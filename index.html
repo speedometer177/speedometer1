@@ -3690,56 +3690,57 @@ function loadLocal() {
 
 // ── SUPABASE SYNC ──
 function syncFromSupabase() {
-  // Direct fetch — works on all devices including mobile
+  // Method 1: Supabase library
+  if (sbClient) {
+    sbClient.from('articles').select('*').order('created_at', {ascending:false})
+      .then(function(res) {
+        if (res.error || !res.data || res.data.length === 0) {
+          syncViaFetch();
+          return;
+        }
+        processSyncData(res.data);
+      }, function() { syncViaFetch(); });
+  } else {
+    syncViaFetch();
+  }
+}
+
+function syncViaFetch() {
   fetch(SB_URL + '/rest/v1/articles?select=*&order=created_at.desc', {
-    headers: {
-      'apikey': SB_KEY,
-      'Authorization': 'Bearer ' + SB_KEY,
-      'Content-Type': 'application/json'
-    }
+    headers: { 'apikey': SB_KEY, 'Authorization': 'Bearer ' + SB_KEY }
   })
   .then(function(r) { return r.json(); })
   .then(function(data) {
     if (!data || !Array.isArray(data) || data.length === 0) {
-      // Supabase empty — push defaults
       DEFAULT_ARTICLES.forEach(function(a){ pushToSupabase(a); });
       return;
     }
-    var sbArticles = data.map(function(r) {
-      var def = DEFAULT_ARTICLES.find(function(d){ return d.title === r.title; });
-      return {
-        id: r.id,
-        title: r.title||'',
-        sub: r.sub||'',
-        cat: r.cat||'local',
-        author: r.author||'מערכת ספידומטר',
-        date: r.date||'',
-        readTime: r.read_time||'',
-        img: r.img || (def ? def.img : '') || CAT_IMAGES[r.cat||'local'],
-        imgCaption: r.img_caption||'',
-        body: r.body||'',
-        score: r.score||null,
-        views: r.views||0,
-        featured: r.featured||false,
-        specs: r.specs||null,
-        gallery: r.gallery||null,
-        galleryCaptions: r.gallery_captions||null,
-        bodyImages: r.body_images||null
-      };
-    });
-    articles = sbArticles;
-    nextId = Math.max.apply(null, articles.map(function(a){return a.id||0;})) + 1;
-    saveLocal();
-    buildHero();
-    buildSections();
-    buildTicker();
-    buildBreakingTicker();
-    handleMobileHero();
+    processSyncData(data);
   })
-  .catch(function(err) {
-    console.log('Sync failed:', err);
-  });
+  .catch(function(err) { console.log('Sync failed:', err); });
 }
+
+function processSyncData(data) {
+  var sbArticles = data.map(function(r) {
+    var def = DEFAULT_ARTICLES.find(function(d){ return d.title === r.title; });
+    var imgFallback = (def && def.img) ? def.img : CAT_IMAGES[r.cat||'local'];
+    return {
+      id: r.id, title: r.title||'', sub: r.sub||'', cat: r.cat||'local',
+      author: r.author||'מערכת ספידומטר', date: r.date||'', time: r.time||'',
+      readTime: r.read_time||'',
+      img: (r.img && r.img.trim().length > 5) ? r.img.trim() : imgFallback,
+      imgCaption: r.img_caption||'', body: r.body||'', score: r.score||null,
+      views: r.views||0, featured: r.featured||false, specs: r.specs||null,
+      gallery: r.gallery||null, galleryCaptions: r.gallery_captions||null,
+      bodyImages: r.body_images||null
+    };
+  });
+  articles = sbArticles;
+  if (articles.length > 0) nextId = Math.max.apply(null, articles.map(function(a){ return a.id||0; })) + 1;
+  saveLocal();
+  buildHero(); buildSections(); buildTicker(); buildBreakingTicker(); handleMobileHero();
+}
+
 
 async function pushToSupabase(articleData) {
   try {
