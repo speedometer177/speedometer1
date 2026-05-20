@@ -2828,11 +2828,14 @@ body.dark-mode .bottom-nav {
   .section { padding: 0 12px; }
   .hero { padding: 0 12px; }
   .header-inner { padding: 0 12px; }
-  /* Hero grid mobile — show original */
-  .hero-grid { display: grid; }
-  .hero-banner-wrap { display: none; }
+  /* Hero grid mobile */
+  .hero-grid { display: none; }
+  .hero-banner-wrap { display: block; }
 }
-/* hero-grid shown on all screens */
+@media (min-width: 681px) {
+  .hero-banner-wrap { display: none; }
+  .hero-grid-wrap { display: block; }
+}
 </style>
 </head>
 <body>
@@ -3566,7 +3569,7 @@ body.dark-mode .bottom-nav {
 
 // ── SUPABASE ──
 const SB_URL = 'https://kaykrrnmykqrfhawgtqt.supabase.co';
-const SB_KEY = 'sb_publishable_Ms6YFTnADm-qAd9617Ey9A_D3x-Zumi';
+const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtheWtycm5teWtxcmZoYXdndHF0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkwMzQ2NjUsImV4cCI6MjA5NDYxMDY2NX0.F24w8eKDj4Q0i5Wm7hHtXW72xFJVgLNQvE5qhaRxnWM';
 let sbClient = null;
 try { sbClient = supabase.createClient(SB_URL, SB_KEY); } catch(e) {}
 
@@ -3687,13 +3690,19 @@ function loadLocal() {
 
 // ── SUPABASE SYNC ──
 function syncFromSupabase() {
+  // Method 1: Supabase library
   if (sbClient) {
     sbClient.from('articles').select('*').order('created_at', {ascending:false})
       .then(function(res) {
-        if (res.error || !res.data || res.data.length === 0) { syncViaFetch(); return; }
+        if (res.error || !res.data || res.data.length === 0) {
+          syncViaFetch();
+          return;
+        }
         processSyncData(res.data);
       }, function() { syncViaFetch(); });
-  } else { syncViaFetch(); }
+  } else {
+    syncViaFetch();
+  }
 }
 
 function syncViaFetch() {
@@ -3734,36 +3743,21 @@ function processSyncData(data) {
 
 
 async function pushToSupabase(articleData) {
-  const row = {
-    title: articleData.title||'', sub: articleData.sub||'', cat: articleData.cat||'local',
-    author: articleData.author||'מערכת ספידומטר', date: articleData.date||'',
-    read_time: articleData.readTime||'', img: articleData.img||'',
-    img_caption: articleData.imgCaption||'', body: articleData.body||'',
-    score: articleData.score||null, views: articleData.views||0,
-    featured: articleData.featured||false, specs: articleData.specs||null,
-    gallery: articleData.gallery||null, body_images: articleData.bodyImages||null
-  };
-  // Try library first (supports UPDATE)
-  if (sbClient) {
-    try {
-      // Check if exists by looking for matching title
-      const {data: existing} = await sbClient.from('articles').select('id').eq('title', articleData.title).single();
-      if (existing) {
-        const {error} = await sbClient.from('articles').update(row).eq('id', existing.id);
-        if (!error) return true;
-      } else {
-        const {error} = await sbClient.from('articles').insert(row);
-        if (!error) return true;
-      }
-    } catch(e) {}
-  }
-  // Fallback: direct fetch INSERT
   try {
+    const row = {
+      title: articleData.title, sub: articleData.sub, cat: articleData.cat,
+      author: articleData.author, date: articleData.date, read_time: articleData.readTime,
+      img: articleData.img||'', img_caption: articleData.imgCaption||'', body: articleData.body||'',
+      score: articleData.score||null, views: articleData.views||0, featured: articleData.featured||false,
+      specs: articleData.specs||null, gallery: articleData.gallery||null, body_images: articleData.bodyImages||null
+    };
     const res = await fetch(SB_URL + '/rest/v1/articles', {
       method: 'POST',
       headers: {
-        'apikey': SB_KEY, 'Authorization': 'Bearer ' + SB_KEY,
-        'Content-Type': 'application/json', 'Prefer': 'return=minimal'
+        'apikey': SB_KEY,
+        'Authorization': 'Bearer ' + SB_KEY,
+        'Content-Type': 'application/json',
+        'Prefer': 'return=minimal'
       },
       body: JSON.stringify(row)
     });
@@ -3771,22 +3765,10 @@ async function pushToSupabase(articleData) {
   } catch(e) { return false; }
 }
 
-
-async function deleteFromSupabase(id) {
-  if (!id) return;
-  // Try library
-  if (sbClient) {
-    try { await sbClient.from('articles').delete().eq('id', id); return; } catch(e) {}
-  }
-  // Fallback fetch
-  try {
-    await fetch(SB_URL + '/rest/v1/articles?id=eq.' + id, {
-      method: 'DELETE',
-      headers: { 'apikey': SB_KEY, 'Authorization': 'Bearer ' + SB_KEY }
-    });
-  } catch(e) {}
+async function deleteFromSupabase(sbId) {
+  if (!sbClient || !sbId) return;
+  try { await sbClient.from('articles').delete().eq('id', sbId); } catch(e) {}
 }
-
 
 // ── DATE ──
 const dateEl = document.getElementById('top-date');
@@ -4693,8 +4675,13 @@ async function handleImageUpload(input) {
   // Always show something immediately
   const local = loadLocal();
   if (local && local.length > 0) {
-    articles = local;
-    nextId = Math.max(...articles.map(a=>a.id)) + 1;
+    // Ensure images always have fallback
+    articles = local.map(function(a) {
+      return Object.assign({}, a, {
+        img: a.img || CAT_IMAGES[a.cat] || CAT_IMAGES['local']
+      });
+    });
+    nextId = Math.max.apply(null, articles.map(function(a){return a.id||0;})) + 1;
   } else {
     articles = DEFAULT_ARTICLES.slice();
     saveLocal();
@@ -4978,6 +4965,10 @@ window.addEventListener('resize', handleMobileHero, { passive: true });
     <button class="bottom-nav-item" onclick="filterCat('quick');setBottomNav(this)" aria-label="בקליק">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
       <span>בקליק</span>
+    </button>
+    <button class="bottom-nav-item" onclick="openAdminLogin();setBottomNav(this)" aria-label="ניהול" id="bottom-admin-btn" style="display:none">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M20 21a8 8 0 1 0-16 0"/></svg>
+      <span>ניהול</span>
     </button>
     <button class="bottom-nav-item" onclick="document.getElementById('mobile-menu').classList.add('open');setBottomNav(this)" aria-label="תפריט">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
