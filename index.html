@@ -2822,6 +2822,9 @@ body.dark-mode .bottom-nav {
   }
   /* Breaking ticker always visible */
   .breaking-ticker { display: flex !important; }
+  /* Always show articles grid on mobile */
+  #latest-grid { display: grid !important; }
+  #reviews-grid { display: grid !important; }
   /* Quick news badge larger */
   .cat-tag[data-cat="quick"] { font-size: 0.88rem !important; font-weight: 700 !important; }
   /* Prevent horizontal overflow */
@@ -3891,12 +3894,15 @@ function latestItemHTML(a, num) {
 
 // ── BUILD SECTIONS ──
 function buildSections() {
-  // Update mobile hero banner too
-  handleMobileHero();
+  // Update mobile hero banner — wrapped in try/catch so articles always load
+  try { handleMobileHero(); } catch(e) { console.log('Mobile hero error:', e); }
   const filtered = currentFilter==='all' ? articles : articles.filter(a=>a.cat===currentFilter);
   const lg = document.getElementById('latest-grid');
-  if (lg) lg.innerHTML = filtered.slice(0,4).map(a=>cardHTML(a)).join('') ||
-    '<p style="color:var(--muted);font-size:0.9rem;grid-column:1/-1;padding:20px 0;">לא נמצאו כתבות בקטגוריה זו.</p>';
+  if (lg) {
+    lg.style.display = 'grid';
+    lg.innerHTML = filtered.slice(0,8).map(a=>cardHTML(a)).join('') ||
+      '<p style="color:var(--muted);font-size:0.9rem;grid-column:1/-1;padding:20px 0;">לא נמצאו כתבות בקטגוריה זו.</p>';
+  }
   const rg = document.getElementById('reviews-grid');
   if (rg) { const r=articles.filter(a=>a.cat==='review').slice(0,3); rg.innerHTML=r.map(a=>cardHTML(a)).join(''); rg.style.display=r.length?'grid':'none'; }
   const wg = document.getElementById('world-grid');
@@ -4761,10 +4767,13 @@ let heroBannerTimer = null;
 let heroBannerArticles = [];
 
 function buildHeroBanner() {
+  try {
   const wrap = document.getElementById('hero-banner-mobile');
   if (!wrap || wrap.style.display === 'none') return;
+  // Use ALL articles with fallback images — never filter to empty
   const pool = (currentFilter === 'all' ? articles : articles.filter(a => a.cat === currentFilter))
-    .filter(a => a.img || CAT_IMAGES[a.cat]).slice(0, 6);
+    .map(a => Object.assign({}, a, { img: (a.img && a.img.length > 5) ? a.img : CAT_IMAGES[a.cat] || CAT_IMAGES['local'] }))
+    .slice(0, 6);
   if (!pool.length) { wrap.innerHTML = ''; return; }
   heroBannerArticles = pool;
   heroBannerIdx = 0;
@@ -4784,6 +4793,7 @@ function buildHeroBanner() {
   }
   clearInterval(heroBannerTimer);
   heroBannerTimer = setInterval(() => moveHeroBanner(1), 4500);
+  } catch(e) { console.log('Banner error:', e); }
 }
 function moveHeroBanner(dir) {
   const n = heroBannerArticles.length; if (!n) return;
@@ -4849,14 +4859,16 @@ function applySystemDark() {
 // MOBILE HERO SHOW/HIDE
 // ══════════════════════════════════════════
 function handleMobileHero() {
-  const isMobile = window.innerWidth <= 680;
-  const mb = document.getElementById('hero-banner-mobile');
-  const dt = document.getElementById('hero-area');
-  if (mb && dt) {
-    mb.style.display = isMobile ? 'block' : 'none';
-    dt.style.display = isMobile ? 'none' : 'block';
-    if (isMobile) buildHeroBanner();
-  }
+  try {
+    const isMobile = window.innerWidth <= 680;
+    const mb = document.getElementById('hero-banner-mobile');
+    const dt = document.getElementById('hero-area');
+    if (mb && dt) {
+      mb.style.display = isMobile ? 'block' : 'none';
+      dt.style.display = isMobile ? 'none' : 'block';
+      if (isMobile) buildHeroBanner();
+    }
+  } catch(e) { console.log('handleMobileHero error:', e); }
 }
 window.addEventListener('resize', handleMobileHero, { passive: true });
 
