@@ -3666,13 +3666,20 @@ function syncFromSupabase() {
         author: r.author||'מערכת ספידומטר', date: r.date||'',
         readTime: r.read_time||'', img: r.img||'', imgCaption: r.img_caption||'',
         body: r.body||'', score: r.score||null, views: r.views||0,
-        featured: r.featured||false, specs: r.specs||null, gallery: r.gallery||null
+        featured: r.featured||false, specs: r.specs||null, gallery: r.gallery||null,
+        galleryCaptions: r.gallery_captions||null
       }; });
       articles = sbArticles;
       nextId = Math.max.apply(null, articles.map(function(a){return a.id;})) + 1;
       saveLocal();
-      buildHero(); buildSections(); buildTicker(); buildBreakingTicker();
-    }, function() {});
+      buildHero();
+      buildSections();
+      buildTicker();
+      buildBreakingTicker();
+      handleMobileHero();
+    }, function(err) {
+      console.log('Supabase sync failed, using local data');
+    });
 }
 
 async function pushToSupabase(articleData) {
@@ -4530,6 +4537,9 @@ async function handleImageUpload(input) {
 // ══════════════════════════════
 (function init() {
   restorePrefs();
+  applySystemDark();
+
+  // Always show something immediately
   const local = loadLocal();
   if (local && local.length > 0) {
     articles = local;
@@ -4538,14 +4548,17 @@ async function handleImageUpload(input) {
     articles = DEFAULT_ARTICLES.slice();
     saveLocal();
   }
+
+  // Build UI immediately with local/default data
   buildHero();
   buildSections();
   buildTicker();
   buildBreakingTicker();
   showHome();
-  setTimeout(syncFromSupabase, 500);
-  applySystemDark();
   handleMobileHero();
+
+  // Then sync from Supabase in background
+  setTimeout(syncFromSupabase, 800);
 
   // First-time push: if Supabase is empty, push all local articles
   setTimeout(async () => {
