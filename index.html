@@ -3690,68 +3690,77 @@ function loadLocal() {
 
 // ── SUPABASE SYNC ──
 function syncFromSupabase() {
-  if (!sbClient) return;
-  sbClient.from('articles').select('*').order('created_at', {ascending:false})
-    .then(function(res) {
-      var data = res.data, error = res.error;
-      if (error) { console.log('Supabase error:', error); return; }
-      if (!data || data.length === 0) {
-        // Supabase empty — push defaults
-        DEFAULT_ARTICLES.forEach(function(a){ pushToSupabase(a); });
-        return;
-      }
-      var sbArticles = data.map(function(r) {
-        // Find matching default for fallback image
-        var def = DEFAULT_ARTICLES.find(function(d){ return d.title === r.title; });
-        return {
-          id: r.id,
-          title: r.title||'',
-          sub: r.sub||'',
-          cat: r.cat||'local',
-          author: r.author||'מערכת ספידומטר',
-          date: r.date||'',
-          readTime: r.read_time||'',
-          img: r.img || (def ? def.img : '') || CAT_IMAGES[r.cat||'local'],
-          imgCaption: r.img_caption||'',
-          body: r.body||'',
-          score: r.score||null,
-          views: r.views||0,
-          featured: r.featured||false,
-          specs: r.specs||null,
-          gallery: r.gallery||null,
-          galleryCaptions: r.gallery_captions||null,
-          bodyImages: r.body_images||null
-        };
-      });
-      articles = sbArticles;
-      nextId = Math.max.apply(null, articles.map(function(a){return a.id||0;})) + 1;
-      saveLocal();
-      buildHero();
-      buildSections();
-      buildTicker();
-      buildBreakingTicker();
-      handleMobileHero();
-    }, function(err) {
-      console.log('Supabase sync failed, using local data');
+  // Direct fetch — works on all devices including mobile
+  fetch(SB_URL + '/rest/v1/articles?select=*&order=created_at.desc', {
+    headers: {
+      'apikey': SB_KEY,
+      'Authorization': 'Bearer ' + SB_KEY,
+      'Content-Type': 'application/json'
+    }
+  })
+  .then(function(r) { return r.json(); })
+  .then(function(data) {
+    if (!data || !Array.isArray(data) || data.length === 0) {
+      // Supabase empty — push defaults
+      DEFAULT_ARTICLES.forEach(function(a){ pushToSupabase(a); });
+      return;
+    }
+    var sbArticles = data.map(function(r) {
+      var def = DEFAULT_ARTICLES.find(function(d){ return d.title === r.title; });
+      return {
+        id: r.id,
+        title: r.title||'',
+        sub: r.sub||'',
+        cat: r.cat||'local',
+        author: r.author||'מערכת ספידומטר',
+        date: r.date||'',
+        readTime: r.read_time||'',
+        img: r.img || (def ? def.img : '') || CAT_IMAGES[r.cat||'local'],
+        imgCaption: r.img_caption||'',
+        body: r.body||'',
+        score: r.score||null,
+        views: r.views||0,
+        featured: r.featured||false,
+        specs: r.specs||null,
+        gallery: r.gallery||null,
+        galleryCaptions: r.gallery_captions||null,
+        bodyImages: r.body_images||null
+      };
     });
+    articles = sbArticles;
+    nextId = Math.max.apply(null, articles.map(function(a){return a.id||0;})) + 1;
+    saveLocal();
+    buildHero();
+    buildSections();
+    buildTicker();
+    buildBreakingTicker();
+    handleMobileHero();
+  })
+  .catch(function(err) {
+    console.log('Sync failed:', err);
+  });
 }
 
 async function pushToSupabase(articleData) {
-  if (!sbClient) return false;
   try {
     const row = {
       title: articleData.title, sub: articleData.sub, cat: articleData.cat,
       author: articleData.author, date: articleData.date, read_time: articleData.readTime,
-      img: articleData.img, img_caption: articleData.imgCaption, body: articleData.body,
-      score: articleData.score, views: articleData.views||0, featured: articleData.featured||false,
+      img: articleData.img||'', img_caption: articleData.imgCaption||'', body: articleData.body||'',
+      score: articleData.score||null, views: articleData.views||0, featured: articleData.featured||false,
       specs: articleData.specs||null, gallery: articleData.gallery||null, body_images: articleData.bodyImages||null
     };
-    if (articleData._sbId) {
-      await sbClient.from('articles').update(row).eq('id', articleData._sbId);
-    } else {
-      await sbClient.from('articles').insert(row);
-    }
-    return true;
+    const res = await fetch(SB_URL + '/rest/v1/articles', {
+      method: 'POST',
+      headers: {
+        'apikey': SB_KEY,
+        'Authorization': 'Bearer ' + SB_KEY,
+        'Content-Type': 'application/json',
+        'Prefer': 'return=minimal'
+      },
+      body: JSON.stringify(row)
+    });
+    return res.ok;
   } catch(e) { return false; }
 }
 
