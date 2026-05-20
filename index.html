@@ -2814,11 +2814,8 @@ body.dark-mode .bottom-nav {
   .article-title { font-size: 1.5rem; line-height: 1.3; }
   /* Cards scroll row on mobile */
   .latest-grid-mobile { display: block; }
-  /* Access btn smaller on mobile */
+  /* Access btn on mobile — just reposition */
   .access-btn {
-    width: 36px !important;
-    height: 36px !important;
-    font-size: 0.85rem !important;
     bottom: 66px !important;
     right: 8px !important;
   }
@@ -3840,12 +3837,18 @@ function filterCat(cat, el) {
 }
 
 // ── ROUTING ──
-function showHome() {
+function showHome(pushState=true) {
   resetMeta();
   document.getElementById('home-page').style.display='block';
   document.getElementById('article-page').style.display='none';
   document.getElementById('admin-page').style.display='none';
   document.getElementById('main-footer').style.display='block';
+  if (pushState && window.history) {
+    window.history.pushState({page:'home'}, '', window.location.pathname);
+  }
+  updateReadingProgress();
+  const homeBtn = document.querySelector('.bottom-nav-item:first-child');
+  if (homeBtn) setBottomNav(homeBtn);
 }
 function showAdmin() {
   document.getElementById('home-page').style.display='none';
@@ -3979,6 +3982,10 @@ function openArticle(id) {
   document.getElementById('related-articles').innerHTML=(related.length?related:fallback).map(r=>cardHTML(r)).join('');
   document.getElementById('sidebar-related').innerHTML=articles.filter(x=>x.id!==id).sort((x,y)=>(y.views||0)-(x.views||0)).slice(0,5).map((r,i)=>latestItemHTML(r,i+1)).join('');
 
+  // Push browser history state
+  if (window.history) {
+    window.history.pushState({page:'article', id:id}, '', '#article-' + id);
+  }
   window.scrollTo({top:0,behavior:'smooth'});
 }
 
@@ -4283,6 +4290,24 @@ function toggleDark() {
 
 // ── ADMIN LOGIN ──
 document.addEventListener('keydown',e=>{ if(e.ctrlKey&&e.shiftKey&&e.key==='A'){e.preventDefault();openAdminLogin();} if(e.key==='Escape'){ closeAdminLogin(); document.getElementById('access-overlay').classList.remove('open'); } });
+
+// ── BROWSER BACK BUTTON ──
+window.addEventListener('popstate', function(e) {
+  if (e.state && e.state.page === 'article') {
+    openArticle(e.state.id);
+  } else if (e.state && e.state.page === 'home') {
+    showHome(false);
+  } else {
+    // Handle hash-based navigation
+    const hash = window.location.hash;
+    if (hash.startsWith('#article-')) {
+      const id = parseInt(hash.replace('#article-',''));
+      if (id) openArticle(id);
+    } else {
+      showHome(false);
+    }
+  }
+});
 
 // ── SECRET HASH ADMIN (mobile) ──
 // Navigate to #admin177 to open admin on mobile
@@ -4828,9 +4853,9 @@ window.addEventListener('resize', handleMobileHero, { passive: true });
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M20 21a8 8 0 1 0-16 0"/></svg>
       <span>ניהול</span>
     </button>
-    <button class="bottom-nav-item" onclick="document.getElementById('search-overlay').style.display='flex';setBottomNav(this)" aria-label="חיפוש">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
-      <span>חיפוש</span>
+    <button class="bottom-nav-item" onclick="document.getElementById('mobile-menu').classList.add('open');setBottomNav(this)" aria-label="תפריט">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+      <span>תפריט</span>
     </button>
   </div>
 </nav>
