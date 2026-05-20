@@ -1,695 +1,610 @@
 <!DOCTYPE html>
 <html lang="he" dir="rtl">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ספידומטר - פאנל ניהול תוכן</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Rubik:wght@300;400;500;700;900&display=swap" rel="family">
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <style>
-        :root {
-            --primary: #ff0033;
-            --primary-hover: #cc0029;
-            --dark: #0f1015;
-            --dark-card: #161822;
-            --dark-input: #1e2130;
-            --text-main: #f8fafc;
-            --text-muted: #94a3b8;
-            --border: #2d3142;
-            --success: #10b981;
-            --font: 'Rubik', sans-serif;
-        }
-
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-            font-family: var(--font);
-            -webkit-font-smoothing: antialiased;
-        }
-
-        body {
-            background-color: var(--dark);
-            color: var(--text-main);
-            min-height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            padding: 20px;
-        }
-
-        /* Login Screen Styles */
-        .login-container {
-            background-color: var(--dark-card);
-            border: 1px solid var(--border);
-            border-radius: 16px;
-            padding: 40px;
-            width: 100%;
-            max-width: 420px;
-            box-shadow: 0 20px 40px rgba(0,0,0,0.4);
-            text-align: center;
-            transition: all 0.3s ease;
-        }
-
-        .logo-area {
-            font-size: 2.5rem;
-            font-weight: 900;
-            letter-spacing: -1px;
-            margin-bottom: 8px;
-            display: inline-block;
-        }
-
-        .logo-area span {
-            color: var(--primary);
-        }
-
-        .subtitle {
-            color: var(--text-muted);
-            font-size: 0.95rem;
-            margin-bottom: 32px;
-        }
-
-        .input-group {
-            position: relative;
-            margin-bottom: 24px;
-            text-align: right;
-        }
-
-        .input-group label {
-            display: block;
-            margin-bottom: 8px;
-            font-size: 0.85rem;
-            font-weight: 500;
-            color: var(--text-muted);
-            letter-spacing: 0.5px;
-        }
-
-        .input-wrapper {
-            position: relative;
-        }
-
-        .input-wrapper i {
-            position: absolute;
-            right: 16px;
-            top: 50%;
-            transform: translateY(-50%);
-            color: var(--text-muted);
-            font-size: 1.1rem;
-            transition: color 0.2s;
-        }
-
-        .input-wrapper input {
-            width: 100%;
-            background-color: var(--dark-input);
-            border: 1.5px solid var(--border);
-            border-radius: 8px;
-            padding: 14px 44px 14px 16px;
-            color: var(--text-main);
-            font-size: 1rem;
-            transition: all 0.2s ease;
-            outline: none;
-        }
-
-        .input-wrapper input:focus {
-            border-color: var(--primary);
-            box-shadow: 0 0 0 3px rgba(255, 0, 51, 0.15);
-        }
-
-        .input-wrapper input:focus + i {
-            color: var(--primary);
-        }
-
-        .btn {
-            width: 100%;
-            background-color: var(--primary);
-            color: white;
-            border: none;
-            border-radius: 8px;
-            padding: 14px;
-            font-size: 1rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.2s;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .btn:hover {
-            background-color: var(--primary-hover);
-            transform: translateY(-1px);
-        }
-
-        .btn:active {
-            transform: translateY(1px);
-        }
-
-        /* Dashboard Styles (Hidden by default) */
-        .dashboard-container {
-            display: none;
-            width: 100%;
-            max-width: 1200px;
-            background-color: var(--dark-card);
-            border: 1px solid var(--border);
-            border-radius: 16px;
-            box-shadow: 0 20px 40px rgba(0,0,0,0.4);
-            overflow: hidden;
-            min-height: 80vh;
-        }
-
-        .dash-header {
-            background-color: rgba(22, 24, 34, 0.8);
-            backdrop-filter: blur(10px);
-            border-bottom: 1px solid var(--border);
-            padding: 20px 40px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .dash-logo {
-            font-size: 1.8rem;
-            font-weight: 900;
-        }
-
-        .dash-logo span {
-            color: var(--primary);
-        }
-
-        .user-actions {
-            display: flex;
-            align-items: center;
-            gap: 16px;
-        }
-
-        .btn-outline {
-            background: transparent;
-            border: 1px solid var(--border);
-            color: var(--text-main);
-            padding: 8px 16px;
-            border-radius: 6px;
-            cursor: pointer;
-            font-size: 0.9rem;
-            transition: all 0.2s;
-        }
-
-        .btn-outline:hover {
-            background-color: var(--border);
-            color: white;
-        }
-
-        .dash-content {
-            padding: 40px;
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 40px;
-        }
-
-        @media (max-width: 968px) {
-            .dash-content {
-                grid-template-columns: 1fr;
-            }
-        }
-
-        .panel-title {
-            font-size: 1.4rem;
-            font-weight: 700;
-            margin-bottom: 24px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            color: var(--text-main);
-            border-bottom: 2px solid var(--border);
-            padding-bottom: 10px;
-        }
-
-        .panel-title i {
-            color: var(--primary);
-        }
-
-        /* Form Controls inside Dashboard */
-        .dash-form .input-group input, 
-        .dash-form .input-group textarea,
-        .dash-form .input-group select {
-            width: 100%;
-            background-color: var(--dark-input);
-            border: 1.5px solid var(--border);
-            border-radius: 8px;
-            padding: 12px 16px;
-            color: var(--text-main);
-            font-size: 0.95rem;
-            outline: none;
-            transition: border-color 0.2s;
-        }
-
-        .dash-form .input-group input:focus, 
-        .dash-form .input-group textarea:focus,
-        .dash-form .input-group select:focus {
-            border-color: var(--primary);
-        }
-
-        .dash-form .input-group textarea {
-            resize: vertical;
-            min-height: 120px;
-            font-family: var(--font);
-        }
-
-        /* Articles List Panel */
-        .articles-list-wrapper {
-            background-color: rgba(15, 16, 21, 0.4);
-            border-radius: 12px;
-            border: 1px solid var(--border);
-            padding: 20px;
-            max-height: 600px;
-            overflow-y: auto;
-        }
-
-        .article-card {
-            background-color: var(--dark-card);
-            border: 1px solid var(--border);
-            border-radius: 8px;
-            padding: 16px;
-            margin-bottom: 16px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            transition: transform 0.2s, border-color 0.2s;
-        }
-
-        .article-card:hover {
-            transform: translateX(-4px);
-            border-color: rgba(255, 0, 51, 0.3);
-        }
-
-        .article-info h4 {
-            font-size: 1rem;
-            font-weight: 600;
-            margin-bottom: 4px;
-            color: var(--text-main);
-        }
-
-        .article-info span {
-            font-size: 0.8rem;
-            color: var(--text-muted);
-            background-color: var(--dark-input);
-            padding: 2px 8px;
-            border-radius: 4px;
-            border: 1px solid var(--border);
-        }
-
-        .article-actions {
-            display: flex;
-            gap: 8px;
-        }
-
-        .btn-icon {
-            background: transparent;
-            border: 1px solid var(--border);
-            color: var(--text-muted);
-            width: 36px;
-            height: 36px;
-            border-radius: 6px;
-            cursor: pointer;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            transition: all 0.2s;
-        }
-
-        .btn-icon:hover {
-            color: white;
-            background-color: var(--border);
-        }
-
-        .btn-icon.delete:hover {
-            background-color: rgba(255, 0, 51, 0.15);
-            border-color: var(--primary);
-            color: var(--primary);
-        }
-
-        /* Notification Toast */
-        .toast {
-            position: fixed;
-            bottom: -100px;
-            right: 20px;
-            background-color: var(--dark-card);
-            border-left: 4px solid var(--primary);
-            color: var(--text-main);
-            padding: 16px 24px;
-            border-radius: 8px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-            z-index: 9999;
-            border: 1px solid var(--border);
-            border-left: 4px solid var(--primary);
-        }
-
-        .toast.success {
-            border-left-color: var(--success);
-        }
-
-        .toast.success i {
-            color: var(--success);
-        }
-
-        .toast.show {
-            bottom: 20px;
-        }
-
-        /* Spinner */
-        .spinner {
-            animation: rotate 1s linear infinite;
-            display: none;
-        }
-
-        @keyframes rotate {
-            100% { transform: rotate(30deg); }
-        }
-
-        .image-preview {
-            width: 100%;
-            height: 150px;
-            background-color: var(--dark-input);
-            border: 1.5px dashed var(--border);
-            border-radius: 8px;
-            margin-top: 8px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            color: var(--text-muted);
-            font-size: 0.9rem;
-            overflow: hidden;
-            background-size: cover;
-            background-position: center;
-        }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="description" content="ספידומטר - אתר חדשות הרכב המוביל בישראל. מבחני רכב, רכב יוקרה, חדשות מקומיות ועולמיות, וייעוץ בקניית רכב.">
+<meta name="keywords" content="חדשות רכב, מבחני רכב, רכב יוקרה, רכב חדש, ישראל, טכנולוגיה, חדשנות, ספידומטר">
+<meta property=\"og:title\" content=\"ספידומטר | רכב · טכנולוגיה · חדשנות\">
+<meta property=\"og:description\" content=\"האתר המוביל בישראל לחדשות רכב, מבחני דרכים, רכב יוקרה וטכנולוגיה אוטומוטיב\">
+<meta property=\"og:type\" content=\"website\">
+<meta property=\"og:url\" content=\"https://speedometer10.co.il/\">
+<meta property=\"og:image\" content=\"https://speedometer10.co.il/logo.png\">
+<meta property=\"og:image:width\" content=\"1200\">
+<meta property=\"og:image:height\" content=\"630\">
+<meta name=\"twitter:image\" content=\"https://speedometer10.co.il/logo.png\">
+<meta name=\"twitter:card\" content=\"summary_large_image\">
+<meta name=\"twitter:title\" content=\"ספידומטר | רכב · טכנולוגיה · חדשנות\">
+<meta name=\"twitter:description\" content=\"האתר המוביל בישראל לחדשות רכב, מבחני דרכים, רכב יוקרה וטכנולוגיה אוטומוטיב\">
+<title>ספידומטר | רכב · טכנולוגיה · חדשנות</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+  :root {
+    --bg-main: #0b0c10;
+    --bg-card: #14161d;
+    --bg-card-hover: #1c1f2a;
+    --primary: #ff1e42;
+    --primary-glow: rgba(255, 30, 66, 0.2);
+    --text-white: #ffffff;
+    --text-gray: #9ca3af;
+    --text-muted: #6b7280;
+    --border-color: rgba(255, 255, 255, 0.05);
+    --border-hover: rgba(255, 30, 66, 0.3);
+    --nav-height: 70px;
+    --accent-blue: #00d2ff;
+    --accent-green: #00ff87;
+  }
+  * {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    -webkit-tap-highlight-color: transparent;
+  }
+  body {
+    background-color: var(--bg-main);
+    color: var(--text-white);
+    padding-top: var(--nav-height);
+    padding-bottom: 60px;
+    overflow-x: hidden;
+  }
+  .navbar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: var(--nav-height);
+    background: rgba(11, 12, 16, 0.95);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--border-color);
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 2rem;
+  }
+  .nav-logo {
+    font-size: 1.8rem;
+    font-weight: 900;
+    color: var(--text-white);
+    text-decoration: none;
+    letter-spacing: -0.5px;
+    display: flex;
+    align-items: center;
+    gap: 0.2rem;
+  }
+  .nav-logo span { color: var(--primary); }
+  .nav-links {
+    display: flex;
+    gap: 1.5rem;
+    align-items: center;
+  }
+  .nav-link {
+    color: var(--text-gray);
+    text-decoration: none;
+    font-weight: 500;
+    font-size: 0.95rem;
+    transition: all 0.2s ease;
+    padding: 0.5rem 0.8rem;
+    border-radius: 6px;
+  }
+  .nav-link:hover, .nav-link.active {
+    color: var(--text-white);
+    background: rgba(255, 255, 255, 0.03);
+  }
+  .nav-link.active {
+    border-bottom: 2px solid var(--primary);
+    border-radius: 6px 6px 0 0;
+  }
+  .nav-consult {
+    background: var(--primary);
+    color: var(--text-white);
+    border: none;
+    padding: 0.6rem 1.2rem;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    box-shadow: 0 4px 12px var(--primary-glow);
+    text-decoration: none;
+  }
+  .nav-consult:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 6px 16px rgba(255, 30, 66, 0.4);
+  }
+  .main-container {
+    max-width: 1300px;
+    margin: 2rem auto;
+    padding: 0 1.5rem;
+  }
+  .hero-grid {
+    display: grid;
+    grid-template-columns: 1.6fr 1fr;
+    gap: 1.5rem;
+    margin-bottom: 2.5rem;
+  }
+  .hero-main {
+    position: relative;
+    border-radius: 16px;
+    overflow: hidden;
+    aspect-ratio: 16/9;
+    cursor: pointer;
+    border: 1px solid var(--border-color);
+  }
+  .hero-main img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.5s ease;
+  }
+  .hero-main:hover img { transform: scale(1.02); }
+  .hero-overlay {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(to top, rgba(11, 12, 16, 0.95) 0%, rgba(11, 12, 16, 0.4) 50%, transparent 100%);
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    padding: 2rem;
+  }
+  .badge {
+    align-self: flex-start;
+    background: var(--primary);
+    color: var(--text-white);
+    padding: 0.3rem 0.8rem;
+    border-radius: 6px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    margin-bottom: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  .hero-main h1 {
+    font-size: 2.2rem;
+    font-weight: 800;
+    line-height: 1.2;
+    margin-bottom: 0.6rem;
+  }
+  .hero-main p {
+    color: var(--text-gray);
+    font-size: 1rem;
+    line-height: 1.4;
+    max-width: 90%;
+  }
+  .hero-side-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+  .side-item {
+    display: flex;
+    gap: 1rem;
+    background: var(--bg-card);
+    padding: 0.8rem;
+    border-radius: 12px;
+    cursor: pointer;
+    border: 1px solid var(--border-color);
+    transition: all 0.2s ease;
+    align-items: center;
+  }
+  .side-item:hover {
+    background: var(--bg-card-hover);
+    border-color: var(--border-hover);
+  }
+  .side-item img {
+    width: 100px;
+    height: 75px;
+    object-fit: cover;
+    border-radius: 8px;
+    flex-shrink: 0;
+  }
+  .side-item-content {
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+  }
+  .side-item h3 {
+    font-size: 0.95rem;
+    font-weight: 600;
+    line-height: 1.3;
+  }
+  .section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+    border-right: 4px solid var(--primary);
+    padding-right: 0.8rem;
+  }
+  .section-header h2 {
+    font-size: 1.5rem;
+    font-weight: 800;
+  }
+  .news-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 3rem;
+  }
+  .news-card {
+    background: var(--bg-card);
+    border-radius: 14px;
+    overflow: hidden;
+    border: 1px solid var(--border-color);
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    flex-direction: column;
+  }
+  .news-card:hover {
+    transform: translateY(-2px);
+    background: var(--bg-card-hover);
+    border-color: var(--border-hover);
+  }
+  .card-img-wrap {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 16/10;
+    overflow: hidden;
+    background: #1a1a1a;
+  }
+  .card-img-wrap img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.3s ease;
+  }
+  .news-card:hover .card-img-wrap img { transform: scale(1.02); }
+  .card-content {
+    padding: 1.2rem;
+    display: flex;
+    flex-direction: column;
+    flex-grow: 1;
+  }
+  .card-content h3 {
+    font-size: 1.1rem;
+    font-weight: 700;
+    line-height: 1.3;
+    margin-bottom: 0.5rem;
+  }
+  .card-content p {
+    color: var(--text-gray);
+    font-size: 0.88rem;
+    line-height: 1.4;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  .card-footer {
+    margin-top: auto;
+    padding-top: 1rem;
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    display: flex;
+    justify-content: space-between;
+  }
+  .article-view {
+    display: none;
+    max-width: 800px;
+    margin: 2rem auto;
+    background: var(--bg-card);
+    border-radius: 16px;
+    padding: 2rem;
+    border: 1px solid var(--border-color);
+  }
+  .back-btn {
+    background: rgba(255,255,255,0.05);
+    color: var(--text-white);
+    border: none;
+    padding: 0.5rem 1rem;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    margin-bottom: 1.5rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  .article-view h1 {
+    font-size: 2.2rem;
+    font-weight: 800;
+    margin-bottom: 1rem;
+    line-height: 1.2;
+  }
+  .article-meta {
+    color: var(--text-gray);
+    font-size: 0.9rem;
+    margin-bottom: 1.5rem;
+    display: flex;
+    gap: 1rem;
+  }
+  .article-main-img {
+    width: 100%;
+    border-radius: 12px;
+    margin-bottom: 2rem;
+  }
+  .article-body {
+    font-size: 1.1rem;
+    line-height: 1.6;
+    color: #e5e7eb;
+  }
+  .article-body p { margin-bottom: 1.2rem; }
+  .bottom-nav { display: none; }
+  .mobile-header-logo { display: none; }
+  @media (max-width: 768px) {
+    body {
+      padding-top: 60px;
+      padding-bottom: 75px;
+    }
+    .navbar { display: none; }
+    .mobile-header-logo {
+      display: flex;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 60px;
+      background: rgba(11, 12, 16, 0.95);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border-color);
+      z-index: 1000;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.6rem;
+      font-weight: 900;
+    }
+    .mobile-header-logo span { color: var(--primary); }
+    .main-container { margin: 1rem auto; padding: 0 1rem; }
+    .hero-grid { grid-template-columns: 1fr; gap: 1rem; }
+    .hero-main h1 { font-size: 1.4rem; }
+    .hero-main p { font-size: 0.88rem; }
+    .hero-overlay { padding: 1rem; }
+    .side-item img { width: 80px; height: 60px; }
+    .side-item h3 { font-size: 0.85rem; }
+    .news-grid { grid-template-columns: 1fr; gap: 1rem; }
+    .section-header h2 { font-size: 1.2rem; }
+    .bottom-nav {
+      display: flex;
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 65px;
+      background: rgba(20, 22, 29, 0.96);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border-top: 1px solid var(--border-color);
+      z-index: 1000;
+      justify-content: space-around;
+      align-items: center;
+      padding-bottom: env(safe-area-inset-bottom);
+    }
+    .bottom-nav-item {
+      background: none;
+      border: none;
+      color: var(--text-gray);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.25rem;
+      cursor: pointer;
+      font-size: 0.75rem;
+      font-weight: 500;
+      flex: 1;
+    }
+    .bottom-nav-item svg { width: 20px; height: 20px; }
+    .bottom-nav-item.active { color: var(--primary); }
+    .article-view { padding: 1rem; margin: 1rem auto; border: none; }
+    .article-view h1 { font-size: 1.6rem; }
+    .article-body { font-size: 1rem; }
+  }
+  .loading-shimmer {
+    background: linear-gradient(90deg, #14161d 25%, #1c1f2a 50%, #14161d 75%);
+    background-size: 200% 100%;
+    animation: shimmer 1.5s infinite;
+  }
+  @keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+</style>
 </head>
 <body>
 
-    <div id="toast" class="toast">
-        <i class="fa-solid fa-circle-info"></i>
-        <span id="toast-message">הודעה מערכת</span>
+  <div class="mobile-header-logo">ספידומטר<span>.</span></div>
+
+  <nav class="navbar">
+    <a href="#" class="nav-logo" onclick="showMainPage()">ספידומטר<span>.</span></a>
+    <div class="nav-links">
+      <a href="#" class="nav-link active" onclick="filterCat('all');setNav(this)">ראשי</a>
+      <a href="#" class="nav-link" onclick="filterCat('news');setNav(this)">חדשות</a>
+      <a href="#" class="nav-link" onclick="filterCat('review');setNav(this)">מבחני דרכים</a>
+      <a href="#" class="nav-link" onclick="filterCat('luxury');setNav(this)">רכבי יוקרה</a>
+      <a href="#" class="nav-link" onclick="filterCat('ev');setNav(this)">חשמלי</a>
+    </div>
+    <a href="https://wa.me/972500000000" target="_blank" class="nav-consult">ייעוץ אישי בוואטסאפ</a>
+  </nav>
+
+  <div class="main-container" id="main-page-content">
+    <div class="hero-grid" id="hero-section">
+      <div class="hero-main loading-shimmer" style="aspect-ratio:16/9;"></div>
+      <div class="hero-side-list">
+        <div class="side-item loading-shimmer" style="height:80px;"></div>
+        <div class="side-item loading-shimmer" style="height:80px;"></div>
+        <div class="side-item loading-shimmer" style="height:80px;"></div>
+      </div>
     </div>
 
-    <div id="login-panel" class="login-container">
-        <div class="logo-area">ספידומטר<span>.</span></div>
-        <div class="subtitle">מערכת ניהול תוכן ואתר חדשות</div>
-        
-        <div class="input-group">
-            <label for="admin-pwd-input">סיסמת מנהל מערכת</label>
-            <div class="input-wrapper">
-                <input type="password" id="admin-pwd-input" placeholder="הכנס סיסמה לחשיפת הפאנל..." autocomplete="off" onkeydown="if(event.key==='Enter')checkAdminPwd()">
-                <i class="fa-solid fa-lock"></i>
-            </div>
-        </div>
+    <div class="section-header">
+      <h2 id="feed-title">כל הכתבות והעדכונים</h2>
+    </div>
+    <div class="news-grid" id="posts-grid"></div>
+  </div>
 
-        <button class="btn" onclick="checkAdminPwd()">
-            <span>התחבר למערכת</span>
-            <i class="fa-solid fa-arrow-left"></i>
+  <div class="article-view" id="article-page-content"></div>
+
+  <nav class="bottom-nav">
+    <button class="bottom-nav-item active" onclick="filterCat('all');setBottomNav(this)" aria-label="בית">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+      <span>בית</span>
+    </button>
+    <button class="bottom-nav-item" onclick="filterCat('review');setBottomNav(this)" aria-label="מבחנים">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+      <span>מבחנים</span>
+    </button>
+    <button class="bottom-nav-item" onclick="filterCat('luxury');setBottomNav(this)" aria-label="יוקרה">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+      <span>יוקרה</span>
+    </button>
+    <button class="bottom-nav-item" onclick="filterCat('ev');setBottomNav(this)" aria-label="חשמלי">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+      <span>חשמלי</span>
+    </button>
+  </nav>
+
+  <script>
+    // הגדרה קבועה וישירה של הקישור והמפתח של ה-Supabase שלך לסנכרון מלא בדומיין ובמובייל
+    const _SB_URL = 'https://kaykrrnmykqrfhawgtqt.supabase.co';
+    const _SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtheWtycm5teWtxcmZoYXdndHF0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkwMzQ2NjUsImV4cCI6MjA5NDYxMDY2NX0.F24w8eKDj4Q0i5Wm7hHtXW72xFJVgLNQvE5qhaRxnWM';
+    
+    const client = supabase.createClient(_SB_URL, _SB_KEY);
+    let allPosts = [];
+    let currentCategory = 'all';
+
+    const catMap = { 'news': 'חדשות', 'review': 'מבחני דרכים', 'luxury': 'רכב יוקרה', 'ev': 'רכב חשמלי' };
+
+    window.addEventListener('DOMContentLoaded', async () => {
+      await fetchBlogPosts();
+    });
+
+    async function fetchBlogPosts() {
+      try {
+        const { data, error } = await client.from('posts').select('*').order('created_at', { ascending: false });
+        if (error) throw error;
+        allPosts = data || [];
+        renderDashboard();
+      } catch (e) {
+        console.error("Error loading posts:", e);
+        document.getElementById('posts-grid').innerHTML = '<p style="grid-column:1/-1;text-align:center;color:var(--text-gray);">שגיאה בטעינת הכתבות. אנא רענן את העמוד.</p>';
+      }
+    }
+
+    function renderDashboard() {
+      const filtered = currentCategory === 'all' ? allPosts : allPosts.filter(p => p.category === catMap[currentCategory] || p.category === currentCategory);
+      const grid = document.getElementById('posts-grid');
+      const heroSection = document.getElementById('hero-section');
+      
+      if (!filtered || filtered.length === 0) {
+        grid.innerHTML = '<p style="grid-column:1/-1;text-align:center;color:var(--text-gray);padding:3rem 0;">אין עדיין כתבות בקטגוריה זו.</p>';
+        if(currentCategory === 'all') heroSection.style.display = 'none';
+        return;
+      }
+
+      if (currentCategory === 'all' && filtered.length >= 1) {
+        heroSection.style.display = 'grid';
+        const main = filtered[0];
+        const sideItems = filtered.slice(1, 4);
+
+        heroSection.innerHTML = `
+          <div class="hero-main" onclick="openArticle('${main.id}')">
+            <img src="${main.image || 'https://images.unsplash.com/photo-1503376780353-7e6692767b70?w=800'}" alt="${escapeHtml(main.title)}">
+            <div class="hero-overlay">
+              <span class="badge">${main.category || 'ראשי'}</span>
+              <h1>${escapeHtml(main.title)}</h1>
+              <p>${escapeHtml(main.subtitle || '')}</p>
+            </div>
+          </div>
+          <div class="hero-side-list">
+            ${sideItems.map(item => `
+              <div class="side-item" onclick="openArticle('${item.id}')">
+                <img src="${item.image || 'https://images.unsplash.com/photo-1503376780353-7e6692767b70?w=300'}" alt="${escapeHtml(item.title)}">
+                <div class="side-item-content">
+                  <span class="badge" style="padding:0.1rem 0.4rem;font-size:0.65rem;margin:0;">${item.category || 'רכב'}</span>
+                  <h3>${escapeHtml(item.title)}</h3>
+                </div>
+              </div>
+            `).join('')}
+          </div>
+        `;
+      } else {
+        heroSection.style.display = 'none';
+      }
+
+      const displayList = (currentCategory === 'all' && filtered.length > 4) ? filtered.slice(4) : filtered;
+      
+      grid.innerHTML = displayList.map(post => `
+        <div class="news-card" onclick="openArticle('${post.id}')">
+          <div class="card-img-wrap">
+            <img src="${post.image || 'https://images.unsplash.com/photo-1503376780353-7e6692767b70?w=500'}" alt="${escapeHtml(post.title)}" loading="lazy">
+          </div>
+          <div class="card-content">
+            <span class="badge" style="margin-bottom:0.5rem;">${post.category || 'כללי'}</span>
+            <h3>${escapeHtml(post.title)}</h3>
+            <p>${escapeHtml(post.subtitle || '')}</p>
+            <div class="card-footer">
+              <span>ספידומטר</span>
+              <span>${new Date(post.created_at).toLocaleDateString('he-IL')}</span>
+            </div>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function openArticle(id) {
+      const post = allPosts.find(p => p.id === id || String(p.id) === String(id));
+      if (!post) return;
+
+      const view = document.getElementById('article-page-content');
+      document.getElementById('main-page-content').style.display = 'none';
+      view.style.display = 'block';
+      window.scrollTo(0, 0);
+
+      view.innerHTML = `
+        <button class="back-btn" onclick="showMainPage()">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="transform:scaleX(-1);"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+          חזרה לכתבות
         </button>
-    </div>
-
-    <div id="dashboard-panel" class="dashboard-container">
-        <div class="dash-header">
-            <div class="dash-logo">ספידומטר<span>.</span> פאנל ניהול</div>
-            <div class="user-actions">
-                <button class="btn-outline" onclick="logout()"><i class="fa-solid fa-right-from-bracket"></i> התנתק</button>
-            </div>
+        <span class="badge">${post.category || 'רכב'}</span>
+        <h1>${escapeHtml(post.title)}</h1>
+        <div class="article-meta">
+          <span>פורסם בתאריך: ${new Date(post.created_at).toLocaleDateString('he-IL')}</span>
+          <span>·</span>
+          <span>מערכת ספידומטר</span>
         </div>
+        ${post.image ? `<img class="article-main-img" src="${post.image}" alt="${escapeHtml(post.title)}">` : ''}
+        <div class="article-body">${post.content}</div>
+      `;
+    }
 
-        <div class="dash-content">
-            <div class="dash-form">
-                <div class="panel-title">
-                    <i class="fa-solid fa-pen-to-square"></i>
-                    <span id="form-action-title">יצירת כתבה חדשה</span>
-                </div>
+    function showMainPage() {
+      document.getElementById('article-page-content').style.display = 'none';
+      document.getElementById('main-page-content').style.display = 'block';
+      window.scrollTo(0, 0);
+    }
 
-                <input type="hidden" id="edit-id" value="">
+    function filterCat(cat) {
+      currentCategory = cat;
+      const titles = { 'all': 'כל הכתבות והעדכונים', 'news': 'חדשות הרכב', 'review': 'מבחני דרכים', 'luxury': 'רכבי יוקרה', 'ev': 'רכב חשמלי חשמליות' };
+      document.getElementById('feed-title').textContent = titles[cat] || 'כתבות';
+      showMainPage();
+      renderDashboard();
+    }
 
-                <div class="input-group">
-                    <label>כותרת הכתבה</label>
-                    <input type="text" id="post-title" placeholder="לדוגמה: אאודי משיקה את ה-RS6 החשמלית החדשה">
-                </div>
+    function setNav(el) {
+      document.querySelectorAll('.nav-link').forEach(a => a.classList.remove('active'));
+      el.classList.add('active');
+    }
 
-                <div class="input-group">
-                    <label>תת כותרת / תיאור קצר</label>
-                    <textarea id="post-subtitle" placeholder="תיאור קצר שיקרא למשתמש להיכנס לכתבה..."></textarea>
-                </div>
+    function setBottomNav(el) {
+      document.querySelectorAll('.bottom-nav-item').forEach(b => b.classList.remove('active'));
+      el.classList.add('active');
+    }
 
-                <div class="input-group">
-                    <label>קטגוריה</label>
-                    <select id="post-category">
-                        <option value="חדשות">חדשות רכב</option>
-                        <option value="מבחני דרכים">מבחני דרכים</option>
-                        <option value="רכב חשמלי">רכב חשמלי</option>
-                        <option value="מגזין ודעות">מגזין ודעות</option>
-                    </select>
-                </div>
-
-                <div class="input-group">
-                    <label>קישור לתמונה (URL)</label>
-                    <input type="text" id="post-image" placeholder="הדבק קישור לתמונה רשת או Unsplash..." oninput="updateImagePreview(this.value)">
-                    <div id="image-preview" class="image-preview">תצוגה מקדימה של התמונה</div>
-                </div>
-
-                <div class="input-group">
-                    <label>תוכן הכתבה המלא (תומך ב-HTML פשוט)</label>
-                    <textarea id="post-content" style="min-height: 200px;" placeholder="כתוב כאן את כל הכתבה המלאה שלך..."></textarea>
-                </div>
-
-                <button class="btn" id="submit-btn" onclick="savePost()">
-                    <i class="fa-solid fa-floppy-disk"></i>
-                    <span id="submit-btn-text">פרסם כתבה באתר</span>
-                </button>
-            </div>
-
-            <div class="dash-list">
-                <div class="panel-title">
-                    <i class="fa-solid fa-list"></i>
-                    <span>כתבות קיימות באתר</span>
-                </div>
-                
-                <div class="articles-list-wrapper" id="articles-list">
-                    <div style="text-align:center; color:var(--text-muted); padding:40px;">טוען כתבות משרת המידע...</div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <script>
-        // חיבור ישיר ומאובטח ל-Supabase עבור GitHub Pages
-        const SUPABASE_URL = 'https://kaykrrnmykqrfhawgtqt.supabase.co';
-        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtheWtycm5teWtxcmZoYXdndHF0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkwMzQ2NjUsImV4cCI6MjA5NDYxMDY2NX0.F24w8eKDj4Q0i5Wm7hHtXW72xFJVgLNQvE5qhaRxnWM';
-        
-        let supabaseClient = null;
-
-        // אתחול קליינט רק אם המפתחות תקינים
-        if(SUPABASE_URL && SUPABASE_ANON_KEY) {
-            supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-        } else {
-            console.error("שגיאה: מפתחות החיבור ל-Supabase חסרים!");
-        }
-
-        // בדיקת אבטחה כניסה מקומית לפאנל
-        function checkAdminPwd() {
-            const pwd = document.getElementById('admin-pwd-input').value;
-            if(pwd === 'speed1010') {
-                showToast('התחברת בהצלחה!', 'success');
-                document.getElementById('login-panel').style.display = 'none';
-                document.getElementById('dashboard-panel').style.display = 'block';
-                loadPosts();
-            } else {
-                showToast('סיסמה שגויה, גישה נדחתה!', 'error');
-            }
-        }
-
-        function logout() {
-            document.getElementById('admin-pwd-input').value = '';
-            document.getElementById('dashboard-panel').style.display = 'none';
-            document.getElementById('login-panel').style.display = 'block';
-        }
-
-        // פונקציית תצוגה מקדימה לתמונה
-        function updateImagePreview(url) {
-            const preview = document.getElementById('image-preview');
-            if(url && url.startsWith('http')) {
-                preview.style.backgroundImage = `url('${url}')`;
-                preview.textContent = '';
-            } else {
-                preview.style.backgroundImage = 'none';
-                preview.textContent = 'תצוגה מקדימה של התמונה';
-            }
-        }
-
-        // טעינת רשימת הכתבות
-        async function loadPosts() {
-            if(!supabaseClient) return;
-            const container = document.getElementById('articles-list');
-            
-            try {
-                const { data, error } = await supabaseClient
-                    .from('posts')
-                    .select('*')
-                    .order('created_at', { ascending: false });
-
-                if(error) throw error;
-
-                if(!data || data.length === 0) {
-                    container.innerHTML = '<div style="text-align:center; color:var(--text-muted); padding:40px;">לא נמצאו עדיין כתבות במערכת.</div>';
-                    return;
-                }
-
-                container.innerHTML = data.map(post => `
-                    <div class="article-card">
-                        <div class="article-info">
-                            <h4>${escapeHtml(post.title)}</h4>
-                            <span>${post.category || 'כללי'}</span>
-                        </div>
-                        <div class="article-actions">
-                            <button class="btn-icon" onclick="editPost('${post.id}')" title="ערוך כתבה"><i class="fa-solid fa-pen"></i></button>
-                            <button class="btn-icon delete" onclick="deletePost('${post.id}')" title="מחק כתבה"><i class="fa-solid fa-trash"></i></button>
-                        </div>
-                    </div>
-                `).join('');
-
-            } catch(err) {
-                console.error(err);
-                container.innerHTML = '<div style="text-align:center; color:#ff0033; padding:40px;">שגיאה בטעינת הנתונים מ-Supabase.</div>';
-            }
-        }
-
-        // שמירה או עדכון כתבה
-        async function savePost() {
-            if(!supabaseClient) return;
-
-            const id = document.getElementById('edit-id').value;
-            const title = document.getElementById('post-title').value.trim();
-            const subtitle = document.getElementById('post-subtitle').value.trim();
-            const category = document.getElementById('post-category').value;
-            const image = document.getElementById('post-image').value.trim();
-            const content = document.getElementById('post-content').value.trim();
-
-            if(!title || !content) {
-                showToast('חובה למלא כותרת ותוכן מלא לכתבה!', 'error');
-                return;
-            }
-
-            const postData = { title, subtitle, category, image, content };
-
-            try {
-                if(id) {
-                    // Update
-                    const { error } = await supabaseClient.from('posts').update(postData).eq('id', id);
-                    if(error) throw error;
-                    showToast('הכתבה עודכנה בהצלחה באתר!', 'success');
-                } else {
-                    // Insert
-                    const { error } = await supabaseClient.from('posts').insert([postData]);
-                    if(error) throw error;
-                    showToast('הכתבה פורסמה בהצלחה באתר!', 'success');
-                }
-
-                resetForm();
-                loadPosts();
-            } catch(err) {
-                console.error(err);
-                showToast('שגיאה בשמירת הכתבה בבסיס הנתונים.', 'error');
-            }
-        }
-
-        // טעינת נתוני כתבה לתוך הטופס לצורך עריכה
-        async function editPost(id) {
-            try {
-                const { data, error } = await supabaseClient.from('posts').select('*').eq('id', id).single();
-                if(error) throw error;
-
-                document.getElementById('edit-id').value = data.id;
-                document.getElementById('post-title').value = data.title;
-                document.getElementById('post-subtitle').value = data.subtitle || '';
-                document.getElementById('post-category').value = data.category || 'חדשות';
-                document.getElementById('post-image').value = data.image || '';
-                document.getElementById('post-content').value = data.content;
-
-                updateImagePreview(data.image);
-
-                document.getElementById('form-action-title').textContent = 'עריכת כתבה קיימת';
-                document.getElementById('submit-btn-text').textContent = 'שמור שינויים בכתבה';
-                showToast('נתוני הכתבה נטענו לעריכה', 'success');
-            } catch(err) {
-                console.error(err);
-                showToast('שגיאה במשיכת נתוני הכתבה המבוקשת.', 'error');
-            }
-        }
-
-        // מחיקת כתבה
-        async function deletePost(id) {
-            if(!confirm('האם אתה בטוח שברצונך למחוק לצמיתות כתבה זו מהאתר?')) return;
-
-            try {
-                const { error } = await supabaseClient.from('posts').delete().eq('id', id);
-                if(error) throw error;
-
-                showToast('הכתבה נמחקה בהצלחה מהשרת', 'success');
-                if(document.getElementById('edit-id').value === id) {
-                    resetForm();
-                }
-                loadPosts();
-            } catch(err) {
-                console.error(err);
-                showToast('שגיאה בביצוע המחיקה מול השרת.', 'error');
-            }
-        }
-
-        function resetForm() {
-            document.getElementById('edit-id').value = '';
-            document.getElementById('post-title').value = '';
-            document.getElementById('post-subtitle').value = '';
-            document.getElementById('post-image').value = '';
-            document.getElementById('post-content').value = '';
-            updateImagePreview('');
-            document.getElementById('form-action-title').textContent = 'יצירת כתבה חדשה';
-            document.getElementById('submit-btn-text').textContent = 'פרסם כתבה באתר';
-        }
-
-        // הלפר קטן למניעת הזרקות קוד ברשימה
-        function escapeHtml(text) {
-            if(!text) return '';
-            return text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
-        }
-
-        // מערכת נוטיפיקציות צפות
-        function showToast(msg, type = 'info') {
-            const toast = document.getElementById('toast');
-            const icon = toast.querySelector('i');
-            const text = document.getElementById('toast-message');
-
-            text.textContent = msg;
-            toast.className = 'toast'; // reset
-            
-            if(type === 'success') {
-                toast.classList.add('success');
-                icon.className = 'fa-solid fa-circle-check';
-            } else if(type === 'error') {
-                toast.classList.add('error');
-                icon.className = 'fa-solid fa-circle-exclamation';
-                toast.style.borderLeftColor = 'var(--primary)';
-                icon.style.color = 'var(--primary)';
-            } else {
-                icon.className = 'fa-solid fa-circle-info';
-            }
-
-            toast.classList.add('show');
-            setTimeout(() => {
-                toast.classList.remove('show');
-            }, 3500);
-        }
-    </script>
+    function escapeHtml(str) {
+      if (!str) return '';
+      return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
+    }
+  </script>
 </body>
 </html>
