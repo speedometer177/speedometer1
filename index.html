@@ -2828,14 +2828,11 @@ body.dark-mode .bottom-nav {
   .section { padding: 0 12px; }
   .hero { padding: 0 12px; }
   .header-inner { padding: 0 12px; }
-  /* Hero grid mobile */
-  .hero-grid { display: none; }
-  .hero-banner-wrap { display: block; }
-}
-@media (min-width: 681px) {
+  /* Hero grid mobile — show original */
+  .hero-grid { display: grid; }
   .hero-banner-wrap { display: none; }
-  .hero-grid-wrap { display: block; }
 }
+/* hero-grid shown on all screens */
 </style>
 </head>
 <body>
