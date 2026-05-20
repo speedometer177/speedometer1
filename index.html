@@ -651,10 +651,11 @@ nav { display: flex; align-items: center; gap: 2px; flex: 1; justify-content: ce
 }
 .breaking-track {
   display: flex;
-  animation: breakingScroll 35s linear infinite;
+  animation: breakingScroll 28s linear infinite;
+  will-change: transform;
   white-space: nowrap;
 }
-@media (min-width: 681px) { .breaking-track:hover { animation-play-state: paused; } }
+/* ticker never pauses */
 .breaking-item {
   font-size: 0.84rem;
   color: rgba(255,255,255,0.85);
@@ -3393,7 +3394,7 @@ body.dark-mode .bottom-nav {
         </div>
         <div class="form-row">
           <div class="form-group">
-            <label for="a-img">תמונה ראשית</label>
+            <label for="a-img">תמונה ראשית — קישור URL</label>
             <div style="display:flex;flex-direction:column;gap:8px;">
               <label for="a-img-file" style="display:flex;align-items:center;gap:8px;padding:10px 14px;border:1.5px dashed var(--border);border-radius:8px;cursor:pointer;font-size:0.82rem;color:var(--mid);background:var(--bg);transition:border-color 0.2s;" onmouseover="this.style.borderColor='var(--red)'" onmouseout="this.style.borderColor='var(--border)'">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
@@ -3431,6 +3432,42 @@ body.dark-mode .bottom-nav {
             <label for="a-score">דירוג (למבחני רכב, 1-10)</label>
             <input type="text" id="a-score" placeholder="8.5">
           </div>
+          <div class="form-group">
+            <label for="a-read-time">זמן קריאה (התאמה ידנית)</label>
+            <input type="text" id="a-read-time" placeholder="למשל: 5 דק׳ קריאה">
+            <span class="form-hint">השאר ריק לחישוב אוטומטי לפי אורך הטקסט</span>
+          </div>
+        </div>
+        <!-- 5 BODY IMAGES WITH CAPTIONS -->
+        <div class="form-row full">
+          <div class="form-group">
+            <label>תמונות לגוף הכתבה (עד 5) — קישורי URL</label>
+            <div style="display:flex;flex-direction:column;gap:10px;">
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;align-items:center;">
+                <input type="url" id="body-img-1" placeholder="קישור תמונה 1...">
+                <input type="text" id="body-img-cap-1" placeholder="כיתוב תמונה 1...">
+              </div>
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;align-items:center;">
+                <input type="url" id="body-img-2" placeholder="קישור תמונה 2...">
+                <input type="text" id="body-img-cap-2" placeholder="כיתוב תמונה 2...">
+              </div>
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;align-items:center;">
+                <input type="url" id="body-img-3" placeholder="קישור תמונה 3...">
+                <input type="text" id="body-img-cap-3" placeholder="כיתוב תמונה 3...">
+              </div>
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;align-items:center;">
+                <input type="url" id="body-img-4" placeholder="קישור תמונה 4...">
+                <input type="text" id="body-img-cap-4" placeholder="כיתוב תמונה 4...">
+              </div>
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;align-items:center;">
+                <input type="url" id="body-img-5" placeholder="קישור תמונה 5...">
+                <input type="text" id="body-img-cap-5" placeholder="כיתוב תמונה 5...">
+              </div>
+            </div>
+            <span class="form-hint">התמונות יוצגו בגוף הכתבה לפי הסדר, עם כיתוב מתחת לכל תמונה</span>
+          </div>
+        </div>
+        <div class="form-row">
           <div class="form-group">
             <label for="a-tag">תג מיוחד (אופציונלי)</label>
             <select id="a-tag">
@@ -3664,7 +3701,7 @@ function syncFromSupabase() {
         readTime: r.read_time||'', img: r.img||'', imgCaption: r.img_caption||'',
         body: r.body||'', score: r.score||null, views: r.views||0,
         featured: r.featured||false, specs: r.specs||null, gallery: r.gallery||null,
-        galleryCaptions: r.gallery_captions||null
+        galleryCaptions: r.gallery_captions||null, bodyImages: r.body_images||null
       }; });
       articles = sbArticles;
       nextId = Math.max.apply(null, articles.map(function(a){return a.id;})) + 1;
@@ -3687,7 +3724,7 @@ async function pushToSupabase(articleData) {
       author: articleData.author, date: articleData.date, read_time: articleData.readTime,
       img: articleData.img, img_caption: articleData.imgCaption, body: articleData.body,
       score: articleData.score, views: articleData.views||0, featured: articleData.featured||false,
-      specs: articleData.specs||null, gallery: articleData.gallery||null
+      specs: articleData.specs||null, gallery: articleData.gallery||null, body_images: articleData.bodyImages||null
     };
     if (articleData._sbId) {
       await sbClient.from('articles').update(row).eq('id', articleData._sbId);
@@ -3951,7 +3988,7 @@ function openArticle(id) {
     setTimeout(()=>document.querySelectorAll('.score-bar-fill').forEach(b=>{b.style.width=b.dataset.pct+'%';}),150);
   } else { specWrap.innerHTML=''; specWrap.style.display='none'; }
 
-  document.getElementById('art-body').innerHTML = parseBody(a.body||'');
+  document.getElementById('art-body').innerHTML = parseBody(a.body||'', a.bodyImages||[]);
 
   const related = articles.filter(x=>x.id!==id&&x.cat===a.cat).sort((x,y)=>(y.views||0)-(x.views||0)).slice(0,3);
   const fallback = articles.filter(x=>x.id!==id).sort((x,y)=>(y.views||0)-(x.views||0)).slice(0,3);
@@ -4021,14 +4058,32 @@ function buildSpecCard(specs) {
 }
 
 // ── PARSE BODY ──
-function parseBody(text) {
-  return text.split('\n').map(line => {
-    if (line.startsWith('## ')) return `<h2>${line.slice(3)}</h2>`;
-    if (line.startsWith('### ')) return `<h3>${line.slice(4)}</h3>`;
-    if (line.startsWith('> ')) return `<blockquote>${line.slice(2)}</blockquote>`;
-    if (!line.trim()) return '';
-    return `<p>${line.replace(/\*\*(.*?)\*\*/g,'<strong>$1</strong>')}</p>`;
-  }).filter(Boolean).join('');
+function parseBody(text, bodyImages) {
+  const lines = text.split('\n');
+  const parts = [];
+  let imgIdx = 0;
+  const imgs = bodyImages || [];
+  for (const line of lines) {
+    if (line.startsWith('## ')) { parts.push(`<h2>${line.slice(3)}</h2>`); }
+    else if (line.startsWith('### ')) { parts.push(`<h3>${line.slice(4)}</h3>`); }
+    else if (line.startsWith('> ')) { parts.push(`<blockquote>${line.slice(2)}</blockquote>`); }
+    else if (!line.trim()) {
+      // Insert next body image after every empty line if available
+      if (imgIdx < imgs.length && imgs[imgIdx] && imgs[imgIdx].src) {
+        parts.push(`<figure style="margin:24px 0;"><img src="${imgs[imgIdx].src}" alt="${imgs[imgIdx].cap||''}" loading="lazy" style="width:100%;border-radius:6px;cursor:zoom-in;" onclick="openLightbox('${imgs[imgIdx].src}')">${imgs[imgIdx].cap?`<figcaption style="font-size:0.75rem;color:var(--muted);text-align:center;margin-top:6px;">${imgs[imgIdx].cap}</figcaption>`:''}</figure>`);
+        imgIdx++;
+      }
+    }
+    else { parts.push(`<p>${line.replace(/\*\*(.*?)\*\*/g,'<strong>$1</strong>')}</p>`); }
+  }
+  // Append remaining images at end
+  while (imgIdx < imgs.length) {
+    if (imgs[imgIdx] && imgs[imgIdx].src) {
+      parts.push(`<figure style="margin:24px 0;"><img src="${imgs[imgIdx].src}" alt="${imgs[imgIdx].cap||''}" loading="lazy" style="width:100%;border-radius:6px;cursor:zoom-in;" onclick="openLightbox('${imgs[imgIdx].src}')">${imgs[imgIdx].cap?`<figcaption style="font-size:0.75rem;color:var(--muted);text-align:center;margin-top:6px;">${imgs[imgIdx].cap}</figcaption>`:''}</figure>`);
+    }
+    imgIdx++;
+  }
+  return parts.filter(Boolean).join('');
 }
 
 // ── SHARE ──
@@ -4155,7 +4210,12 @@ async function publishArticle() {
     imgCaption:(document.getElementById('a-img-cap').value||'').trim(),
     gallery: galleryImages.length > 0 ? galleryImages.map(g=>g.src) : null,
     galleryCaptions: galleryImages.length > 0 ? galleryImages.map(g=>g.caption||'') : null,
+    bodyImages: [1,2,3,4,5].map(i=>({
+      src:(document.getElementById('body-img-'+i)?.value||'').trim(),
+      cap:(document.getElementById('body-img-cap-'+i)?.value||'').trim()
+    })).filter(x=>x.src),
     body, score:(document.getElementById('a-score').value||'').trim()||null,
+    readTime:(document.getElementById('a-read-time')?.value||'').trim() || (Math.max(1,Math.ceil(body.split(/\s+/).length/200))+' דק׳ קריאה'),
     views: editId?(articles.find(a=>a.id===parseInt(editId))?.views||0):0,
     featured:false
   };
@@ -4174,7 +4234,13 @@ function editArticle(id) {
   document.getElementById('a-title').value=a.title; document.getElementById('a-title').dataset.editId=id;
   document.getElementById('a-sub').value=a.sub||''; document.getElementById('a-cat').value=a.cat;
   document.getElementById('a-author').value=a.author; document.getElementById('a-img').value=a.img||'';
-  document.getElementById('a-img-cap').value=a.imgCaption||''; document.getElementById('a-score').value=a.score||'';
+  document.getElementById('a-img-cap').value=a.imgCaption||'';
+  document.getElementById('a-score').value=a.score||'';
+  const rtEl=document.getElementById('a-read-time'); if(rtEl) rtEl.value=a.readTime||'';
+  if(a.bodyImages) a.bodyImages.forEach((img,i)=>{
+    const si=document.getElementById('body-img-'+(i+1)); if(si) si.value=img.src||'';
+    const ci=document.getElementById('body-img-cap-'+(i+1)); if(ci) ci.value=img.cap||'';
+  });
   document.getElementById('a-body').value=a.body||'';
   window.scrollTo({top:0});
 }
@@ -4187,7 +4253,7 @@ async function deleteArticle(id) {
 }
 function viewArticle(id) { showHome(); openArticle(id); }
 function clearForm() {
-  ['a-title','a-sub','a-author','a-img','a-img-cap','a-score','a-body'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+  ['a-title','a-sub','a-author','a-img','a-img-cap','a-score','a-body','a-read-time','body-img-1','body-img-cap-1','body-img-2','body-img-cap-2','body-img-3','body-img-cap-3','body-img-4','body-img-cap-4','body-img-5','body-img-cap-5'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
   delete document.getElementById('a-title').dataset.editId;
   document.getElementById('a-cat').value='local';
   galleryImages = [];
@@ -4290,6 +4356,18 @@ function toggleDark() {
 
 // ── ADMIN LOGIN ──
 document.addEventListener('keydown',e=>{ if(e.ctrlKey&&e.shiftKey&&e.key==='A'){e.preventDefault();openAdminLogin();} if(e.key==='Escape'){ closeAdminLogin(); document.getElementById('access-overlay').classList.remove('open'); } });
+
+// ── REALTIME SYNC ──
+function setupRealtimeSync() {
+  if (!sbClient) return;
+  try {
+    sbClient.channel('articles-changes')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'articles' }, () => {
+        syncFromSupabase();
+      })
+      .subscribe();
+  } catch(e) {}
+}
 
 // ── BROWSER BACK BUTTON ──
 window.addEventListener('popstate', function(e) {
@@ -4584,6 +4662,10 @@ async function handleImageUpload(input) {
 
   // Then sync from Supabase in background
   setTimeout(syncFromSupabase, 800);
+  // Auto-sync every 30 seconds for real-time feel
+  setInterval(syncFromSupabase, 30000);
+  // Supabase Realtime subscription
+  setTimeout(setupRealtimeSync, 2000);
 
   // First-time push: if Supabase is empty, push all local articles
   setTimeout(async () => {
