@@ -3694,17 +3694,37 @@ function syncFromSupabase() {
   sbClient.from('articles').select('*').order('created_at', {ascending:false})
     .then(function(res) {
       var data = res.data, error = res.error;
-      if (error || !data || data.length === 0) return;
-      var sbArticles = data.map(function(r) { return {
-        id: r.id, title: r.title||'', sub: r.sub||'', cat: r.cat||'local',
-        author: r.author||'מערכת ספידומטר', date: r.date||'',
-        readTime: r.read_time||'', img: r.img||'', imgCaption: r.img_caption||'',
-        body: r.body||'', score: r.score||null, views: r.views||0,
-        featured: r.featured||false, specs: r.specs||null, gallery: r.gallery||null,
-        galleryCaptions: r.gallery_captions||null, bodyImages: r.body_images||null
-      }; });
+      if (error) { console.log('Supabase error:', error); return; }
+      if (!data || data.length === 0) {
+        // Supabase empty — push defaults
+        DEFAULT_ARTICLES.forEach(function(a){ pushToSupabase(a); });
+        return;
+      }
+      var sbArticles = data.map(function(r) {
+        // Find matching default for fallback image
+        var def = DEFAULT_ARTICLES.find(function(d){ return d.title === r.title; });
+        return {
+          id: r.id,
+          title: r.title||'',
+          sub: r.sub||'',
+          cat: r.cat||'local',
+          author: r.author||'מערכת ספידומטר',
+          date: r.date||'',
+          readTime: r.read_time||'',
+          img: r.img || (def ? def.img : '') || CAT_IMAGES[r.cat||'local'],
+          imgCaption: r.img_caption||'',
+          body: r.body||'',
+          score: r.score||null,
+          views: r.views||0,
+          featured: r.featured||false,
+          specs: r.specs||null,
+          gallery: r.gallery||null,
+          galleryCaptions: r.gallery_captions||null,
+          bodyImages: r.body_images||null
+        };
+      });
       articles = sbArticles;
-      nextId = Math.max.apply(null, articles.map(function(a){return a.id;})) + 1;
+      nextId = Math.max.apply(null, articles.map(function(a){return a.id||0;})) + 1;
       saveLocal();
       buildHero();
       buildSections();
@@ -4645,8 +4665,13 @@ async function handleImageUpload(input) {
   // Always show something immediately
   const local = loadLocal();
   if (local && local.length > 0) {
-    articles = local;
-    nextId = Math.max(...articles.map(a=>a.id)) + 1;
+    // Ensure images always have fallback
+    articles = local.map(function(a) {
+      return Object.assign({}, a, {
+        img: a.img || CAT_IMAGES[a.cat] || CAT_IMAGES['local']
+      });
+    });
+    nextId = Math.max.apply(null, articles.map(function(a){return a.id||0;})) + 1;
   } else {
     articles = DEFAULT_ARTICLES.slice();
     saveLocal();
