@@ -1070,7 +1070,7 @@ nav { display: flex; align-items: center; gap: 2px; flex: 1; justify-content: ce
   animation: tickerScroll 28s linear infinite;
   white-space: nowrap;
 }
-.ticker-track:hover { animation-play-state: paused; }
+/* ticker never pauses */
 .ticker-item {
   font-size: 0.78rem;
   color: rgba(255,255,255,0.75);
@@ -2836,6 +2836,17 @@ body.dark-mode .bottom-nav {
   .hero-banner-wrap { display: none; }
 }
 /* hero-grid shown on all screens */
+
+/* ════ MOBILE TOUCH IMPROVEMENTS ════ */
+@media (max-width: 680px) {
+  .card, .hero-main, .hero-side-card, .latest-item, .bottom-nav-item {
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+  }
+  .bottom-nav-item { min-height: 44px; }
+  .cat-tag { min-height: 44px; display: flex; align-items: center; }
+  .breaking-item { user-select: none; }
+}
 </style>
 </head>
 <body>
@@ -3375,7 +3386,7 @@ body.dark-mode .bottom-nav {
         <div class="form-row">
           <div class="form-group">
             <label for="a-cat">קטגוריה *</label>
-            <select id="a-cat">
+            <select id="a-cat" onchange="toggleSpecsSection(this.value)">
               <option value="local">חדשות מקומיות</option>
               <option value="world">חדשות עולמיות</option>
               <option value="review">מבחן רכב</option>
@@ -3429,13 +3440,81 @@ body.dark-mode .bottom-nav {
         </div>
         <div class="form-row">
           <div class="form-group">
-            <label for="a-score">דירוג (למבחני רכב, 1-10)</label>
+            <label for="a-score">דירוג כולל (1-10)</label>
             <input type="text" id="a-score" placeholder="8.5">
           </div>
           <div class="form-group">
             <label for="a-read-time">זמן קריאה (התאמה ידנית)</label>
             <input type="text" id="a-read-time" placeholder="למשל: 5 דק׳ קריאה">
             <span class="form-hint">השאר ריק לחישוב אוטומטי לפי אורך הטקסט</span>
+          </div>
+        </div>
+        <!-- SPECS SECTION — for review articles -->
+        <div class="form-row full" id="specs-section" style="display:none;">
+          <div class="form-group">
+            <div style="background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:18px;">
+              <div style="font-size:0.88rem;font-weight:700;margin-bottom:14px;color:var(--black);display:flex;align-items:center;gap:8px;">
+                <span style="display:block;width:3px;height:16px;background:var(--red);border-radius:2px;"></span>
+                תעודת זהות טכנית
+              </div>
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+                <div class="form-group">
+                  <label for="spec-engine">סוג מנוע</label>
+                  <select id="spec-engine" onchange="toggleRangeField(this.value)">
+                    <option value="בנזין">בנזין</option>
+                    <option value="דיזל">דיזל</option>
+                    <option value="היברידי">היברידי</option>
+                    <option value="חשמלי">חשמלי</option>
+                    <option value="PHEV">PHEV</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label for="spec-power">כוחות סוס</label>
+                  <input type="text" id="spec-power" placeholder="למשל: 300">
+                </div>
+                <div class="form-group">
+                  <label for="spec-torque">מומנט (נ"מ)</label>
+                  <input type="text" id="spec-torque" placeholder="למשל: 450">
+                </div>
+                <div class="form-group">
+                  <label for="spec-zero">0-100 (שניות)</label>
+                  <input type="text" id="spec-zero" placeholder="למשל: 4.5">
+                </div>
+                <div class="form-group" id="spec-range-group">
+                  <label for="spec-range">טווח (ק"מ) — חשמלי בלבד</label>
+                  <input type="text" id="spec-range" placeholder="למשל: 500">
+                </div>
+                <div class="form-group">
+                  <label for="spec-price">מחיר (₪)</label>
+                  <input type="text" id="spec-price" placeholder="למשל: 250,000">
+                </div>
+              </div>
+              <div style="margin-top:14px;border-top:1px solid var(--border);padding-top:14px;">
+                <div style="font-size:0.78rem;font-weight:600;color:var(--dark);margin-bottom:10px;">ציוני קטגוריה (1-10)</div>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+                  <div class="form-group">
+                    <label for="score-driving">נסיעה</label>
+                    <input type="number" id="score-driving" min="1" max="10" step="0.1" placeholder="9.0">
+                  </div>
+                  <div class="form-group">
+                    <label for="score-design">עיצוב</label>
+                    <input type="number" id="score-design" min="1" max="10" step="0.1" placeholder="8.5">
+                  </div>
+                  <div class="form-group">
+                    <label for="score-tech">טכנולוגיה</label>
+                    <input type="number" id="score-tech" min="1" max="10" step="0.1" placeholder="9.0">
+                  </div>
+                  <div class="form-group">
+                    <label for="score-comfort">נוחות</label>
+                    <input type="number" id="score-comfort" min="1" max="10" step="0.1" placeholder="8.0">
+                  </div>
+                  <div class="form-group">
+                    <label for="score-value">ערך</label>
+                    <input type="number" id="score-value" min="1" max="10" step="0.1" placeholder="7.5">
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
         <!-- 5 BODY IMAGES WITH CAPTIONS -->
@@ -4271,7 +4350,24 @@ async function publishArticle() {
     body, score:(document.getElementById('a-score').value||'').trim()||null,
     readTime:(document.getElementById('a-read-time')?.value||'').trim() || (Math.max(1,Math.ceil(body.split(/\s+/).length/200))+' דק׳ קריאה'),
     views: editId?(articles.find(a=>a.id===parseInt(editId))?.views||0):0,
-    featured:false
+    featured:false,
+    specs: (document.getElementById('a-cat').value === 'review') ? (() => {
+      const p = document.getElementById('spec-power')?.value?.trim();
+      const t = document.getElementById('spec-torque')?.value?.trim();
+      const z = document.getElementById('spec-zero')?.value?.trim();
+      const r = document.getElementById('spec-range')?.value?.trim();
+      const pr = document.getElementById('spec-price')?.value?.trim();
+      const eng = document.getElementById('spec-engine')?.value;
+      const cats = [
+        {name:'נסיעה', score: parseFloat(document.getElementById('score-driving')?.value)||0},
+        {name:'עיצוב', score: parseFloat(document.getElementById('score-design')?.value)||0},
+        {name:'טכנולוגיה', score: parseFloat(document.getElementById('score-tech')?.value)||0},
+        {name:'נוחות', score: parseFloat(document.getElementById('score-comfort')?.value)||0},
+        {name:'ערך', score: parseFloat(document.getElementById('score-value')?.value)||0},
+      ].filter(x => x.score > 0);
+      if (!p && !t && !z) return null;
+      return { engine: eng, power: p, torque: t, zeroToHundred: z, range: r||null, price: pr, cats };
+    })() : null
   };
   if (editId) { const idx=articles.findIndex(a=>a.id===parseInt(editId)); if(idx>-1) articles[idx]=data; delete document.getElementById('a-title').dataset.editId; }
   else articles.unshift(data);
@@ -4296,6 +4392,22 @@ function editArticle(id) {
     const ci=document.getElementById('body-img-cap-'+(i+1)); if(ci) ci.value=img.cap||'';
   });
   document.getElementById('a-body').value=a.body||'';
+  // Load specs if review
+  toggleSpecsSection(a.cat);
+  if (a.cat === 'review' && a.specs) {
+    const s = a.specs;
+    if(document.getElementById('spec-engine')) document.getElementById('spec-engine').value = s.engine||'בנזין';
+    if(document.getElementById('spec-power')) document.getElementById('spec-power').value = s.power||'';
+    if(document.getElementById('spec-torque')) document.getElementById('spec-torque').value = s.torque||'';
+    if(document.getElementById('spec-zero')) document.getElementById('spec-zero').value = s.zeroToHundred||'';
+    if(document.getElementById('spec-range')) document.getElementById('spec-range').value = s.range||'';
+    if(document.getElementById('spec-price')) document.getElementById('spec-price').value = s.price||'';
+    if (s.cats) {
+      const map = {נסיעה:'score-driving',עיצוב:'score-design',טכנולוגיה:'score-tech',נוחות:'score-comfort',ערך:'score-value'};
+      s.cats.forEach(ct => { const el=document.getElementById(map[ct.name]); if(el) el.value=ct.score; });
+    }
+    toggleRangeField(s.engine||'בנזין');
+  }
   window.scrollTo({top:0});
 }
 async function deleteArticle(id) {
@@ -4307,7 +4419,8 @@ async function deleteArticle(id) {
 }
 function viewArticle(id) { showHome(); openArticle(id); }
 function clearForm() {
-  ['a-title','a-sub','a-author','a-img','a-img-cap','a-score','a-body','a-read-time','body-img-1','body-img-cap-1','body-img-2','body-img-cap-2','body-img-3','body-img-cap-3','body-img-4','body-img-cap-4','body-img-5','body-img-cap-5'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+  ['a-title','a-sub','a-author','a-img','a-img-cap','a-score','a-body','a-read-time','body-img-1','body-img-cap-1','body-img-2','body-img-cap-2','body-img-3','body-img-cap-3','body-img-4','body-img-cap-4','body-img-5','body-img-cap-5','spec-power','spec-torque','spec-zero','spec-range','spec-price','score-driving','score-design','score-tech','score-comfort','score-value'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+  const specSec=document.getElementById('specs-section'); if(specSec) specSec.style.display='none';
   delete document.getElementById('a-title').dataset.editId;
   document.getElementById('a-cat').value='local';
   galleryImages = [];
@@ -4407,6 +4520,20 @@ function toggleDark() {
   if (accBtn) accBtn.textContent = isDark ? 'כבה' : 'הפעל';
   try { localStorage.setItem('sp_dark', isDark); } catch(e) {}
 }
+
+// ── SPECS SECTION TOGGLE ──
+function toggleSpecsSection(cat) {
+  const sec = document.getElementById('specs-section');
+  if (sec) sec.style.display = (cat === 'review') ? 'block' : 'none';
+  // Show/hide range field for electric only
+  const engineEl = document.getElementById('spec-engine');
+  if (engineEl) toggleRangeField(engineEl.value);
+}
+function toggleRangeField(engine) {
+  const rg = document.getElementById('spec-range-group');
+  if (rg) rg.style.display = (engine === 'חשמלי' || engine === 'PHEV') ? 'block' : 'none';
+}
+// Add onchange to engine select (done via HTML attr below)
 
 // ── ADMIN LOGIN ──
 document.addEventListener('keydown',e=>{ if(e.ctrlKey&&e.shiftKey&&e.key==='A'){e.preventDefault();openAdminLogin();} if(e.key==='Escape'){ closeAdminLogin(); document.getElementById('access-overlay').classList.remove('open'); } });
@@ -4714,6 +4841,13 @@ async function handleImageUpload(input) {
   showHome();
   handleMobileHero();
 
+  // Restore current page from URL hash
+  const initHash = window.location.hash;
+  if (initHash.startsWith('#article-')) {
+    const initId = parseInt(initHash.replace('#article-', ''));
+    if (initId) setTimeout(() => openArticle(initId), 900); // after sync
+  }
+
   // Then sync from Supabase in background
   setTimeout(syncFromSupabase, 800);
   // Auto-sync every 30 seconds for real-time feel
@@ -4799,8 +4933,14 @@ function moveHeroBanner(dir) {
   const n = heroBannerArticles.length; if (!n) return;
   heroBannerIdx = (heroBannerIdx + dir + n) % n;
   const t = document.getElementById('hbt');
-  if (t) t.style.transform = 'translateX(' + (heroBannerIdx * 100) + '%)';
+  if (t) {
+    t.style.transition = 'transform 0.5s cubic-bezier(0.25,0.46,0.45,0.94)';
+    t.style.transform = 'translateX(' + (heroBannerIdx * 100) + '%)';
+  }
   document.querySelectorAll('.hero-banner-dot').forEach((d,i) => d.classList.toggle('active', i===heroBannerIdx));
+  // Reset auto-timer
+  clearInterval(heroBannerTimer);
+  heroBannerTimer = setInterval(() => moveHeroBanner(1), 4500);
 }
 function goHeroBanner(idx) {
   heroBannerIdx = idx;
