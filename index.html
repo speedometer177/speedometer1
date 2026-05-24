@@ -2839,11 +2839,6 @@ body.dark-mode .bottom-nav {
   /* Hero grid mobile — show original */
   .hero-grid { display: grid; }
   .hero-banner-wrap { display: none; }
-  /* Pros/Cons stacked on mobile */
-  #art-pros-cons > div { grid-template-columns: 1fr !important; }
-  /* Body img upload grid */
-  #body-imgs-list > div { grid-template-columns: auto 1fr !important; }
-  #body-imgs-list > div input:last-child { display: none; }
 }
 /* hero-grid shown on all screens */
 
@@ -3504,8 +3499,8 @@ body.reading-mode .reading-mode-btn { background: var(--ink); color: #fff; borde
         </div>
         <div class="form-row">
           <div class="form-group">
-            <label for="a-cat">קטגוריה ראשית *</label>
-            <select id="a-cat" onchange="toggleSpecsSection(this.value);syncCatCheckboxes(this.value)">
+            <label for="a-cat">קטגוריה *</label>
+            <select id="a-cat" onchange="toggleSpecsSection(this.value)">
               <option value="local">חדשות מקומיות</option>
               <option value="world">חדשות עולמיות</option>
               <option value="review">מבחן רכב</option>
@@ -3520,36 +3515,6 @@ body.reading-mode .reading-mode-btn { background: var(--ink); color: #fff; borde
           <div class="form-group">
             <label for="a-author">שם הכותב</label>
             <input type="text" id="a-author" placeholder="שם הכתב / המערכת">
-          </div>
-        </div>
-        <!-- MULTI-CATEGORY -->
-        <div class="form-row full">
-          <div class="form-group">
-            <label>קטגוריות נוספות (אופציונלי)</label>
-            <div style="display:flex;flex-wrap:wrap;gap:8px;padding:10px;background:var(--bg);border:1px solid var(--border);border-radius:8px;">
-              <label style="display:flex;align-items:center;gap:5px;font-size:0.82rem;cursor:pointer;"><input type="checkbox" class="extra-cat-cb" value="local"> חדשות מקומיות</label>
-              <label style="display:flex;align-items:center;gap:5px;font-size:0.82rem;cursor:pointer;"><input type="checkbox" class="extra-cat-cb" value="world"> עולמי</label>
-              <label style="display:flex;align-items:center;gap:5px;font-size:0.82rem;cursor:pointer;"><input type="checkbox" class="extra-cat-cb" value="review"> מבחן רכב</label>
-              <label style="display:flex;align-items:center;gap:5px;font-size:0.82rem;cursor:pointer;"><input type="checkbox" class="extra-cat-cb" value="electric"> חשמלי</label>
-              <label style="display:flex;align-items:center;gap:5px;font-size:0.82rem;cursor:pointer;"><input type="checkbox" class="extra-cat-cb" value="tech"> טכנולוגיה</label>
-              <label style="display:flex;align-items:center;gap:5px;font-size:0.82rem;cursor:pointer;"><input type="checkbox" class="extra-cat-cb" value="buying"> קניית רכב</label>
-              <label style="display:flex;align-items:center;gap:5px;font-size:0.82rem;cursor:pointer;"><input type="checkbox" class="extra-cat-cb" value="sport"> ספורט</label>
-              <label style="display:flex;align-items:center;gap:5px;font-size:0.82rem;cursor:pointer;"><input type="checkbox" class="extra-cat-cb" value="luxury"> יוקרה</label>
-            </div>
-            <span class="form-hint">הכתבה תופיע גם בסינון קטגוריות נוספות אלו</span>
-          </div>
-        </div>
-        <!-- SLUG + READ MINUTES -->
-        <div class="form-row">
-          <div class="form-group">
-            <label for="a-slug">Slug (כתובת URL — אנגלית בלבד)</label>
-            <input type="text" id="a-slug" placeholder="porsche-911-review" dir="ltr" oninput="this.value=this.value.replace(/[^a-z0-9-]/g,'').replace(/--+/g,'-')">
-            <span class="form-hint">למשל: porsche-911-review — ישמש כ-domain.co.il/porsche-911-review</span>
-          </div>
-          <div class="form-group">
-            <label for="a-read-mins">דקות קריאה (1–5)</label>
-            <input type="number" id="a-read-mins" min="1" max="5" step="1" placeholder="3" style="max-width:100px;">
-            <span class="form-hint">יוצג על הכתבה (השאר ריק לחישוב אוטומטי)</span>
           </div>
         </div>
         <div class="form-row">
@@ -3597,29 +3562,6 @@ body.reading-mode .reading-mode-btn { background: var(--ink); color: #fff; borde
             <label for="a-read-time">זמן קריאה (התאמה ידנית)</label>
             <input type="text" id="a-read-time" placeholder="למשל: 5 דק׳ קריאה">
             <span class="form-hint">השאר ריק לחישוב אוטומטי לפי אורך הטקסט</span>
-          </div>
-        </div>
-        <!-- PROS / CONS — מבחן רכב only -->
-        <div class="form-row full" id="pros-cons-section" style="display:none;">
-          <div class="form-group">
-            <div style="background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:18px;">
-              <div style="font-size:0.88rem;font-weight:700;margin-bottom:14px;color:var(--black);display:flex;align-items:center;gap:8px;">
-                <span style="display:block;width:3px;height:16px;background:var(--red);border-radius:2px;"></span>
-                יתרונות וחסרונות (יופיעו בכתבה)
-              </div>
-              <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
-                <div>
-                  <div style="font-size:0.8rem;font-weight:700;color:#16a34a;margin-bottom:8px;display:flex;align-items:center;gap:6px;"><span style="width:20px;height:20px;background:#16a34a;color:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:1rem;font-weight:900;line-height:1;">+</span> יתרונות</div>
-                  <textarea id="a-pros" rows="5" placeholder="+ ביצועים מרשימים&#10;+ עיצוב חדשני&#10;+ מרחב פנימי גדול" style="width:100%;padding:10px;border:1px solid #bbf7d0;border-radius:6px;font-size:0.82rem;font-family:var(--font);resize:vertical;background:#f0fdf4;"></textarea>
-                  <span class="form-hint">שורה אחת = יתרון אחד</span>
-                </div>
-                <div>
-                  <div style="font-size:0.8rem;font-weight:700;color:#dc2626;margin-bottom:8px;display:flex;align-items:center;gap:6px;"><span style="width:20px;height:20px;background:#dc2626;color:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:1rem;font-weight:900;line-height:1;">−</span> חסרונות</div>
-                  <textarea id="a-cons" rows="5" placeholder="- מחיר גבוה&#10;- צריכת דלק&#10;- מרחב מטען מוגבל" style="width:100%;padding:10px;border:1px solid #fecaca;border-radius:6px;font-size:0.82rem;font-family:var(--font);resize:vertical;background:#fef2f2;"></textarea>
-                  <span class="form-hint">שורה אחת = חיסרון אחד</span>
-                </div>
-              </div>
-            </div>
           </div>
         </div>
         <!-- SPECS SECTION — for review articles -->
@@ -3693,44 +3635,27 @@ body.reading-mode .reading-mode-btn { background: var(--ink); color: #fff; borde
         <!-- 5 BODY IMAGES WITH CAPTIONS -->
         <div class="form-row full">
           <div class="form-group">
-            <label>תמונות לגוף הכתבה (עד 5) — העלאה או קישור URL</label>
-            <div style="display:flex;flex-direction:column;gap:14px;">
-              <!-- Body image upload helper -->
-              <div style="background:var(--bg);border:1px dashed var(--border);border-radius:8px;padding:12px;display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
-                <label style="display:inline-flex;align-items:center;gap:6px;background:var(--red);color:#fff;padding:7px 14px;border-radius:6px;cursor:pointer;font-size:0.82rem;font-weight:600;">
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-                  העלה תמונת גוף
-                  <input type="file" accept="image/*" style="display:none;" onchange="handleBodyImageUpload(this)">
-                </label>
-                <span style="font-size:0.75rem;color:var(--muted);">מדחס ל-WebP אוטומטית · מעלה ל-Supabase Storage</span>
-                <span id="body-upload-status" style="font-size:0.75rem;color:var(--muted);"></span>
+            <label>תמונות לגוף הכתבה (עד 5) — קישורי URL</label>
+            <div style="display:flex;flex-direction:column;gap:10px;">
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;align-items:center;">
+                <input type="url" id="body-img-1" placeholder="קישור תמונה 1...">
+                <input type="text" id="body-img-cap-1" placeholder="כיתוב תמונה 1...">
               </div>
-              <div style="display:flex;flex-direction:column;gap:10px;" id="body-imgs-list">
-                <div style="display:grid;grid-template-columns:auto 1fr 1fr;gap:8px;align-items:center;">
-                  <span style="font-size:0.75rem;color:var(--muted);min-width:20px;">1</span>
-                  <input type="url" id="body-img-1" placeholder="קישור תמונה 1 (או העלה למעלה)...">
-                  <input type="text" id="body-img-cap-1" placeholder="כיתוב תמונה 1...">
-                </div>
-                <div style="display:grid;grid-template-columns:auto 1fr 1fr;gap:8px;align-items:center;">
-                  <span style="font-size:0.75rem;color:var(--muted);min-width:20px;">2</span>
-                  <input type="url" id="body-img-2" placeholder="קישור תמונה 2...">
-                  <input type="text" id="body-img-cap-2" placeholder="כיתוב תמונה 2...">
-                </div>
-                <div style="display:grid;grid-template-columns:auto 1fr 1fr;gap:8px;align-items:center;">
-                  <span style="font-size:0.75rem;color:var(--muted);min-width:20px;">3</span>
-                  <input type="url" id="body-img-3" placeholder="קישור תמונה 3...">
-                  <input type="text" id="body-img-cap-3" placeholder="כיתוב תמונה 3...">
-                </div>
-                <div style="display:grid;grid-template-columns:auto 1fr 1fr;gap:8px;align-items:center;">
-                  <span style="font-size:0.75rem;color:var(--muted);min-width:20px;">4</span>
-                  <input type="url" id="body-img-4" placeholder="קישור תמונה 4...">
-                  <input type="text" id="body-img-cap-4" placeholder="כיתוב תמונה 4...">
-                </div>
-                <div style="display:grid;grid-template-columns:auto 1fr 1fr;gap:8px;align-items:center;">
-                  <span style="font-size:0.75rem;color:var(--muted);min-width:20px;">5</span>
-                  <input type="url" id="body-img-5" placeholder="קישור תמונה 5...">
-                  <input type="text" id="body-img-cap-5" placeholder="כיתוב תמונה 5...">
-                </div>
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;align-items:center;">
+                <input type="url" id="body-img-2" placeholder="קישור תמונה 2...">
+                <input type="text" id="body-img-cap-2" placeholder="כיתוב תמונה 2...">
+              </div>
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;align-items:center;">
+                <input type="url" id="body-img-3" placeholder="קישור תמונה 3...">
+                <input type="text" id="body-img-cap-3" placeholder="כיתוב תמונה 3...">
+              </div>
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;align-items:center;">
+                <input type="url" id="body-img-4" placeholder="קישור תמונה 4...">
+                <input type="text" id="body-img-cap-4" placeholder="כיתוב תמונה 4...">
+              </div>
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;align-items:center;">
+                <input type="url" id="body-img-5" placeholder="קישור תמונה 5...">
+                <input type="text" id="body-img-cap-5" placeholder="כיתוב תמונה 5...">
               </div>
             </div>
             <span class="form-hint">התמונות יוצגו בגוף הכתבה לפי הסדר, עם כיתוב מתחת לכל תמונה</span>
@@ -3994,13 +3919,10 @@ function processSyncData(data) {
     var imgFallback = (def && def.img) ? def.img : CAT_IMAGES[r.cat||'local'];
     return {
       id: r.id, title: r.title||'', sub: r.sub||'', cat: r.cat||'local',
-      extraCats: r.extra_cats||[],
-      slug: r.slug||'',
       author: r.author||'מערכת ספידומטר', date: r.date||'', time: r.time||'',
       readTime: r.read_time||'',
       img: (r.img && r.img.trim().length > 5) ? r.img.trim() : imgFallback,
       imgCaption: r.img_caption||'', body: r.body||'', score: r.score||null,
-      pros: r.pros||null, cons: r.cons||null,
       views: r.views||0, featured: r.featured||false, specs: r.specs||null,
       gallery: r.gallery||null, galleryCaptions: r.gallery_captions||null,
       bodyImages: r.body_images||null
@@ -4016,15 +3938,12 @@ function processSyncData(data) {
 async function pushToSupabase(articleData) {
   const row = {
     title: articleData.title||'', sub: articleData.sub||'', cat: articleData.cat||'local',
-    extra_cats: articleData.extraCats||[],
-    slug: articleData.slug||'',
     author: articleData.author||'מערכת ספידומטר', date: articleData.date||'',
     read_time: articleData.readTime||'', img: articleData.img||'',
     img_caption: articleData.imgCaption||'', body: articleData.body||'',
     score: articleData.score||null, views: articleData.views||0,
     featured: articleData.featured||false, specs: articleData.specs||null,
-    gallery: articleData.gallery||null, body_images: articleData.bodyImages||null,
-    pros: articleData.pros||null, cons: articleData.cons||null
+    gallery: articleData.gallery||null, body_images: articleData.bodyImages||null
   };
   // Try library first (supports UPDATE)
   if (sbClient) {
@@ -4102,7 +4021,7 @@ function buildTicker() {
 function buildHero() {
   const area = document.getElementById('hero-area');
   if (!area) return;
-  const pool = currentFilter==='all' ? articles : articles.filter(a=>articleMatchesCat(a,currentFilter));
+  const pool = currentFilter==='all' ? articles : articles.filter(a=>a.cat===currentFilter);
   const featured = pool.filter(a=>a.featured);
   const main = featured[0]||pool[0];
   const side1 = featured[1]||pool[1];
@@ -4176,7 +4095,7 @@ function latestItemHTML(a, num) {
 function buildSections() {
   // Update mobile hero banner — wrapped in try/catch so articles always load
   try { handleMobileHero(); } catch(e) { console.log('Mobile hero error:', e); }
-  const filtered = currentFilter==='all' ? articles : articles.filter(a=>articleMatchesCat(a,currentFilter));
+  const filtered = currentFilter==='all' ? articles : articles.filter(a=>a.cat===currentFilter);
   const lg = document.getElementById('latest-grid');
   if (lg) {
     lg.style.display = 'grid';
@@ -4204,15 +4123,7 @@ function filterCat(cat, el) {
     });
   }
   buildHero(); buildSections(); showHome();
-  window.scrollTo({top:0, behavior:'instant'});
-}
-
-// ── ARTICLE FILTER HELPER (includes extraCats) ──
-function articleMatchesCat(a, cat) {
-  if (cat === 'all') return true;
-  if (a.cat === cat) return true;
-  if (a.extraCats && a.extraCats.includes(cat)) return true;
-  return false;
+  window.scrollTo({top:0,behavior:'smooth'});
 }
 
 // ── ROUTING ──
@@ -4228,7 +4139,6 @@ function showHome(pushState=true) {
   if (pushState && window.history) {
     window.history.pushState({page:'home', filter: currentFilter}, '', window.location.pathname);
   }
-  window.scrollTo({top:0, behavior:'instant'});
   updateReadingProgress();
   const homeBtn = document.querySelector('.bottom-nav-item:first-child');
   if (homeBtn) setBottomNav(homeBtn);
@@ -4336,32 +4246,6 @@ function openArticle(id) {
 
   document.getElementById('art-body').innerHTML = parseBody(a.body||'', a.bodyImages||[]);
 
-  // Pros / Cons — only for מבחן רכב
-  let prosConsEl = document.getElementById('art-pros-cons');
-  if (!prosConsEl) {
-    prosConsEl = document.createElement('div');
-    prosConsEl.id = 'art-pros-cons';
-    const bodyEl = document.getElementById('art-body');
-    if (bodyEl && bodyEl.parentNode) bodyEl.parentNode.insertBefore(prosConsEl, bodyEl);
-  }
-  if (a.cat === 'review' && (a.pros?.length || a.cons?.length)) {
-    prosConsEl.style.display = 'block';
-    prosConsEl.innerHTML = `
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin:24px 0;">
-        <div style="background:#f0fdf4;border:1.5px solid #bbf7d0;border-radius:10px;padding:16px;">
-          <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;"><span style="width:24px;height:24px;background:#16a34a;color:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:1.1rem;line-height:1;">+</span><span style="font-weight:800;color:#16a34a;font-size:0.9rem;">יתרונות</span></div>
-          ${(a.pros||[]).map(p=>`<div style="display:flex;align-items:flex-start;gap:8px;margin-bottom:8px;font-size:0.85rem;color:#166534;line-height:1.5;"><span style="color:#16a34a;font-weight:700;flex-shrink:0;">✓</span>${p}</div>`).join('')}
-        </div>
-        <div style="background:#fef2f2;border:1.5px solid #fecaca;border-radius:10px;padding:16px;">
-          <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;"><span style="width:24px;height:24px;background:#dc2626;color:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:1.2rem;line-height:1;">−</span><span style="font-weight:800;color:#dc2626;font-size:0.9rem;">חסרונות</span></div>
-          ${(a.cons||[]).map(c=>`<div style="display:flex;align-items:flex-start;gap:8px;margin-bottom:8px;font-size:0.85rem;color:#991b1b;line-height:1.5;"><span style="color:#dc2626;font-weight:700;flex-shrink:0;">✗</span>${c}</div>`).join('')}
-        </div>
-      </div>`;
-  } else if (prosConsEl) {
-    prosConsEl.style.display = 'none';
-    prosConsEl.innerHTML = '';
-  }
-
   const related = articles.filter(x=>x.id!==id&&x.cat===a.cat).sort((x,y)=>(y.views||0)-(x.views||0)).slice(0,3);
   const fallback = articles.filter(x=>x.id!==id).sort((x,y)=>(y.views||0)-(x.views||0)).slice(0,3);
   // Render gallery
@@ -4391,13 +4275,11 @@ function openArticle(id) {
   document.getElementById('related-articles').innerHTML=(related.length?related:fallback).map(r=>cardHTML(r)).join('');
   document.getElementById('sidebar-related').innerHTML=articles.filter(x=>x.id!==id).sort((x,y)=>(y.views||0)-(x.views||0)).slice(0,5).map((r,i)=>latestItemHTML(r,i+1)).join('');
 
-  // Push browser history state — use replaceState first to avoid scroll-jump,
-  // then push so back-button works
+  // Push browser history state
   if (window.history) {
     window.history.pushState({page:'article', id:id}, '', getArticleUrl(a));
   }
-  // Instant scroll to top — smooth causes visible jump when page is tall
-  window.scrollTo({top:0, behavior:'instant'});
+  window.scrollTo({top:0,behavior:'smooth'});
 }
 
 // ── SLIDER ──
@@ -4572,29 +4454,14 @@ async function publishArticle() {
   const editId = document.getElementById('a-title').dataset.editId;
   const now=new Date();
   const readMin=Math.max(1,Math.ceil(body.split(/\s+/).length/200));
-  // Gather extra categories
-  const extraCats = Array.from(document.querySelectorAll('.extra-cat-cb:checked')).map(cb=>cb.value).filter(v=>v!==document.getElementById('a-cat').value);
-  // Slug
-  const slugInput = (document.getElementById('a-slug')?.value||'').trim();
-  const slug = slugInput || slugifyEN(title);
-  // Read mins
-  const readMinsInput = parseInt(document.getElementById('a-read-mins')?.value||'0');
-  const readTime = readMinsInput > 0 ? readMinsInput+' דק׳ קריאה' : (readMin+' דק׳ קריאה');
-  // Pros / Cons
-  const prosRaw = (document.getElementById('a-pros')?.value||'').trim();
-  const consRaw = (document.getElementById('a-cons')?.value||'').trim();
-  const pros = prosRaw ? prosRaw.split('\n').map(l=>l.replace(/^[+\-\s]+/,'')).filter(Boolean) : null;
-  const cons = consRaw ? consRaw.split('\n').map(l=>l.replace(/^[+\-\s]+/,'')).filter(Boolean) : null;
   const data = {
     id: editId ? parseInt(editId) : nextId++,
     title, sub:(document.getElementById('a-sub').value||'').trim(),
     cat:document.getElementById('a-cat').value,
-    extraCats,
-    slug,
     author:(document.getElementById('a-author').value||'').trim()||'מערכת ספידומטר',
     date:now.toLocaleDateString('he-IL'),
     time:now.toLocaleTimeString('he-IL',{hour:'2-digit',minute:'2-digit'}),
-    readTime,
+    readTime:readMin+' דק׳ קריאה',
     img:(document.getElementById('a-img').value||'').trim(),
     imgCaption:(document.getElementById('a-img-cap').value||'').trim(),
     gallery: galleryImages.length > 0 ? galleryImages.map(g=>g.src) : null,
@@ -4604,7 +4471,7 @@ async function publishArticle() {
       cap:(document.getElementById('body-img-cap-'+i)?.value||'').trim()
     })).filter(x=>x.src),
     body, score:(document.getElementById('a-score').value||'').trim()||null,
-    pros, cons,
+    readTime:(document.getElementById('a-read-time')?.value||'').trim() || (Math.max(1,Math.ceil(body.split(/\s+/).length/200))+' דק׳ קריאה'),
     views: editId?(articles.find(a=>a.id===parseInt(editId))?.views||0):0,
     featured:false,
     specs: (document.getElementById('a-cat').value === 'review') ? (() => {
@@ -4642,18 +4509,6 @@ function editArticle(id) {
   document.getElementById('a-author').value=a.author; document.getElementById('a-img').value=a.img||'';
   document.getElementById('a-img-cap').value=a.imgCaption||'';
   document.getElementById('a-score').value=a.score||'';
-  const slugEl=document.getElementById('a-slug'); if(slugEl) slugEl.value=a.slug||'';
-  // Read mins from readTime string
-  const rmEl=document.getElementById('a-read-mins');
-  if(rmEl) { const m=parseInt((a.readTime||'').match(/\d+/)?.[0]||'0'); rmEl.value=m>0&&m<=5?m:''; }
-  // Pros/cons
-  const prosEl=document.getElementById('a-pros'); if(prosEl) prosEl.value=(a.pros||[]).join('\n');
-  const consEl=document.getElementById('a-cons'); if(consEl) consEl.value=(a.cons||[]).join('\n');
-  // Extra cats
-  syncCatCheckboxes(a.cat);
-  document.querySelectorAll('.extra-cat-cb').forEach(cb => {
-    if (a.extraCats && a.extraCats.includes(cb.value)) cb.checked = true;
-  });
   const rtEl=document.getElementById('a-read-time'); if(rtEl) rtEl.value=a.readTime||'';
   if(a.bodyImages) a.bodyImages.forEach((img,i)=>{
     const si=document.getElementById('body-img-'+(i+1)); if(si) si.value=img.src||'';
@@ -4676,7 +4531,7 @@ function editArticle(id) {
     }
     toggleRangeField(s.engine||'בנזין');
   }
-  window.scrollTo({top:0, behavior:'instant'});
+  window.scrollTo({top:0});
 }
 async function deleteArticle(id) {
   if(!confirm('למחוק את הכתבה לצמיתות?')) return;
@@ -4687,17 +4542,13 @@ async function deleteArticle(id) {
 }
 function viewArticle(id) { showHome(); openArticle(id); }
 function clearForm() {
-  ['a-title','a-sub','a-author','a-img','a-img-cap','a-score','a-body','a-read-time','a-slug','a-read-mins','a-pros','a-cons','body-img-1','body-img-cap-1','body-img-2','body-img-cap-2','body-img-3','body-img-cap-3','body-img-4','body-img-cap-4','body-img-5','body-img-cap-5','spec-power','spec-torque','spec-zero','spec-range','spec-price','score-driving','score-design','score-tech','score-comfort','score-value'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+  ['a-title','a-sub','a-author','a-img','a-img-cap','a-score','a-body','a-read-time','body-img-1','body-img-cap-1','body-img-2','body-img-cap-2','body-img-3','body-img-cap-3','body-img-4','body-img-cap-4','body-img-5','body-img-cap-5','spec-power','spec-torque','spec-zero','spec-range','spec-price','score-driving','score-design','score-tech','score-comfort','score-value'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
   const specSec=document.getElementById('specs-section'); if(specSec) specSec.style.display='none';
-  const pcSec=document.getElementById('pros-cons-section'); if(pcSec) pcSec.style.display='none';
   delete document.getElementById('a-title').dataset.editId;
   document.getElementById('a-cat').value='local';
-  document.querySelectorAll('.extra-cat-cb').forEach(cb=>{ cb.checked=false; cb.parentElement.style.opacity='1'; cb.disabled=false; });
   galleryImages = [];
-  bodyImgNextSlot = 1;
   renderGalleryPreview();
   const us = document.getElementById('upload-status'); if(us) us.textContent='';
-  const bus = document.getElementById('body-upload-status'); if(bus) bus.textContent='';
 }
 
 // ── SEARCH ──
@@ -4796,9 +4647,7 @@ function toggleDark() {
 // ── SPECS SECTION TOGGLE ──
 function toggleSpecsSection(cat) {
   const sec = document.getElementById('specs-section');
-  const pc = document.getElementById('pros-cons-section');
   if (sec) sec.style.display = (cat === 'review') ? 'block' : 'none';
-  if (pc) pc.style.display = (cat === 'review') ? 'block' : 'none';
   // Show/hide range field for electric only
   const engineEl = document.getElementById('spec-engine');
   if (engineEl) toggleRangeField(engineEl.value);
@@ -4840,47 +4689,8 @@ function previewArticle() {
   document.body.appendChild(banner);
 }
 
-// ── ENGLISH SLUG GENERATOR ──
-function slugifyEN(title) {
-  // Basic transliteration for common Hebrew/mixed titles
-  const map = {'א':'a','ב':'b','ג':'g','ד':'d','ה':'h','ו':'v','ז':'z','ח':'ch','ט':'t','י':'y','כ':'k','ך':'k','ל':'l','מ':'m','ם':'m','נ':'n','ן':'n','ס':'s','ע':'a','פ':'p','ף':'p','צ':'ts','ץ':'ts','ק':'k','ר':'r','ש':'sh','ת':'t',' ':'-'};
-  return title.toLowerCase().split('').map(c => map[c] || (/[a-z0-9-]/.test(c) ? c : '')).join('').replace(/-+/g,'-').replace(/^-|-$/g,'').slice(0,60) || 'article-'+Date.now();
-}
-
-// ── SYNC CATEGORY CHECKBOXES ──
-function syncCatCheckboxes(mainCat) {
-  document.querySelectorAll('.extra-cat-cb').forEach(cb => {
-    if (cb.value === mainCat) { cb.checked = false; cb.parentElement.style.opacity = '0.4'; cb.disabled = true; }
-    else { cb.parentElement.style.opacity = '1'; cb.disabled = false; }
-  });
-}
-
-// ── BODY IMAGE UPLOAD WITH SUPABASE STORAGE ──
-let bodyImgNextSlot = 1;
-async function handleBodyImageUpload(input) {
-  const file = input.files[0]; if (!file) return;
-  const status = document.getElementById('body-upload-status');
-  if (status) { status.textContent = 'מדחס ומעלה...'; status.style.color='var(--muted)'; }
-  try {
-    const url = await uploadImageToSupabase(file);
-    if (url && bodyImgNextSlot <= 5) {
-      const el = document.getElementById('body-img-'+bodyImgNextSlot);
-      if (el) { el.value = url; el.style.borderColor='#22c55e'; }
-      if (status) { status.textContent = '✅ תמונה ' + bodyImgNextSlot + ' הועלתה'; status.style.color='#22c55e'; }
-      bodyImgNextSlot = Math.min(bodyImgNextSlot + 1, 5);
-    } else if (!url) {
-      // fallback to base64
-      const reader = new FileReader();
-      reader.onload = e => {
-        const el = document.getElementById('body-img-'+bodyImgNextSlot);
-        if (el && bodyImgNextSlot<=5) { el.value=e.target.result; bodyImgNextSlot=Math.min(bodyImgNextSlot+1,5); }
-        if (status) { status.textContent='✅ נשמרה (base64)'; status.style.color='#22c55e'; }
-      };
-      reader.readAsDataURL(file);
-    }
-  } catch(e) { if (status) { status.textContent='שגיאה'; status.style.color='var(--red)'; } }
-  input.value = '';
-}
+// ── CLEAN URLs ──
+function toSlug(title) {
   return title
     .replace(/[^\u0590-\u05FF\w\s-]/g, '')
     .trim()
@@ -4889,8 +4699,7 @@ async function handleBodyImageUpload(input) {
     .slice(0, 60);
 }
 function getArticleUrl(a) {
-  const s = a.slug || slugifyEN(a.title);
-  return '/' + s;
+  return '/article/' + a.id + '-' + toSlug(a.title);
 }
 
 // ── REALTIME SYNC ──
@@ -4950,35 +4759,14 @@ function toggleReadingMode() {
 // ── BROWSER BACK BUTTON ──
 window.addEventListener('popstate', function(e) {
   if (e.state && e.state.page === 'article') {
-    // Open without pushing another history entry
-    const a = articles.find(x=>x.id===e.state.id);
-    if (!a) { showHome(false); return; }
-    currentArticleId = e.state.id;
-    document.getElementById('home-page').style.display='none';
-    document.getElementById('article-page').style.display='block';
-    document.getElementById('admin-page').style.display='none';
-    updateMeta(a);
-    document.getElementById('art-cat').textContent = CAT_LABELS[a.cat];
-    document.getElementById('art-title').textContent = a.title;
-    document.getElementById('art-sub').textContent = a.sub||'';
-    document.getElementById('art-author').textContent = a.author;
-    document.getElementById('art-date').textContent = a.date;
-    const wordCount = (a.body||'').split(/\s+/).filter(Boolean).length;
-    const readMins = Math.max(1, Math.ceil(wordCount / 200));
-    document.getElementById('art-read').textContent = a.readTime || (readMins + ' דק׳ קריאה');
-    const artTimeEl = document.getElementById('art-time'); if(artTimeEl) artTimeEl.textContent = a.time ? ('פורסם: '+a.time) : '';
-    const imgEl = document.getElementById('art-img');
-    const oldSl = document.getElementById('art-slider'); if(oldSl) oldSl.remove();
-    imgEl.style.display='block'; imgEl.src=a.img||CAT_IMAGES[a.cat]; imgEl.alt=a.title;
-    document.getElementById('art-img-caption').textContent = a.imgCaption||'';
-    document.getElementById('art-body').innerHTML = parseBody(a.body||'', a.bodyImages||[]);
-    const specWrap = document.getElementById('art-spec');
-    if (a.cat==='review'&&a.specs) { specWrap.innerHTML=buildSpecCard(a.specs); specWrap.style.display='block'; setTimeout(()=>document.querySelectorAll('.score-bar-fill').forEach(b=>{b.style.width=b.dataset.pct+'%';}),150); }
-    else { specWrap.innerHTML=''; specWrap.style.display='none'; }
-    window.scrollTo({top:0, behavior:'instant'});
+    openArticle(e.state.id);
   } else if (e.state && e.state.page === 'home') {
     showHome(false);
-    if (e.state.filter) { currentFilter = e.state.filter; buildHero(); buildSections(); }
+    // Restore filter if saved
+    if (e.state && e.state.filter) {
+      currentFilter = e.state.filter;
+      buildHero(); buildSections();
+    }
   } else {
     const path = window.location.pathname;
     const hash = window.location.hash;
@@ -4998,6 +4786,19 @@ window.addEventListener('popstate', function(e) {
   }
 });
 
+
+// ── URL HELPERS ──
+function slugify(title) {
+  return title
+    .replace(/[^\u0590-\u05FF\w\s-]/g, '')
+    .replace(/\s+/g, '-')
+    .replace(/-+/g, '-')
+    .trim()
+    .substring(0, 60);
+}
+function getArticleUrl(a) {
+  return '/article/' + a.id + '-' + slugify(a.title);
+}
 
 // ── SECRET HASH ADMIN (mobile) ──
 // Navigate to #admin177 to open admin on mobile
@@ -5301,18 +5102,6 @@ async function compressImageFile(file, maxKB = 300) {
 // INIT
 // ══════════════════════════════
 (function init() {
-  // ── Handle GitHub Pages 404 redirect ──
-  // When 404.html redirects to /?redirect=/slug, restore the original URL
-  const redirectParam = new URLSearchParams(window.location.search).get('redirect');
-  if (redirectParam) {
-    // Replace the ugly /?redirect=... with the clean URL
-    window.history.replaceState(null, '', redirectParam);
-  }
-
-  // Prevent layout jump: hide body until first paint is ready
-  document.body.style.opacity = '0';
-  document.body.style.transition = 'opacity 0.18s ease';
-
   restorePrefs();
   applySystemDark();
 
@@ -5344,47 +5133,20 @@ async function compressImageFile(file, maxKB = 300) {
   showHome(false);
   handleMobileHero();
 
-  // Fade in after first render
-  requestAnimationFrame(() => {
-    requestAnimationFrame(() => {
-      document.body.style.opacity = '1';
-    });
-  });
-
-  // Restore from URL — supports /slug, /article/ID-slug and #article-ID
+  // Restore current page from URL hash
+  // Restore from URL — supports /article/ID-slug and #article-ID
   const initPath = window.location.pathname;
   const initHash = window.location.hash;
-  function openByPath(path) {
-    if (!articles.length) return false;
-    // Try /article/ID-... format
-    if (path.startsWith('/article/')) {
-      const id = parseInt(path.replace('/article/','').split('-')[0]);
-      const found = id && articles.find(a => a.id === id);
-      if (found) { openArticle(found.id); return true; }
-    }
-    // Try slug match
-    const slug = path.replace(/^\//, '').replace(/\/$/, '');
-    if (slug) {
-      const found = articles.find(a => a.slug === slug || slugifyEN(a.title) === slug);
-      if (found) { openArticle(found.id); return true; }
-    }
-    return false;
-  }
-  if (initPath && initPath !== '/') {
-    setTimeout(() => {
-      if (!openByPath(initPath) && initHash.startsWith('#article-')) {
-        const id = parseInt(initHash.replace('#article-', ''));
-        const found = id && articles.find(a => a.id === id);
-        if (found) openArticle(found.id);
-      }
-    }, 400);
+  if (initPath.startsWith('/article/')) {
+    const initId = parseInt(initPath.replace('/article/','').split('-')[0]);
+    if (initId) setTimeout(() => openArticle(initId), 900);
   } else if (initHash.startsWith('#article-')) {
-    const id = parseInt(initHash.replace('#article-', ''));
-    if (id) setTimeout(() => { const f=articles.find(a=>a.id===id); if(f) openArticle(f.id); }, 400);
+    const initId = parseInt(initHash.replace('#article-', ''));
+    if (initId) setTimeout(() => openArticle(initId), 900);
   }
 
   // Then sync from Supabase in background
-  setTimeout(syncFromSupabase, 600);
+  setTimeout(syncFromSupabase, 800);
   // Auto-sync every 30 seconds for real-time feel
   setInterval(syncFromSupabase, 30000);
   // Supabase Realtime subscription
@@ -5459,21 +5221,11 @@ function buildHeroBanner() {
     '</div></div>';
   const track = document.getElementById('hbt');
   if (track) {
-    let tsx = 0, tsy = 0, swiping = false;
-    track.addEventListener('touchstart', e => {
-      tsx = e.touches[0].clientX;
-      tsy = e.touches[0].clientY;
-      swiping = false;
-    }, { passive: true });
-    track.addEventListener('touchmove', e => {
-      const dx = Math.abs(e.touches[0].clientX - tsx);
-      const dy = Math.abs(e.touches[0].clientY - tsy);
-      if (dx > dy && dx > 8) { swiping = true; e.preventDefault(); }
-    }, { passive: false });
+    let tsx = 0;
+    track.addEventListener('touchstart', e => { tsx = e.touches[0].clientX; }, { passive: true });
     track.addEventListener('touchend', e => {
-      if (!swiping) return;
       const dx = e.changedTouches[0].clientX - tsx;
-      if (Math.abs(dx) > 40) moveHeroBanner(dx > 0 ? -1 : 1);
+      if (Math.abs(dx) > 50) moveHeroBanner(dx > 0 ? -1 : 1);
     }, { passive: true });
   }
   clearInterval(heroBannerTimer);
