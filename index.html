@@ -19,6 +19,7 @@
 <meta name="twitter:title" content="ספידומטר | רכב · טכנולוגיה · חדשנות">
 <meta name="twitter:description" content="האתר המוביל בישראל לחדשות רכב, מבחני דרכים ורכב יוקרה">
 <meta name="robots" content="index, follow">
+<meta name="googlebot" content="index, follow">
 <meta name="theme-color" content="#e8001d">
 <link rel="canonical" href="https://speedometer10.co.il/">
 <script type="application/ld+json">
@@ -54,7 +55,21 @@
 <meta name="apple-mobile-web-app-title" content="ספידומטר">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Assistant:wght@300;400;500;600;700;800&family=Rubik:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link rel="dns-prefetch" href="//fonts.googleapis.com">
+<link rel="dns-prefetch" href="//fonts.gstatic.com">
+<link rel="dns-prefetch" href="//cdn.jsdelivr.net">
+<meta http-equiv="x-dns-prefetch-control" content="on">
+<link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Assistant:wght@400;600;700;800&family=Rubik:wght@400;500;700;900&display=swap" onload="this.onload=null;this.rel='stylesheet'">
+<noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Assistant:wght@400;600;700;800&family=Rubik:wght@400;500;700;900&display=swap"></noscript>
+<style id="critical-css">
+  .hero-banner-wrap { min-height: 260px; background: #f7f7f5; }
+  .hero-grid { min-height: 400px; }
+  .hero-main { aspect-ratio: 16/9; overflow: hidden; }
+  .hero-side-card { aspect-ratio: 16/9; overflow: hidden; }
+  .hero-banner-slide { aspect-ratio: 16/9; overflow: hidden; }
+  .card-img { aspect-ratio: 16/9; background: #f7f7f5; overflow: hidden; }
+  img { max-width: 100%; height: auto; display: block; }
+</style>
 <style>
 /* ════════════════════════════════════
    RESET & ROOT
@@ -210,21 +225,21 @@ button { font-family: var(--font); cursor: pointer; }
   bottom: 24px;
   right: 16px;
   left: auto;
-  width: 52px; height: 52px;
-  background: #fff;
+  width: 44px; height: 44px;
+  background: #1a1a1a;
   border: none;
-  border-radius: 50%;
+  border-radius: 8px;
   padding: 0;
   display: flex; align-items: center; justify-content: center;
   z-index: 9999;
-  box-shadow: 0 2px 12px rgba(0,0,0,0.18);
+  box-shadow: none;
   cursor: pointer;
-  transition: transform 0.22s ease, box-shadow 0.22s ease;
+  opacity: 0.85;
+  transition: opacity 0.2s;
 }
-.access-btn:hover { transform: scale(1.08); box-shadow: 0 4px 18px rgba(0,0,0,0.22); }
-.access-btn:focus { outline: 3px solid #1a7adb; }
-.access-btn.hidden-scroll { opacity: 0; pointer-events: none; transform: scale(0.8); transition: opacity 0.3s, transform 0.3s; }
-.access-btn img { width: 52px; height: 52px; border-radius: 50%; display: block; }
+.access-btn:hover { opacity: 1; transform: none; box-shadow: none; }
+.access-btn.hidden-scroll { opacity: 0; pointer-events: none; transition: opacity 0.3s; }
+.access-btn img { width: 44px; height: 44px; border-radius: 8px; display: block; }
 
 .access-overlay {
   display: none;
@@ -656,10 +671,11 @@ nav { display: flex; align-items: center; gap: 2px; flex: 1; justify-content: ce
 }
 .breaking-track {
   display: flex;
-  animation: breakingScroll 28s linear infinite;
+  animation: tickerScroll 30s linear infinite;
   will-change: transform;
   white-space: nowrap;
 }
+.breaking-track:hover { animation-play-state: paused; }
 /* ticker never pauses */
 .breaking-item {
   font-size: 0.84rem;
@@ -671,9 +687,9 @@ nav { display: flex; align-items: center; gap: 2px; flex: 1; justify-content: ce
   font-weight: 500;
 }
 .breaking-item:hover { color: #fff; }
-@keyframes breakingScroll {
-  from { transform: translateX(0); }
-  to { transform: translateX(-50%); }
+@keyframes tickerScroll {
+  0%   { transform: translateX(0); }
+  100% { transform: translateX(-33.333%); }
 }
 
 /* ════════════════════════════════════
@@ -736,6 +752,9 @@ nav { display: flex; align-items: center; gap: 2px; flex: 1; justify-content: ce
   overflow: hidden;
   background: #111;
   min-height: 420px;
+  aspect-ratio: 16/9;
+  display: flex;
+  flex-direction: column;
 }
 .hero-main img {
   width: 100%; height: 100%;
@@ -797,10 +816,12 @@ nav { display: flex; align-items: center; gap: 2px; flex: 1; justify-content: ce
   overflow: hidden;
   background: #111;
   flex: 1;
+  aspect-ratio: 16/9;
 }
 .hero-side-card img {
-  width: 100%; height: 100%;
+  width: 100%; height: 160px;
   object-fit: cover;
+  flex-shrink: 0;
   transition: transform 0.4s;
   opacity: 0.8;
   loading: lazy;
@@ -836,6 +857,8 @@ nav { display: flex; align-items: center; gap: 2px; flex: 1; justify-content: ce
   max-width: var(--max);
   margin: 48px auto 0;
   padding: 0 24px;
+  content-visibility: auto;
+  contain-intrinsic-size: 0 500px;
 }
 .section-head {
   display: flex;
@@ -1736,6 +1759,11 @@ textarea { resize: vertical; min-height: 180px; line-height: 1.6; }
   .danny-section { flex-direction: column; text-align: center; }
 }
 @media (max-width: 680px) {
+  body { font-size: 16.5px; }
+  .card-title { font-size: 1.02rem; line-height: 1.4; }
+  .card-excerpt { font-size: 0.88rem; }
+  .latest-title { font-size: 0.95rem; }
+  .breaking-item { font-size: 0.85rem; }
   .top-bar { display: none; }
   .breaking-ticker { display: flex; }
   .header-inner { height: 58px; }
@@ -2744,15 +2772,20 @@ body.dark-mode .bottom-nav {
 }
 .hero-banner-track {
   display: flex;
-  transition: transform 0.5s cubic-bezier(0.25,0.46,0.45,0.94);
+  transition: transform 0.45s cubic-bezier(0.25,0.46,0.45,0.94);
+  will-change: transform;
   touch-action: pan-y;
 }
 .hero-banner-slide {
   min-width: 100%;
+  width: 100%;
+  flex-shrink: 0;
   position: relative;
   cursor: pointer;
   background: #111;
   touch-action: pan-y;
+  aspect-ratio: 16/9;
+  overflow: hidden;
 }
 .hero-banner-slide img {
   width: 100%; height: 420px;
@@ -2802,8 +2835,9 @@ body.dark-mode .bottom-nav {
   transition: background 0.2s;
 }
 .hero-banner-prev:hover, .hero-banner-next:hover { background: rgba(0,0,0,0.8); }
-.hero-banner-prev { right: 12px; }
-.hero-banner-next { left: 12px; }
+.hero-banner-prev, .hero-banner-next { top: auto; bottom: 48px; transform: none; }
+.hero-banner-next { right: 16px; left: auto; }
+.hero-banner-prev { right: 56px; left: auto; }
 
 /* ════════════════════════════════════
    SWIPEABLE CARDS ROW
@@ -3388,6 +3422,7 @@ body.reading-mode .reading-mode-btn { background: var(--ink); color: #fff; borde
             </a>
           </div>
         </div>
+        <div id="art-tags" style="display:none;margin-top:16px;padding-top:16px;border-top:1px solid var(--border);"></div>
         <div class="article-body" id="art-body"></div>
         <!-- Article Gallery -->
         <div id="art-gallery" style="display:none;margin-top:32px;"></div>
@@ -3540,6 +3575,13 @@ body.reading-mode .reading-mode-btn { background: var(--ink); color: #fff; borde
             <input type="text" id="a-author" placeholder="שם הכתב / המערכת">
           </div>
         </div>
+        <div class="form-row full">
+          <div class="form-group">
+            <label for="a-tags">תגיות (מופרדות בפסיק)</label>
+            <input type="text" id="a-tags" placeholder="למשל: טויוטה, היברידי, 2025">
+            <span class="form-hint">תגיות עוזרות לחיפוש ול-SEO</span>
+          </div>
+        </div>
         <div class="form-row">
           <div class="form-group">
             <label for="a-img">תמונה ראשית — קישור URL</label>
@@ -3582,9 +3624,12 @@ body.reading-mode .reading-mode-btn { background: var(--ink); color: #fff; borde
             <input type="text" id="a-score" placeholder="8.5">
           </div>
           <div class="form-group">
-            <label for="a-read-time">זמן קריאה (התאמה ידנית)</label>
-            <input type="text" id="a-read-time" placeholder="למשל: 5 דק׳ קריאה">
-            <span class="form-hint">השאר ריק לחישוב אוטומטי לפי אורך הטקסט</span>
+            <label for="a-read-time">זמן קריאה (דקות)</label>
+            <div style="display:flex;align-items:center;gap:8px;">
+              <input type="number" id="a-read-time" min="1" max="60" placeholder="3" style="width:70px;text-align:center;">
+              <span style="font-size:0.85rem;color:var(--muted);white-space:nowrap;">דק׳ קריאה</span>
+            </div>
+            <span class="form-hint">השאר ריק לחישוב אוטומטי</span>
           </div>
         </div>
         <!-- SPECS SECTION — for review articles -->
@@ -3783,7 +3828,7 @@ body.reading-mode .reading-mode-btn { background: var(--ink); color: #fff; borde
 
 <button class="back-top" id="back-top" onclick="window.scrollTo({top:0,behavior:'smooth'})" aria-label="גלול לראש הדף">↑</button>
 
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
 <script>
 /* =============================================
    SPEEDOMETER v7 — UPGRADED
@@ -4027,7 +4072,7 @@ function buildBreakingTicker() {
   const content = articles.slice(0,8).map(a =>
     `<span class="breaking-item" onclick="openArticle(${a.id})" role="button" tabindex="0">${a.title}</span>`
   ).join('');
-  track.innerHTML = content + content;
+  track.innerHTML = content + content + content;
 }
 
 // ── MAIN TICKER ──
@@ -4088,7 +4133,7 @@ function buildHero() {
 // ── CARD HTML ──
 function cardHTML(a) {
   const score = a.score?`<div class="review-score ${parseFloat(a.score)>=8?'high':parseFloat(a.score)>=6?'mid':''}">${a.score}</div>`:'';
-  return `<div class="card" onclick="openArticle(${a.id})" role="button" tabindex="0" aria-label="${a.title}" onkeydown="if(event.key==='Enter')openArticle(${a.id})">
+  return `<a href="#article-${a.id}" class="card" onclick="openArticle(${a.id});return false;" role="article" aria-label="${a.title}">
     <div class="card-img">
       <img src="${a.img||CAT_IMAGES[a.cat]}" alt="${a.title}" loading="lazy">
       ${score}<span class="card-cat">${CAT_LABELS[a.cat]}</span>
@@ -4102,7 +4147,7 @@ function cardHTML(a) {
         ${a.readTime?`<span class="card-readtime">${a.readTime}</span>`:''}
       </div>
     </div>
-  </div>`;
+  </a>`;
 }
 
 function latestItemHTML(a, num) {
@@ -4154,6 +4199,8 @@ function filterCat(cat, el) {
 // ── ROUTING ──
 function showHome(pushState=true) {
   resetMeta();
+  const artSubEl = document.getElementById('art-sub');
+  if (artSubEl) artSubEl.style.display = '';
   const hp = document.getElementById('home-page');
   const ap2 = document.getElementById('article-page');
   const adp = document.getElementById('admin-page');
@@ -4191,7 +4238,8 @@ function openArticle(id) {
   updateMeta(a);
   document.getElementById('art-cat').textContent = CAT_LABELS[a.cat];
   document.getElementById('art-title').textContent = a.title;
-  document.getElementById('art-sub').textContent = a.sub||'';
+  const artSubEl = document.getElementById('art-sub');
+  if (artSubEl) artSubEl.style.display = 'none';
   document.getElementById('art-author').textContent = a.author;
   document.getElementById('art-date').textContent = a.date;
   // Auto-calculate read time from body
@@ -4246,6 +4294,7 @@ function openArticle(id) {
   if (a.specs && a.specs.power) {
     schema.about = {"@type":"Car","name":a.title,"vehicleEngine":{"@type":"EngineSpecification","enginePower":{"@type":"QuantitativeValue","value":a.specs.power,"unitCode":"BHP"}}};
   }
+  if (a.tags && a.tags.length) schema.keywords = a.tags.join(', ');
   sc.textContent = JSON.stringify(schema, (k,v) => v === undefined ? undefined : v);
 
   // Slider or single image
@@ -4270,6 +4319,14 @@ function openArticle(id) {
   } else { specWrap.innerHTML=''; specWrap.style.display='none'; }
 
   document.getElementById('art-body').innerHTML = parseBody(a.body||'', a.bodyImages||[]);
+
+  const tagsWrap = document.getElementById('art-tags');
+  if (tagsWrap && a.tags && a.tags.length) {
+    tagsWrap.innerHTML = a.tags.map(t =>
+      `<span onclick="doSearch('${t}')" style="display:inline-block;padding:4px 12px;background:var(--bg);border:1px solid var(--border);border-radius:20px;font-size:0.78rem;cursor:pointer;margin:4px 2px;transition:all 0.15s;" onmouseover="this.style.borderColor='var(--red)'" onmouseout="this.style.borderColor='var(--border)'">${t}</span>`
+    ).join('');
+    tagsWrap.style.display = 'block';
+  } else if (tagsWrap) tagsWrap.style.display = 'none';
 
   const related = articles.filter(x=>x.id!==id&&x.cat===a.cat).sort((x,y)=>(y.views||0)-(x.views||0)).slice(0,3);
   const fallback = articles.filter(x=>x.id!==id).sort((x,y)=>(y.views||0)-(x.views||0)).slice(0,3);
@@ -4496,7 +4553,10 @@ async function publishArticle() {
       cap:(document.getElementById('body-img-cap-'+i)?.value||'').trim()
     })).filter(x=>x.src),
     body, score:(document.getElementById('a-score').value||'').trim()||null,
-    readTime:(document.getElementById('a-read-time')?.value||'').trim() || (Math.max(1,Math.ceil(body.split(/\s+/).length/200))+' דק׳ קריאה'),
+    readTime: document.getElementById('a-read-time')?.value?.trim()
+      ? document.getElementById('a-read-time').value.trim() + " דק׳ קריאה"
+      : Math.max(1, Math.ceil(body.split(/\s+/).length/200)) + " דק׳ קריאה",
+    tags: (document.getElementById('a-tags')?.value||'').split(',').map(t=>t.trim()).filter(Boolean),
     views: editId?(articles.find(a=>a.id===parseInt(editId))?.views||0):0,
     featured:false,
     specs: (document.getElementById('a-cat').value === 'review') ? (() => {
@@ -4534,7 +4594,9 @@ function editArticle(id) {
   document.getElementById('a-author').value=a.author; document.getElementById('a-img').value=a.img||'';
   document.getElementById('a-img-cap').value=a.imgCaption||'';
   document.getElementById('a-score').value=a.score||'';
-  const rtEl=document.getElementById('a-read-time'); if(rtEl) rtEl.value=a.readTime||'';
+  const rtEl=document.getElementById('a-read-time'); if (rtEl) rtEl.value = a.readTime ? a.readTime.replace(/[^0-9]/g,'') : '';
+  const tagsEl = document.getElementById('a-tags');
+  if (tagsEl) tagsEl.value = (a.tags||[]).join(', ');
   if(a.bodyImages) a.bodyImages.forEach((img,i)=>{
     const si=document.getElementById('body-img-'+(i+1)); if(si) si.value=img.src||'';
     const ci=document.getElementById('body-img-cap-'+(i+1)); if(ci) ci.value=img.cap||'';
@@ -4567,7 +4629,7 @@ async function deleteArticle(id) {
 }
 function viewArticle(id) { showHome(); openArticle(id); }
 function clearForm() {
-  ['a-title','a-sub','a-author','a-img','a-img-cap','a-score','a-body','a-read-time','body-img-1','body-img-cap-1','body-img-2','body-img-cap-2','body-img-3','body-img-cap-3','body-img-4','body-img-cap-4','body-img-5','body-img-cap-5','spec-power','spec-torque','spec-zero','spec-range','spec-price','score-driving','score-design','score-tech','score-comfort','score-value'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+  ['a-title','a-sub','a-author','a-img','a-img-cap','a-score','a-body','a-read-time','a-tags','body-img-1','body-img-cap-1','body-img-2','body-img-cap-2','body-img-3','body-img-cap-3','body-img-4','body-img-cap-4','body-img-5','body-img-cap-5','spec-power','spec-torque','spec-zero','spec-range','spec-price','score-driving','score-design','score-tech','score-comfort','score-value'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
   const specSec=document.getElementById('specs-section'); if(specSec) specSec.style.display='none';
   delete document.getElementById('a-title').dataset.editId;
   document.getElementById('a-cat').value='local';
@@ -4990,6 +5052,18 @@ function updateMeta(a) {
   const desc = a.sub || a.title;
   const img = a.img || 'https://images.unsplash.com/photo-1555215695-3004980ad54e?w=1200&q=80';
   document.title = title;
+
+  let can = document.querySelector('link[rel="canonical"]');
+  if (!can) { can = document.createElement('link'); can.rel='canonical'; document.head.appendChild(can); }
+  can.href = window.location.origin + window.location.pathname + '#article-' + a.id;
+
+  let auth = document.querySelector('meta[name="author"]');
+  if (!auth) { auth = document.createElement('meta'); auth.name='author'; document.head.appendChild(auth); }
+  auth.content = a.author || 'מערכת ספידומטר';
+
+  let desc2 = document.querySelector('meta[name="description"]');
+  if (desc2) desc2.content = a.sub || a.title;
+
   setMeta('description', desc);
   setOG('og:title', title);
   setOG('og:description', desc);
@@ -5016,6 +5090,10 @@ function resetMeta() {
   setOG('og:type', 'website');
   setOG('og:url', 'https://speedometer10.co.il/');
   setMeta('description', 'האתר המוביל בישראל לחדשות רכב, מבחני דרכים, רכב יוקרה וטכנולוגיה אוטומוטיב');
+  const can2 = document.querySelector('link[rel="canonical"]');
+  if (can2) can2.href = 'https://speedometer10.co.il/';
+  const auth2 = document.querySelector('meta[name="author"]');
+  if (auth2) auth2.content = 'מערכת ספידומטר';
 }
 
 
@@ -5251,7 +5329,7 @@ function buildHeroBanner() {
   // Use ALL articles with fallback images — never filter to empty
   const pool = (currentFilter === 'all' ? articles.filter(a => a.cat !== 'quick') : articles.filter(a => a.cat === currentFilter))
     .map(a => Object.assign({}, a, { img: (a.img && a.img.length > 5) ? a.img : CAT_IMAGES[a.cat] || CAT_IMAGES['local'] }))
-    .slice(0, 6);
+    .slice(0, 5);
   if (!pool.length) { wrap.innerHTML = ''; return; }
   heroBannerArticles = pool;
   heroBannerIdx = 0;
@@ -5262,18 +5340,13 @@ function buildHeroBanner() {
     '</div></div>';
   const track = document.getElementById('hbt');
   if (track) {
-    let bsx = 0, bsy = 0;
-    track.addEventListener('touchstart', e => {
-      bsx = e.touches[0].clientX;
-      bsy = e.touches[0].clientY;
-    }, { passive: true });
+    let bsx=0, bsy=0;
+    track.addEventListener('touchstart', e => { bsx=e.touches[0].clientX; bsy=e.touches[0].clientY; }, {passive:true});
     track.addEventListener('touchend', e => {
       const dx = e.changedTouches[0].clientX - bsx;
       const dy = e.changedTouches[0].clientY - bsy;
-      if (Math.abs(dx) > 40 && Math.abs(dx) > Math.abs(dy)) {
-        moveHeroBanner(dx > 0 ? -1 : 1);
-      }
-    }, { passive: true });
+      if (Math.abs(dx) > 40 && Math.abs(dx) > Math.abs(dy)) moveHeroBanner(dx > 0 ? -1 : 1);
+    }, {passive:true});
   }
   clearInterval(heroBannerTimer);
   heroBannerTimer = setInterval(() => moveHeroBanner(1), 4500);
@@ -5284,8 +5357,8 @@ function moveHeroBanner(dir) {
   heroBannerIdx = (heroBannerIdx + dir + n) % n;
   const t = document.getElementById('hbt');
   if (t) {
-    t.style.transition = 'transform 0.5s cubic-bezier(0.25,0.46,0.45,0.94)';
-    t.style.transform = 'translateX(' + (heroBannerIdx * 100) + '%)';
+    t.style.transition = 'transform 0.45s cubic-bezier(0.25,0.46,0.45,0.94)';
+    t.style.transform = 'translateX(' + (heroBannerIdx * -100) + '%)';
   }
   document.querySelectorAll('.hero-banner-dot').forEach((d,i) => d.classList.toggle('active', i===heroBannerIdx));
   // Reset auto-timer
@@ -5295,7 +5368,7 @@ function moveHeroBanner(dir) {
 function goHeroBanner(idx) {
   heroBannerIdx = idx;
   const t = document.getElementById('hbt');
-  if (t) t.style.transform = 'translateX(' + (idx * 100) + '%)';
+  if (t) t.style.transform = 'translateX(' + (idx * -100) + '%)';
   document.querySelectorAll('.hero-banner-dot').forEach((d,i) => d.classList.toggle('active', i===idx));
   clearInterval(heroBannerTimer);
   heroBannerTimer = setInterval(() => moveHeroBanner(1), 4500);
