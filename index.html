@@ -65,8 +65,8 @@
   .hero-banner-wrap { min-height: 260px; background: #f7f7f5; }
   .hero-grid { min-height: 400px; }
   .hero-main { aspect-ratio: 16/9; overflow: hidden; }
-  .hero-side-card { aspect-ratio: 16/9; overflow: hidden; }
-  .hero-banner-slide { aspect-ratio: 16/9; overflow: hidden; }
+  .hero-side-card { overflow: hidden; }
+  .hero-banner-slide { overflow: hidden; }
   .card-img { aspect-ratio: 16/9; background: #f7f7f5; overflow: hidden; }
   img { max-width: 100%; height: auto; display: block; }
 </style>
@@ -816,17 +816,16 @@ nav { display: flex; align-items: center; gap: 2px; flex: 1; justify-content: ce
   overflow: hidden;
   background: #111;
   flex: 1;
-  aspect-ratio: 16/9;
+  min-height: 0;
 }
 .hero-side-card img {
-  width: 100%; height: 160px;
+  width: 100%;
+  height: 100%;
   object-fit: cover;
-  flex-shrink: 0;
   transition: transform 0.4s;
   opacity: 0.8;
-  loading: lazy;
-  aspect-ratio: 16/9;
   background: var(--bg);
+  display: block;
 }
 .hero-side-card:hover img { transform: scale(1.04); opacity: 0.95; }
 .hero-side-content {
@@ -1380,6 +1379,11 @@ footer {
   border-radius: 2px;
   margin-bottom: 14px;
   letter-spacing: 0.04em;
+  transition: background 0.18s, transform 0.15s;
+}
+.article-cat-tag:hover {
+  background: var(--red-dark);
+  transform: translateY(-1px);
 }
 .article-title {
   font-size: 2rem;
@@ -2784,16 +2788,17 @@ body.dark-mode .bottom-nav {
   cursor: pointer;
   background: #111;
   touch-action: pan-y;
-  aspect-ratio: 16/9;
   overflow: hidden;
+  height: 320px;
 }
 .hero-banner-slide img {
-  width: 100%; height: 420px;
+  width: 100%;
+  height: 100%;
   object-fit: cover;
   opacity: 0.85;
   transition: opacity 0.3s;
-  aspect-ratio: 16/9;
   background: var(--bg);
+  display: block;
 }
 .hero-banner-slide:hover img { opacity: 1; }
 .hero-banner-content {
@@ -2869,7 +2874,8 @@ body.dark-mode .bottom-nav {
   /* Hide hamburger — replaced by bottom nav */
   .hamburger { display: none !important; }
   /* Hero banner mobile height */
-  .hero-banner-slide img { height: 260px; }
+  .hero-banner-slide { height: 240px; }
+  .hero-banner-slide img { height: 100%; }
   .hero-banner-content { padding: 16px; }
   /* Reading improvements */
   .article-body { font-size: 1.02rem; line-height: 1.95; }
@@ -3588,9 +3594,9 @@ body.reading-mode .reading-mode-btn { background: var(--ink); color: #fff; borde
             <div style="display:flex;flex-direction:column;gap:8px;">
               <label for="a-img-file" style="display:flex;align-items:center;gap:8px;padding:10px 14px;border:1.5px dashed var(--border);border-radius:8px;cursor:pointer;font-size:0.82rem;color:var(--mid);background:var(--bg);transition:border-color 0.2s;" onmouseover="this.style.borderColor='var(--red)'" onmouseout="this.style.borderColor='var(--border)'">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
-                העלה תמונה מהמצלמה (מדחס אוטומטית ל-WebP)
+                בחר תמונה מהגלריה (מדחסת אוטומטית ל-WebP)
               </label>
-              <input type="file" id="a-img-file" accept="image/*" capture="environment" style="display:none;" onchange="handleImageUpload(this)">
+              <input type="file" id="a-img-file" accept="image/*" style="display:none;" onchange="handleImageUpload(this)">
               <input type="url" id="a-img" placeholder="או הכנס קישור תמונה...">
               <span id="upload-status" class="form-hint"></span>
               <div id="upload-preview" style="margin-top:8px;"></div>
@@ -4236,7 +4242,13 @@ function openArticle(id) {
   document.getElementById('admin-page').style.display='none';
 
   updateMeta(a);
-  document.getElementById('art-cat').textContent = CAT_LABELS[a.cat];
+  const artCatEl = document.getElementById('art-cat');
+  if (artCatEl) {
+    artCatEl.textContent = CAT_LABELS[a.cat];
+    artCatEl.onclick = () => { showHome(); filterCat(a.cat); };
+    artCatEl.style.cursor = 'pointer';
+    artCatEl.title = 'לכל ' + CAT_LABELS[a.cat];
+  }
   document.getElementById('art-title').textContent = a.title;
   const artSubEl = document.getElementById('art-sub');
   if (artSubEl) artSubEl.style.display = 'none';
