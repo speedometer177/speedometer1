@@ -2,7 +2,7 @@
 <html lang="he" dir="rtl">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="description" content="ספידומטר - אתר חדשות הרכב המוביל בישראל. מבחני רכב, רכב יוקרה, חדשות מקומיות ועולמיות, וייעוץ בקניית רכב.">
 <meta name="keywords" content="חדשות רכב, מבחני רכב, רכב יוקרה, רכב חדש, ישראל, טכנולוגיה, חדשנות, ספידומטר">
 <meta property="og:title" content="ספידומטר | רכב · טכנולוגיה · חדשנות">
@@ -29,7 +29,7 @@
   "name": "ספידומטר",
   "url": "https://speedometer10.co.il/",
   "logo": "https://speedometer10.co.il/logo.png",
-  "description": "ספידומטר הוקם במטרה לתת לרוכש את התמונה המלאה על הרכב. אנו פעילים ביוטיוב ובסושיאל מדיה משנת 2024, ומספקים מעטפת מלאה, מקצועית ומדויקת לרוכשי הרכב בישראל.",
+  "description": "ספידומטר ספידומטר - פורטל הרכב הטכנולוגי והמדויק בישראל. האתר הוקם במטרה להעניק לרוכש המקומי מעטפת מקצועית, מקיפה ומבוססת דאטה לקבלת ההחלטה הנכונה ביותר. אנו מספקים תוכן מוטורי איכותי, חדשות ועדכונים מהארץ ומהעולם, לצד מבחני רכב מעמיקים. עם נוכחות דינמית ואהודה במיוחד במדיה וברשתות החברתיות, "ספידומטר" מחבר בין קהילת חובבי הרכב לידע המקצועי המתקדם ביותר.",
   "inLanguage": "he",
   "sameAs": [
     "http://www.youtube.com/@Speedometer-r4s",
@@ -54,6 +54,9 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="ספידומטר">
 <link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://images.unsplash.com" crossorigin>
+<link rel="dns-prefetch" href="//images.unsplash.com">
+<link rel="dns-prefetch" href="//kaykrrnmykqrfhawgtqt.supabase.co">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="dns-prefetch" href="//fonts.googleapis.com">
 <link rel="dns-prefetch" href="//fonts.gstatic.com">
@@ -62,13 +65,24 @@
 <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Assistant:wght@400;600;700;800&family=Rubik:wght@400;500;700;900&display=swap" onload="this.onload=null;this.rel='stylesheet'">
 <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Assistant:wght@400;600;700;800&family=Rubik:wght@400;500;700;900&display=swap"></noscript>
 <style id="critical-css">
-  .hero-banner-wrap { min-height: 260px; background: #f7f7f5; }
+  /* CLS Prevention - reserve space before images load */
+  .hero-banner-wrap { min-height: 270px; height: 270px; background: transparent; }
   .hero-grid { min-height: 400px; }
-  .hero-main { aspect-ratio: 16/9; overflow: hidden; }
+  .hero-main { overflow: hidden; }
   .hero-side-card { overflow: hidden; }
   .hero-banner-slide { overflow: hidden; }
-  .card-img { aspect-ratio: 16/9; background: #f7f7f5; overflow: hidden; }
+  .card-img { aspect-ratio: 16/9; background: #f7f7f5; overflow: hidden; width: 100%; }
   img { max-width: 100%; height: auto; display: block; }
+  /* Prevent image jumps */
+  .card-img img { width: 100%; height: 100%; object-fit: cover; }
+  .hero-main img, .hero-side-card img { width: 100%; height: 100%; object-fit: cover; }
+  .hero-banner-slide img { width: 100%; height: 260px; object-fit: cover; display: block; }
+  /* Prevent layout shift from fonts */
+  body { font-display: swap; }
+  /* Stable header height */
+  header { height: 68px; }
+  .breaking-ticker { height: 40px; }
+  .cat-bar { height: 42px; }
 </style>
 <style>
 /* ════════════════════════════════════
@@ -225,21 +239,21 @@ button { font-family: var(--font); cursor: pointer; }
   bottom: 24px;
   right: 16px;
   left: auto;
-  width: 44px; height: 44px;
-  background: #1a1a1a;
+  width: 52px; height: 52px;
+  background: transparent;
   border: none;
-  border-radius: 8px;
+  border-radius: 50%;
   padding: 0;
   display: flex; align-items: center; justify-content: center;
   z-index: 9999;
   box-shadow: none;
   cursor: pointer;
-  opacity: 0.85;
-  transition: opacity 0.2s;
+  opacity: 0.9;
+  transition: opacity 0.2s, transform 0.2s;
 }
-.access-btn:hover { opacity: 1; transform: none; box-shadow: none; }
+.access-btn:hover { opacity: 1; transform: scale(1.08); box-shadow: none; }
 .access-btn.hidden-scroll { opacity: 0; pointer-events: none; transition: opacity 0.3s; }
-.access-btn img { width: 44px; height: 44px; border-radius: 8px; display: block; }
+.access-btn img { width: 52px; height: 52px; border-radius: 50%; display: block; }
 
 .access-overlay {
   display: none;
@@ -281,13 +295,14 @@ button { font-family: var(--font); cursor: pointer; }
 .access-action-btn:hover, .access-action-btn.active { background: var(--red); color: #fff; border-color: var(--red); }
 
 /* High contrast mode */
-body.high-contrast { filter: contrast(1.5) brightness(1.1); }
+body.high-contrast { filter: contrast(1.6) brightness(1.05) !important; }
 /* Grayscale */
 body.grayscale { filter: grayscale(100%); }
-/* Font sizes */
-body.small-text { font-size: 14px !important; }
-body.large-text { font-size: 18px !important; }
-body.larger-text { font-size: 20px !important; }
+/* Font sizes - controlled via JS on html element */
+body.small-text   { --acc-font-scale: 0.85; }
+body.large-text   { --acc-font-scale: 1.15; }
+body.larger-text  { --acc-font-scale: 1.3; }
+
 
 /* ════════════════════════════════════
    DARK MODE TOGGLE
@@ -410,6 +425,127 @@ header.scrolled { box-shadow: 0 2px 20px rgba(0,0,0,0.1); }
 }
 .btn-youtube svg { width: 18px; height: 18px; flex-shrink: 0; }
 
+
+/* ════════════════════════════════════
+   SPEC INFOGRAPHIC CARD (article view)
+════════════════════════════════════ */
+.spec-infographic {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 20px 22px;
+  margin: 0 0 24px;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.05);
+}
+.si-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.8rem;
+  font-weight: 800;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin-bottom: 14px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--border);
+}
+.si-header-bar {
+  display: block;
+  width: 3px; height: 14px;
+  background: var(--red);
+  border-radius: 2px;
+  flex-shrink: 0;
+}
+.si-model-badge {
+  margin-right: auto;
+  background: var(--black);
+  color: #fff;
+  font-size: 0.72rem;
+  padding: 2px 10px;
+  border-radius: 10px;
+  letter-spacing: 0;
+  font-weight: 700;
+}
+.si-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0;
+}
+.si-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 4px;
+  border-bottom: 1px solid var(--border);
+  gap: 8px;
+}
+.si-row:nth-child(odd) { background: rgba(0,0,0,0.015); }
+.si-label {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 0.75rem;
+  color: var(--mid);
+  flex-shrink: 0;
+  min-width: 90px;
+}
+.si-label span { white-space: nowrap; }
+.si-val {
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--black);
+  text-align: left;
+}
+/* Pros & Cons */
+.si-proscons {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+.si-pros, .si-cons {
+  border-radius: 6px;
+  padding: 10px 12px;
+}
+.si-pros { background: #f0fdf4; border: 1px solid #bbf7d0; }
+.si-cons { background: #fef2f2; border: 1px solid #fecaca; }
+.si-pc-title {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  margin-bottom: 7px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+.si-pros .si-pc-title { color: #16a34a; }
+.si-cons .si-pc-title { color: #dc2626; }
+.si-pc-item {
+  font-size: 0.78rem;
+  line-height: 1.5;
+  padding: 1px 0;
+  display: flex;
+  align-items: flex-start;
+  gap: 5px;
+  color: var(--dark);
+}
+.si-pro span { color: #16a34a; font-weight: 800; flex-shrink: 0; }
+.si-con span { color: #dc2626; font-weight: 800; flex-shrink: 0; }
+@media (max-width: 680px) {
+  .si-grid { grid-template-columns: 1fr; }
+  .si-proscons { grid-template-columns: 1fr; }
+}
+body.dark-mode .spec-infographic { background: var(--dm-surface); border-color: var(--dm-border); }
+body.dark-mode .si-row { border-color: var(--dm-border); }
+body.dark-mode .si-row:nth-child(odd) { background: rgba(255,255,255,0.03); }
+body.dark-mode .si-label { color: #888; }
+body.dark-mode .si-val { color: #e0e0e0; }
+body.dark-mode .si-pros { background: rgba(22,163,74,0.08); border-color: rgba(22,163,74,0.2); }
+body.dark-mode .si-cons { background: rgba(220,38,38,0.08); border-color: rgba(220,38,38,0.2); }
+body.dark-mode .si-pc-item { color: #ccc; }
+
 /* Spec card for reviews */
 .spec-card {
   background: var(--bg);
@@ -459,6 +595,121 @@ header.scrolled { box-shadow: 0 2px 20px rgba(0,0,0,0.1); }
 .score-bar-wrap { flex: 1; height: 5px; background: var(--border); border-radius: 10px; overflow: hidden; }
 .score-bar-fill { height: 100%; background: var(--red); border-radius: 10px; transition: width 0.8s ease; }
 .score-num { font-size: 0.75rem; font-weight: 700; color: var(--ink); width: 24px; text-align: left; }
+
+/* ════════════════════════════════════
+   MOBILE HERO BANNER — Floating Card Design
+════════════════════════════════════ */
+.hero-banner-wrap {
+  position: relative;
+  width: 100%;
+  height: 270px;
+  overflow: visible; /* arrows can peek outside edges */
+  background: transparent;
+  margin: 0 0 16px;
+  border-radius: 12px;
+}
+.hero-banner {
+  position: relative;
+  width: 100%;
+  height: 270px;
+  overflow: hidden;
+  border-radius: 12px;
+  box-shadow: 0 4px 24px rgba(0,0,0,0.18);
+}
+/* Fade edges — left and right side gradients (light mode) */
+/* No side fades — clean full-width floating banner */
+.hero-banner-track {
+  display: flex;
+  height: 100%;
+  will-change: transform;
+  /* direction:ltr so translateX works correctly in RTL page */
+  direction: ltr;
+}
+.hero-banner-slide {
+  min-width: 100%;
+  width: 100%;
+  height: 100%;
+  position: relative;
+  overflow: hidden;
+  cursor: pointer;
+  flex-shrink: 0;
+  direction: rtl; /* restore RTL for content */
+}
+.hero-banner-slide img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+.hero-banner-content {
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  padding: 14px 16px 12px;
+  background: linear-gradient(to top, rgba(0,0,0,0.88) 0%, rgba(0,0,0,0.4) 60%, transparent 100%);
+}
+/* Arrow buttons — at the outer edges, vertically centered, floating outside banner */
+.hero-banner-prev,
+.hero-banner-next {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 38px; height: 38px;
+  background: rgba(20,20,20,0.72);
+  color: #fff;
+  border: 1.5px solid rgba(255,255,255,0.22);
+  border-radius: 50%;
+  font-size: 1.25rem;
+  font-weight: 700;
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  z-index: 20;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  transition: background 0.18s, box-shadow 0.18s;
+  pointer-events: all;
+  padding: 0;
+  line-height: 1;
+  touch-action: manipulation;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.35);
+}
+/* RIGHT side — flush at right edge of banner */
+.hero-banner-prev { right: -4px; }
+/* LEFT side — flush at left edge of banner */
+.hero-banner-next { left: -4px; }
+.hero-banner-prev:hover,
+.hero-banner-next:hover {
+  background: var(--red);
+  border-color: var(--red);
+  box-shadow: 0 0 0 3px rgba(232,0,29,0.28), 0 4px 14px rgba(232,0,29,0.3);
+}
+.hero-banner-prev:active,
+.hero-banner-next:active {
+  background: var(--red-dark);
+  transform: translateY(-50%) scale(0.94);
+}
+.hero-banner-dots {
+  position: absolute;
+  bottom: 8px;
+  left: 50%; transform: translateX(-50%);
+  display: flex; gap: 5px;
+  z-index: 9;
+  direction: ltr;
+}
+.hero-banner-dot {
+  width: 6px; height: 6px;
+  background: rgba(255,255,255,0.42);
+  border-radius: 50%;
+  cursor: pointer;
+  border: none;
+  padding: 0;
+  transition: all 0.22s ease;
+  touch-action: manipulation;
+}
+.hero-banner-dot.active {
+  background: #fff;
+  width: 20px;
+  border-radius: 3px;
+}
 
 /* Image slider */
 .img-slider {
@@ -671,20 +922,20 @@ nav { display: flex; align-items: center; gap: 2px; flex: 1; justify-content: ce
 }
 .breaking-track {
   display: flex;
-  animation: tickerScroll 30s linear infinite;
-  will-change: transform;
+  animation: tickerScroll 55s linear infinite;
   white-space: nowrap;
 }
 .breaking-track:hover { animation-play-state: paused; }
 /* ticker never pauses */
 .breaking-item {
-  font-size: 0.84rem;
-  color: rgba(255,255,255,0.85);
-  padding: 0 28px;
-  border-right: 1px solid rgba(255,255,255,0.12);
+  font-size: 0.96rem;   /* larger — more prominent */
+  color: rgba(255,255,255,0.88);
+  padding: 0 32px;
+  border-right: 1px solid rgba(255,255,255,0.14);
   cursor: pointer;
   transition: color 0.2s;
-  font-weight: 500;
+  font-weight: 600;
+  letter-spacing: 0.01em;
 }
 .breaking-item:hover { color: #fff; }
 @keyframes tickerScroll {
@@ -739,11 +990,11 @@ nav { display: flex; align-items: center; gap: 2px; flex: 1; justify-content: ce
 .hero-grid {
   display: grid;
   grid-template-columns: 1fr 340px;
-  grid-template-rows: auto auto;
+  /* hero-main spans 2 rows and is 500px tall; each side card = 249px */
+  grid-template-rows: 249px 249px;
   gap: 2px;
   border-radius: 8px;
   overflow: hidden;
-  align-items: stretch;
 }
 .hero-main {
   grid-row: span 2;
@@ -751,18 +1002,19 @@ nav { display: flex; align-items: center; gap: 2px; flex: 1; justify-content: ce
   cursor: pointer;
   overflow: hidden;
   background: #111;
-  min-height: 420px;
-  aspect-ratio: 16/9;
+  /* Fixed height prevents white gap on right side */
+  height: 500px;
+  min-height: 500px;
   display: flex;
   flex-direction: column;
 }
 .hero-main img {
+  position: absolute;
+  top: 0; left: 0;
   width: 100%; height: 100%;
   object-fit: cover;
   transition: transform 0.5s ease;
   opacity: 0.85;
-  loading: lazy;
-  aspect-ratio: 16/9;
   background: var(--bg);
 }
 .hero-main:hover img { transform: scale(1.03); opacity: 1; }
@@ -809,23 +1061,24 @@ nav { display: flex; align-items: center; gap: 2px; flex: 1; justify-content: ce
   padding: 2px 8px;
   border-radius: 10px;
 }
-.hero-side { display: flex; flex-direction: column; gap: 2px; }
+.hero-side { display: flex; flex-direction: column; gap: 2px; grid-row: span 2; }
 .hero-side-card {
   position: relative;
   cursor: pointer;
   overflow: hidden;
   background: #111;
   flex: 1;
-  min-height: 0;
+  min-height: 200px;
 }
 .hero-side-card img {
+  position: absolute;
+  top: 0; left: 0;
   width: 100%;
   height: 100%;
   object-fit: cover;
   transition: transform 0.4s;
   opacity: 0.8;
   background: var(--bg);
-  display: block;
 }
 .hero-side-card:hover img { transform: scale(1.04); opacity: 0.95; }
 .hero-side-content {
@@ -858,6 +1111,7 @@ nav { display: flex; align-items: center; gap: 2px; flex: 1; justify-content: ce
   padding: 0 24px;
   content-visibility: auto;
   contain-intrinsic-size: 0 500px;
+  contain: layout style; /* additional containment */
 }
 .section-head {
   display: flex;
@@ -925,11 +1179,15 @@ nav { display: flex; align-items: center; gap: 2px; flex: 1; justify-content: ce
   background: var(--bg);
   position: relative;
   width: 100%;
+  /* Prevent CLS - dimensions reserved */
 }
 .card-img img {
   width: 100%; height: 100%;
   object-fit: cover;
   transition: transform 0.4s;
+  display: block;
+  /* Prevent image jump on load */
+  will-change: transform;
 }
 .card:hover .card-img img { transform: scale(1.04); }
 
@@ -1100,7 +1358,7 @@ nav { display: flex; align-items: center; gap: 2px; flex: 1; justify-content: ce
 }
 .ticker-track {
   display: flex;
-  animation: tickerScroll 28s linear infinite;
+  animation: tickerScrollHalf 50s linear infinite;
   white-space: nowrap;
 }
 /* ticker never pauses */
@@ -1113,7 +1371,7 @@ nav { display: flex; align-items: center; gap: 2px; flex: 1; justify-content: ce
   transition: color 0.2s;
 }
 .ticker-item:hover { color: #fff; }
-@keyframes tickerScroll {
+@keyframes tickerScrollHalf {
   from { transform: translateX(0); }
   to { transform: translateX(-50%); }
 }
@@ -1357,6 +1615,35 @@ footer {
 /* ════════════════════════════════════
    ARTICLE PAGE
 ════════════════════════════════════ */
+
+/* ════════════════════════════════════
+   BREADCRUMB NAV (SEO + UX)
+════════════════════════════════════ */
+.breadcrumb-nav {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.75rem;
+  color: var(--muted);
+  margin-bottom: 14px;
+  flex-wrap: wrap;
+}
+.breadcrumb-nav a {
+  color: var(--mid);
+  transition: color 0.18s;
+}
+.breadcrumb-nav a:hover { color: var(--red); }
+.breadcrumb-nav .bc-sep {
+  color: var(--light);
+  font-size: 0.7rem;
+}
+.breadcrumb-nav .bc-current {
+  color: var(--black);
+  font-weight: 600;
+}
+body.dark-mode .breadcrumb-nav a { color: #aaa; }
+body.dark-mode .breadcrumb-nav .bc-current { color: #e0e0e0; }
+
 .article-page { display: none; }
 .article-inner {
   max-width: var(--max);
@@ -1539,6 +1826,88 @@ footer {
 /* ════════════════════════════════════
    ADMIN PANEL
 ════════════════════════════════════ */
+
+/* ════════════════════════════════════
+   SPEC ADMIN CARD (review form)
+════════════════════════════════════ */
+.spec-admin-card {
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 20px;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.05);
+}
+.spec-admin-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 0.9rem;
+  font-weight: 800;
+  color: var(--black);
+  margin-bottom: 18px;
+  padding-bottom: 12px;
+  border-bottom: 2px solid var(--border);
+}
+.spec-admin-bar {
+  display: block;
+  width: 3px; height: 18px;
+  background: var(--red);
+  border-radius: 2px;
+  flex-shrink: 0;
+}
+.spec-admin-section-title {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin: 16px 0 10px;
+  padding-bottom: 6px;
+  border-bottom: 1px solid var(--border);
+}
+.spec-admin-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+.spec-admin-row {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+.spec-admin-icon {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--mid);
+  line-height: 1;
+}
+.spec-admin-row input,
+.spec-admin-row select {
+  padding: 8px 10px;
+  font-size: 0.85rem;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  font-family: var(--font);
+  color: var(--ink);
+  background: var(--white);
+  width: 100%;
+  outline: none;
+  transition: border-color 0.18s;
+}
+.spec-admin-row input:focus,
+.spec-admin-row select:focus { border-color: var(--red); }
+@media (max-width: 680px) {
+  .spec-admin-grid { grid-template-columns: 1fr; }
+}
+body.dark-mode .spec-admin-card { background: var(--dm-surface); border-color: var(--dm-border); }
+body.dark-mode .spec-admin-header { color: #e0e0e0; border-color: var(--dm-border); }
+body.dark-mode .spec-admin-section-title { border-color: var(--dm-border); }
+body.dark-mode .spec-admin-row input,
+body.dark-mode .spec-admin-row select { background: #2a2a2a; border-color: #333; color: #e0e0e0; }
+
 .admin-page { display: none; }
 .admin-inner {
   max-width: 860px;
@@ -1749,7 +2118,7 @@ textarea { resize: vertical; min-height: 180px; line-height: 1.6; }
   nav { display: none; }
   .hamburger { display: flex; }
   .hero-grid { grid-template-columns: 1fr; grid-template-rows: auto; }
-  .hero-main { min-height: 300px; grid-row: auto; }
+  .hero-main { min-height: 300px; height: 300px; grid-row: auto; }
   .hero-side { flex-direction: row; }
   .hero-side-card { min-height: 160px; }
   .two-col { grid-template-columns: 1fr; }
@@ -1778,13 +2147,20 @@ textarea { resize: vertical; min-height: 180px; line-height: 1.6; }
   .hero-main-title { font-size: 1.25rem; }
   .hero-side { display: none; }
   .hero-grid { grid-template-columns: 1fr; }
+  /* Mobile hero banner dimensions */
+  .hero-banner-wrap { height: 270px; min-height: 270px; overflow: visible; }
+  .hero-banner { height: 270px; overflow: hidden; }
+  .hero-banner-slide { height: 270px; }
+  .hero-banner-slide img { height: 270px; }
   .form-row { grid-template-columns: 1fr; }
   .footer-grid { grid-template-columns: 1fr; }
   .article-title { font-size: 1.4rem; }
   .footer-bottom { flex-direction: column; gap: 10px; text-align: center; }
   .section { padding: 0 16px; }
-  .hero { padding: 0 16px; }
-  .access-btn { bottom: 75px; }
+  .hero { padding: 0 12px; }
+  /* Bottom nav space */
+  #home-page, #article-page { padding-bottom: 80px; }
+  .access-btn { bottom: 75px; background: transparent; border-radius: 50%; }
   .back-top { left: 24px; bottom: 80px; }
   
 }
@@ -1941,6 +2317,11 @@ body.dark-mode .read-time-badge { background: #333; color: #e0e0e0; }
   position: relative;
 }
 body.dark-mode .danny-section { background: linear-gradient(135deg,#1a1a1a,#222); }
+body.dark-mode { --page-edge-color: #0f0f0f; }
+body:not(.dark-mode) { --page-edge-color: #f7f7f5; }
+body.dark-mode .breadcrumb-nav a { color: #999; }
+body.dark-mode .breadcrumb-nav .bc-current { color: #e0e0e0; }
+body.dark-mode .cat-breadcrumb-preview { color: #666; }
 .danny-name {
   font-size: 1.05rem;
   font-weight: 800;
@@ -2824,25 +3205,7 @@ body.dark-mode .bottom-nav {
   padding: 0;
 }
 .hero-banner-dot.active { background: #fff; width: 20px; border-radius: 4px; }
-.hero-banner-prev, .hero-banner-next {
-  position: absolute;
-  top: 50%; transform: translateY(-50%);
-  width: 36px; height: 36px;
-  background: rgba(0,0,0,0.5);
-  color: #fff;
-  border: none;
-  border-radius: 50%;
-  cursor: pointer;
-  display: flex; align-items: center; justify-content: center;
-  font-size: 1rem;
-  z-index: 2;
-  backdrop-filter: blur(4px);
-  transition: background 0.2s;
-}
-.hero-banner-prev:hover, .hero-banner-next:hover { background: rgba(0,0,0,0.8); }
-.hero-banner-prev, .hero-banner-next { top: auto; bottom: 48px; transform: none; }
-.hero-banner-next { right: 16px; left: auto; }
-.hero-banner-prev { right: 56px; left: auto; }
+/* old banner arrow overrides removed */
 
 /* ════════════════════════════════════
    SWIPEABLE CARDS ROW
@@ -3088,31 +3451,31 @@ body.reading-mode .reading-mode-btn { background: var(--ink); color: #fff; borde
 <!-- ════════ HEADER ════════ -->
 <header role="banner">
   <div class="header-inner">
-    <div class="logo" onclick="currentFilter='all'; showHome(); buildHero(); buildSections(); window.scrollTo({top:0,behavior:'smooth'});return false;" role="link" tabindex="0" aria-label="ספידומטר - עמוד הבית" onkeydown="if(event.key==='Enter'){currentFilter='all'; showHome(); buildHero(); buildSections(); window.scrollTo({top:0,behavior:'smooth'});return false;}">
+    <div class="logo" onclick="event.preventDefault();currentFilter='all'; showHome(); buildHero(); buildSections(); handleMobileHero(); window.scrollTo({top:0,behavior:'smooth'});" role="link" tabindex="0" aria-label="ספידומטר - עמוד הבית" onkeydown="if(event.key==='Enter'){currentFilter='all'; showHome(); buildHero(); buildSections(); window.scrollTo({top:0,behavior:'smooth'});return false;}">
       <span class="logo-name">ספידו<span>מטר</span></span>
       <span class="logo-sub">רכב · טכנולוגיה · חדשנות</span>
     </div>
 
     <nav role="navigation" aria-label="ניווט ראשי">
       <div class="nav-item">
-        <a class="nav-link" href="javascript:void(0)" onclick="showHome()" aria-label="עמוד הבית">בית</a>
+        <a class="nav-link" href="/" onclick="event.preventDefault();currentFilter='all';showHome();buildHero();buildSections();window.scrollTo({top:0,behavior:'smooth'});" aria-label="עמוד הבית ספידומטר">בית</a>
       </div>
       <div class="nav-item">
         <a class="nav-link" href="javascript:void(0)" aria-haspopup="true" aria-expanded="false">חדשות רכב
           <svg viewBox="0 0 12 8" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M1 1l5 5 5-5"/></svg>
         </a>
         <div class="dropdown" role="menu">
-          <a href="javascript:void(0)" onclick="filterCat('local')" role="menuitem">חדשות מקומיות</a>
-          <a href="javascript:void(0)" onclick="filterCat('world')" role="menuitem">חדשות עולמיות</a>
-          <a href="javascript:void(0)" onclick="filterCat('electric')" role="menuitem">רכב חשמלי</a>
-          <a href="javascript:void(0)" onclick="filterCat('tech')" role="menuitem">טכנולוגיה ובטיחות</a>
+          <a href="/?cat=local" onclick="event.preventDefault();filterCat('local')" role="menuitem">חדשות מקומיות</a>
+          <a href="/?cat=world" onclick="event.preventDefault();filterCat('world')" role="menuitem">חדשות עולמיות</a>
+          <a href="/?cat=electric" onclick="event.preventDefault();filterCat('electric')" role="menuitem">רכב חשמלי</a>
+          <a href="/?cat=tech" onclick="event.preventDefault();filterCat('tech')" role="menuitem">טכנולוגיה ובטיחות</a>
         </div>
       </div>
       <div class="nav-item">
-        <a class="nav-link" href="javascript:void(0)" onclick="filterCat('review')" aria-label="מבחני רכב">מבחני רכב</a>
+        <a class="nav-link" href="/?cat=review" onclick="event.preventDefault();filterCat('review')" aria-label="מבחני רכב">מבחני רכב</a>
       </div>
       <div class="nav-item">
-        <a class="nav-link" href="javascript:void(0)" onclick="filterCat('luxury')" aria-label="רכבי יוקרה">יוקרה
+        <a class="nav-link" href="/?cat=luxury" onclick="event.preventDefault();filterCat('luxury')" aria-label="רכבי יוקרה">יוקרה
           <span style="background:var(--red);color:#fff;font-size:0.6rem;padding:1px 6px;border-radius:10px;font-weight:700;margin-right:2px;">חדש</span>
         </a>
       </div>
@@ -3121,13 +3484,13 @@ body.reading-mode .reading-mode-btn { background: var(--ink); color: #fff; borde
           <svg viewBox="0 0 12 8" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M1 1l5 5 5-5"/></svg>
         </a>
         <div class="dropdown" role="menu">
-          <a href="javascript:void(0)" onclick="filterCat('buying');return false;" role="menuitem">מדריך קניית רכב</a>
-          <a href="javascript:void(0)" onclick="filterCat('electric');return false;" role="menuitem">מדריך רכב חשמלי</a>
-          <a href="javascript:void(0)" onclick="filterCat('buying');return false;" role="menuitem">השוואת רכבים</a>
+          <a href="/?cat=buying" onclick="event.preventDefault();filterCat('buying')" role="menuitem">מדריך קניית רכב</a>
+          <a href="/?cat=electric" onclick="event.preventDefault();filterCat('electric')" role="menuitem">מדריך רכב חשמלי</a>
+          <a href="/?cat=buying" onclick="event.preventDefault();filterCat('buying')" role="menuitem">השוואת רכבים</a>
         </div>
       </div>
       <div class="nav-item">
-        <a class="nav-link nav-link-quick" href="javascript:void(0)" onclick="filterCat('quick')" aria-label="חדשות בקליק"><svg class="quick-icon-small" viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg" style="width:14px;height:14px;margin-left:4px;"><defs><linearGradient id="qbn" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#60a5fa"/><stop offset="100%" stop-color="#a78bfa"/></linearGradient></defs><rect x="1" y="1" width="24" height="19" rx="6" fill="#1a1050" stroke="url(#qbn)" stroke-width="1.5"/><path d="M5 20 L3 27 L11 22" fill="#1a1050" stroke="url(#qbn)" stroke-width="1.2"/><path d="M17 5 L13 15 L16 15 L14 26 L21 13 L17.5 13 L21 5Z" fill="#fbbf24" opacity="0.95"/></svg>חדשות בקליק</a>
+        <a class="nav-link nav-link-quick" href="/?cat=quick" onclick="event.preventDefault();filterCat('quick')" aria-label="חדשות בקליק"><svg class="quick-icon-small" viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg" style="width:14px;height:14px;margin-left:4px;"><defs><linearGradient id="qbn" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#60a5fa"/><stop offset="100%" stop-color="#a78bfa"/></linearGradient></defs><rect x="1" y="1" width="24" height="19" rx="6" fill="#1a1050" stroke="url(#qbn)" stroke-width="1.5"/><path d="M5 20 L3 27 L11 22" fill="#1a1050" stroke="url(#qbn)" stroke-width="1.2"/><path d="M17 5 L13 15 L16 15 L14 26 L21 13 L17.5 13 L21 5Z" fill="#fbbf24" opacity="0.95"/></svg>חדשות בקליק</a>
       </div>
     </nav>
 
@@ -3247,7 +3610,7 @@ body.reading-mode .reading-mode-btn { background: var(--ink); color: #fff; borde
   <section class="section" aria-label="חדשות אחרונות">
     <div class="section-head">
       <h2 class="section-title">חדשות אחרונות</h2>
-      <a href="javascript:void(0)" class="section-more" onclick="filterCat('local')">לכל הכתבות →</a>
+      <a href="/?cat=local" class="section-more" onclick="event.preventDefault();filterCat('local')">לכל הכתבות →</a>
     </div>
     <div class="cards-grid cards-scroll-row-desktop" id="latest-grid"></div>
   </section>
@@ -3275,7 +3638,7 @@ body.reading-mode .reading-mode-btn { background: var(--ink); color: #fff; borde
       <div>
         <div class="section-head">
           <h2 class="section-title">מבחני רכב</h2>
-          <a href="javascript:void(0)" class="section-more" onclick="filterCat('review')">לכל המבחנים →</a>
+          <a href="/?cat=review" class="section-more" onclick="event.preventDefault();filterCat('review')">לכל המבחנים →</a>
         </div>
         <div class="cards-grid cols-3" id="reviews-grid"></div>
       </div>
@@ -3366,7 +3729,7 @@ body.reading-mode .reading-mode-btn { background: var(--ink); color: #fff; borde
   <section class="section" aria-label="חדשות עולמיות">
     <div class="section-head">
       <h2 class="section-title">חדשות עולמיות</h2>
-      <a href="javascript:void(0)" class="section-more" onclick="filterCat('world')">לכל הכתבות →</a>
+      <a href="/?cat=world" class="section-more" onclick="event.preventDefault();filterCat('world')">לכל הכתבות →</a>
     </div>
     <div class="cards-grid" id="world-grid"></div>
   </section>
@@ -3393,6 +3756,8 @@ body.reading-mode .reading-mode-btn { background: var(--ink); color: #fff; borde
     <div class="article-layout">
       <article>
         <div class="article-header">
+          <!-- Breadcrumb: filled by JS in openArticle() -->
+          <nav class="breadcrumb-nav" id="art-breadcrumb" aria-label="נתיב ניווט"></nav>
           <span class="article-cat-tag" id="art-cat"></span>
           <h1 class="article-title" id="art-title"></h1>
           <p class="article-sub" id="art-sub"></p>
@@ -3564,7 +3929,7 @@ body.reading-mode .reading-mode-btn { background: var(--ink); color: #fff; borde
         <div class="form-row">
           <div class="form-group">
             <label for="a-cat">קטגוריה *</label>
-            <select id="a-cat" onchange="toggleSpecsSection(this.value)">
+            <select id="a-cat" onchange="toggleSpecsSection(this.value);updateCatBreadcrumbPreview(this.value)">
               <option value="local">חדשות מקומיות</option>
               <option value="world">חדשות עולמיות</option>
               <option value="review">מבחן רכב</option>
@@ -3575,6 +3940,7 @@ body.reading-mode .reading-mode-btn { background: var(--ink); color: #fff; borde
               <option value="luxury">יוקרה</option>
               <option value="quick">חדשות בקליק</option>
             </select>
+            <span class="form-hint" id="cat-breadcrumb-preview" style="margin-top:4px;color:var(--muted);font-size:0.72rem;">תג הניווט: <strong>חדשות › חדשות מקומיות</strong></span>
           </div>
           <div class="form-group">
             <label for="a-author">שם הכותב</label>
@@ -3641,14 +4007,51 @@ body.reading-mode .reading-mode-btn { background: var(--ink); color: #fff; borde
         <!-- SPECS SECTION — for review articles -->
         <div class="form-row full" id="specs-section" style="display:none;">
           <div class="form-group">
-            <div style="background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:18px;">
-              <div style="font-size:0.88rem;font-weight:700;margin-bottom:14px;color:var(--black);display:flex;align-items:center;gap:8px;">
-                <span style="display:block;width:3px;height:16px;background:var(--red);border-radius:2px;"></span>
-                תעודת זהות טכנית
+            <div class="spec-admin-card">
+              <!-- Header -->
+              <div class="spec-admin-header">
+                <span class="spec-admin-bar"></span>
+                <span>מפרט טכני מלא — תעודת זהות</span>
               </div>
-              <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
-                <div class="form-group">
-                  <label for="spec-engine">סוג מנוע</label>
+
+              <!-- IDENTITY SECTION -->
+              <div class="spec-admin-section-title">🚗 זהות הרכב</div>
+              <div class="spec-admin-grid">
+                <div class="spec-admin-row">
+                  <div class="spec-admin-icon"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="9" width="15" height="9" rx="2"/><path d="M6 9V6a4 4 0 0 1 4-4h4l3 7"/><circle cx="5.5" cy="18.5" r="1.5"/><circle cx="16.5" cy="18.5" r="1.5"/></svg><span>דגם</span></div>
+                  <input type="text" id="spec-model" placeholder="למשל: Toyota RAV4">
+                </div>
+                <div class="spec-admin-row">
+                  <div class="spec-admin-icon"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg><span>שנה</span></div>
+                  <input type="text" id="spec-year" placeholder="למשל: 2025">
+                </div>
+                <div class="spec-admin-row">
+                  <div class="spec-admin-icon"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 12h16M4 18h16"/></svg><span>סגמנט</span></div>
+                  <select id="spec-segment">
+                    <option value="">בחר סגמנט</option>
+                    <option>מיני-עירוני (A)</option><option>עירוני (B)</option><option>קומפקטי (C)</option><option>משפחתי (D)</option><option>מנהלים (E)</option><option>יוקרה (F)</option>
+                    <option>SUV קומפקטי</option><option>SUV בינוני</option><option>SUV גדול</option><option>קרוסאובר</option><option>פיקאפ</option><option>מינוון</option>
+                  </select>
+                </div>
+                <div class="spec-admin-row">
+                  <div class="spec-admin-icon"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg><span>מחיר (₪)</span></div>
+                  <input type="text" id="spec-price" placeholder="למשל: 250,000">
+                </div>
+                <div class="spec-admin-row">
+                  <div class="spec-admin-icon"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg><span>ארץ ייצור</span></div>
+                  <input type="text" id="spec-country" placeholder="למשל: יפן, גרמניה">
+                </div>
+                <div class="spec-admin-row">
+                  <div class="spec-admin-icon"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M4.22 4.22l2.12 2.12M17.66 17.66l2.12 2.12M2 12h3M19 12h3"/></svg><span>רמות גימור</span></div>
+                  <input type="text" id="spec-trims" placeholder="למשל: Active, Style, Elite">
+                </div>
+              </div>
+
+              <!-- POWERTRAIN SECTION -->
+              <div class="spec-admin-section-title">⚡ כוח ומנוע</div>
+              <div class="spec-admin-grid">
+                <div class="spec-admin-row">
+                  <div class="spec-admin-icon"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="10" rx="2"/><path d="M7 7V5M17 7V5M7 17v2M17 17v2M2 12h2M20 12h2"/></svg><span>מנוע</span></div>
                   <select id="spec-engine" onchange="toggleRangeField(this.value)">
                     <option value="בנזין">בנזין</option>
                     <option value="דיזל">דיזל</option>
@@ -3657,50 +4060,98 @@ body.reading-mode .reading-mode-btn { background: var(--ink); color: #fff; borde
                     <option value="PHEV">PHEV</option>
                   </select>
                 </div>
-                <div class="form-group">
-                  <label for="spec-power">כוחות סוס</label>
+                <div class="spec-admin-row">
+                  <div class="spec-admin-icon"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg><span>הספק (כ"ס)</span></div>
                   <input type="text" id="spec-power" placeholder="למשל: 300">
                 </div>
-                <div class="form-group">
-                  <label for="spec-torque">מומנט (נ"מ)</label>
+                <div class="spec-admin-row">
+                  <div class="spec-admin-icon"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2a10 10 0 1 0 10 10"/><polyline points="22 2 22 8 16 8"/></svg><span>מומנט (נ״מ)</span></div>
                   <input type="text" id="spec-torque" placeholder="למשל: 450">
                 </div>
-                <div class="form-group">
-                  <label for="spec-zero">0-100 (שניות)</label>
+                <div class="spec-admin-row">
+                  <div class="spec-admin-icon"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12H19M13 6l6 6-6 6"/></svg><span>0-100 (שניות)</span></div>
                   <input type="text" id="spec-zero" placeholder="למשל: 4.5">
                 </div>
-                <div class="form-group" id="spec-range-group">
-                  <label for="spec-range">טווח (ק"מ) — חשמלי בלבד</label>
+                <div class="spec-admin-row" id="spec-gearbox-row">
+                  <div class="spec-admin-icon"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="5" cy="12" r="2"/><circle cx="19" cy="12" r="2"/><path d="M7 12h10M12 7V5M12 19v-2M8 7V5M16 7V5"/></svg><span>תיבת הילוכים</span></div>
+                  <select id="spec-gearbox">
+                    <option value="">בחר תיבה</option>
+                    <option>ידנית 5 הילוכים</option><option>ידנית 6 הילוכים</option>
+                    <option>אוטומטית 6 הילוכים</option><option>אוטומטית 7 הילוכים</option><option>אוטומטית 8 הילוכים</option><option>אוטומטית 9 הילוכים</option><option>CVT</option><option>DSG 7</option><option>DSG 8</option>
+                  </select>
+                </div>
+                <div class="spec-admin-row">
+                  <div class="spec-admin-icon"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg><span>מהירות מירבית (קמ"ש)</span></div>
+                  <input type="text" id="spec-topspeed" placeholder="למשל: 240">
+                </div>
+                <div class="spec-admin-row" id="spec-range-group">
+                  <div class="spec-admin-icon"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" stroke-width="2"><path d="M13 2 L3 14 L12 14 L11 22 L21 10 L12 10 Z"/></svg><span>טווח (ק"מ) — חשמלי</span></div>
                   <input type="text" id="spec-range" placeholder="למשל: 500">
                 </div>
-                <div class="form-group">
-                  <label for="spec-price">מחיר (₪)</label>
-                  <input type="text" id="spec-price" placeholder="למשל: 250,000">
+              </div>
+
+              <!-- PRACTICAL SECTION -->
+              <div class="spec-admin-section-title">📦 מידות ויעילות</div>
+              <div class="spec-admin-grid">
+                <div class="spec-admin-row">
+                  <div class="spec-admin-icon"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/></svg><span>נפח תא מטען (ל׳)</span></div>
+                  <input type="text" id="spec-trunk" placeholder="למשל: 450">
+                </div>
+                <div class="spec-admin-row">
+                  <div class="spec-admin-icon"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 22V9l6-6h6l2 2v4h1a2 2 0 0 1 2 2v7a2 2 0 0 1-2 2H3z"/><path d="M9 3v6h6"/></svg><span>צריכת דלק (ל/100)</span></div>
+                  <input type="text" id="spec-consumption" placeholder="למשל: 6.5">
+                </div>
+                <div class="spec-admin-row">
+                  <div class="spec-admin-icon"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="2"><path d="M2 22 C2 22 5 15 12 15 C19 15 22 22 22 22"/><path d="M12 15 C12 15 8 10 12 2 C16 10 12 15 12 15"/></svg><span>דרגת זיהום אוויר</span></div>
+                  <select id="spec-emission">
+                    <option value="">בחר דרגה</option>
+                    <option>Euro 6d</option><option>Euro 6d-Temp</option><option>Euro 5</option>
+                    <option>0 פליטות (חשמלי)</option><option>נמוך מאוד (PHEV)</option>
+                  </select>
                 </div>
               </div>
-              <div style="margin-top:14px;border-top:1px solid var(--border);padding-top:14px;">
-                <div style="font-size:0.78rem;font-weight:600;color:var(--dark);margin-bottom:10px;">ציוני קטגוריה (1-10)</div>
-                <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
-                  <div class="form-group">
-                    <label for="score-driving">נסיעה</label>
-                    <input type="number" id="score-driving" min="1" max="10" step="0.1" placeholder="9.0">
-                  </div>
-                  <div class="form-group">
-                    <label for="score-design">עיצוב</label>
-                    <input type="number" id="score-design" min="1" max="10" step="0.1" placeholder="8.5">
-                  </div>
-                  <div class="form-group">
-                    <label for="score-tech">טכנולוגיה</label>
-                    <input type="number" id="score-tech" min="1" max="10" step="0.1" placeholder="9.0">
-                  </div>
-                  <div class="form-group">
-                    <label for="score-comfort">נוחות</label>
-                    <input type="number" id="score-comfort" min="1" max="10" step="0.1" placeholder="8.0">
-                  </div>
-                  <div class="form-group">
-                    <label for="score-value">ערך</label>
-                    <input type="number" id="score-value" min="1" max="10" step="0.1" placeholder="7.5">
-                  </div>
+
+              <!-- PROS & CONS -->
+              <div class="spec-admin-section-title">✅ יתרונות וחסרונות</div>
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:4px;">
+                <div class="form-group">
+                  <label style="display:flex;align-items:center;gap:6px;color:#16a34a;font-weight:700;">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#16a34a" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+                    יתרונות (כל אחד בשורה)
+                  </label>
+                  <textarea id="spec-pros" rows="4" placeholder="שירות מעולה&#10;צריכת דלק נמוכה&#10;חלל פנים מרווח" style="min-height:90px;border-color:#bbf7d0;"></textarea>
+                </div>
+                <div class="form-group">
+                  <label style="display:flex;align-items:center;gap:6px;color:#dc2626;font-weight:700;">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#dc2626" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                    חסרונות (כל אחד בשורה)
+                  </label>
+                  <textarea id="spec-cons" rows="4" placeholder="מחיר גבוה יחסית&#10;טיפול יקר&#10;אחסון מוגבל" style="min-height:90px;border-color:#fecaca;"></textarea>
+                </div>
+              </div>
+
+              <!-- SCORES -->
+              <div class="spec-admin-section-title" style="margin-top:16px;">⭐ ציוני קטגוריה (1-10)</div>
+              <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-top:4px;">
+                <div class="form-group" style="text-align:center;">
+                  <label for="score-driving" style="font-size:0.7rem;">🛣️ נסיעה</label>
+                  <input type="number" id="score-driving" min="1" max="10" step="0.1" placeholder="9.0" style="text-align:center;">
+                </div>
+                <div class="form-group" style="text-align:center;">
+                  <label for="score-design" style="font-size:0.7rem;">🎨 עיצוב</label>
+                  <input type="number" id="score-design" min="1" max="10" step="0.1" placeholder="8.5" style="text-align:center;">
+                </div>
+                <div class="form-group" style="text-align:center;">
+                  <label for="score-tech" style="font-size:0.7rem;">💻 טכנולוגיה</label>
+                  <input type="number" id="score-tech" min="1" max="10" step="0.1" placeholder="9.0" style="text-align:center;">
+                </div>
+                <div class="form-group" style="text-align:center;">
+                  <label for="score-comfort" style="font-size:0.7rem;">🛋️ נוחות</label>
+                  <input type="number" id="score-comfort" min="1" max="10" step="0.1" placeholder="8.0" style="text-align:center;">
+                </div>
+                <div class="form-group" style="text-align:center;">
+                  <label for="score-value" style="font-size:0.7rem;">💰 ערך</label>
+                  <input type="number" id="score-value" min="1" max="10" step="0.1" placeholder="7.5" style="text-align:center;">
                 </div>
               </div>
             </div>
@@ -3782,7 +4233,7 @@ body.reading-mode .reading-mode-btn { background: var(--ink); color: #fff; borde
           <span class="logo-name">ספידו<span>מטר</span></span>
           <span class="logo-sub" style="color:rgba(255,255,255,0.4)">רכב · טכנולוגיה · חדשנות</span>
         </div>
-        <p>ספידומטר הוקם במטרה לתת לרוכש את התמונה המלאה על הרכב. אנו פעילים ביוטיוב ובסושיאל מדיה משנת 2024, ומספקים מעטפת מלאה, מקצועית ומדויקת לרוכשי הרכב בישראל.</p>
+        <p>פורטל הרכב הטכנולוגי והמדויק בישראל. מספקים מעטפת מקצועית ומבוססת דאטה לרוכש המקומי — חדשות, מבחני רכב ועדכוני שוק עם נוכחות דינמית ברשתות החברתיות.</p>
         <!-- Social Icons -->
         <div class="footer-social" aria-label="רשתות חברתיות">
           <a href="http://www.youtube.com/@Speedometer-r4s" target="_blank" rel="noopener noreferrer" aria-label="ערוץ ספידומטר ביוטיוב" title="ספידומטר יוטיוב">
@@ -3799,20 +4250,21 @@ body.reading-mode .reading-mode-btn { background: var(--ink); color: #fff; borde
       </div>
       <div class="footer-col">
         <h4>קטגוריות</h4>
-        <a href="javascript:void(0)" onclick="filterCat('local')">חדשות מקומיות</a>
-        <a href="javascript:void(0)" onclick="filterCat('world')">חדשות עולמיות</a>
-        <a href="javascript:void(0)" onclick="filterCat('review')">מבחני רכב</a>
-        <a href="javascript:void(0)" onclick="filterCat('luxury')">רכב יוקרה</a>
-        <a href="javascript:void(0)" onclick="filterCat('electric')">רכב חשמלי</a>
-        <a href="javascript:void(0)" onclick="filterCat('tech')">טכנולוגיה</a>
-        <a href="javascript:void(0)" onclick="filterCat('quick')">חדשות בקליק</a>
+        <a href="/?cat=local" onclick="event.preventDefault();filterCat('local')">חדשות מקומיות</a>
+        <a href="/?cat=world" onclick="event.preventDefault();filterCat('world')">חדשות עולמיות</a>
+        <a href="/?cat=review" onclick="event.preventDefault();filterCat('review')">מבחני רכב</a>
+        <a href="/?cat=luxury" onclick="event.preventDefault();filterCat('luxury')">רכב יוקרה</a>
+        <a href="/?cat=electric" onclick="event.preventDefault();filterCat('electric')">רכב חשמלי</a>
+        <a href="/?cat=tech" onclick="event.preventDefault();filterCat('tech')">טכנולוגיה</a>
+        <a href="/?cat=quick" onclick="event.preventDefault();filterCat('quick')">חדשות בקליק</a>
       </div>
       <div class="footer-col">
         <h4>שירותים</h4>
         <a href="https://wa.me/972559365579?text=%D7%A9%D7%9C%D7%95%D7%9D%20%D7%90%D7%A9%D7%9E%D7%97%20%D7%9C%D7%A7%D7%91%D7%9C%20%D7%99%D7%99%D7%A2%D7%95%D7%A5%20%D7%91%D7%91%D7%97%D7%99%D7%A8%D7%AA%20%D7%A8%D7%9B%D7%91" target="_blank" rel="noopener noreferrer">ייעוץ קניית רכב</a>
         <a href="javascript:void(0)" onclick="filterCat('review');return false;">השוואת רכבים</a>
-        <a href="javascript:void(0)" onclick="filterCat('buying');return false;">מדריך קניית רכב</a>
+        <a href="/?cat=buying" onclick="event.preventDefault();filterCat('buying')">מדריך קניית רכב</a>
         <a href="https://chat.whatsapp.com/JeEvifhd0Cm1e7gqI2MeQD" target="_blank" rel="noopener noreferrer">קבוצת וואטסאפ</a>
+        <a href="javascript:void(0)" onclick="openModal('about-modal');return false;" style="color:rgba(255,255,255,0.5);">אודות</a>
         <a href="javascript:void(0)" onclick="openModal('access-modal');return false;" style="color:rgba(255,255,255,0.5);">הצהרת נגישות</a>
       </div>
       <div class="footer-col">
@@ -3834,7 +4286,7 @@ body.reading-mode .reading-mode-btn { background: var(--ink); color: #fff; borde
 
 <button class="back-top" id="back-top" onclick="window.scrollTo({top:0,behavior:'smooth'})" aria-label="גלול לראש הדף">↑</button>
 
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer async></script>
 <script>
 /* =============================================
    SPEEDOMETER v7 — UPGRADED
@@ -4106,7 +4558,7 @@ function buildHero() {
   area.innerHTML = `
     <div class="hero-grid">
       <div class="hero-main" onclick="openArticle(${main.id})" role="button" tabindex="0" aria-label="${main.title}" onkeydown="if(event.key==='Enter')openArticle(${main.id})">
-        <img src="${main.img||CAT_IMAGES[main.cat]}" alt="${main.title}" loading="lazy">
+        <img src="${main.img||CAT_IMAGES[main.cat]}" alt="${main.title}" loading="eager" fetchpriority="high" width="800" height="450">
         <div class="hero-main-content">
           <span class="hero-cat-badge">${CAT_LABELS[main.cat]}</span>
           <h2 class="hero-main-title">${main.title}</h2>
@@ -4121,13 +4573,13 @@ function buildHero() {
       </div>
       <div class="hero-side">
         ${side1?`<div class="hero-side-card" onclick="openArticle(${side1.id})" role="button" tabindex="0" aria-label="${side1.title}" onkeydown="if(event.key==='Enter')openArticle(${side1.id})">
-          <img src="${side1.img||CAT_IMAGES[side1.cat]}" alt="${side1.title}" loading="lazy">
+          <img src="${side1.img||CAT_IMAGES[side1.cat]}" alt="${side1.title}" loading="lazy" width="340" height="210" decoding="async">
           <div class="hero-side-content">
             <div class="hero-side-cat">${CAT_LABELS[side1.cat]}</div>
             <div class="hero-side-title">${side1.title}</div>
           </div></div>`:''}
         ${side2?`<div class="hero-side-card" onclick="openArticle(${side2.id})" role="button" tabindex="0" aria-label="${side2.title}" onkeydown="if(event.key==='Enter')openArticle(${side2.id})">
-          <img src="${side2.img||CAT_IMAGES[side2.cat]}" alt="${side2.title}" loading="lazy">
+          <img src="${side2.img||CAT_IMAGES[side2.cat]}" alt="${side2.title}" loading="lazy" width="340" height="210" decoding="async">
           <div class="hero-side-content">
             <div class="hero-side-cat">${CAT_LABELS[side2.cat]}</div>
             <div class="hero-side-title">${side2.title}</div>
@@ -4141,7 +4593,7 @@ function cardHTML(a) {
   const score = a.score?`<div class="review-score ${parseFloat(a.score)>=8?'high':parseFloat(a.score)>=6?'mid':''}">${a.score}</div>`:'';
   return `<a href="#article-${a.id}" class="card" onclick="openArticle(${a.id});return false;" role="article" aria-label="${a.title}">
     <div class="card-img">
-      <img src="${a.img||CAT_IMAGES[a.cat]}" alt="${a.title}" loading="lazy">
+      <img src="${a.img||CAT_IMAGES[a.cat]}" alt="${a.title}" loading="lazy" width="400" height="225" decoding="async">
       ${score}<span class="card-cat">${CAT_LABELS[a.cat]}</span>
     </div>
     <div class="card-body">
@@ -4220,6 +4672,8 @@ function showHome(pushState=true) {
   updateReadingProgress();
   const homeBtn = document.querySelector('.bottom-nav-item:first-child');
   if (homeBtn) setBottomNav(homeBtn);
+  // Re-trigger mobile hero if needed
+  try { handleMobileHero(); } catch(e) {}
 }
 function showAdmin() {
   document.getElementById('home-page').style.display='none';
@@ -4249,9 +4703,45 @@ function openArticle(id) {
     artCatEl.style.cursor = 'pointer';
     artCatEl.title = 'לכל ' + CAT_LABELS[a.cat];
   }
+  // ── BREADCRUMB (SEO + navigation) ──
+  const bcNav = document.getElementById('art-breadcrumb');
+  if (bcNav) {
+    const bcMap = {
+      local:   {parent:'חדשות', child:'חדשות מקומיות', parentCat:'local'},
+      world:   {parent:'חדשות', child:'חדשות עולמיות', parentCat:'world'},
+      review:  {parent:'מבחנים', child:'מבחני רכב', parentCat:'review'},
+      electric:{parent:'מדריכים', child:'רכב חשמלי', parentCat:'electric'},
+      tech:    {parent:'מדריכים', child:'טכנולוגיה ובטיחות', parentCat:'tech'},
+      buying:  {parent:'מדריכים', child:'מדריך קניית רכב', parentCat:'buying'},
+      sport:   {parent:'מבחנים', child:'רכב ספורט', parentCat:'sport'},
+      luxury:  {parent:'יוקרה', child:'רכב יוקרה', parentCat:'luxury'},
+      quick:   {parent:'חדשות', child:'חדשות בקליק', parentCat:'quick'}
+    };
+    const bc = bcMap[a.cat] || {parent:'חדשות', child:CAT_LABELS[a.cat]||a.cat, parentCat:a.cat};
+    // JSON-LD for Google breadcrumb
+    const bcSchema = {"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[
+      {"@type":"ListItem","position":1,"name":"ספידומטר","item":"https://speedometer10.co.il/"},
+      {"@type":"ListItem","position":2,"name":bc.parent,"item":"https://speedometer10.co.il/?cat="+bc.parentCat},
+      {"@type":"ListItem","position":3,"name":bc.child,"item":"https://speedometer10.co.il/?cat="+a.cat},
+      {"@type":"ListItem","position":4,"name":a.title}
+    ]};
+    let bcSchemaEl = document.getElementById('breadcrumb-schema');
+    if (!bcSchemaEl) { bcSchemaEl=document.createElement('script'); bcSchemaEl.id='breadcrumb-schema'; bcSchemaEl.type='application/ld+json'; document.head.appendChild(bcSchemaEl); }
+    bcSchemaEl.textContent = JSON.stringify(bcSchema);
+    // Visual breadcrumb
+    const shortTitle = a.title.length > 48 ? a.title.substring(0, 48) + '…' : a.title;
+    bcNav.innerHTML =
+      '<a href="javascript:void(0)" onclick="showHome()" aria-label="עמוד הבית ספידומטר">בית</a>' +
+      '<span class="bc-sep" aria-hidden="true">›</span>' +
+      '<a href="javascript:void(0)" onclick="filterCat(\'' + a.cat + '\')" aria-label="' + bc.child + '">חדשות</a>' +
+      '<span class="bc-sep" aria-hidden="true">›</span>' +
+      '<a href="javascript:void(0)" onclick="filterCat(\'' + a.cat + '\')" aria-label="' + bc.child + '">' + bc.child + '</a>' +
+      '<span class="bc-sep" aria-hidden="true">›</span>' +
+      '<span class="bc-current" aria-current="page">' + shortTitle + '</span>';
+  }
   document.getElementById('art-title').textContent = a.title;
   const artSubEl = document.getElementById('art-sub');
-  if (artSubEl) artSubEl.style.display = 'none';
+  if (artSubEl) { artSubEl.textContent = a.sub||''; artSubEl.style.display = a.sub ? 'block' : 'none'; }
   document.getElementById('art-author').textContent = a.author;
   document.getElementById('art-date').textContent = a.date;
   // Auto-calculate read time from body
@@ -4307,6 +4797,12 @@ function openArticle(id) {
     schema.about = {"@type":"Car","name":a.title,"vehicleEngine":{"@type":"EngineSpecification","enginePower":{"@type":"QuantitativeValue","value":a.specs.power,"unitCode":"BHP"}}};
   }
   if (a.tags && a.tags.length) schema.keywords = a.tags.join(', ');
+  // Add category as articleSection
+  schema.articleSection = CAT_LABELS[a.cat] || a.cat;
+  // Add inLanguage
+  schema.inLanguage = 'he';
+  // Add publisher
+  schema.publisher = {"@type":"Organization","name":"ספידומטר","url":"https://speedometer10.co.il/","logo":{"@type":"ImageObject","url":"https://speedometer10.co.il/logo.png"}};
   sc.textContent = JSON.stringify(schema, (k,v) => v === undefined ? undefined : v);
 
   // Slider or single image
@@ -4330,7 +4826,7 @@ function openArticle(id) {
     setTimeout(()=>document.querySelectorAll('.score-bar-fill').forEach(b=>{b.style.width=b.dataset.pct+'%';}),150);
   } else { specWrap.innerHTML=''; specWrap.style.display='none'; }
 
-  document.getElementById('art-body').innerHTML = parseBody(a.body||'', a.bodyImages||[]);
+  document.getElementById('art-body').innerHTML = parseBody(a.body||'', a.bodyImages||[], a.title);
 
   const tagsWrap = document.getElementById('art-tags');
   if (tagsWrap && a.tags && a.tags.length) {
@@ -4397,24 +4893,81 @@ function goSlide(id,idx) { if(!sliderState[id]) sliderState[id]={current:0}; mov
 
 // ── SPEC CARD ──
 function buildSpecCard(specs) {
-  const cats=specs.cats||[];
-  return `<div class="spec-card"><div class="spec-card-title">תעודת זהות טכנית</div><div class="spec-grid">
-    ${specs.power?`<div class="spec-item"><span class="spec-val">${specs.power}</span><span class="spec-label">כוחות סוס</span></div>`:''}
-    ${specs.zeroToHundred?`<div class="spec-item"><span class="spec-val">${specs.zeroToHundred}s</span><span class="spec-label">0-100</span></div>`:''}
-    ${specs.range?`<div class="spec-item"><span class="spec-val">${specs.range}</span><span class="spec-label">טווח קמ</span></div>`:''}
-    ${specs.price?`<div class="spec-item"><span class="spec-val">${specs.price}</span><span class="spec-label">מחיר</span></div>`:''}
-    ${specs.engine?`<div class="spec-item"><span class="spec-val">${specs.engine}</span><span class="spec-label">מנוע</span></div>`:''}
-  </div>${cats.length?`<div class="score-bars">${cats.map(c=>`<div class="score-row"><span class="score-name">${c.name}</span><div class="score-bar-wrap"><div class="score-bar-fill" data-pct="${c.score*10}" style="width:0%"></div></div><span class="score-num">${c.score}</span></div>`).join('')}</div>`:''}</div>`;
+  const cats = specs.cats||[];
+  // Helper
+  const row = (icon, label, val) => val ? `
+    <div class="si-row">
+      <div class="si-label">${icon}<span>${label}</span></div>
+      <div class="si-val">${val}</div>
+    </div>` : '';
+  // Pros & Cons
+  const prosHTML = (specs.pros||[]).length ? `
+    <div class="si-proscons">
+      <div class="si-pros">
+        <div class="si-pc-title">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#16a34a" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+          יתרונות
+        </div>
+        ${(specs.pros||[]).map(p=>`<div class="si-pc-item si-pro"><span>+</span>${p}</div>`).join('')}
+      </div>
+      ${(specs.cons||[]).length ? `<div class="si-cons">
+        <div class="si-pc-title">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#dc2626" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          חסרונות
+        </div>
+        ${(specs.cons||[]).map(c=>`<div class="si-pc-item si-con"><span>−</span>${c}</div>`).join('')}
+      </div>` : ''}
+    </div>` : '';
+  // Score bars
+  const scoresHTML = cats.length ? `
+    <div class="score-bars" style="margin-top:14px;">
+      ${cats.map(c=>`<div class="score-row"><span class="score-name">${c.name}</span><div class="score-bar-wrap"><div class="score-bar-fill" data-pct="${c.score*10}" style="width:0%"></div></div><span class="score-num">${c.score}</span></div>`).join('')}
+    </div>` : '';
+  return `<div class="spec-infographic">
+    <div class="si-header">
+      <span class="si-header-bar"></span>
+      <span>תעודת זהות טכנית</span>
+      ${specs.model?`<span class="si-model-badge">${specs.model}${specs.year?' '+specs.year:''}</span>`:''}
+    </div>
+    ${(specs.pros||specs.cons) && (specs.pros||[]).length ? prosHTML : ''}
+    <div class="si-grid">
+      ${row('<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 12h16M4 18h16"/></svg>', 'סגמנט', specs.segment||null)}
+      ${row('<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>', 'מחיר', specs.price||null)}
+      ${row('<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>', 'ארץ ייצור', specs.country||null)}
+      ${row('<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M4.22 4.22l2.12 2.12M17.66 17.66l2.12 2.12M2 12h3M19 12h3"/></svg>', 'גימורים', specs.trims||null)}
+      ${row('<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="10" rx="2"/><path d="M7 7V5M17 7V5M7 17v2M17 17v2M2 12h2M20 12h2"/></svg>', 'מנוע', specs.engine||null)}
+      ${row('<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>', 'הספק', specs.power ? specs.power+' כ"ס' : null)}
+      ${row('<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2a10 10 0 1 0 10 10"/><polyline points="22 2 22 8 16 8"/></svg>', 'מומנט', specs.torque ? specs.torque+' נ"מ' : null)}
+      ${row('<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12H19M13 6l6 6-6 6"/></svg>', 'תאוצה 0-100', specs.zeroToHundred ? specs.zeroToHundred+'s' : null)}
+      ${specs.engine !== 'חשמלי' && specs.gearbox ? row('<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="5" cy="12" r="2"/><circle cx="19" cy="12" r="2"/><path d="M7 12h10M12 7V5M12 19v-2"/></svg>', 'תיבת הילוכים', specs.gearbox) : ''}
+      ${row('<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4"/></svg>', 'מהירות מירבית', specs.topspeed ? specs.topspeed+' קמ"ש' : null)}
+      ${row('<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/></svg>', 'תא מטען', specs.trunk ? specs.trunk+' ל' : null)}
+      ${row('<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 22V9l6-6h6l2 2v4h1a2 2 0 0 1 2 2v7a2 2 0 0 1-2 2H3z"/></svg>', 'צריכת דלק', specs.consumption ? specs.consumption+' ל/100' : null)}
+      ${row('<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="2"><path d="M2 22 C2 22 5 15 12 15 C19 15 22 22 22 22"/><path d="M12 15 C12 15 8 10 12 2 C16 10 12 15 12 15"/></svg>', 'זיהום אוויר', specs.emission||null)}
+      ${specs.range ? row('<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" stroke-width="2"><path d="M13 2 L3 14 L12 14 L11 22 L21 10 L12 10 Z"/></svg>', 'טווח', specs.range+' ק"מ') : ''}
+    </div>
+    ${scoresHTML}
+  </div>`;
 }
 
 // ── PARSE BODY ──
-function parseBody(text, bodyImages) {
+function parseBody(text, bodyImages, articleTitle) {
   const lines = text.split('\n');
   const parts = [];
   let imgIdx = 0;
   const imgs = bodyImages || [];
+  // Track if we've seen a heading that duplicates the article title
+  let firstHeadingSkipped = false;
   for (const line of lines) {
-    if (line.startsWith('## ')) { parts.push(`<h2>${line.slice(3)}</h2>`); }
+    if (line.startsWith('## ')) {
+      const headingText = line.slice(3).trim();
+      // Skip if this heading is identical (or near-identical) to article title
+      if (!firstHeadingSkipped && articleTitle && headingText === articleTitle.trim()) {
+        firstHeadingSkipped = true;
+        continue; // skip duplicate
+      }
+      parts.push(`<h2>${headingText}</h2>`);
+    }
     else if (line.startsWith('### ')) { parts.push(`<h3>${line.slice(4)}</h3>`); }
     else if (line.startsWith('> ')) { parts.push(`<blockquote>${line.slice(2)}</blockquote>`); }
     else if (!line.trim()) {
@@ -4585,8 +5138,23 @@ async function publishArticle() {
         {name:'נוחות', score: parseFloat(document.getElementById('score-comfort')?.value)||0},
         {name:'ערך', score: parseFloat(document.getElementById('score-value')?.value)||0},
       ].filter(x => x.score > 0);
-      if (!p && !t && !z) return null;
-      return { engine: eng, power: p, torque: t, zeroToHundred: z, range: r||null, price: pr, cats };
+      const prosRaw = (document.getElementById('spec-pros')?.value||'').trim();
+      const consRaw = (document.getElementById('spec-cons')?.value||'').trim();
+      return {
+        engine: eng, power: p, torque: t, zeroToHundred: z, range: r||null, price: pr, cats,
+        model: document.getElementById('spec-model')?.value?.trim()||null,
+        year: document.getElementById('spec-year')?.value?.trim()||null,
+        segment: document.getElementById('spec-segment')?.value||null,
+        country: document.getElementById('spec-country')?.value?.trim()||null,
+        trims: document.getElementById('spec-trims')?.value?.trim()||null,
+        gearbox: document.getElementById('spec-gearbox')?.value||null,
+        topspeed: document.getElementById('spec-topspeed')?.value?.trim()||null,
+        trunk: document.getElementById('spec-trunk')?.value?.trim()||null,
+        consumption: document.getElementById('spec-consumption')?.value?.trim()||null,
+        emission: document.getElementById('spec-emission')?.value||null,
+        pros: prosRaw ? prosRaw.split('\n').map(s=>s.trim()).filter(Boolean) : [],
+        cons: consRaw ? consRaw.split('\n').map(s=>s.trim()).filter(Boolean) : [],
+      };
     })() : null
   };
   if (editId) { const idx=articles.findIndex(a=>a.id===parseInt(editId)); if(idx>-1) articles[idx]=data; delete document.getElementById('a-title').dataset.editId; }
@@ -4618,12 +5186,25 @@ function editArticle(id) {
   toggleSpecsSection(a.cat);
   if (a.cat === 'review' && a.specs) {
     const s = a.specs;
-    if(document.getElementById('spec-engine')) document.getElementById('spec-engine').value = s.engine||'בנזין';
-    if(document.getElementById('spec-power')) document.getElementById('spec-power').value = s.power||'';
-    if(document.getElementById('spec-torque')) document.getElementById('spec-torque').value = s.torque||'';
-    if(document.getElementById('spec-zero')) document.getElementById('spec-zero').value = s.zeroToHundred||'';
-    if(document.getElementById('spec-range')) document.getElementById('spec-range').value = s.range||'';
-    if(document.getElementById('spec-price')) document.getElementById('spec-price').value = s.price||'';
+    const setV = (id, val) => { const el=document.getElementById(id); if(el && val!=null) el.value=val; };
+    setV('spec-engine', s.engine||'בנזין');
+    setV('spec-power', s.power||'');
+    setV('spec-torque', s.torque||'');
+    setV('spec-zero', s.zeroToHundred||'');
+    setV('spec-range', s.range||'');
+    setV('spec-price', s.price||'');
+    setV('spec-model', s.model||'');
+    setV('spec-year', s.year||'');
+    setV('spec-segment', s.segment||'');
+    setV('spec-country', s.country||'');
+    setV('spec-trims', s.trims||'');
+    setV('spec-gearbox', s.gearbox||'');
+    setV('spec-topspeed', s.topspeed||'');
+    setV('spec-trunk', s.trunk||'');
+    setV('spec-consumption', s.consumption||'');
+    setV('spec-emission', s.emission||'');
+    if (s.pros && s.pros.length) setV('spec-pros', s.pros.join('\n'));
+    if (s.cons && s.cons.length) setV('spec-cons', s.cons.join('\n'));
     if (s.cats) {
       const map = {נסיעה:'score-driving',עיצוב:'score-design',טכנולוגיה:'score-tech',נוחות:'score-comfort',ערך:'score-value'};
       s.cats.forEach(ct => { const el=document.getElementById(map[ct.name]); if(el) el.value=ct.score; });
@@ -4641,7 +5222,13 @@ async function deleteArticle(id) {
 }
 function viewArticle(id) { showHome(); openArticle(id); }
 function clearForm() {
-  ['a-title','a-sub','a-author','a-img','a-img-cap','a-score','a-body','a-read-time','a-tags','body-img-1','body-img-cap-1','body-img-2','body-img-cap-2','body-img-3','body-img-cap-3','body-img-4','body-img-cap-4','body-img-5','body-img-cap-5','spec-power','spec-torque','spec-zero','spec-range','spec-price','score-driving','score-design','score-tech','score-comfort','score-value'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+  ['a-title','a-sub','a-author','a-img','a-img-cap','a-score','a-body','a-read-time','a-tags',
+   'body-img-1','body-img-cap-1','body-img-2','body-img-cap-2','body-img-3','body-img-cap-3','body-img-4','body-img-cap-4','body-img-5','body-img-cap-5',
+   'spec-power','spec-torque','spec-zero','spec-range','spec-price',
+   'spec-model','spec-year','spec-country','spec-trims','spec-topspeed','spec-trunk','spec-consumption',
+   'spec-pros','spec-cons',
+   'score-driving','score-design','score-tech','score-comfort','score-value'
+  ].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
   const specSec=document.getElementById('specs-section'); if(specSec) specSec.style.display='none';
   delete document.getElementById('a-title').dataset.editId;
   document.getElementById('a-cat').value='local';
@@ -4676,6 +5263,9 @@ function setFontSize(size) {
   });
   const map = {small:'small-text',large:'large-text',larger:'larger-text'};
   if (map[size]) document.body.classList.add(map[size]);
+  // Scale html font-size so all rem values scale proportionally
+  const scales = {small: '13px', normal: '16px', large: '18.5px', larger: '21px'};
+  document.documentElement.style.fontSize = scales[size] || '16px';
   const bid = {small:'fs-small',normal:'fs-normal',large:'fs-large',larger:'fs-larger'}[size];
   if (bid) { const b=document.getElementById(bid); if(b) b.classList.add('active'); }
   try { localStorage.setItem('sp_fontSize', size); } catch(e) {}
@@ -4727,6 +5317,7 @@ function resetAll() {
    'grayscale','highlight-links','highlight-headings','no-animations','dark-mode'].forEach(c=>document.body.classList.remove(c));
   document.querySelectorAll('.acc-pill').forEach(b=>b.classList.remove('active'));
   document.getElementById('fs-normal')?.classList.add('active');
+  document.documentElement.style.fontSize = '16px'; // reset html font-size
   const di=document.getElementById('dark-icon');
   if(di) di.innerHTML='<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>';
   const dl=document.getElementById('dark-label'); if(dl) dl.textContent='מצב לילה';
@@ -4753,7 +5344,10 @@ function toggleSpecsSection(cat) {
 }
 function toggleRangeField(engine) {
   const rg = document.getElementById('spec-range-group');
-  if (rg) rg.style.display = (engine === 'חשמלי' || engine === 'PHEV') ? 'block' : 'none';
+  if (rg) rg.style.display = (engine === 'חשמלי' || engine === 'PHEV') ? 'flex' : 'none';
+  // Hide gearbox for electric
+  const gb = document.getElementById('spec-gearbox-row');
+  if (gb) gb.style.display = (engine === 'חשמלי') ? 'none' : 'flex';
 }
 // Add onchange to engine select (done via HTML attr below)
 
@@ -4764,29 +5358,7 @@ document.addEventListener('keydown',e=>{ if(e.ctrlKey&&e.shiftKey&&e.key==='A'){
 
 
 // ── PREVIEW ARTICLE ──
-function previewArticle() {
-  const title = (document.getElementById('a-title').value||'').trim();
-  const body = (document.getElementById('a-body').value||'').trim();
-  const img = (document.getElementById('a-img').value||'').trim();
-  const sub = (document.getElementById('a-sub').value||'').trim();
-  const cat = document.getElementById('a-cat').value;
-  if (!title) { alert('הזן כותרת תחילה'); return; }
-  // Build temp article and open it
-  const tempArticle = {
-    id: -1, title, sub, cat, body, img: img || CAT_IMAGES[cat],
-    imgCaption: '', author: document.getElementById('a-author').value||'מערכת ספידומטר',
-    date: new Date().toLocaleDateString('he-IL'), readTime: '—', score: null, views: 0, featured: false
-  };
-  const orig = articles;
-  articles = [tempArticle, ...articles];
-  openArticle(-1);
-  articles = orig;
-  // Show preview banner
-  const banner = document.createElement('div');
-  banner.style.cssText = 'position:fixed;top:0;left:0;right:0;background:#ff9800;color:#fff;text-align:center;padding:8px;font-size:0.85rem;font-weight:700;z-index:9999;';
-  banner.innerHTML = '👁 תצוגה מקדימה — <button onclick="showAdmin();this.parentElement.remove()" style="background:rgba(0,0,0,0.2);border:none;color:#fff;padding:2px 10px;border-radius:4px;cursor:pointer;font-family:var(--font)">חזור לעריכה</button>';
-  document.body.appendChild(banner);
-}
+// previewArticle - see below
 
 // ── CLEAN URLs ──
 function toSlug(title) {
@@ -4991,7 +5563,7 @@ function closeModal(id) {
 }
 document.addEventListener('keydown', e => {
   if (e.key === 'Escape') {
-    ['access-modal','privacy-modal','terms-modal'].forEach(id => closeModal(id));
+    ['about-modal','access-modal','privacy-modal','terms-modal'].forEach(id => closeModal(id));
     document.getElementById('access-overlay')?.classList.remove('open');
     document.getElementById('admin-login-overlay').style.display = 'none';
   }
@@ -5008,6 +5580,12 @@ document.addEventListener('click', function(e) {
 
 // ── SCROLL ──
 window.addEventListener('scroll',()=>{ document.getElementById('back-top')?.classList.toggle('visible',window.scrollY>400); document.querySelector('header')?.classList.toggle('scrolled',window.scrollY>60); });
+// Re-check mobile hero on resize
+let resizeTimer;
+window.addEventListener('resize', () => {
+  clearTimeout(resizeTimer);
+  resizeTimer = setTimeout(() => { handleMobileHero(); }, 200);
+});
 
 // ── RESTORE PREFERENCES ──
 function restorePrefs() {
@@ -5022,7 +5600,7 @@ function restorePrefs() {
     if (localStorage.getItem('sp_headings')==='true') { document.body.classList.add('highlight-headings'); document.getElementById('btn-headings')?.classList.add('active'); }
     if (localStorage.getItem('sp_noanim')==='true') { document.body.classList.add('no-animations'); document.getElementById('btn-anim')?.classList.add('active'); }
     const fs = localStorage.getItem('sp_fontSize');
-    setFontSize(fs||'normal');
+    setFontSize(fs||'normal'); // restores html font-size too
   } catch(e) { document.getElementById('fs-normal')?.classList.add('active'); }
 }
 
@@ -5064,6 +5642,11 @@ function updateMeta(a) {
   const desc = a.sub || a.title;
   const img = a.img || 'https://images.unsplash.com/photo-1555215695-3004980ad54e?w=1200&q=80';
   document.title = title;
+  // Add article-type OG tags
+  setOG('og:type', 'article');
+  if (a.date) setMeta('article:published_time', a.date);
+  setMeta('article:author', a.author || 'מערכת ספידומטר');
+  setMeta('article:section', CAT_LABELS[a.cat] || a.cat);
 
   let can = document.querySelector('link[rel="canonical"]');
   if (!can) { can = document.createElement('link'); can.rel='canonical'; document.head.appendChild(can); }
@@ -5229,6 +5812,26 @@ async function compressImageFile(file, maxKB = 300) {
   });
 }
 
+
+// ── ADMIN BREADCRUMB PREVIEW ──
+function updateCatBreadcrumbPreview(cat) {
+  const el = document.getElementById('cat-breadcrumb-preview');
+  if (!el) return;
+  const bcMap = {
+    local:   'חדשות › חדשות מקומיות',
+    world:   'חדשות › חדשות עולמיות',
+    review:  'מבחנים › מבחני רכב',
+    electric:'מדריכים › רכב חשמלי',
+    tech:    'מדריכים › טכנולוגיה ובטיחות',
+    buying:  'מדריכים › מדריך קניית רכב',
+    sport:   'מבחנים › רכב ספורט',
+    luxury:  'יוקרה › רכב יוקרה',
+    quick:   'חדשות › חדשות בקליק'
+  };
+  const path = bcMap[cat] || 'חדשות › ' + (CAT_LABELS[cat]||cat);
+  el.innerHTML = 'תג הניווט: <strong>' + path + '</strong>';
+}
+
 // ══════════════════════════════
 // INIT
 // ══════════════════════════════
@@ -5256,13 +5859,15 @@ async function compressImageFile(file, maxKB = 300) {
         <div class="skeleton-text short"></div>
       </div>`).join('');
   }
-  // Build UI immediately with local/default data
+  // Build UI immediately with local/default data (synchronous, no delays)
   buildHero();
   buildSections();
   buildTicker();
   buildBreakingTicker();
   showHome(false);
   handleMobileHero();
+  // Ensure mobile hero shows instantly without reflow
+  requestAnimationFrame(() => handleMobileHero());
 
   // Restore current page from URL hash
   // Restore from URL — supports /article/ID-slug and #article-ID
@@ -5345,11 +5950,23 @@ function buildHeroBanner() {
   if (!pool.length) { wrap.innerHTML = ''; return; }
   heroBannerArticles = pool;
   heroBannerIdx = 0;
-  wrap.innerHTML = '<div class="hero-banner"><div class="hero-banner-track" id="hbt">' +
-    pool.map((a, i) => '<div class="hero-banner-slide" onclick="openArticle(' + a.id + ')" role="button" tabindex="0"><img src="' + (a.img||CAT_IMAGES[a.cat]) + '" alt="' + a.title.replace(/"/g,"'") + '" loading="' + (i===0?'eager':'lazy') + '"><div class="hero-banner-content"><span style="display:inline-block;background:var(--red);color:#fff;font-size:0.65rem;font-weight:700;padding:3px 10px;border-radius:2px;margin-bottom:8px;">' + (CAT_LABELS[a.cat]||'') + '</span><div style="font-size:1.1rem;font-weight:800;color:#fff;line-height:1.3;margin-bottom:5px;">' + a.title + '</div><div style="font-size:0.75rem;color:rgba(255,255,255,0.7);">' + a.author + ' · ' + a.date + '</div></div></div>').join('') +
-    '</div><button class="hero-banner-prev" onclick="moveHeroBanner(-1)" aria-label="הקודם">&#8250;</button><button class="hero-banner-next" onclick="moveHeroBanner(1)" aria-label="הבא">&#8249;</button><div class="hero-banner-dots">' +
-    pool.map((_,i) => '<button class="hero-banner-dot ' + (i===0?'active':'') + '" onclick="goHeroBanner(' + i + ')" aria-label="שקופית ' + (i+1) + '"></button>').join('') +
-    '</div></div>';
+  // Build HTML with all slides
+  const slidesHTML = pool.map((a, i) =>
+    '<div class="hero-banner-slide" onclick="openArticle(' + a.id + ')" role="button" tabindex="0" aria-label="' + a.title.replace(/"/g,"'") + '">' +
+    '<img src="' + (a.img||CAT_IMAGES[a.cat]) + '" alt="' + a.title.replace(/"/g,"'") + '" width="400" height="260" loading="' + (i===0?'eager':'lazy') + '" fetchpriority="' + (i===0?'high':'auto') + '">' +
+    '<div class="hero-banner-content" style="direction:rtl;text-align:right;">' +
+    '<span style="display:inline-block;background:var(--red);color:#fff;font-size:0.65rem;font-weight:700;padding:3px 10px;border-radius:2px;margin-bottom:8px;">' + (CAT_LABELS[a.cat]||'') + '</span>' +
+    '<div style="font-size:1.1rem;font-weight:800;color:#fff;line-height:1.3;margin-bottom:5px;">' + a.title + '</div>' +
+    '<div style="font-size:0.75rem;color:rgba(255,255,255,0.7);">' + a.author + ' · ' + a.date + '</div>' +
+    '</div></div>'
+  ).join('');
+  const dotsHTML = pool.map((_,i) => '<button class="hero-banner-dot ' + (i===0?'active':'') + '" onclick="goHeroBanner(' + i + ')" aria-label="שקופית ' + (i+1) + '"></button>').join('');
+  wrap.innerHTML = '<div class="hero-banner">' +
+    '<div class="hero-banner-track" id="hbt" style="transform:translateX(0);transition:none;direction:ltr;">' + slidesHTML + '</div>' +
+    '<button class="hero-banner-prev" onclick="moveHeroBanner(1)" aria-label="הבא">&#8250;</button>' +
+    '<button class="hero-banner-next" onclick="moveHeroBanner(-1)" aria-label="הקודם">&#8249;</button>' +
+    '<div class="hero-banner-dots">' + dotsHTML + '</div>' +
+    '</div>';
   const track = document.getElementById('hbt');
   if (track) {
     let bsx=0, bsy=0;
@@ -5361,7 +5978,8 @@ function buildHeroBanner() {
     }, {passive:true});
   }
   clearInterval(heroBannerTimer);
-  heroBannerTimer = setInterval(() => moveHeroBanner(1), 4500);
+  // NO auto-advance - manual only (arrows + swipe)
+  clearInterval(heroBannerTimer);
   } catch(e) { console.log('Banner error:', e); }
 }
 function moveHeroBanner(dir) {
@@ -5369,21 +5987,34 @@ function moveHeroBanner(dir) {
   heroBannerIdx = (heroBannerIdx + dir + n) % n;
   const t = document.getElementById('hbt');
   if (t) {
-    t.style.transition = 'transform 0.45s cubic-bezier(0.25,0.46,0.45,0.94)';
+    // Enable smooth transition for user-triggered moves
+    t.style.transition = 'transform 0.4s cubic-bezier(0.25,0.46,0.45,0.94)';
+    t.style.transform = 'translateX(' + (heroBannerIdx * -100) + '%)';
+    // Disable transition after animation so auto-advance doesn't flash
+    setTimeout(() => { if(t) t.style.transition = 'transform 0.4s cubic-bezier(0.25,0.46,0.45,0.94)'; }, 450);
+  }
+  document.querySelectorAll('.hero-banner-dot').forEach((d,i) => d.classList.toggle('active', i===heroBannerIdx));
+  // No auto-timer - manual navigation only
+}
+function autoAdvanceBanner() {
+  const n = heroBannerArticles.length; if (!n) return;
+  heroBannerIdx = (heroBannerIdx + 1) % n;
+  const t = document.getElementById('hbt');
+  if (t) {
+    t.style.transition = 'transform 0.4s cubic-bezier(0.25,0.46,0.45,0.94)';
     t.style.transform = 'translateX(' + (heroBannerIdx * -100) + '%)';
   }
   document.querySelectorAll('.hero-banner-dot').forEach((d,i) => d.classList.toggle('active', i===heroBannerIdx));
-  // Reset auto-timer
-  clearInterval(heroBannerTimer);
-  heroBannerTimer = setInterval(() => moveHeroBanner(1), 4500);
 }
 function goHeroBanner(idx) {
   heroBannerIdx = idx;
   const t = document.getElementById('hbt');
-  if (t) t.style.transform = 'translateX(' + (idx * -100) + '%)';
+  if (t) {
+    t.style.transition = 'transform 0.4s cubic-bezier(0.25,0.46,0.45,0.94)';
+    t.style.transform = 'translateX(' + (idx * -100) + '%)';
+  }
   document.querySelectorAll('.hero-banner-dot').forEach((d,i) => d.classList.toggle('active', i===idx));
   clearInterval(heroBannerTimer);
-  heroBannerTimer = setInterval(() => moveHeroBanner(1), 4500);
 }
 
 // ══════════════════════════════════════════
@@ -5443,9 +6074,16 @@ function handleMobileHero() {
     const mb = document.getElementById('hero-banner-mobile');
     const dt = document.getElementById('hero-area');
     if (mb && dt) {
-      mb.style.display = isMobile ? 'block' : 'none';
-      dt.style.display = isMobile ? 'none' : 'block';
-      if (isMobile) buildHeroBanner();
+      if (isMobile) {
+        mb.style.display = 'block';
+        dt.style.display = 'none';
+        buildHeroBanner();
+      } else {
+        mb.style.display = 'none';
+        dt.style.display = 'block';
+        // Kill banner timer when not mobile
+        clearInterval(heroBannerTimer);
+      }
     }
   } catch(e) { console.log('handleMobileHero error:', e); }
 }
@@ -5463,6 +6101,32 @@ if ('serviceWorker' in navigator) {
 
 <!-- ════ SKIP LINK ════ -->
 <a href="#home-page" class="skip-link" tabindex="0">דלג לתוכן המרכזי</a>
+
+<!-- ════ ABOUT MODAL ════ -->
+<div class="legal-modal" id="about-modal" onclick="if(event.target===this)closeModal('about-modal')" role="dialog" aria-modal="true" aria-labelledby="about-modal-title">
+  <div class="legal-modal-box">
+    <div class="legal-modal-head">
+      <h2 id="about-modal-title">אודות ספידומטר</h2>
+      <button class="legal-modal-close" onclick="closeModal('about-modal')" aria-label="סגור">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div class="legal-modal-body">
+      <h3>מי אנחנו</h3>
+      <p>ספידומטר - פורטל הרכב הטכנולוגי והמדויק בישראל.</p>
+      <p>האתר הוקם במטרה להעניק לרוכש המקומי מעטפת מקצועית, מקיפה ומבוססת דאטה לקבלת ההחלטה הנכונה ביותר. אנו מספקים תוכן מוטורי איכותי, חדשות ועדכונים מהארץ ומהעולם, לצד מבחני רכב מעמיקים. עם נוכחות דינמית ואהודה במיוחד במדיה וברשתות החברתיות, "ספידומטר" מחבר בין קהילת חובבי הרכב לידע המקצועי המתקדם ביותר.</p>
+      <h3>מה אנחנו מציעים</h3>
+      <div class="legal-acc-feature"><div class="legal-acc-dot"></div><div>חדשות רכב מקומיות ועולמיות בזמן אמת</div></div>
+      <div class="legal-acc-feature"><div class="legal-acc-dot"></div><div>מבחני רכב מעמיקים ומבוססי נתונים</div></div>
+      <div class="legal-acc-feature"><div class="legal-acc-dot"></div><div>מדריכי קניית רכב מקצועיים</div></div>
+      <div class="legal-acc-feature"><div class="legal-acc-dot"></div><div>עדכוני טכנולוגיה ובטיחות בתחום הרכב</div></div>
+      <div class="legal-acc-feature"><div class="legal-acc-dot"></div><div>ייעוץ אישי ללא עלות בבחירת הרכב</div></div>
+      <h3>צור קשר</h3>
+      <p><a href="mailto:speedometer177@gmail.com" style="color:#1a7adb;">speedometer177@gmail.com</a><br>
+      <a href="tel:+972559365579" style="color:#1a7adb;">055-9365579</a></p>
+    </div>
+  </div>
+</div>
 
 <!-- ════ ACCESSIBILITY STATEMENT MODAL ════ -->
 <div class="legal-modal" id="access-modal" onclick="if(event.target===this)closeModal('access-modal')" role="dialog" aria-modal="true" aria-labelledby="access-modal-title">
@@ -5561,7 +6225,7 @@ if ('serviceWorker' in navigator) {
 <!-- ════════ BOTTOM NAVIGATION (Mobile) ════════ -->
 <nav class="bottom-nav" role="navigation" aria-label="ניווט תחתון">
   <div class="bottom-nav-inner">
-    <button class="bottom-nav-item active" onclick="currentFilter='all';showHome();buildHero();buildSections();setBottomNav(this);window.scrollTo({top:0,behavior:'smooth'})" aria-label="בית">
+    <button class="bottom-nav-item active" onclick="currentFilter='all';showHome();buildHero();buildSections();setBottomNav(this);window.scrollTo({top:0,behavior:'smooth'});handleMobileHero();" aria-label="עמוד הבית ספידומטר">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
       <span>בית</span>
     </button>
