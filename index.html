@@ -653,10 +653,12 @@ body.dark-mode .si-pc-item { color: #ccc; }
   position: relative;
   width: 100%;
   height: 270px;
-  overflow: visible; /* arrows can peek outside edges */
+  overflow: visible;
   background: transparent;
   margin: 0 0 16px;
   border-radius: 12px;
+  /* חיצים עיגול שלם — מוודא שלא נחתכים ע"י padding של הורה */
+  isolation: isolate;
 }
 .hero-banner {
   position: relative;
@@ -712,7 +714,7 @@ body.dark-mode .si-pc-item { color: #ccc; }
   font-weight: 700;
   cursor: pointer;
   display: flex; align-items: center; justify-content: center;
-  z-index: 20;
+  z-index: 30;
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
   transition: background 0.18s, box-shadow 0.18s;
@@ -722,10 +724,9 @@ body.dark-mode .si-pc-item { color: #ccc; }
   touch-action: manipulation;
   box-shadow: 0 2px 8px rgba(0,0,0,0.35);
 }
-/* RIGHT side — flush at right edge of banner */
-.hero-banner-prev { right: -4px; }
-/* LEFT side — flush at left edge of banner */
-.hero-banner-next { left: -4px; }
+/* חיצים על קצוות הבאנר — יוצאים מעט, עיגול שלם */
+.hero-banner-prev { right: 4px; }   /* בתוך ה-wrap המורחב, יוצא מהתמונה */
+.hero-banner-next { left: 4px; }
 .hero-banner-prev:hover,
 .hero-banner-next:hover {
   background: var(--red);
@@ -747,18 +748,22 @@ body.dark-mode .si-pc-item { color: #ccc; }
 }
 .hero-banner-dot {
   width: 6px; height: 6px;
-  background: rgba(255,255,255,0.42);
+  background: rgba(255,255,255,0.75);
   border-radius: 50%;
   cursor: pointer;
-  border: none;
+  border: 1px solid rgba(0,0,0,0.25);
   padding: 0;
   transition: all 0.22s ease;
   touch-action: manipulation;
+  /* צל שמבטיח נראות על כל תמונה בהירה או כהה */
+  box-shadow: 0 1px 3px rgba(0,0,0,0.5);
 }
 .hero-banner-dot.active {
   background: #fff;
   width: 20px;
   border-radius: 3px;
+  border-color: rgba(0,0,0,0.2);
+  box-shadow: 0 1px 4px rgba(0,0,0,0.5);
 }
 
 /* Image slider */
@@ -1036,6 +1041,7 @@ nav { display: flex; align-items: center; gap: 2px; flex: 1; justify-content: ce
   max-width: var(--max);
   margin: 32px auto 0;
   padding: 0 24px;
+  overflow: visible;
 }
 .hero-grid {
   display: grid;
@@ -2298,7 +2304,15 @@ textarea { resize: vertical; min-height: 180px; line-height: 1.6; }
   .hero-side { display: none; }
   .hero-grid { grid-template-columns: 1fr; }
   /* Mobile hero banner dimensions */
-  .hero-banner-wrap { height: 270px; min-height: 270px; overflow: visible; }
+  .hero-banner-wrap { 
+    height: 270px; 
+    min-height: 270px; 
+    overflow: visible;
+    /* יוצאים מהpadding של .hero כדי שהחיצים לא יחתכו */
+    margin-left: -24px;
+    margin-right: -24px;
+    width: calc(100% + 48px);
+  }
   .hero-banner { height: 270px; overflow: hidden; }
   .hero-banner-slide { height: 270px; }
   .hero-banner-slide img { height: 270px; }
@@ -4585,6 +4599,11 @@ let currentFilter = 'all';
 let currentArticleId = null;
 let nextId = 11;
 let sliderState = {};
+// Deleted article IDs — persisted so sync never restores them
+let deletedIds = new Set(JSON.parse(localStorage.getItem('sp_deleted_ids')||'[]'));
+function saveDeletedIds() {
+  try { localStorage.setItem('sp_deleted_ids', JSON.stringify([...deletedIds])); } catch(e) {}
+}
 
 // ── LOCAL STORAGE ──
 function saveLocal() {
@@ -4604,6 +4623,8 @@ function syncFromSupabase() {
     sbClient.from('articles').select('*').order('created_at', {ascending:false})
       .then(function(res) {
         if (res.error || !res.data || res.data.length === 0) { syncViaFetch(); return; }
+        // Reload deletedIds from localStorage before processing
+        deletedIds = new Set(JSON.parse(localStorage.getItem('sp_deleted_ids')||'[]'));
         processSyncData(res.data);
       }, function() { syncViaFetch(); });
   } else { syncViaFetch(); }
@@ -4619,15 +4640,23 @@ function syncViaFetch() {
       DEFAULT_ARTICLES.forEach(function(a){ pushToSupabase(a); });
       return;
     }
+    // Reload deletedIds from localStorage before processing
+    deletedIds = new Set(JSON.parse(localStorage.getItem('sp_deleted_ids')||'[]'));
     processSyncData(data);
   })
   .catch(function(err) { console.log('Sync failed:', err); });
 }
 
 function processSyncData(data) {
+  // Reload deletedIds fresh from localStorage
+  deletedIds = new Set(JSON.parse(localStorage.getItem('sp_deleted_ids')||'[]'));
+
+  // Map Supabase rows to article objects
   var sbArticles = data.map(function(r) {
     var def = DEFAULT_ARTICLES.find(function(d){ return d.title === r.title; });
     var imgFallback = (def && def.img) ? def.img : CAT_IMAGES[r.cat||'local'];
+    // Preserve local-only fields that Supabase doesn't store
+    var local = articles.find(function(a){ return a.id === r.id; });
     return {
       id: r.id, title: r.title||'', sub: r.sub||'', cat: r.cat||'local',
       author: r.author||'מערכת ספידומטר', date: r.date||'', time: r.time||'',
@@ -4636,10 +4665,27 @@ function processSyncData(data) {
       imgCaption: r.img_caption||'', body: r.body||'', score: r.score||null,
       views: r.views||0, featured: r.featured||false, specs: r.specs||null,
       gallery: r.gallery||null, galleryCaptions: r.gallery_captions||null,
-      bodyImages: r.body_images||null
+      bodyImages: r.body_images||null,
+      // Preserve local-only fields
+      ytUrls: (local && local.ytUrls) ? local.ytUrls : (r.yt_urls||null),
+      tags: (local && local.tags) ? local.tags : (r.tags||[]),
+      scheduledAt: (local && local.scheduledAt) ? local.scheduledAt : (r.scheduled_at||null),
     };
   });
-  articles = sbArticles;
+
+  // Filter deleted IDs
+  var fromSB = sbArticles.filter(function(a){ return !deletedIds.has(a.id); });
+
+  // Keep local-only articles (those not yet in Supabase — negative IDs or not found in SB)
+  var sbIds = new Set(fromSB.map(function(a){ return a.id; }));
+  var localOnly = articles.filter(function(a){
+    return !sbIds.has(a.id) && !deletedIds.has(a.id);
+  });
+
+  // Merge: Supabase first (sorted by id desc), then any local-only articles
+  articles = fromSB.concat(localOnly);
+  articles.sort(function(a,b){ return b.id - a.id; });
+
   if (articles.length > 0) nextId = Math.max.apply(null, articles.map(function(a){ return a.id||0; })) + 1;
   saveLocal();
   buildHero(); buildSections(); buildTicker(); buildBreakingTicker(); handleMobileHero();
@@ -5524,23 +5570,38 @@ function loadYTEmbed(el, vid) {
 
 async function deleteArticle(id) {
   if(!confirm('למחוק את הכתבה לצמיתות?')) return;
-  const a = articles.find(x=>x.id===id);
-  // Remove from local array
-  articles = articles.filter(x=>x.id!==id);
+
+  // 1. Mark as deleted IMMEDIATELY — prevents sync from restoring it
+  deletedIds.add(id);
+  saveDeletedIds();
+
+  // 2. Remove from local array and update UI
+  articles = articles.filter(x => x.id !== id);
   saveLocal();
   buildHero(); buildSections(); buildTicker(); buildBreakingTicker();
   renderAdminTable();
-  // Delete from Supabase and confirm
-  if (a && sbClient) {
+
+  // 3. Delete from Supabase — try both methods
+  let deleted = false;
+  if (sbClient) {
     try {
       const { error } = await sbClient.from('articles').delete().eq('id', id);
-      if (error) {
-        console.error('Supabase delete error:', error);
-        alert('הכתבה נמחקה מקומית אך אירעה שגיאה בשרת: ' + error.message);
-      }
-    } catch(e) {
-      console.error('Delete failed:', e);
-    }
+      if (!error) { deleted = true; }
+      else { console.error('sbClient delete error:', error); }
+    } catch(e) { console.error('sbClient delete failed:', e); }
+  }
+  if (!deleted) {
+    // Fallback: direct fetch DELETE
+    try {
+      const res = await fetch(SB_URL + '/rest/v1/articles?id=eq.' + id, {
+        method: 'DELETE',
+        headers: { 'apikey': SB_KEY, 'Authorization': 'Bearer ' + SB_KEY }
+      });
+      deleted = res.ok;
+    } catch(e) { console.error('Fetch delete failed:', e); }
+  }
+  if (!deleted) {
+    console.warn('Delete may not have reached server — ID kept in deletedIds for protection');
   }
 }
 function viewArticle(id) { showHome(); openArticle(id); }
@@ -6307,12 +6368,14 @@ function buildHeroBanner() {
     '</div></div>'
   ).join('');
   const dotsHTML = pool.map((_,i) => '<button class="hero-banner-dot ' + (i===0?'active':'') + '" onclick="goHeroBanner(' + i + ')" aria-label="שקופית ' + (i+1) + '"></button>').join('');
-  wrap.innerHTML = '<div class="hero-banner">' +
-    '<div class="hero-banner-track" id="hbt" style="transform:translateX(0);transition:none;direction:ltr;">' + slidesHTML + '</div>' +
+  // חיצים מחוץ ל-hero-banner כדי שלא יחתכו על ידי overflow:hidden
+  wrap.innerHTML =
+    '<div class="hero-banner">' +
+      '<div class="hero-banner-track" id="hbt" style="transform:translateX(0);transition:none;direction:ltr;">' + slidesHTML + '</div>' +
+      '<div class="hero-banner-dots">' + dotsHTML + '</div>' +
+    '</div>' +
     '<button class="hero-banner-prev" onclick="moveHeroBanner(1)" aria-label="הבא">&#8250;</button>' +
-    '<button class="hero-banner-next" onclick="moveHeroBanner(-1)" aria-label="הקודם">&#8249;</button>' +
-    '<div class="hero-banner-dots">' + dotsHTML + '</div>' +
-    '</div>';
+    '<button class="hero-banner-next" onclick="moveHeroBanner(-1)" aria-label="הקודם">&#8249;</button>';
   const track = document.getElementById('hbt');
   if (track) {
     let bsx=0, bsy=0;
