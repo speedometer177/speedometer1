@@ -674,6 +674,9 @@ body.dark-mode .si-pc-item { color: #ccc; }
   overflow: hidden;
   border-radius: 16px;
   box-shadow: 0 6px 28px rgba(0,0,0,0.18);
+  /* מאפשר גלילה אנכית — הדפדפן לא ינסה לנהל את ה-touch */
+  touch-action: pan-y;
+  overscroll-behavior: none;
 }
 .hero-banner-track {
   display: flex;
@@ -5138,7 +5141,18 @@ function openArticle(id) {
     sl.innerHTML = buildSliderHTML(a.gallery);
     sliderState['art-slider']={current:0};
   } else {
-    imgEl.style.display='block'; imgEl.src=a.img||CAT_IMAGES[a.cat]; imgEl.alt=a.title;
+    imgEl.style.display='block';
+    // תמונה שהועלתה מהטלפון — src ישיר ללא עיבוד
+    // תמונת Unsplash — הוסף WebP + resize
+    const rawSrc = a.img || CAT_IMAGES[a.cat];
+    if (rawSrc && rawSrc.includes('unsplash.com')) {
+      // הוסף פרמטרי אופטימיזציה אם חסרים
+      const url = rawSrc.includes('fm=webp') ? rawSrc : rawSrc.replace(/\?(.*)/, '?$1&fm=webp&q=75&w=900&auto=format').replace(/^([^?]+)$/, '$1?fm=webp&q=75&w=900&auto=format');
+      imgEl.src = url;
+    } else {
+      imgEl.src = rawSrc;
+    }
+    imgEl.alt = a.title;
   }
   document.getElementById('art-img-caption').textContent = a.imgCaption||'';
 
@@ -6438,34 +6452,40 @@ function buildHeroBanner() {
     }
   });
 
-  // ── LIVE SWIPE ──
-  let _sx = 0, _sy = 0, _dragging = false, _slideW = 0;
+  // ── LIVE SWIPE — נועל כיוון, מונע גלילת דף ──
+  let _sx = 0, _sy = 0, _dragging = false, _slideW = 0, _lockedDir = null;
 
   viewport.addEventListener('touchstart', function(e) {
     _slideW = viewport.offsetWidth;
     _sx = e.touches[0].clientX;
     _sy = e.touches[0].clientY;
     _dragging = false;
+    _lockedDir = null;
     track.style.transition = 'none';
   }, { passive: true });
 
   viewport.addEventListener('touchmove', function(e) {
     const dx = e.touches[0].clientX - _sx;
     const dy = e.touches[0].clientY - _sy;
-    if (!_dragging) {
-      if (Math.abs(dx) < 6 && Math.abs(dy) < 6) return;
-      if (Math.abs(dy) > Math.abs(dx)) return;
-      _dragging = true;
+
+    // נעל כיוון בתחילת המחוות
+    if (!_lockedDir) {
+      if (Math.abs(dx) < 5 && Math.abs(dy) < 5) return;
+      _lockedDir = Math.abs(dx) >= Math.abs(dy) ? 'h' : 'v';
     }
+
+    if (_lockedDir === 'v') return; // גלילה אנכית — לא נוגעים בקרוסלה
+
+    // גלילה אופקית — עוצרים גלילת הדף
+    e.preventDefault();
+    _dragging = true;
     const base = _extIdx * -_slideW;
     track.style.transform = 'translateX(' + (base + dx) + 'px)';
-  }, { passive: true });
+  }, { passive: false }); // חייב להיות false כדי ש-preventDefault יעבוד
 
   viewport.addEventListener('touchend', function(e) {
     if (_dragging) {
-      e.preventDefault();
       const dx = e.changedTouches[0].clientX - _sx;
-      // RTL: swipe שמאלה (dx<0) = קדימה (הבא), swipe ימינה (dx>0) = אחורה (הקודם)
       if (dx < -_slideW * 0.22) {
         _extIdx++;
         heroBannerIdx = (heroBannerIdx + 1) % n;
@@ -6477,7 +6497,8 @@ function buildHeroBanner() {
       _updateDots();
     }
     _dragging = false;
-  });
+    _lockedDir = null;
+  }, { passive: true });
 
   // שמור refs גלובליים ל-goHeroBanner
   wrap._snapTo = _snapTo;
