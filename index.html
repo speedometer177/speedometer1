@@ -4663,6 +4663,9 @@ async function syncFromSupabase() {
     // REPLACE local articles with Supabase — Supabase is source of truth
     articles = sbArticles;
     nextId = Math.max(...articles.map(a => a.id), 0) + 1;
+    // שמירת חתימת מזהים — מאפשרת לסנכרון התקופתי לדעת אם היה שינוי
+    // בלי להוריד שוב את כל הכתבות (כולל תמונות כבדות) כל פעם.
+    _lastSyncSig = articles.map(a => a.id).join(',');
     saveLocal();
     buildHero();
     buildSections();
@@ -4672,6 +4675,33 @@ async function syncFromSupabase() {
   } catch(e) {
     console.log('Sync error:', e);
   }
+}
+
+// ── סנכרון תקופתי חסכוני ב-Egress ──
+// במקום להוריד את כל הכתבות (כולל תמונות) כל 30 שניות בכל מכשיר,
+// בודקים קודם רק את רשימת המזהים (כמה בתים). מורידים הכל מחדש רק אם
+// נוספה/נמחקה כתבה. כשהטאב לא פעיל — לא מסנכרנים בכלל.
+let _lastSyncSig = '';
+async function maybeSyncFromSupabase() {
+  if (document.hidden) return;
+  try {
+    let ids;
+    if (sbClient) {
+      const { data, error } = await sbClient
+        .from('articles').select('id').order('id', { ascending: false });
+      if (error) return;
+      ids = (data || []).map(r => r.id);
+    } else {
+      const r = await fetch(SB_URL + '/rest/v1/articles?select=id&order=id.desc', {
+        headers: { 'apikey': SB_KEY, 'Authorization': 'Bearer ' + SB_KEY }
+      });
+      if (!r.ok) return;
+      ids = (await r.json()).map(r => r.id);
+    }
+    const sig = ids.join(',');
+    if (sig === _lastSyncSig) return; // אין שינוי — לא מורידים את כל התוכן
+    await syncFromSupabase();
+  } catch(e) {}
 }
 
 
@@ -5794,10 +5824,17 @@ function getArticleUrl(a) {
 function setupRealtimeSync() {
   if (!sbClient) return;
   try {
+    // מאזינים רק להוספה ומחיקה של כתבות — לא לעדכונים (UPDATE).
+    // עדכון מתרחש בכל פתיחת כתבה (מונה צפיות), וקודם זה גרם לכל מכשיר
+    // מחובר להוריד מחדש את כל הכתבות והתמונות — בזבוז Egress עצום.
+    let _rtTimer;
+    const _rtSync = () => {
+      clearTimeout(_rtTimer);
+      _rtTimer = setTimeout(() => { if (!document.hidden) syncFromSupabase(); }, 1500);
+    };
     sbClient.channel('articles-changes')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'articles' }, () => {
-        syncFromSupabase();
-      })
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'articles' }, _rtSync)
+      .on('postgres_changes', { event: 'DELETE', schema: 'public', table: 'articles' }, _rtSync)
       .subscribe();
   } catch(e) {}
 }
@@ -6336,8 +6373,13 @@ function updateCatBreadcrumbPreview(cat) {
 
   // Then sync from Supabase in background
   setTimeout(syncFromSupabase, 800);
-  // Auto-sync every 30 seconds for real-time feel
-  setInterval(syncFromSupabase, 30000);
+  // סנכרון תקופתי חסכוני — בודק רק אם היה שינוי לפני שמוריד הכל מחדש,
+  // ולא מסנכרן כשהטאב לא פעיל. חוסך משמעותית ב-Egress.
+  setInterval(maybeSyncFromSupabase, 60000);
+  // כשחוזרים לטאב — בדיקת שינוי מהירה (במקום סקר רציף ברקע)
+  document.addEventListener('visibilitychange', () => {
+    if (!document.hidden) maybeSyncFromSupabase();
+  });
   // Supabase Realtime subscription
   setTimeout(setupRealtimeSync, 2000);
 
