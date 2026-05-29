@@ -4694,12 +4694,19 @@ function buildSupabaseRow(articleData) {
 
 async function pushToSupabase(articleData) {
   const row = buildSupabaseRow(articleData);
+  window._lastPushError = '';
   // Try library first
   if (sbClient) {
     try {
       const {error} = await sbClient.from('articles').insert(row);
       if (!error) return true;
-    } catch(e) {}
+      if (error) {
+        window._lastPushError = (error.message||'') +
+          (error.details ? (' | ' + error.details) : '') +
+          (error.hint ? (' | ' + error.hint) : '') +
+          (error.code ? (' | code ' + error.code) : '');
+      }
+    } catch(e) { window._lastPushError = e.message || String(e); }
   }
   // Fallback: direct fetch INSERT
   try {
@@ -4711,8 +4718,14 @@ async function pushToSupabase(articleData) {
       },
       body: JSON.stringify(row)
     });
-    return res.ok;
-  } catch(e) { return false; }
+    if (res.ok) return true;
+    try { window._lastPushError = 'HTTP ' + res.status + ' — ' + (await res.text()); }
+    catch(_) { window._lastPushError = 'HTTP ' + res.status; }
+    return false;
+  } catch(e) {
+    if (!window._lastPushError) window._lastPushError = e.message || String(e);
+    return false;
+  }
 }
 
 async function updateInSupabase(articleData) {
@@ -5497,7 +5510,7 @@ async function publishArticle() {
       syncFromSupabase();
       alert('הכתבה פורסמה בהצלחה!');
     } else {
-      alert('⚠️ הכתבה נשמרה במכשיר זה, אך ההעלאה ל-Supabase נכשלה — כנראה חסרה עמודה בטבלה. הכתבה לא תופיע במכשירים אחרים עד שהטבלה תתוקן (ראה הוראות SQL).');
+      alert('⚠️ ההעלאה ל-Supabase נכשלה.\n\nהשגיאה המדויקת מ-Supabase:\n' + (window._lastPushError || '(לא התקבלה הודעת שגיאה)'));
     }
   }
 }
