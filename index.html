@@ -68,6 +68,17 @@
 <link rel="preload" as="image" href="https://images.unsplash.com/photo-1580273916550-e323be2ae537?w=900&q=75&fm=webp&auto=format" fetchpriority="high">
 <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Assistant:wght@400;600;700;800&family=Rubik:wght@400;500;700;900&display=swap" onload="this.onload=null;this.rel='stylesheet'">
 <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Assistant:wght@400;600;700;800&family=Rubik:wght@400;500;700;900&display=swap"></noscript>
+<style id="critical">
+  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:'Rubik','Assistant',sans-serif;background:#fff;color:#1a1a1a}
+  .hero-banner-wrap{min-height:240px;background:#f7f7f5}
+  .hero-grid{min-height:380px}
+  .hero-main{aspect-ratio:16/9;overflow:hidden;background:#111}
+  .hero-side-card{overflow:hidden;background:#111}
+  .card-img{aspect-ratio:16/9;background:#f7f7f5;overflow:hidden}
+  header{height:68px;background:#fff}
+  .breaking-ticker{height:40px;overflow:hidden}
+</style>
 <style id="critical-css">
   /* CLS Prevention - reserve space before images load */
   .hero-banner-wrap { min-height: 270px; height: 270px; background: transparent; border-radius: 16px; overflow: hidden; }
@@ -81,6 +92,8 @@
   .card-img img { width: 100%; height: 100%; object-fit: cover; }
   .hero-main img, .hero-side-card img { width: 100%; height: 100%; object-fit: cover; }
   .hero-banner-slide img { width: 100%; height: 100%; object-fit: cover; display: block; border-radius: 16px; }
+  /* Hero banner slide fixed height */
+  .hero-banner-slide { height: 240px; overflow: hidden; }
   /* Prevent layout shift from fonts */
   body { font-display: swap; }
   /* Stable header height */
@@ -2830,18 +2843,22 @@ body.dark-mode .access-contact-row { border-color: var(--dm-border); }
 
 /* ════ MOBILE-FIRST ADMIN ════ */
 @media (max-width: 680px) {
+  .admin-page { padding: 0 12px 80px; }
   .admin-inner { padding: 20px 16px; }
   .form-block { padding: 20px 16px; }
-  .form-row { grid-template-columns: 1fr; }
+  .form-row { flex-direction: column; grid-template-columns: 1fr; }
   input[type="text"], input[type="url"], select, textarea {
-    font-size: 1rem;
+    font-size: 16px; /* Prevents zoom on iOS */
     padding: 13px 14px;
     border-radius: 8px;
+  }
+  .form-group input, .form-group select, .form-group textarea {
+    font-size: 16px; /* Prevents zoom on iOS */
   }
   label { font-size: 0.85rem; margin-bottom: 2px; }
   .btn-primary { width: 100%; padding: 14px; font-size: 1rem; border-radius: 8px; }
   .btn-secondary { padding: 13px 18px; font-size: 0.9rem; }
-  .admin-tabs { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  .admin-tabs { overflow-x: auto; white-space: nowrap; -webkit-overflow-scrolling: touch; }
   .admin-tab { padding: 12px 16px; font-size: 0.9rem; }
   textarea { min-height: 220px; }
 }
@@ -4067,11 +4084,11 @@ body.reading-mode .reading-mode-btn { background: var(--ink); color: #fff; borde
         <div class="form-row">
           <div class="form-group">
             <label for="a-title">כותרת הכתבה *</label>
-            <input type="text" id="a-title" placeholder="כותרת ראשית מושכת...">
+            <input type="text" id="a-title" placeholder="כותרת ראשית מושכת..." autocomplete="off" autocorrect="off" autocapitalize="off">
           </div>
           <div class="form-group">
             <label for="a-sub">כותרת משנה / תקציר</label>
-            <input type="text" id="a-sub" placeholder="תקציר קצר שמסביר את הכתבה...">
+            <input type="text" id="a-sub" placeholder="תקציר קצר שמסביר את הכתבה..." autocomplete="off" autocorrect="off" autocapitalize="off">
           </div>
         </div>
         <div class="form-row">
@@ -4092,7 +4109,7 @@ body.reading-mode .reading-mode-btn { background: var(--ink); color: #fff; borde
           </div>
           <div class="form-group">
             <label for="a-author">שם הכותב</label>
-            <input type="text" id="a-author" placeholder="שם הכתב / המערכת">
+            <input type="text" id="a-author" placeholder="שם הכתב / המערכת" autocomplete="off" autocorrect="off" autocapitalize="off">
           </div>
         </div>
         <div class="form-row full">
@@ -4111,7 +4128,7 @@ body.reading-mode .reading-mode-btn { background: var(--ink); color: #fff; borde
                 בחר תמונה מהגלריה (מדחסת אוטומטית ל-WebP)
               </label>
               <input type="file" id="a-img-file" accept="image/*" style="display:none;" onchange="handleImageUpload(this)">
-              <input type="url" id="a-img" placeholder="או הכנס קישור תמונה...">
+              <input type="url" id="a-img" placeholder="או הכנס קישור תמונה..." autocomplete="off" autocorrect="off" autocapitalize="off">
               <span id="upload-status" class="form-hint"></span>
               <div id="upload-preview" style="margin-top:8px;"></div>
             </div>
@@ -4321,11 +4338,11 @@ body.reading-mode .reading-mode-btn { background: var(--ink); color: #fff; borde
             <div style="display:flex;flex-direction:column;gap:8px;margin-top:6px;">
               <div style="display:flex;gap:8px;align-items:center;">
                 <span style="font-size:0.75rem;color:var(--mid);min-width:20px;">1</span>
-                <input type="url" id="yt-url-1" placeholder="https://www.youtube.com/watch?v=..." style="flex:1;">
+                <input type="url" id="yt-url-1" placeholder="https://www.youtube.com/watch?v=..." style="flex:1;" autocomplete="off" autocorrect="off" autocapitalize="off">
               </div>
               <div style="display:flex;gap:8px;align-items:center;">
                 <span style="font-size:0.75rem;color:var(--mid);min-width:20px;">2</span>
-                <input type="url" id="yt-url-2" placeholder="https://www.youtube.com/watch?v=... (אופציונלי)" style="flex:1;">
+                <input type="url" id="yt-url-2" placeholder="https://www.youtube.com/watch?v=... (אופציונלי)" style="flex:1;" autocomplete="off" autocorrect="off" autocapitalize="off">
               </div>
             </div>
             <span class="form-hint">הסרטונים יוצגו עם תמונת הכותרת ביוטיוב, לחיצה פותחת מוטמע</span>
@@ -4470,7 +4487,7 @@ body.reading-mode .reading-mode-btn { background: var(--ink); color: #fff; borde
 
 <button class="back-top" id="back-top" onclick="window.scrollTo({top:0,behavior:'smooth'})" aria-label="גלול לראש הדף">↑</button>
 
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
 /* =============================================
    SPEEDOMETER v7 — UPGRADED
@@ -4602,123 +4619,86 @@ function loadLocal() {
   return null;
 }
 
-// ── SUPABASE SYNC ──
-function syncFromSupabase() {
-  if (sbClient) {
-    // מביא רק כתבות שלא מסומנות כמחוקות
-    sbClient.from('articles').select('*').eq('deleted', false).order('created_at', {ascending:false})
-      .then(function(res) {
-        if (res.error) {
-          // אם העמודה לא קיימת — fallback ללא פילטר
-          sbClient.from('articles').select('*').order('created_at', {ascending:false})
-            .then(function(res2) {
-              if (res2.error || !res2.data || res2.data.length === 0) { syncViaFetch(); return; }
-              deletedIds = new Set(JSON.parse(localStorage.getItem('sp_deleted_ids')||'[]'));
-              processSyncData(res2.data);
-            }, function() { syncViaFetch(); });
-          return;
-        }
-        if (!res.data || res.data.length === 0) return;
-        deletedIds = new Set(JSON.parse(localStorage.getItem('sp_deleted_ids')||'[]'));
-        processSyncData(res.data);
-      }, function() { syncViaFetch(); });
-  } else { syncViaFetch(); }
+// ── SUPABASE SYNC — Supabase is source of truth ──
+function mapRow(r) {
+  var def = DEFAULT_ARTICLES.find(function(d){ return d.title === r.title; });
+  var imgFallback = (def && def.img) ? def.img : CAT_IMAGES[r.cat||'local'];
+  return {
+    id: r.id, title: r.title||'', sub: r.sub||'', cat: r.cat||'local',
+    author: r.author||'מערכת ספידומטר', date: r.date||'', time: r.time||'',
+    readTime: r.read_time||'',
+    img: (r.img && r.img.trim().length > 5) ? r.img.trim() : imgFallback,
+    imgCaption: r.img_caption||'', body: r.body||'', score: r.score||null,
+    views: r.views||0, featured: r.featured||false, specs: r.specs||null,
+    gallery: r.gallery||null, galleryCaptions: r.gallery_captions||null,
+    bodyImages: r.body_images||null,
+    ytUrls: r.yt_urls||null,
+    tags: r.tags||[],
+    scheduledAt: r.scheduled_at||null,
+  };
 }
 
-function syncViaFetch() {
-  // מביא רק כתבות לא מחוקות — אם העמודה קיימת
-  fetch(SB_URL + '/rest/v1/articles?select=*&deleted=eq.false&order=created_at.desc', {
-    headers: { 'apikey': SB_KEY, 'Authorization': 'Bearer ' + SB_KEY }
-  })
-  .then(function(r) { return r.json(); })
-  .then(function(data) {
-    if (!data || !Array.isArray(data)) return;
-    if (data.length === 0) {
-      // fallback: נסה בלי פילטר deleted
-      fetch(SB_URL + '/rest/v1/articles?select=*&order=created_at.desc', {
+async function syncFromSupabase() {
+  try {
+    let rows;
+    if (sbClient) {
+      const { data, error } = await sbClient
+        .from('articles')
+        .select('*')
+        .order('id', { ascending: false });
+      if (error) throw error;
+      rows = data;
+    } else {
+      const r = await fetch(SB_URL + '/rest/v1/articles?select=*&order=id.desc', {
         headers: { 'apikey': SB_KEY, 'Authorization': 'Bearer ' + SB_KEY }
-      })
-      .then(r2 => r2.json())
-      .then(function(data2) {
-        if (!data2 || !Array.isArray(data2) || data2.length === 0) return;
-        deletedIds = new Set(JSON.parse(localStorage.getItem('sp_deleted_ids')||'[]'));
-        processSyncData(data2);
-      }).catch(function(){});
-      return;
+      });
+      if (!r.ok) throw new Error('fetch failed');
+      rows = await r.json();
     }
-    deletedIds = new Set(JSON.parse(localStorage.getItem('sp_deleted_ids')||'[]'));
-    processSyncData(data);
-  })
-  .catch(function(err) { console.log('Sync failed:', err); });
-}
+    if (!Array.isArray(rows) || rows.length === 0) return;
 
-function processSyncData(data) {
-  // Reload deletedIds fresh from localStorage
-  deletedIds = new Set(JSON.parse(localStorage.getItem('sp_deleted_ids')||'[]'));
+    // Map Supabase rows to article format
+    const sbArticles = rows.map(mapRow);
 
-  // Map Supabase rows to article objects
-  var sbArticles = data.map(function(r) {
-    var def = DEFAULT_ARTICLES.find(function(d){ return d.title === r.title; });
-    var imgFallback = (def && def.img) ? def.img : CAT_IMAGES[r.cat||'local'];
-    // Preserve local-only fields that Supabase doesn't store
-    var local = articles.find(function(a){ return a.id === r.id; });
-    return {
-      id: r.id, title: r.title||'', sub: r.sub||'', cat: r.cat||'local',
-      author: r.author||'מערכת ספידומטר', date: r.date||'', time: r.time||'',
-      readTime: r.read_time||'',
-      img: (r.img && r.img.trim().length > 5) ? r.img.trim() : imgFallback,
-      imgCaption: r.img_caption||'', body: r.body||'', score: r.score||null,
-      views: r.views||0, featured: r.featured||false, specs: r.specs||null,
-      gallery: r.gallery||null, galleryCaptions: r.gallery_captions||null,
-      bodyImages: r.body_images||null,
-      // Preserve local-only fields
-      ytUrls: (local && local.ytUrls) ? local.ytUrls : (r.yt_urls||null),
-      tags: (local && local.tags) ? local.tags : (r.tags||[]),
-      scheduledAt: (local && local.scheduledAt) ? local.scheduledAt : (r.scheduled_at||null),
-    };
-  });
-
-  // Filter deleted IDs
-  var fromSB = sbArticles.filter(function(a){ return !deletedIds.has(a.id); });
-
-  // Keep local-only articles (those not yet in Supabase — negative IDs or not found in SB)
-  var sbIds = new Set(fromSB.map(function(a){ return a.id; }));
-  var localOnly = articles.filter(function(a){
-    return !sbIds.has(a.id) && !deletedIds.has(a.id);
-  });
-
-  // Merge: Supabase first (sorted by id desc), then any local-only articles
-  articles = fromSB.concat(localOnly);
-  articles.sort(function(a,b){ return b.id - a.id; });
-
-  if (articles.length > 0) nextId = Math.max.apply(null, articles.map(function(a){ return a.id||0; })) + 1;
-  saveLocal();
-  buildHero(); buildSections(); buildTicker(); buildBreakingTicker(); handleMobileHero();
+    // REPLACE local articles with Supabase — Supabase is source of truth
+    articles = sbArticles;
+    nextId = Math.max(...articles.map(a => a.id), 0) + 1;
+    saveLocal();
+    buildHero();
+    buildSections();
+    try { buildBreakingTicker(); } catch(e) {}
+    try { buildTicker(); } catch(e) {}
+    try { handleMobileHero(); } catch(e) {}
+  } catch(e) {
+    console.log('Sync error:', e);
+  }
 }
 
 
-async function pushToSupabase(articleData) {
-  const row = {
+function buildSupabaseRow(articleData) {
+  const img = articleData.img || '';
+  const safeImg = (img.startsWith('data:') && img.length > 500000) ? img.substring(0, 500000) : img;
+  return {
     title: articleData.title||'', sub: articleData.sub||'', cat: articleData.cat||'local',
-    author: articleData.author||'מערכת ספידומטר', date: articleData.date||'',
-    read_time: articleData.readTime||'', img: articleData.img||'',
+    author: articleData.author||'מערכת ספידומטר', date: articleData.date||'', time: articleData.time||'',
+    read_time: articleData.readTime||'',
+    img: safeImg,
     img_caption: articleData.imgCaption||'', body: articleData.body||'',
     score: articleData.score||null, views: articleData.views||0,
     featured: articleData.featured||false, specs: articleData.specs||null,
-    gallery: articleData.gallery||null, body_images: articleData.bodyImages||null
+    gallery: articleData.gallery||null, body_images: articleData.bodyImages||null,
+    tags: articleData.tags||[], yt_urls: articleData.ytUrls||null,
+    scheduled_at: articleData.scheduledAt||null, gallery_captions: articleData.galleryCaptions||null
   };
-  // Try library first (supports UPDATE)
+}
+
+async function pushToSupabase(articleData) {
+  const row = buildSupabaseRow(articleData);
+  // Try library first
   if (sbClient) {
     try {
-      // Check if exists by looking for matching title
-      const {data: existing} = await sbClient.from('articles').select('id').eq('title', articleData.title).single();
-      if (existing) {
-        const {error} = await sbClient.from('articles').update(row).eq('id', existing.id);
-        if (!error) return true;
-      } else {
-        const {error} = await sbClient.from('articles').insert(row);
-        if (!error) return true;
-      }
+      const {error} = await sbClient.from('articles').insert(row);
+      if (!error) return true;
     } catch(e) {}
   }
   // Fallback: direct fetch INSERT
@@ -4733,6 +4713,26 @@ async function pushToSupabase(articleData) {
     });
     return res.ok;
   } catch(e) { return false; }
+}
+
+async function updateInSupabase(articleData) {
+  const row = buildSupabaseRow(articleData);
+  try {
+    if (sbClient) {
+      await sbClient.from('articles').update(row).eq('id', articleData.id);
+      return;
+    }
+    await fetch(SB_URL + '/rest/v1/articles?id=eq.' + articleData.id, {
+      method: 'PATCH',
+      headers: {
+        'apikey': SB_KEY,
+        'Authorization': 'Bearer ' + SB_KEY,
+        'Content-Type': 'application/json',
+        'Prefer': 'return=minimal'
+      },
+      body: JSON.stringify(row)
+    });
+  } catch(e) { console.log('Update error:', e); }
 }
 
 
@@ -5354,38 +5354,19 @@ function renderAdminTable() {
     articles.map(a=>`<tr><td><div class="tbl-title">${a.title}${a.scheduledAt?'<span style="font-size:0.68rem;background:#f59e0b;color:#fff;padding:1px 7px;border-radius:10px;margin-right:6px;">⏰ תזמון</span>':''}</div></td><td><span class="tbl-cat">${CAT_LABELS[a.cat]||a.cat}</span></td><td style="color:var(--mid);font-size:0.8rem">${a.author}</td><td style="color:var(--muted);font-size:0.78rem">${a.date}</td><td style="color:var(--muted);font-size:0.78rem">${a.views||0}</td><td><div class="tbl-actions"><button class="tbl-btn" onclick="viewArticle(${a.id})">צפה</button><button class="tbl-btn" onclick="editArticle(${a.id})">ערוך</button><button class="tbl-btn del" onclick="deleteArticle(${a.id})">מחק</button></div></td></tr>`).join('')
   }</tbody>`;
 }
-// ── IMAGE COMPRESSION ──
-function compressImage(file, maxWidth=1200, quality=0.82) {
-  return new Promise(resolve => {
-    const reader = new FileReader();
-    reader.onload = e => {
-      const img = new Image();
-      img.onload = () => {
-        const canvas = document.createElement('canvas');
-        // Reduce max width on mobile for even faster load
-        const isMobile = window.innerWidth <= 680;
-        if (isMobile) { maxWidth = Math.min(maxWidth, 800); quality = Math.min(quality, 0.78); }
-        let w = img.width, h = img.height;
-        if (w > maxWidth) { h = Math.round(h * maxWidth / w); w = maxWidth; }
-        canvas.width = w; canvas.height = h;
-        const ctx = canvas.getContext('2d');
-        ctx.drawImage(img, 0, 0, w, h);
-        resolve(canvas.toDataURL('image/webp', quality));
-      };
-      img.src = e.target.result;
-    };
-    reader.readAsDataURL(file);
-  });
-}
-
 // Gallery images array
 let galleryImages = []; // [{src, caption}]
 
 async function handleGalleryUpload(input) {
   const files = Array.from(input.files).slice(0, 10 - galleryImages.length);
   for (const file of files) {
-    const compressed = await compressImage(file, 1400, 0.85);
-    galleryImages.push({src: compressed, caption: ''});
+    const compressedFile = await compressImageFile(file, 300);
+    const src = await new Promise(res => {
+      const r = new FileReader();
+      r.onload = e => res(e.target.result);
+      r.readAsDataURL(compressedFile || file);
+    });
+    galleryImages.push({src, caption: ''});
   }
   renderGalleryPreview();
   input.value = '';
@@ -5407,14 +5388,6 @@ function renderGalleryPreview() {
 function removeGalleryImg(i) {
   galleryImages.splice(i, 1);
   renderGalleryPreview();
-}
-
-async function handleImageUpload(input) {
-  const file = input.files[0]; if (!file) return;
-  document.getElementById('upload-status').textContent = 'מדחס תמונה...';
-  const compressed = await compressImage(file, 1200, 0.82);
-  document.getElementById('a-img').value = compressed;
-  document.getElementById('upload-status').textContent = 'התמונה הועלתה ודוחסה בהצלחה';
 }
 
 // ── LIGHTBOX ──
@@ -5497,13 +5470,26 @@ async function publishArticle() {
       };
     })() : null
   };
-  if (editId) { const idx=articles.findIndex(a=>a.id===parseInt(editId)); if(idx>-1) articles[idx]=data; delete document.getElementById('a-title').dataset.editId; }
-  else articles.unshift(data);
-  saveLocal();
-  await maybeAddQuickVersion(data);
-  buildHero(); buildSections(); buildTicker(); buildBreakingTicker();
-  clearForm();
-  pushToSupabase(data).then(ok=>{ if(ok) syncFromSupabase(); });
+  if (editId) {
+    // UPDATE existing article in Supabase
+    const idx = articles.findIndex(a => a.id === parseInt(editId));
+    if (idx > -1) articles[idx] = data;
+    delete document.getElementById('a-title').dataset.editId;
+    saveLocal();
+    await maybeAddQuickVersion(data);
+    buildHero(); buildSections(); buildTicker(); buildBreakingTicker();
+    clearForm();
+    await updateInSupabase(data);
+    syncFromSupabase();
+  } else {
+    // INSERT new article
+    articles.unshift(data);
+    saveLocal();
+    await maybeAddQuickVersion(data);
+    buildHero(); buildSections(); buildTicker(); buildBreakingTicker();
+    clearForm();
+    pushToSupabase(data).then(() => { syncFromSupabase(); });
+  }
   alert(editId?'הכתבה עודכנה בהצלחה!':'הכתבה פורסמה בהצלחה!');
 }
 function editArticle(id) {
@@ -5584,48 +5570,47 @@ function loadYTEmbed(el, vid) {
 }
 
 async function deleteArticle(id) {
-  if(!confirm('למחוק את הכתבה לצמיתות?')) return;
+  if (!confirm('למחוק את הכתבה לצמיתות?')) return;
 
-  // 1. סמן מחוק מיידית — מונע מ-sync להחזיר
-  deletedIds.add(id);
-  saveDeletedIds();
+  let deleted = false;
 
-  // 2. הסר מהמערך המקומי ועדכן UI
-  articles = articles.filter(x => x.id !== id);
-  saveLocal();
-  buildHero(); buildSections(); buildTicker(); buildBreakingTicker();
-  renderAdminTable();
-
-  // 3. Soft delete ב-Supabase — מסמן deleted=true כך שכל המכשירים יסנן אותו
-  //    (אם העמודה לא קיימת — fallback למחיקה פיזית)
-  let softDeleted = false;
+  // Try Supabase library
   if (sbClient) {
     try {
-      const { error } = await sbClient.from('articles').update({ deleted: true }).eq('id', id);
-      if (!error) { softDeleted = true; }
+      const { error } = await sbClient.from('articles').delete().eq('id', id);
+      if (!error) deleted = true;
     } catch(e) {}
   }
-  if (!softDeleted) {
-    // Fallback fetch PATCH
+
+  // Fallback: fetch DELETE
+  if (!deleted) {
     try {
       const r = await fetch(SB_URL + '/rest/v1/articles?id=eq.' + id, {
-        method: 'PATCH',
-        headers: { 'apikey': SB_KEY, 'Authorization': 'Bearer ' + SB_KEY, 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
-        body: JSON.stringify({ deleted: true })
+        method: 'DELETE',
+        headers: {
+          'apikey': SB_KEY,
+          'Authorization': 'Bearer ' + SB_KEY,
+          'Content-Type': 'application/json',
+          'Prefer': 'return=minimal'
+        }
       });
-      if (r.ok) softDeleted = true;
+      if (r.ok) deleted = true;
     } catch(e) {}
   }
-  // אם soft delete נכשל — hard delete
-  if (!softDeleted) {
-    try {
-      if (sbClient) await sbClient.from('articles').delete().eq('id', id);
-      else await fetch(SB_URL + '/rest/v1/articles?id=eq.' + id, {
-        method: 'DELETE',
-        headers: { 'apikey': SB_KEY, 'Authorization': 'Bearer ' + SB_KEY }
-      });
-    } catch(e) { console.warn('Delete may not have reached server'); }
+
+  if (!deleted) {
+    alert('שגיאה במחיקה — נסה שוב');
+    return;
   }
+
+  // Remove locally only after confirmed deletion
+  articles = articles.filter(a => a.id !== id);
+  saveLocal();
+  buildHero();
+  buildSections();
+  try { buildBreakingTicker(); } catch(e) {}
+  renderAdminTable();
+  alert('הכתבה נמחקה');
 }
 function viewArticle(id) { showHome(); openArticle(id); }
 function clearForm() {
@@ -6150,56 +6135,50 @@ async function uploadImageToSupabase(file) {
 async function handleImageUpload(input) {
   const file = input.files[0];
   if (!file) return;
-  const label = document.getElementById('upload-status');
-  const preview = document.getElementById('upload-preview');
-  if (label) { label.textContent = 'מדחס ומעלה תמונה...'; label.style.color = 'var(--muted)'; }
+  const statusEl = document.getElementById('upload-status');
+  const previewEl = document.getElementById('upload-preview');
+  if (statusEl) { statusEl.textContent = 'מדחס תמונה...'; statusEl.style.color = 'var(--muted)'; }
+
   try {
-    // Compress first
-    const compressed = await compressImageFile(file, 300);
-    // Show preview
-    if (preview && compressed) {
-      const reader = new FileReader();
-      reader.onload = e => { preview.innerHTML = '<img src="' + e.target.result + '" style="width:100%;max-height:180px;object-fit:cover;border-radius:6px;margin-top:6px;">'; };
-      reader.readAsDataURL(compressed);
-    }
-    // Try Supabase Storage upload
-    const url = await uploadImageToSupabase(compressed || file);
-    if (url) {
-      document.getElementById('a-img').value = url;
-      if (label) { label.textContent = '✅ התמונה הועלתה בהצלחה'; label.style.color = '#22c55e'; }
-    } else {
-      // Fallback: convert to base64
-      const reader = new FileReader();
-      reader.onload = e => {
-        document.getElementById('a-img').value = e.target.result;
-        if (label) { label.textContent = '✅ תמונה נשמרה (base64)'; label.style.color = '#22c55e'; }
-      };
-      reader.readAsDataURL(compressed || file);
-    }
+    // Compress aggressively for mobile: max 800px wide, max 150KB
+    const compressed = await compressImageFile(file, 150);
+    const targetFile = compressed || file;
+
+    const reader = new FileReader();
+    reader.onload = e => {
+      const b64 = e.target.result;
+      document.getElementById('a-img').value = b64;
+      if (previewEl) previewEl.innerHTML = `<img src="${b64}" style="max-width:100%;max-height:160px;border-radius:6px;object-fit:cover;margin-top:8px;">`;
+      if (statusEl) { statusEl.textContent = '✅ תמונה נטענה בהצלחה (' + Math.round(targetFile.size/1024) + 'KB)'; statusEl.style.color = '#22c55e'; }
+    };
+    reader.readAsDataURL(targetFile);
   } catch(e) {
-    if (label) { label.textContent = 'שגיאה — נסה שוב'; label.style.color = 'var(--red)'; }
+    if (statusEl) { statusEl.textContent = 'שגיאה — נסה שוב'; statusEl.style.color = 'var(--red)'; }
   }
+  input.value = '';
 }
 
 async function handleBodyImgUpload(input, idx) {
   const file = input.files[0]; if (!file) return;
-  const compressed = await compressImageFile(file, 300);
+  const compressed = await compressImageFile(file, 120);
   const reader = new FileReader();
   reader.onload = e => {
-    document.getElementById('body-img-' + idx).value = e.target.result;
+    const el = document.getElementById('body-img-' + idx);
+    if (el) el.value = e.target.result;
   };
   reader.readAsDataURL(compressed || file);
   input.value = '';
 }
 
-// Compress image to maxKB
-async function compressImageFile(file, maxKB = 300) {
+// Compress image to maxKB — WebP, mobile-friendly
+async function compressImageFile(file, maxKB = 200) {
   return new Promise(resolve => {
     const img = new Image();
     const url = URL.createObjectURL(file);
     img.onload = () => {
+      URL.revokeObjectURL(url);
       let w = img.width, h = img.height;
-      const MAX = 1200;
+      const MAX = 900;
       if (w > MAX || h > MAX) {
         const r = Math.min(MAX/w, MAX/h);
         w = Math.round(w*r); h = Math.round(h*r);
@@ -6207,17 +6186,22 @@ async function compressImageFile(file, maxKB = 300) {
       const canvas = document.createElement('canvas');
       canvas.width = w; canvas.height = h;
       canvas.getContext('2d').drawImage(img, 0, 0, w, h);
-      let q = 0.85;
-      const tryIt = () => canvas.toBlob(blob => {
-        if (!blob) { resolve(null); return; }
-        if (blob.size <= maxKB * 1024 || q < 0.3) {
-          resolve(new File([blob], file.name.replace(/\.[^.]+$/, '.webp'), {type:'image/webp'}));
-        } else { q -= 0.07; tryIt(); }
-      }, 'image/webp', q);
-      tryIt();
-      URL.revokeObjectURL(url);
+
+      let q = 0.82;
+      const tryCompress = () => {
+        canvas.toBlob(blob => {
+          if (!blob) { resolve(null); return; }
+          if (blob.size <= maxKB * 1024 || q < 0.25) {
+            resolve(new File([blob], file.name.replace(/\.[^.]+$/, '.webp'), { type: 'image/webp' }));
+          } else {
+            q = Math.max(0.25, q - 0.08);
+            tryCompress();
+          }
+        }, 'image/webp', q);
+      };
+      tryCompress();
     };
-    img.onerror = () => resolve(null);
+    img.onerror = () => { URL.revokeObjectURL(url); resolve(null); };
     img.src = url;
   });
 }
