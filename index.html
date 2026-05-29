@@ -4889,7 +4889,7 @@ function cardHTML(a) {
   const score = a.score?`<div class="review-score ${parseFloat(a.score)>=8?'high':parseFloat(a.score)>=6?'mid':''}">${a.score}</div>`:'';
   return `<a href="#article-${a.id}" class="card" onclick="openArticle(${a.id});return false;" role="article" aria-label="${a.title}">
     <div class="card-img">
-      <img src="${a.img||CAT_IMAGES[a.cat]}" alt="${a.title}" loading="lazy" width="400" height="225" decoding="async">
+      <img src="${a.img||CAT_IMAGES[a.cat]}" alt="${a.title}" loading="lazy" width="400" height="225" decoding="async" onload="this.classList.add('loaded')" onerror="this.classList.add('loaded')">
       ${score}<span class="card-cat">${CAT_LABELS[a.cat]}</span>
     </div>
     <div class="card-body">
@@ -5481,6 +5481,7 @@ async function publishArticle() {
     clearForm();
     await updateInSupabase(data);
     syncFromSupabase();
+    alert('הכתבה עודכנה בהצלחה!');
   } else {
     // INSERT new article
     articles.unshift(data);
@@ -5488,9 +5489,17 @@ async function publishArticle() {
     await maybeAddQuickVersion(data);
     buildHero(); buildSections(); buildTicker(); buildBreakingTicker();
     clearForm();
-    pushToSupabase(data).then(() => { syncFromSupabase(); });
+    // חשוב: לסנכרן מהשרת רק אם ההעלאה הצליחה. אם ההעלאה נכשלת
+    // (למשל עמודה חסרה בטבלת Supabase), syncFromSupabase ימחק את
+    // הכתבה החדשה מהמסך — ולכן הכתבה "נעלמת מכל מקום".
+    const ok = await pushToSupabase(data);
+    if (ok) {
+      syncFromSupabase();
+      alert('הכתבה פורסמה בהצלחה!');
+    } else {
+      alert('⚠️ הכתבה נשמרה במכשיר זה, אך ההעלאה ל-Supabase נכשלה — כנראה חסרה עמודה בטבלה. הכתבה לא תופיע במכשירים אחרים עד שהטבלה תתוקן (ראה הוראות SQL).');
+    }
   }
-  alert(editId?'הכתבה עודכנה בהצלחה!':'הכתבה פורסמה בהצלחה!');
 }
 function editArticle(id) {
   const a=articles.find(x=>x.id===id); if(!a) return;
@@ -5977,7 +5986,13 @@ document.addEventListener('click', function(e) {
 window.addEventListener('scroll',()=>{ document.getElementById('back-top')?.classList.toggle('visible',window.scrollY>400); document.querySelector('header')?.classList.toggle('scrolled',window.scrollY>60); });
 // Re-check mobile hero on resize
 let resizeTimer;
+let _lastViewportW = window.innerWidth;
 window.addEventListener('resize', () => {
+  // במובייל גלילה מעלה/מטה מסתירה/מציגה את שורת הכתובת ומשנה רק את
+  // הגובה — מה שמפעיל resize. אם הרוחב לא השתנה, אין צורך לבנות מחדש
+  // את הקרוסלה (בנייה מחדש = הבהוב). נבנה מחדש רק כששינוי הרוחב אמיתי.
+  if (window.innerWidth === _lastViewportW) return;
+  _lastViewportW = window.innerWidth;
   clearTimeout(resizeTimer);
   resizeTimer = setTimeout(() => { handleMobileHero(); }, 200);
 });
@@ -6588,10 +6603,9 @@ function handleMobileHero() {
     }
   } catch(e) { console.log('handleMobileHero error:', e); }
 }
-// On resize, rebuild carousel with new dimensions
-window.addEventListener('resize', () => {
-  handleMobileHero();
-}, { passive: true });
+// הסרנו מאזין resize כפול ולא-מושהה שבנה מחדש את הקרוסלה בכל שינוי גובה
+// (כולל הסתרת שורת הכתובת בגלילה במובייל) — זה היה הגורם להבהוב.
+// הבנייה-מחדש על שינוי רוחב אמיתי מטופלת במאזין המושהה והמוגן למעלה.
 
 
 // ── SERVICE WORKER ──
