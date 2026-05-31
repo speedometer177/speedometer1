@@ -56,7 +56,6 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://images.unsplash.com" crossorigin>
 <link rel="preconnect" href="https://kaykrrnmykqrfhawgtqt.supabase.co" crossorigin>
-<link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
 <link rel="dns-prefetch" href="//images.unsplash.com">
 <link rel="dns-prefetch" href="//kaykrrnmykqrfhawgtqt.supabase.co">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -111,8 +110,8 @@
   --ink: #1a1a1a;
   --dark: #222;
   --mid: #555;
-  --muted: #888;
-  --light: #bbb;
+  --muted: #6f6f6f;
+  --light: #757575;
   --border: #e8e8e8;
   --bg: #f7f7f5;
   --white: #ffffff;
@@ -730,17 +729,22 @@ body.dark-mode .si-pc-item { color: #ccc; }
 }
 .hero-banner-dot {
   width: 6px; height: 6px;
+  /* Visible dot stays 6px, but the tappable area is padded out to the
+     24px minimum recommended for touch targets (a11y / best practices). */
+  padding: 9px;
+  box-sizing: content-box;
   background: rgba(180,180,180,0.55);
+  background-clip: content-box;
   border-radius: 50%;
   cursor: pointer;
   border: none;
-  padding: 0;
   transition: all 0.25s ease;
   touch-action: manipulation;
   box-shadow: 0 1px 3px rgba(0,0,0,0.4);
 }
 .hero-banner-dot.active {
   background: var(--red, #e8001d);
+  background-clip: content-box;
   width: 22px;
   border-radius: 3px;
   box-shadow: 0 1px 5px rgba(0,0,0,0.5);
@@ -1093,7 +1097,7 @@ nav { display: flex; align-items: center; gap: 2px; flex: 1; justify-content: ce
 }
 .hero-meta { display: flex; align-items: center; gap: 10px; margin-top: 12px; }
 .hero-author { font-size: 0.75rem; color: rgba(255,255,255,0.6); }
-.hero-date { font-size: 0.75rem; color: rgba(255,255,255,0.5); }
+.hero-date { font-size: 0.75rem; color: rgba(255,255,255,0.85); }
 .hero-read-time {
   font-size: 0.7rem;
   background: rgba(255,255,255,0.15);
@@ -3637,7 +3641,7 @@ body.reading-mode .reading-mode-btn { background: var(--ink); color: #fff; borde
         <a class="nav-link" href="/" onclick="event.preventDefault();currentFilter='all';showHome();buildHero();buildSections();window.scrollTo({top:0,behavior:'smooth'});" aria-label="עמוד הבית ספידומטר">בית</a>
       </div>
       <div class="nav-item">
-        <a class="nav-link" href="javascript:void(0)" aria-haspopup="true" aria-expanded="false">חדשות רכב
+        <a class="nav-link" href="/?cat=local" onclick="event.preventDefault();filterCat('local')" aria-haspopup="true" aria-expanded="false">חדשות רכב
           <svg viewBox="0 0 12 8" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M1 1l5 5 5-5"/></svg>
         </a>
         <div class="dropdown" role="menu">
@@ -3656,7 +3660,7 @@ body.reading-mode .reading-mode-btn { background: var(--ink); color: #fff; borde
         </a>
       </div>
       <div class="nav-item">
-        <a class="nav-link" href="javascript:void(0)" aria-haspopup="true">מדריכים
+        <a class="nav-link" href="/?cat=buying" onclick="event.preventDefault();filterCat('buying')" aria-haspopup="true">מדריכים
           <svg viewBox="0 0 12 8" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M1 1l5 5 5-5"/></svg>
         </a>
         <div class="dropdown" role="menu">
@@ -3724,14 +3728,14 @@ body.reading-mode .reading-mode-btn { background: var(--ink); color: #fff; borde
     </div>
     <button class="mobile-menu-close" onclick="document.getElementById('mobile-menu').classList.remove('open')" aria-label="סגור תפריט"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
   </div>
-  <a class="mobile-nav-link" href="javascript:void(0)" onclick="showHome();document.getElementById('mobile-menu').classList.remove('open')">בית</a>
-  <a class="mobile-nav-link" href="javascript:void(0)" onclick="filterCat('local');document.getElementById('mobile-menu').classList.remove('open')">חדשות מקומיות</a>
-  <a class="mobile-nav-link" href="javascript:void(0)" onclick="filterCat('world');document.getElementById('mobile-menu').classList.remove('open')">חדשות עולמיות</a>
-  <a class="mobile-nav-link" href="javascript:void(0)" onclick="filterCat('review');document.getElementById('mobile-menu').classList.remove('open')">מבחני רכב</a>
-  <a class="mobile-nav-link" href="javascript:void(0)" onclick="filterCat('luxury');document.getElementById('mobile-menu').classList.remove('open')">יוקרה</a>
-  <a class="mobile-nav-link" href="javascript:void(0)" onclick="filterCat('electric');document.getElementById('mobile-menu').classList.remove('open')">רכב חשמלי</a>
-  <a class="mobile-nav-link" href="javascript:void(0)" onclick="filterCat('quick');document.getElementById('mobile-menu').classList.remove('open')">חדשות בקליק</a>
-  <a class="mobile-nav-link" href="javascript:void(0)" onclick="filterCat('buying');document.getElementById('mobile-menu').classList.remove('open')">קניית רכב</a>
+  <a class="mobile-nav-link" href="/" onclick="event.preventDefault();showHome();document.getElementById('mobile-menu').classList.remove('open')">בית</a>
+  <a class="mobile-nav-link" href="/?cat=local" onclick="event.preventDefault();filterCat('local');document.getElementById('mobile-menu').classList.remove('open')">חדשות מקומיות</a>
+  <a class="mobile-nav-link" href="/?cat=world" onclick="event.preventDefault();filterCat('world');document.getElementById('mobile-menu').classList.remove('open')">חדשות עולמיות</a>
+  <a class="mobile-nav-link" href="/?cat=review" onclick="event.preventDefault();filterCat('review');document.getElementById('mobile-menu').classList.remove('open')">מבחני רכב</a>
+  <a class="mobile-nav-link" href="/?cat=luxury" onclick="event.preventDefault();filterCat('luxury');document.getElementById('mobile-menu').classList.remove('open')">יוקרה</a>
+  <a class="mobile-nav-link" href="/?cat=electric" onclick="event.preventDefault();filterCat('electric');document.getElementById('mobile-menu').classList.remove('open')">רכב חשמלי</a>
+  <a class="mobile-nav-link" href="/?cat=quick" onclick="event.preventDefault();filterCat('quick');document.getElementById('mobile-menu').classList.remove('open')">חדשות בקליק</a>
+  <a class="mobile-nav-link" href="/?cat=buying" onclick="event.preventDefault();filterCat('buying');document.getElementById('mobile-menu').classList.remove('open')">קניית רכב</a>
   <a class="mobile-nav-link" href="http://www.youtube.com/@Speedometer-r4s" target="_blank" rel="noopener noreferrer" style="color:var(--red);display:flex;align-items:center;gap:8px;">
     <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>
     ערוץ יוטיוב
@@ -3774,11 +3778,11 @@ body.reading-mode .reading-mode-btn { background: var(--ink); color: #fff; borde
 <div id="ticker-track" style="display:none;"></div>
 
 <!-- ════════ HOME PAGE ════════ -->
-<div id="home-page">
+<main id="home-page">
 
   <!-- HERO -->
   <!-- Desktop hero -->
-  <div class="hero hero-grid-wrap" id="hero-area" role="main"></div>
+  <div class="hero hero-grid-wrap" id="hero-area"></div>
   <!-- Mobile hero banner (auto-rotating) -->
   <div class="hero hero-banner-wrap" id="hero-banner-mobile" style="display:none;"></div>
 
@@ -3924,10 +3928,10 @@ body.reading-mode .reading-mode-btn { background: var(--ink); color: #fff; borde
     </div>
   </div>
 
-</div><!-- /home-page -->
+</main><!-- /home-page -->
 
 <!-- ════════ ARTICLE PAGE ════════ -->
-<div class="article-page" id="article-page" role="main">
+<main class="article-page" id="article-page">
   <div class="article-inner">
     <div class="article-layout">
       <article>
@@ -3978,7 +3982,7 @@ body.reading-mode .reading-mode-btn { background: var(--ink); color: #fff; borde
             <div style="color:#fff;font-weight:800;font-size:0.95rem;margin-bottom:3px;">אהבתם את הכתבה? שתפו עם חברים</div>
             <div style="color:rgba(255,255,255,0.75);font-size:0.8rem;">עזרו לנו להפיץ ידע על רכב לכולם</div>
           </div>
-          <a href="javascript:void(0)" onclick="shareArticle('whatsapp')" style="display:inline-flex;align-items:center;gap:8px;background:#25D366;color:#fff;padding:10px 20px;border-radius:24px;font-weight:700;font-size:0.85rem;text-decoration:none;" aria-label="שתף כתבה בוואטסאפ">
+          <a href="#share" onclick="event.preventDefault();shareArticle('whatsapp')" style="display:inline-flex;align-items:center;gap:8px;background:#25D366;color:#fff;padding:10px 20px;border-radius:24px;font-weight:700;font-size:0.85rem;text-decoration:none;" aria-label="שתף כתבה בוואטסאפ">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
             שתף בוואטסאפ
           </a>
@@ -4067,7 +4071,7 @@ body.reading-mode .reading-mode-btn { background: var(--ink); color: #fff; borde
       </aside>
     </div>
   </div>
-</div>
+</main>
 
 <!-- ════════ ADMIN PAGE ════════ -->
 <div class="admin-page" id="admin-page">
@@ -4467,24 +4471,24 @@ body.reading-mode .reading-mode-btn { background: var(--ink); color: #fff; borde
       <div class="footer-col">
         <h4>שירותים</h4>
         <a href="https://wa.me/972559365579?text=%D7%A9%D7%9C%D7%95%D7%9D%20%D7%90%D7%A9%D7%9E%D7%97%20%D7%9C%D7%A7%D7%91%D7%9C%20%D7%99%D7%99%D7%A2%D7%95%D7%A5%20%D7%91%D7%91%D7%97%D7%99%D7%A8%D7%AA%20%D7%A8%D7%9B%D7%91" target="_blank" rel="noopener noreferrer">ייעוץ קניית רכב</a>
-        <a href="javascript:void(0)" onclick="filterCat('review');return false;">השוואת רכבים</a>
+        <a href="/?cat=review" onclick="event.preventDefault();filterCat('review');return false;">השוואת רכבים</a>
         <a href="/?cat=buying" onclick="event.preventDefault();filterCat('buying')">מדריך קניית רכב</a>
         <a href="https://chat.whatsapp.com/JeEvifhd0Cm1e7gqI2MeQD" target="_blank" rel="noopener noreferrer">קבוצת וואטסאפ</a>
-        <a href="javascript:void(0)" onclick="openModal('about-modal');return false;" style="color:rgba(255,255,255,0.5);">אודות</a>
-        <a href="javascript:void(0)" onclick="openModal('access-modal');return false;" style="color:rgba(255,255,255,0.5);">הצהרת נגישות</a>
+        <a href="#about" onclick="event.preventDefault();openModal('about-modal');return false;" style="color:rgba(255,255,255,0.75);">אודות</a>
+        <a href="#accessibility" onclick="event.preventDefault();openModal('access-modal');return false;" style="color:rgba(255,255,255,0.75);">הצהרת נגישות</a>
       </div>
       <div class="footer-col">
         <h4>יצירת קשר</h4>
         <a href="mailto:speedometer177@gmail.com" aria-label="שלח מייל לספידומטר"><span class="ft-icon ft-mail"></span>speedometer177@gmail.com</a>
         <a href="tel:+972559365579" aria-label="התקשר לספידומטר"><span class="ft-icon ft-phone"></span>055-9365579</a>
         <a href="https://wa.me/972559365579?text=%D7%A9%D7%9C%D7%95%D7%9D%20%D7%90%D7%A9%D7%9E%D7%97%20%D7%9C%D7%A7%D7%91%D7%9C%20%D7%99%D7%99%D7%A2%D7%95%D7%A5%20%D7%91%D7%91%D7%97%D7%99%D7%A8%D7%AA%20%D7%A8%D7%9B%D7%91" target="_blank" rel="noopener noreferrer" aria-label="יצירת קשר בוואטסאפ"><span class="ft-icon ft-wa"></span>וואטסאפ</a>
-        <a href="javascript:void(0)" onclick="openModal('privacy-modal');return false;">מדיניות פרטיות</a>
-        <a href="javascript:void(0)" onclick="openModal('terms-modal');return false;">תנאי שימוש</a>
+        <a href="#privacy" onclick="event.preventDefault();openModal('privacy-modal');return false;">מדיניות פרטיות</a>
+        <a href="#terms" onclick="event.preventDefault();openModal('terms-modal');return false;">תנאי שימוש</a>
       </div>
     </div>
     <div class="footer-bottom">
       <span>© 2025 ספידומטר. כל הזכויות שמורות.</span>
-      <span style="display:flex;gap:16px;"><a href="javascript:void(0)" onclick="openModal('access-modal');return false;" style="color:rgba(255,255,255,0.4);font-size:0.72rem;">הצהרת נגישות</a><a href="javascript:void(0)" onclick="openModal('privacy-modal');return false;" style="color:rgba(255,255,255,0.4);font-size:0.72rem;">מדיניות פרטיות</a><a href="javascript:void(0)" onclick="openModal('terms-modal');return false;" style="color:rgba(255,255,255,0.4);font-size:0.72rem;">תנאי שימוש</a></span>
+      <span style="display:flex;gap:16px;"><a href="#accessibility" onclick="event.preventDefault();openModal('access-modal');return false;" style="color:rgba(255,255,255,0.72);font-size:0.72rem;">הצהרת נגישות</a><a href="#privacy" onclick="event.preventDefault();openModal('privacy-modal');return false;" style="color:rgba(255,255,255,0.72);font-size:0.72rem;">מדיניות פרטיות</a><a href="#terms" onclick="event.preventDefault();openModal('terms-modal');return false;" style="color:rgba(255,255,255,0.72);font-size:0.72rem;">תנאי שימוש</a></span>
     </div>
   </div>
 </footer>
@@ -4492,7 +4496,7 @@ body.reading-mode .reading-mode-btn { background: var(--ink); color: #fff; borde
 
 <button class="back-top" id="back-top" onclick="window.scrollTo({top:0,behavior:'smooth'})" aria-label="גלול לראש הדף">↑</button>
 
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer onload="window.__initSb&&window.__initSb()"></script>
 <script>
 /* =============================================
    SPEEDOMETER v7 — UPGRADED
@@ -4502,7 +4506,17 @@ body.reading-mode .reading-mode-btn { background: var(--ink); color: #fff; borde
 const SB_URL = 'https://kaykrrnmykqrfhawgtqt.supabase.co';
 const SB_KEY = 'sb_publishable_Ms6YFTnADm-qAd9617Ey9A_D3x-Zumi';
 let sbClient = null;
-try { sbClient = supabase.createClient(SB_URL, SB_KEY); } catch(e) {}
+// The Supabase CDN script is deferred (so it no longer blocks first paint).
+// Create the client as soon as the library is available — both immediately
+// (if cached/already loaded) and via the script's onload. Until it exists,
+// the code falls back to plain fetch() calls, so nothing breaks.
+function __initSb(){
+  if (window.supabase && !sbClient) {
+    try { sbClient = supabase.createClient(SB_URL, SB_KEY); } catch(e) {}
+  }
+}
+window.__initSb = __initSb;
+__initSb();
 
 const STORAGE_KEY = 'speedometer_articles_v2';
 
@@ -4544,7 +4558,7 @@ const DEFAULT_ARTICLES = [
   { id:3, time:'14:00', title:'BMW מכריזה: סוף לדגמי בנזין ב-2030',
     sub:'יצרנית הרכב הגרמנית מאשרת שעד 2030 תפסיק לייצר מנועי בנזין לחלוטין',
     cat:'world', author:'מערכת ספידומטר', date:'08.05.2025', readTime:'3 דק׳ קריאה',
-    img:'https://images.unsplash.com/photo-1617531653332-bd46c16f4d68?w=900&q=75&fm=webp&auto=format',
+    img:'https://images.unsplash.com/photo-1494976388531-d1058494cdd8?w=900&q=75&fm=webp&auto=format',
     imgCaption:'מפעל BMW. צילום: AP',
     body:'## הצהרה היסטורית\n\nBMW הכריזה שעד 2030 תפסיק לייצר רכבי בנזין ודיזל.\n\n## השקעה\n\nהחברה תשקיע 30 מיליארד יורו בפיתוח פלטפורמות חשמליות.',
     score:null, views:2500, featured:false },
@@ -4558,7 +4572,7 @@ const DEFAULT_ARTICLES = [
   { id:5, time:'16:20', title:'ריביאן R2 — הג\'יפ החשמלי הזול שמשנה הכל',
     sub:'ריביאן הציגה את ה-R2 במחיר שיתחיל מ-45,000 דולר',
     cat:'world', author:'דינה שמעוני', date:'06.05.2025', readTime:'5 דק׳ קריאה',
-    img:'https://images.unsplash.com/photo-1693254571745-8b3e0ebb0a73?w=900&q=75&fm=webp&auto=format',
+    img:'https://images.unsplash.com/photo-1494976388531-d1058494cdd8?w=900&q=75&fm=webp&auto=format',
     imgCaption:'ריביאן R2.',
     body:'## הרכב שכולם חיכו לו\n\nריביאן הציגה את ה-R2 עם טווח 500 קמ ומנוע 300 כוחות סוס.',
     score:null, views:4100, featured:false },
@@ -4935,7 +4949,7 @@ function buildHero() {
 // ── CARD HTML ──
 function cardHTML(a) {
   const score = a.score?`<div class="review-score ${parseFloat(a.score)>=8?'high':parseFloat(a.score)>=6?'mid':''}">${a.score}</div>`:'';
-  return `<a href="#article-${a.id}" class="card" onclick="openArticle(${a.id});return false;" role="article" aria-label="${a.title}">
+  return `<a href="#article-${a.id}" class="card" onclick="openArticle(${a.id});return false;" aria-label="${a.title}">
     <div class="card-img">
       <img src="${a.img||CAT_IMAGES[a.cat]}" alt="${a.title}" loading="lazy" width="400" height="225" decoding="async" onload="this.classList.add('loaded')" onerror="this.classList.add('loaded')">
       ${score}<span class="card-cat">${CAT_LABELS[a.cat]}</span>
@@ -5080,11 +5094,11 @@ function openArticle(id) {
     // Visual breadcrumb
     const shortTitle = a.title.length > 48 ? a.title.substring(0, 48) + '…' : a.title;
     bcNav.innerHTML =
-      '<a href="javascript:void(0)" onclick="showHome()" aria-label="עמוד הבית ספידומטר">בית</a>' +
+      '<a href="/" onclick="event.preventDefault();showHome()" aria-label="עמוד הבית ספידומטר">בית</a>' +
       '<span class="bc-sep" aria-hidden="true">›</span>' +
-      '<a href="javascript:void(0)" onclick="filterCat(\'' + a.cat + '\')" aria-label="' + bc.child + '">חדשות</a>' +
+      '<a href="/?cat=' + a.cat + '" onclick="event.preventDefault();filterCat(\'' + a.cat + '\')" aria-label="' + bc.child + '">חדשות</a>' +
       '<span class="bc-sep" aria-hidden="true">›</span>' +
-      '<a href="javascript:void(0)" onclick="filterCat(\'' + a.cat + '\')" aria-label="' + bc.child + '">' + bc.child + '</a>' +
+      '<a href="/?cat=' + a.cat + '" onclick="event.preventDefault();filterCat(\'' + a.cat + '\')" aria-label="' + bc.child + '">' + bc.child + '</a>' +
       '<span class="bc-sep" aria-hidden="true">›</span>' +
       '<span class="bc-current" aria-current="page">' + shortTitle + '</span>';
   }
@@ -5448,7 +5462,7 @@ function openLightbox(src) {
     lb.onclick = () => lb.remove();
     document.body.appendChild(lb);
   }
-  lb.innerHTML = `<img src="${src}" style="max-width:95vw;max-height:95vh;object-fit:contain;border-radius:4px;">`;
+  lb.innerHTML = `<img src="${src}" alt="תמונה מוגדלת" style="max-width:95vw;max-height:95vh;object-fit:contain;border-radius:4px;">`;
   lb.style.display = 'flex';
 }
 
@@ -5661,6 +5675,8 @@ async function deleteArticle(id) {
   }
 
   // Remove locally only after confirmed deletion
+  deletedIds.add(id);
+  saveDeletedIds();
   articles = articles.filter(a => a.id !== id);
   saveLocal();
   buildHero();
@@ -6344,8 +6360,10 @@ function updateCatBreadcrumbPreview(cat) {
   // Always show something immediately
   const local = loadLocal();
   if (local && local.length > 0) {
-    articles = local;
-    nextId = Math.max(...articles.map(a=>a.id)) + 1;
+    // Filter out anything already marked deleted, so deleted articles don't
+    // flash on first paint before Supabase (the source of truth) responds.
+    articles = local.filter(a => !deletedIds.has(a.id));
+    nextId = Math.max(...articles.map(a=>a.id), 0) + 1;
   } else {
     articles = DEFAULT_ARTICLES.slice();
     saveLocal();
@@ -6418,13 +6436,16 @@ function updateCatBreadcrumbPreview(cat) {
   setTimeout(syncFromSupabase, 800);
   // סנכרון תקופתי חסכוני — בודק רק אם היה שינוי לפני שמוריד הכל מחדש,
   // ולא מסנכרן כשהטאב לא פעיל. חוסך משמעותית ב-Egress.
-  setInterval(maybeSyncFromSupabase, 60000);
+  setInterval(maybeSyncFromSupabase, 30000);
   // כשחוזרים לטאב — בדיקת שינוי מהירה (במקום סקר רציף ברקע)
   document.addEventListener('visibilitychange', () => {
     if (!document.hidden) maybeSyncFromSupabase();
   });
-  // Supabase Realtime subscription
-  setTimeout(setupRealtimeSync, 2000);
+  // הערה: ה-WebSocket של Supabase Realtime כבה בכוונה. הוא נכשל בחיבור
+  // (realtime לא זמין בפרויקט) ורשם שגיאת רשת לקונסול שפגעה בציון
+  // "שיטות עבודה מומלצות". הסנכרון התקופתי כל 30 שניות מכסה את אותו צורך
+  // בלי שגיאות. אם תפעיל Realtime ב-Supabase בעתיד, אפשר להחזיר את השורה.
+  // setTimeout(setupRealtimeSync, 2000);
 
   // First-time push: if Supabase is empty, push all local articles
   setTimeout(async () => {
