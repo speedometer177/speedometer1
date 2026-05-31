@@ -6226,27 +6226,57 @@ async function handleImageUpload(input) {
   if (statusEl) { statusEl.textContent = 'מדחס תמונה...'; statusEl.style.color = 'var(--muted)'; }
 
   try {
-    // Compress aggressively for mobile: max 900px wide, max 150KB
+    // Compress to WebP (smaller than JPEG), max 900px, ~150KB.
     const compressed = await compressImageFile(file, 150);
     if (!compressed) {
       if (statusEl) { statusEl.textContent = '❌ לא ניתן לקרוא את התמונה. נסה לשמור/לצלם בפורמט JPG או PNG (במקום HEIC).'; statusEl.style.color = 'var(--red)'; }
       input.value = '';
       return;
     }
-    const targetFile = compressed;
 
-    const reader = new FileReader();
-    reader.onload = e => {
-      const b64 = e.target.result;
-      document.getElementById('a-img').value = b64;
-      if (previewEl) previewEl.innerHTML = `<img src="${b64}" style="max-width:100%;max-height:160px;border-radius:6px;object-fit:cover;margin-top:8px;" alt="תצוגה מקדימה של התמונה הראשית">`;
-      if (statusEl) { statusEl.textContent = '✅ תמונה נטענה בהצלחה (' + Math.round(targetFile.size/1024) + 'KB)'; statusEl.style.color = '#22c55e'; }
-    };
-    reader.readAsDataURL(targetFile);
+    if (statusEl) { statusEl.textContent = 'מעלה תמונה לאחסון...'; statusEl.style.color = 'var(--muted)'; }
+
+    // Upload to Supabase Storage (bucket: article-images); store only a short URL.
+    // Works with a simple bucket-only policy (bucket_id = 'article-images'),
+    // so any file type / folder is allowed.
+    let publicUrl = null;
+    try {
+      if (window.__initSb) window.__initSb();
+      if (sbClient) {
+        const ext = (compressed.name.split('.').pop() || 'webp').toLowerCase();
+        const path = Date.now() + '-' + Math.random().toString(36).slice(2, 8) + '.' + ext;
+        const { error: upErr } = await sbClient.storage
+          .from('article-images')
+          .upload(path, compressed, { contentType: compressed.type, upsert: false });
+        if (!upErr) {
+          const { data } = sbClient.storage.from('article-images').getPublicUrl(path);
+          publicUrl = data && data.publicUrl ? data.publicUrl : null;
+        }
+      }
+    } catch (e) { publicUrl = null; }
+
+    if (publicUrl) {
+      // Success — store the short URL (light & fast)
+      document.getElementById('a-img').value = publicUrl;
+      if (previewEl) previewEl.innerHTML = `<img src="${publicUrl}" style="max-width:100%;max-height:160px;border-radius:6px;object-fit:cover;margin-top:8px;" alt="תצוגה מקדימה של התמונה הראשית">`;
+      if (statusEl) { statusEl.textContent = '✅ הועלתה לאחסון (' + Math.round(compressed.size/1024) + 'KB)'; statusEl.style.color = '#22c55e'; }
+      input.value = '';
+    } else {
+      // Safety net — storage not ready/failed: fall back to base64 exactly as before
+      const reader = new FileReader();
+      reader.onload = e => {
+        const b64 = e.target.result;
+        document.getElementById('a-img').value = b64;
+        if (previewEl) previewEl.innerHTML = `<img src="${b64}" style="max-width:100%;max-height:160px;border-radius:6px;object-fit:cover;margin-top:8px;" alt="תצוגה מקדימה של התמונה הראשית">`;
+        if (statusEl) { statusEl.textContent = '⚠️ נשמרה מקומית (האחסון לא זמין עדיין)'; statusEl.style.color = '#f59e0b'; }
+      };
+      reader.readAsDataURL(compressed);
+      input.value = '';
+    }
   } catch(e) {
     if (statusEl) { statusEl.textContent = 'שגיאה — נסה שוב'; statusEl.style.color = 'var(--red)'; }
+    input.value = '';
   }
-  input.value = '';
 }
 
 async function handleBodyImgUpload(input, idx) {
@@ -6266,7 +6296,7 @@ async function handleBodyImgUpload(input, idx) {
 // always a browser-displayable WebP/JPEG even if the SOURCE was HEIC/HEIF
 // (iPhone default). Tries createImageBitmap first (decodes more formats and
 // honours EXIF orientation on mobile), then falls back to <img>.
-async function compressImageFile(file, maxKB = 200) {
+async function compressImageFile(file, maxKB = 200, forceMime = null) {
   // Step 1: decode the file into something drawable.
   const source = await decodeImageSource(file);
   if (!source) return null; // couldn't decode at all (e.g. unsupported HEIC w/o codec)
@@ -6284,8 +6314,10 @@ async function compressImageFile(file, maxKB = 200) {
   ctx.drawImage(source.img, 0, 0, w, h);
   if (source.close) source.close(); // free ImageBitmap
 
-  // Step 3: re-encode. Prefer WebP; fall back to JPEG if the browser can't make WebP.
-  const mime = canvasSupportsWebp(canvas) ? 'image/webp' : 'image/jpeg';
+  // Step 3: re-encode. Caller can force a format (e.g. JPEG to match a storage
+  // policy); otherwise prefer WebP and fall back to JPEG if unsupported.
+  const mime = forceMime ? forceMime
+             : (canvasSupportsWebp(canvas) ? 'image/webp' : 'image/jpeg');
   const ext = mime === 'image/webp' ? '.webp' : '.jpg';
   return new Promise(resolve => {
     let q = 0.82;
