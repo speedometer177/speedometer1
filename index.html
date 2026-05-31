@@ -1037,9 +1037,14 @@ nav { display: flex; align-items: center; gap: 2px; flex: 1; justify-content: ce
   cursor: pointer;
   overflow: hidden;
   background: #111;
-  /* Fixed height prevents white gap on right side */
-  height: 500px;
-  min-height: 500px;
+  /* Fill the grid area exactly so it always matches the side column height */
+  height: 100%;
+  min-height: 0;
+  /* IMPORTANT: cancel the aspect-ratio:16/9 set in the critical CSS. With a
+     fixed height, that ratio forces the width to 889px — wider than the 810px
+     grid track — so the main image spilled sideways under the side cards. */
+  aspect-ratio: auto;
+  width: 100%;
   display: flex;
   flex-direction: column;
 }
@@ -6205,15 +6210,20 @@ async function handleImageUpload(input) {
   if (statusEl) { statusEl.textContent = 'מדחס תמונה...'; statusEl.style.color = 'var(--muted)'; }
 
   try {
-    // Compress aggressively for mobile: max 800px wide, max 150KB
+    // Compress aggressively for mobile: max 900px wide, max 150KB
     const compressed = await compressImageFile(file, 150);
-    const targetFile = compressed || file;
+    if (!compressed) {
+      if (statusEl) { statusEl.textContent = '❌ לא ניתן לקרוא את התמונה. נסה לשמור/לצלם בפורמט JPG או PNG (במקום HEIC).'; statusEl.style.color = 'var(--red)'; }
+      input.value = '';
+      return;
+    }
+    const targetFile = compressed;
 
     const reader = new FileReader();
     reader.onload = e => {
       const b64 = e.target.result;
       document.getElementById('a-img').value = b64;
-      if (previewEl) previewEl.innerHTML = `<img src="${b64}" style="max-width:100%;max-height:160px;border-radius:6px;object-fit:cover;margin-top:8px;">`;
+      if (previewEl) previewEl.innerHTML = `<img src="${b64}" style="max-width:100%;max-height:160px;border-radius:6px;object-fit:cover;margin-top:8px;" alt="תצוגה מקדימה של התמונה הראשית">`;
       if (statusEl) { statusEl.textContent = '✅ תמונה נטענה בהצלחה (' + Math.round(targetFile.size/1024) + 'KB)'; statusEl.style.color = '#22c55e'; }
     };
     reader.readAsDataURL(targetFile);
@@ -6235,40 +6245,73 @@ async function handleBodyImgUpload(input, idx) {
   input.value = '';
 }
 
-// Compress image to maxKB — WebP, mobile-friendly
+// Compress image to maxKB — mobile-friendly.
+// Draws the decoded image onto a canvas then re-encodes it, so the OUTPUT is
+// always a browser-displayable WebP/JPEG even if the SOURCE was HEIC/HEIF
+// (iPhone default). Tries createImageBitmap first (decodes more formats and
+// honours EXIF orientation on mobile), then falls back to <img>.
 async function compressImageFile(file, maxKB = 200) {
-  return new Promise(resolve => {
-    const img = new Image();
-    const url = URL.createObjectURL(file);
-    img.onload = () => {
-      URL.revokeObjectURL(url);
-      let w = img.width, h = img.height;
-      const MAX = 900;
-      if (w > MAX || h > MAX) {
-        const r = Math.min(MAX/w, MAX/h);
-        w = Math.round(w*r); h = Math.round(h*r);
-      }
-      const canvas = document.createElement('canvas');
-      canvas.width = w; canvas.height = h;
-      canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+  // Step 1: decode the file into something drawable.
+  const source = await decodeImageSource(file);
+  if (!source) return null; // couldn't decode at all (e.g. unsupported HEIC w/o codec)
 
-      let q = 0.82;
-      const tryCompress = () => {
-        canvas.toBlob(blob => {
-          if (!blob) { resolve(null); return; }
-          if (blob.size <= maxKB * 1024 || q < 0.25) {
-            resolve(new File([blob], file.name.replace(/\.[^.]+$/, '.webp'), { type: 'image/webp' }));
-          } else {
-            q = Math.max(0.25, q - 0.08);
-            tryCompress();
-          }
-        }, 'image/webp', q);
-      };
-      tryCompress();
+  // Step 2: scale down.
+  let w = source.width, h = source.height;
+  const MAX = 900;
+  if (w > MAX || h > MAX) {
+    const r = Math.min(MAX / w, MAX / h);
+    w = Math.round(w * r); h = Math.round(h * r);
+  }
+  const canvas = document.createElement('canvas');
+  canvas.width = w; canvas.height = h;
+  const ctx = canvas.getContext('2d');
+  ctx.drawImage(source.img, 0, 0, w, h);
+  if (source.close) source.close(); // free ImageBitmap
+
+  // Step 3: re-encode. Prefer WebP; fall back to JPEG if the browser can't make WebP.
+  const mime = canvasSupportsWebp(canvas) ? 'image/webp' : 'image/jpeg';
+  const ext = mime === 'image/webp' ? '.webp' : '.jpg';
+  return new Promise(resolve => {
+    let q = 0.82;
+    const tryCompress = () => {
+      canvas.toBlob(blob => {
+        if (!blob) { resolve(null); return; }
+        if (blob.size <= maxKB * 1024 || q < 0.25) {
+          resolve(new File([blob], (file.name || 'image').replace(/\.[^.]+$/, '') + ext, { type: mime }));
+        } else {
+          q = Math.max(0.25, q - 0.08);
+          tryCompress();
+        }
+      }, mime, q);
     };
-    img.onerror = () => { URL.revokeObjectURL(url); resolve(null); };
-    img.src = url;
+    tryCompress();
   });
+}
+
+// Decode a File into a drawable source, trying the most capable path first.
+function decodeImageSource(file) {
+  return new Promise(resolve => {
+    // createImageBitmap: best mobile support, applies EXIF orientation.
+    if (window.createImageBitmap) {
+      createImageBitmap(file)
+        .then(bmp => resolve({ img: bmp, width: bmp.width, height: bmp.height, close: () => bmp.close && bmp.close() }))
+        .catch(() => fallbackImg());
+    } else {
+      fallbackImg();
+    }
+    function fallbackImg() {
+      const img = new Image();
+      const url = URL.createObjectURL(file);
+      img.onload = () => { URL.revokeObjectURL(url); resolve({ img, width: img.naturalWidth, height: img.naturalHeight }); };
+      img.onerror = () => { URL.revokeObjectURL(url); resolve(null); };
+      img.src = url;
+    }
+  });
+}
+
+function canvasSupportsWebp(canvas) {
+  try { return canvas.toDataURL('image/webp').indexOf('data:image/webp') === 0; }
+  catch (e) { return false; }
 }
 
 
