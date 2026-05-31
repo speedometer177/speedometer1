@@ -729,22 +729,26 @@ body.dark-mode .si-pc-item { color: #ccc; }
 }
 .hero-banner-dot {
   width: 6px; height: 6px;
-  /* Visible dot stays 6px, but the tappable area is padded out to the
-     24px minimum recommended for touch targets (a11y / best practices). */
-  padding: 9px;
-  box-sizing: content-box;
   background: rgba(180,180,180,0.55);
-  background-clip: content-box;
   border-radius: 50%;
   cursor: pointer;
   border: none;
+  padding: 0;
+  position: relative;
   transition: all 0.25s ease;
   touch-action: manipulation;
   box-shadow: 0 1px 3px rgba(0,0,0,0.4);
 }
+/* Invisible 24px tap target (keeps the dot small but still accessible). */
+.hero-banner-dot::before {
+  content: '';
+  position: absolute;
+  top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+  width: 24px; height: 24px;
+}
 .hero-banner-dot.active {
   background: var(--red, #e8001d);
-  background-clip: content-box;
   width: 22px;
   border-radius: 3px;
   box-shadow: 0 1px 5px rgba(0,0,0,0.5);
@@ -5423,12 +5427,8 @@ async function handleGalleryUpload(input) {
   const files = Array.from(input.files).slice(0, 10 - galleryImages.length);
   for (const file of files) {
     const compressedFile = await compressImageFile(file, 300);
-    const src = await new Promise(res => {
-      const r = new FileReader();
-      r.onload = e => res(e.target.result);
-      r.readAsDataURL(compressedFile || file);
-    });
-    galleryImages.push({src, caption: ''});
+    const src = await uploadImageOrBase64(compressedFile || null);
+    if (src) galleryImages.push({src, caption: ''});
   }
   renderGalleryPreview();
   input.value = '';
@@ -6279,15 +6279,41 @@ async function handleImageUpload(input) {
   }
 }
 
+// Shared helper: upload a compressed image to Supabase Storage and return its
+// public URL. If storage isn't available or fails, returns a base64 data URL
+// instead (safety net) so an upload never fails outright. Same approach as the
+// main image, reused for gallery + in-body images.
+async function uploadImageOrBase64(compressed) {
+  if (!compressed) return null;
+  try {
+    if (window.__initSb) window.__initSb();
+    if (sbClient) {
+      const ext = (compressed.name.split('.').pop() || 'webp').toLowerCase();
+      const path = Date.now() + '-' + Math.random().toString(36).slice(2, 8) + '.' + ext;
+      const { error: upErr } = await sbClient.storage
+        .from('article-images')
+        .upload(path, compressed, { contentType: compressed.type, upsert: false });
+      if (!upErr) {
+        const { data } = sbClient.storage.from('article-images').getPublicUrl(path);
+        if (data && data.publicUrl) return data.publicUrl;
+      }
+    }
+  } catch (e) { /* fall through to base64 */ }
+  // Fallback: base64
+  return await new Promise(res => {
+    const r = new FileReader();
+    r.onload = e => res(e.target.result);
+    r.onerror = () => res(null);
+    r.readAsDataURL(compressed);
+  });
+}
+
 async function handleBodyImgUpload(input, idx) {
   const file = input.files[0]; if (!file) return;
   const compressed = await compressImageFile(file, 120);
-  const reader = new FileReader();
-  reader.onload = e => {
-    const el = document.getElementById('body-img-' + idx);
-    if (el) el.value = e.target.result;
-  };
-  reader.readAsDataURL(compressed || file);
+  const url = await uploadImageOrBase64(compressed || null);
+  const el = document.getElementById('body-img-' + idx);
+  if (el && url) el.value = url;
   input.value = '';
 }
 
