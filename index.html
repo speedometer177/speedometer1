@@ -4983,7 +4983,7 @@ function buildHero() {
   area.innerHTML = `
     <div class="hero-grid">
       <div class="hero-main" onclick="openArticle(${main.id})" role="button" tabindex="0" aria-label="${main.title}" onkeydown="if(event.key==='Enter')openArticle(${main.id})">
-        <img src="${main.img||CAT_IMAGES[main.cat]}" alt="${main.title}" loading="eager" fetchpriority="high" width="800" height="450">
+        <img src="${main.img||CAT_IMAGES[main.cat]}"${responsiveAttrs(main.img||CAT_IMAGES[main.cat], '(max-width:980px) 100vw, 800px')} alt="${main.title}" loading="eager" fetchpriority="high" decoding="async" width="800" height="450">
         <div class="hero-main-content">
           <span class="hero-cat-badge">${CAT_LABELS[main.cat]}</span>
           <h2 class="hero-main-title">${main.title}</h2>
@@ -4997,13 +4997,13 @@ function buildHero() {
       </div>
       <div class="hero-side">
         ${side1?`<div class="hero-side-card" onclick="openArticle(${side1.id})" role="button" tabindex="0" aria-label="${side1.title}" onkeydown="if(event.key==='Enter')openArticle(${side1.id})">
-          <img src="${side1.img||CAT_IMAGES[side1.cat]}" alt="${side1.title}" loading="lazy" width="340" height="210" decoding="async">
+          <img src="${cardThumb(side1.img||CAT_IMAGES[side1.cat])}"${responsiveAttrs(side1.img||CAT_IMAGES[side1.cat], '(max-width:980px) 50vw, 340px')} alt="${side1.title}" loading="lazy" width="340" height="210" decoding="async">
           <div class="hero-side-content">
             <div class="hero-side-cat">${CAT_LABELS[side1.cat]}</div>
             <div class="hero-side-title">${side1.title}</div>
           </div></div>`:''}
         ${side2?`<div class="hero-side-card" onclick="openArticle(${side2.id})" role="button" tabindex="0" aria-label="${side2.title}" onkeydown="if(event.key==='Enter')openArticle(${side2.id})">
-          <img src="${side2.img||CAT_IMAGES[side2.cat]}" alt="${side2.title}" loading="lazy" width="340" height="210" decoding="async">
+          <img src="${cardThumb(side2.img||CAT_IMAGES[side2.cat])}"${responsiveAttrs(side2.img||CAT_IMAGES[side2.cat], '(max-width:980px) 50vw, 340px')} alt="${side2.title}" loading="lazy" width="340" height="210" decoding="async">
           <div class="hero-side-content">
             <div class="hero-side-cat">${CAT_LABELS[side2.cat]}</div>
             <div class="hero-side-title">${side2.title}</div>
@@ -5023,11 +5023,21 @@ function cardThumb(url) {
   }
   return url;
 }
+// Build a responsive srcset+sizes for Unsplash URLs (they resize via the w=
+// param). For Supabase storage URLs there's only one uploaded size — no smaller
+// variants exist — so we return empty and rely on the single optimized file.
+// `sizesAttr` describes how wide the image renders so the browser picks well.
+function responsiveAttrs(url, sizesAttr) {
+  if (typeof url !== 'string' || url.indexOf('images.unsplash.com') === -1) return '';
+  const widths = [320, 500, 800, 1200];
+  const srcset = widths.map(w => url.replace(/([?&])w=\d+/, '$1w=' + w) + ' ' + w + 'w').join(', ');
+  return ` srcset="${srcset}" sizes="${sizesAttr}"`;
+}
 function cardHTML(a) {
   const score = a.score?`<div class="review-score ${parseFloat(a.score)>=8?'high':parseFloat(a.score)>=6?'mid':''}">${a.score}</div>`:'';
   return `<a href="#article-${a.id}" class="card" onclick="openArticle(${a.id});return false;" aria-label="${a.title}">
     <div class="card-img">
-      <img src="${cardThumb(a.img||CAT_IMAGES[a.cat])}" alt="${a.title}" loading="lazy" width="400" height="225" decoding="async" onload="this.classList.add('loaded')" onerror="this.classList.add('loaded')">
+      <img src="${cardThumb(a.img||CAT_IMAGES[a.cat])}"${responsiveAttrs(a.img||CAT_IMAGES[a.cat], '(max-width:680px) 45vw, 400px')} alt="${a.title}" loading="lazy" width="400" height="225" decoding="async" onload="this.classList.add('loaded')" onerror="this.classList.add('loaded')">
       ${score}<span class="card-cat">${CAT_LABELS[a.cat]}</span>
     </div>
     <div class="card-body">
@@ -5127,6 +5137,7 @@ function showAdmin() {
 function openArticle(id) {
   const a = articles.find(x=>x.id===id); if(!a) return;
   currentArticleId = id;
+  if (typeof _progressTop !== 'undefined') _progressTop = null; // re-measure progress bounds for this article
   // If heavy fields aren't loaded yet and this article has no body, fetch its
   // full content on demand so the page is never blank.
   if (!_heavyLoaded && (!a.body || a.body.length === 0)) {
@@ -5353,7 +5364,7 @@ function openArticle(id) {
         <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:10px;">
           ${a.gallery.map((src,i)=>`
             <div style="cursor:zoom-in;" onclick="openLightbox('${src}')">
-              <img src="${src}" alt="${captions[i]||'תמונה '+(i+1)}" loading="lazy" style="width:100%;aspect-ratio:4/3;object-fit:cover;border-radius:6px;border:1px solid var(--border);transition:transform 0.2s;" onmouseover="this.style.transform='scale(1.02)'" onmouseout="this.style.transform='scale(1)'">
+              <img src="${src}" alt="${captions[i]||'תמונה '+(i+1)}" loading="lazy" decoding="async" width="200" height="150" style="width:100%;aspect-ratio:4/3;object-fit:cover;border-radius:6px;border:1px solid var(--border);transition:transform 0.2s;" onmouseover="this.style.transform='scale(1.02)'" onmouseout="this.style.transform='scale(1)'">
               ${captions[i]?`<p style="font-size:0.72rem;color:var(--muted);margin-top:4px;text-align:center;">${captions[i]}</p>`:''}
             </div>
           `).join('')}
@@ -5376,7 +5387,7 @@ function openArticle(id) {
 // ── SLIDER ──
 function buildSliderHTML(images) {
   const dots = images.map((_,i)=>`<button class="slider-dot ${i===0?'active':''}" onclick="goSlide('art-slider',${i})" aria-label="תמונה ${i+1}"></button>`).join('');
-  const imgs = images.map((src,i)=>`<img src="${src}" alt="תמונה ${i+1}" loading="lazy">`).join('');
+  const imgs = images.map((src,i)=>`<img src="${src}" alt="תמונה ${i+1}" loading="lazy" decoding="async">`).join('');
   return `<div class="img-slider" id="art-slider"><div class="slider-track" id="ast">${imgs}</div><button class="slider-btn slider-prev" onclick="moveSlide('art-slider',-1)" aria-label="תמונה קודמת">&#8250;</button><button class="slider-btn slider-next" onclick="moveSlide('art-slider',1)" aria-label="תמונה הבאה">&#8249;</button><div class="slider-dots" role="tablist">${dots}</div><div class="slider-count" id="asc" aria-live="polite">1 / ${images.length}</div></div>`;
 }
 function moveSlide(id,dir) {
@@ -5472,7 +5483,7 @@ function parseBody(text, bodyImages, articleTitle) {
 
   // Evenly distribute images across paragraphs
   const figHTML = img =>
-    `<figure class="body-img-wrap"><img src="${img.src}" alt="${img.cap||''}" loading="lazy" onclick="openLightbox('${img.src}')">${img.cap?`<figcaption>${img.cap}</figcaption>`:''}</figure>`;
+    `<figure class="body-img-wrap"><img src="${img.src}" alt="${img.cap||''}" loading="lazy" decoding="async" width="800" height="450" onclick="openLightbox('${img.src}')">${img.cap?`<figcaption>${img.cap}</figcaption>`:''}</figure>`;
 
   const paraCount = rawParts.filter(x=>x.type==='p').length;
   const interval = Math.max(2, Math.floor(paraCount / (imgs.length + 1)));
@@ -6345,7 +6356,7 @@ async function handleImageUpload(input) {
         const path = Date.now() + '-' + Math.random().toString(36).slice(2, 8) + '.' + ext;
         const { error: upErr } = await sbClient.storage
           .from('article-images')
-          .upload(path, compressed, { contentType: compressed.type, upsert: false });
+          .upload(path, compressed, { contentType: compressed.type, upsert: false, cacheControl: '31536000' });
         if (!upErr) {
           const { data } = sbClient.storage.from('article-images').getPublicUrl(path);
           publicUrl = data && data.publicUrl ? data.publicUrl : null;
@@ -6390,7 +6401,7 @@ async function uploadImageOrBase64(compressed) {
       const path = Date.now() + '-' + Math.random().toString(36).slice(2, 8) + '.' + ext;
       const { error: upErr } = await sbClient.storage
         .from('article-images')
-        .upload(path, compressed, { contentType: compressed.type, upsert: false });
+        .upload(path, compressed, { contentType: compressed.type, upsert: false, cacheControl: '31536000' });
       if (!upErr) {
         const { data } = sbClient.storage.from('article-images').getPublicUrl(path);
         if (data && data.publicUrl) return data.publicUrl;
@@ -6634,17 +6645,32 @@ function updateReadingProgress() {
   const ap = document.getElementById('article-page');
   if (!ap || ap.style.display === 'none') { bar.style.width = '0%'; bar.style.display = 'none'; return; }
   bar.style.display = 'block';
-  // Measure to end of article body text only
-  const artBody = document.getElementById('art-body');
-  if (!artBody) return;
-  const bodyBottom = artBody.getBoundingClientRect().bottom + window.scrollY;
-  const bodyTop = artBody.getBoundingClientRect().top + window.scrollY - 100;
+  // Use the cached body geometry (measured once on open/resize) so the scroll
+  // handler only reads window.scrollY — which does NOT force a layout — and then
+  // writes the bar width inside rAF. This removes the per-frame forced reflow.
+  if (_progressTop === null) measureProgressBounds();
+  if (_progressTop === null) return;
   const scrollTop = window.scrollY;
-  const total = bodyBottom - bodyTop;
-  const progress = scrollTop - bodyTop;
+  const total = _progressBottom - _progressTop;
+  const progress = scrollTop - _progressTop;
   const pct = total > 0 ? Math.min(100, Math.max(0, (progress / total) * 100)) : 0;
-  bar.style.width = pct + '%';
+  if (_progressRaf) return;
+  _progressRaf = requestAnimationFrame(() => {
+    _progressRaf = 0;
+    bar.style.width = pct + '%';
+  });
 }
+// Cached article-body bounds for the progress bar (read-once, not per-scroll).
+let _progressTop = null, _progressBottom = 0, _progressRaf = 0;
+function measureProgressBounds() {
+  const artBody = document.getElementById('art-body');
+  if (!artBody) { _progressTop = null; return; }
+  const rect = artBody.getBoundingClientRect();
+  _progressBottom = rect.bottom + window.scrollY;
+  _progressTop = rect.top + window.scrollY - 100;
+}
+// Re-measure when layout can actually change (not on every scroll).
+window.addEventListener('resize', () => { _progressTop = null; }, { passive: true });
 window.addEventListener('scroll', updateReadingProgress, { passive: true });
 
 // ══════════════════════════════════════════
