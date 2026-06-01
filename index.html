@@ -4632,7 +4632,17 @@ function saveDeletedIds() {
 
 // ── LOCAL STORAGE ──
 function saveLocal() {
-  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(articles)); } catch(e) {}
+  try {
+    // Store a LIGHT copy only (no body/gallery/body_images). The instant
+    // first-paint reads this, so keeping it light means a fast load and no
+    // localStorage quota overflow. Heavy fields come from Supabase after paint.
+    const light = articles.map(a => {
+      const c = Object.assign({}, a);
+      delete c.body; delete c.gallery; delete c.bodyImages;
+      return c;
+    });
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(light));
+  } catch(e) {}
 }
 function loadLocal() {
   try {
@@ -4663,16 +4673,20 @@ function mapRow(r) {
 
 async function syncFromSupabase() {
   try {
+    // Fields the homepage actually needs to paint (cards + hero). Deliberately
+    // EXCLUDES the heavy fields (body, gallery, body_images) so the first load
+    // is light and fast — those are fetched in the background by stage 2 below.
+    const LIGHT = 'id,title,sub,cat,author,date,time,read_time,img,img_caption,score,views,featured,specs,gallery_captions,yt_urls,tags,scheduled_at';
     let rows;
     if (sbClient) {
       const { data, error } = await sbClient
         .from('articles')
-        .select('*')
+        .select(LIGHT)
         .order('id', { ascending: false });
       if (error) throw error;
       rows = data;
     } else {
-      const r = await fetch(SB_URL + '/rest/v1/articles?select=*&order=id.desc', {
+      const r = await fetch(SB_URL + '/rest/v1/articles?select=' + LIGHT + '&order=id.desc', {
         headers: { 'apikey': SB_KEY, 'Authorization': 'Bearer ' + SB_KEY }
       });
       if (!r.ok) throw new Error('fetch failed');
@@ -4695,9 +4709,49 @@ async function syncFromSupabase() {
     try { buildBreakingTicker(); } catch(e) {}
     try { buildTicker(); } catch(e) {}
     try { handleMobileHero(); } catch(e) {}
+
+    // Stage 2: fetch the heavy fields in the background and merge them in, so
+    // opening an article shows full body/gallery. Runs after first paint.
+    setTimeout(fetchHeavyFields, 1200);
   } catch(e) {
     console.log('Sync error:', e);
   }
+}
+
+// Background fetch of heavy article fields (body, gallery, body_images).
+let _heavyLoaded = false;
+async function fetchHeavyFields() {
+  if (_heavyLoaded) return;
+  try {
+    let rows;
+    const HEAVY = 'id,body,gallery,body_images';
+    if (sbClient) {
+      const { data, error } = await sbClient.from('articles').select(HEAVY);
+      if (error) throw error;
+      rows = data;
+    } else {
+      const r = await fetch(SB_URL + '/rest/v1/articles?select=' + HEAVY, {
+        headers: { 'apikey': SB_KEY, 'Authorization': 'Bearer ' + SB_KEY }
+      });
+      if (!r.ok) throw new Error('heavy fetch failed');
+      rows = await r.json();
+    }
+    if (!Array.isArray(rows)) return;
+    const byId = {};
+    rows.forEach(r => { byId[r.id] = r; });
+    articles.forEach(a => {
+      const h = byId[a.id];
+      if (h) {
+        a.body = h.body || '';
+        a.gallery = h.gallery || null;
+        a.bodyImages = h.body_images || null;
+      }
+    });
+    _heavyLoaded = true;
+    saveLocal();
+    // If an article is currently open, re-render it now that its body is in.
+    try { if (typeof currentArticleId !== 'undefined' && currentArticleId) openArticle(currentArticleId); } catch(e) {}
+  } catch(e) { console.log('Heavy fetch error:', e); }
 }
 
 // ── סנכרון תקופתי חסכוני ב-Egress ──
@@ -4876,15 +4930,23 @@ function buildMobileLatestStrip(articles) {
   }
 
   let isScrolling = false;
+  // Measure card width once (it doesn't change during scrolling). Reading
+  // offsetWidth on every scroll frame forced a layout recalc (the "forced
+  // reflow" PageSpeed flagged). Cache it on the element instead.
+  let _cardW = 0;
+  const getCardW = () => {
+    if (!_cardW) _cardW = strip.querySelector('.card')?.offsetWidth || strip.offsetWidth;
+    return _cardW;
+  };
+  window.addEventListener('resize', () => { _cardW = 0; }, {passive:true});
   strip.addEventListener('scroll', () => {
     if (isScrolling) return;
     isScrolling = true;
     requestAnimationFrame(() => {
-      updateMobileDots(strip, dotsEl, items.length);
+      updateMobileDots(strip, dotsEl, items.length, getCardW());
       // Infinite loop: if near end, jump to real start
-      const cardW = strip.querySelector('.card')?.offsetWidth || strip.offsetWidth;
       const gap = 14;
-      const step = cardW + gap;
+      const step = getCardW() + gap;
       const maxReal = step * items.length;
       if (strip.scrollLeft >= maxReal) {
         strip.scrollLeft = strip.scrollLeft - maxReal;
@@ -4899,9 +4961,9 @@ function scrollToCard(strip, idx) {
   if (card) card.scrollIntoView({behavior:'smooth', block:'nearest', inline:'start'});
 }
 
-function updateMobileDots(strip, dotsEl, count) {
+function updateMobileDots(strip, dotsEl, count, cardW) {
   if (!dotsEl) return;
-  const cardW = strip.querySelector('.card')?.offsetWidth || strip.offsetWidth;
+  if (!cardW) cardW = strip.querySelector('.card')?.offsetWidth || strip.offsetWidth;
   const gap = 14;
   const activeIdx = Math.round(strip.scrollLeft / (cardW + gap)) % count;
   dotsEl.querySelectorAll('.mc-dot').forEach((d,i) => d.classList.toggle('active', i===activeIdx));
@@ -4951,11 +5013,21 @@ function buildHero() {
 }
 
 // ── CARD HTML ──
+// Cards display the image at ~400px wide. For Unsplash URLs we can request a
+// smaller width on the fly (saves the wasted bytes PageSpeed flagged). Storage
+// URLs can't be resized via URL but are already compressed (~900px), so we
+// leave them as-is.
+function cardThumb(url) {
+  if (typeof url === 'string' && url.indexOf('images.unsplash.com') !== -1) {
+    return url.replace(/([?&])w=\d+/, '$1w=500');
+  }
+  return url;
+}
 function cardHTML(a) {
   const score = a.score?`<div class="review-score ${parseFloat(a.score)>=8?'high':parseFloat(a.score)>=6?'mid':''}">${a.score}</div>`:'';
   return `<a href="#article-${a.id}" class="card" onclick="openArticle(${a.id});return false;" aria-label="${a.title}">
     <div class="card-img">
-      <img src="${a.img||CAT_IMAGES[a.cat]}" alt="${a.title}" loading="lazy" width="400" height="225" decoding="async" onload="this.classList.add('loaded')" onerror="this.classList.add('loaded')">
+      <img src="${cardThumb(a.img||CAT_IMAGES[a.cat])}" alt="${a.title}" loading="lazy" width="400" height="225" decoding="async" onload="this.classList.add('loaded')" onerror="this.classList.add('loaded')">
       ${score}<span class="card-cat">${CAT_LABELS[a.cat]}</span>
     </div>
     <div class="card-body">
@@ -5055,6 +5127,32 @@ function showAdmin() {
 function openArticle(id) {
   const a = articles.find(x=>x.id===id); if(!a) return;
   currentArticleId = id;
+  // If heavy fields aren't loaded yet and this article has no body, fetch its
+  // full content on demand so the page is never blank.
+  if (!_heavyLoaded && (!a.body || a.body.length === 0)) {
+    try {
+      const fetchOne = async () => {
+        try {
+          let row = null;
+          if (sbClient) {
+            const { data } = await sbClient.from('articles').select('id,body,gallery,body_images').eq('id', id).single();
+            row = data;
+          } else {
+            const r = await fetch(SB_URL + '/rest/v1/articles?select=id,body,gallery,body_images&id=eq.' + id, {
+              headers: { 'apikey': SB_KEY, 'Authorization': 'Bearer ' + SB_KEY }
+            });
+            if (r.ok) { const arr = await r.json(); row = arr && arr[0]; }
+          }
+          if (row) {
+            a.body = row.body || ''; a.gallery = row.gallery || null; a.bodyImages = row.body_images || null;
+            saveLocal();
+            if (currentArticleId === id) openArticle(id);
+          }
+        } catch(e) {}
+      };
+      fetchOne();
+    } catch(e) {}
+  }
   a.views = (a.views||0)+1; saveLocal();
   if (sbClient) Promise.resolve(sbClient.from('articles').update({views:a.views}).eq('id',id)).catch(()=>{});
 
