@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="he">
+<head>
+<meta charset="UTF-8">
+<meta name="robots" content="noindex,nofollow">
+<title>Sitemap Generator — ספידומטר</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+  body { font-family: monospace; background: #0f0f0f; color: #d8d8d8; padding: 24px; }
+  button { background: #e8001d; color: #fff; border: none; border-radius: 6px; padding: 10px 20px; font-size: 1rem; cursor: pointer; margin: 4px; }
+  textarea { width: 100%; height: 400px; background: #1a1a1a; color: #22c55e; font-family: monospace; font-size: 0.8rem; border: 1px solid #333; border-radius: 6px; padding: 12px; margin-top: 12px; }
+  #status { color: #f59e0b; margin: 8px 0; }
+</style>
+</head>
+<body>
+<h2 style="color:#fff">🗺 Sitemap Generator — ספידומטר</h2>
+<p style="color:#888">יוצר sitemap.xml דינמי מהכתבות הפעילות ב‑Supabase.</p>
+<button onclick="generate()">צור Sitemap</button>
+<button onclick="download()">הורד sitemap.xml</button>
+<div id="status"></div>
+<textarea id="out" placeholder="ה‑XML יופיע כאן..."></textarea>
+
+<script>
+const SB_URL = 'https://kaykrrnmykqrfhawgtqt.supabase.co';
+const SB_KEY = 'sb_publishable_Ms6YFTnADm-qAd9617Ey9A_D3x-Zumi';
+const BASE = 'https://speedometer10.co.il';
+const sb = supabase.createClient(SB_URL, SB_KEY);
+let xmlContent = '';
+
+async function generate() {
+  document.getElementById('status').textContent = 'טוען כתבות...';
+  const { data, error } = await sb.from('articles')
+    .select('id,title,cat,date,scheduled_at')
+    .order('id', { ascending: false });
+  if (error) { document.getElementById('status').textContent = 'שגיאה: ' + error.message; return; }
+
+  const today = new Date().toISOString().split('T')[0];
+  const urls = [];
+
+  // Homepage
+  urls.push(`  <url>
+    <loc>${BASE}/</loc>
+    <changefreq>hourly</changefreq>
+    <priority>1.0</priority>
+    <lastmod>${today}</lastmod>
+  </url>`);
+
+  // Category pages
+  const cats = ['local','world','review','electric','tech','buying','sport','luxury','quick'];
+  for (const cat of cats) {
+    urls.push(`  <url>
+    <loc>${BASE}/?cat=${cat}</loc>
+    <changefreq>daily</changefreq>
+    <priority>0.7</priority>
+    <lastmod>${today}</lastmod>
+  </url>`);
+  }
+
+  // Article pages
+  for (const a of data) {
+    const lastmod = a.date ? a.date.split('.').reverse().join('-') : today;
+    const titleSlug = (a.title||'').slice(0,60).replace(/\s+/g, '-').replace(/[^\w\u0590-\u05ff-]/g, '');
+    urls.push(`  <url>
+    <loc>${BASE}/#article-${a.id}</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+    <lastmod>${today}</lastmod>
+  </url>`);
+  }
+
+  xmlContent = `<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.sitemaps.org/schemas/sitemap/0.9
+        http://www.sitemaps.org/schemas/sitemap/0.9/sitemap.xsd">
+${urls.join('\n')}
+</urlset>`;
+
+  document.getElementById('out').value = xmlContent;
+  document.getElementById('status').textContent = `✅ נוצר Sitemap עם ${data.length + 1 + cats.length} כתובות.`;
+}
+
+function download() {
+  if (!xmlContent) { alert('לחץ קודם על "צור Sitemap"'); return; }
+  const blob = new Blob([xmlContent], { type: 'application/xml' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'sitemap.xml';
+  a.click();
+}
+</script>
+</body>
+</html>
