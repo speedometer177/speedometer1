@@ -1,0 +1,797 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="index, follow">
+<!-- SEO tags filled dynamically by JS -->
+<title>טוען...</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Rubik:wght@400;500;700;900&display=swap">
+
+<style>
+/* ════ RESET ════ */
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --black:#0a0a0a; --ink:#1a1a1a; --dark:#222; --mid:#555; --muted:#6f6f6f;
+  --border:#e8e8e8; --bg:#f7f7f5; --white:#fff; --red:#e8001d;
+  --font:'Rubik',sans-serif; --radius:8px; --max:1100px;
+  --shadow:0 2px 14px rgba(0,0,0,0.08);
+}
+html{scroll-behavior:smooth;overflow-x:hidden}
+body{font-family:var(--font);background:var(--bg);color:var(--ink);font-size:16px;line-height:1.6;-webkit-font-smoothing:antialiased}
+a{text-decoration:none;color:inherit}
+img{max-width:100%;display:block}
+button{font-family:var(--font);cursor:pointer;border:none;background:none}
+
+/* ════ HEADER ════ */
+header{background:var(--white);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:100;box-shadow:0 1px 0 rgba(0,0,0,0.04)}
+.header-inner{max-width:var(--max);margin:0 auto;padding:0 24px;height:68px;display:flex;align-items:center;justify-content:space-between;gap:20px}
+.logo{display:flex;flex-direction:column;gap:1px;text-decoration:none}
+.logo-name{font-size:1.8rem;font-weight:900;letter-spacing:-0.04em;line-height:1;color:var(--black)}
+.logo-name span{color:var(--red)}
+.logo-sub{font-size:0.58rem;color:var(--muted);letter-spacing:0.1em;text-transform:uppercase}
+.header-breadcrumb{display:flex;align-items:center;gap:8px;font-size:0.78rem;color:var(--muted);flex-wrap:wrap}
+.header-breadcrumb a{color:var(--muted);transition:color 0.2s}
+.header-breadcrumb a:hover{color:var(--red)}
+.header-breadcrumb .sep{color:var(--border)}
+
+/* ════ HERO ════ */
+.car-hero{position:relative;background:#0a0a0a;overflow:hidden;max-height:520px}
+.car-hero-img{width:100%;max-height:520px;object-fit:cover;display:block;opacity:0;transition:opacity 0.4s}
+.car-hero-img.loaded{opacity:1}
+.car-hero-overlay{position:absolute;inset:0;background:linear-gradient(to bottom,rgba(0,0,0,0) 30%,rgba(0,0,0,0.82) 100%)}
+.car-hero-content{position:absolute;bottom:0;right:0;left:0;padding:32px 32px 28px}
+.car-hero-inner{max-width:var(--max);margin:0 auto}
+.car-hero-cat{display:inline-block;background:rgba(232,0,29,0.9);color:#fff;font-size:0.65rem;font-weight:700;padding:3px 10px;border-radius:20px;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:8px}
+.car-hero-title{font-size:clamp(1.6rem,4vw,2.6rem);font-weight:900;color:#fff;line-height:1.15;margin-bottom:8px;letter-spacing:-0.02em}
+.car-hero-sub{font-size:0.9rem;color:rgba(255,255,255,0.7);max-width:560px;margin-bottom:18px}
+.car-hero-stats{display:flex;gap:24px;flex-wrap:wrap}
+.car-hero-stat{display:flex;flex-direction:column}
+.car-hero-stat-val{font-size:1.25rem;font-weight:900;color:#fff;line-height:1}
+.car-hero-stat-label{font-size:0.65rem;color:rgba(255,255,255,0.55);text-transform:uppercase;letter-spacing:0.08em;margin-top:2px}
+.car-hero-cta{position:absolute;top:24px;left:24px;display:flex;flex-direction:column;gap:8px}
+@media(max-width:600px){.car-hero-content{padding:20px 16px 20px}.car-hero-title{font-size:1.4rem}.car-hero-stats{gap:14px}.car-hero-cta{display:none}}
+
+/* ════ QUICK SPECS STRIP ════ */
+.spec-strip-wrap{background:var(--white);border-bottom:1px solid var(--border)}
+.spec-strip{max-width:var(--max);margin:0 auto;padding:0 24px;display:flex;gap:0;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none}
+.spec-strip::-webkit-scrollbar{display:none}
+.spec-strip-item{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;padding:18px 20px;border-left:1px solid var(--border);flex-shrink:0;min-width:110px;text-align:center}
+.spec-strip-item:last-child{border-left:none}
+.spec-strip-icon{font-size:1.3rem;margin-bottom:2px}
+.spec-strip-val{font-size:1rem;font-weight:800;color:var(--ink)}
+.spec-strip-label{font-size:0.62rem;color:var(--muted);text-transform:uppercase;letter-spacing:0.08em;white-space:nowrap}
+
+/* ════ CONTENT LAYOUT ════ */
+.car-content{max-width:var(--max);margin:0 auto;padding:32px 24px 80px;display:grid;grid-template-columns:1fr 300px;gap:28px;align-items:start}
+@media(max-width:900px){.car-content{grid-template-columns:1fr;padding:20px 16px 80px}}
+
+/* ════ MAIN COLUMN ════ */
+.car-main{}
+
+/* ════ TABS ════ */
+.tabs-nav{display:flex;gap:0;border-bottom:1px solid var(--border);overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;margin-bottom:24px;background:var(--white);border-radius:10px 10px 0 0;flex-shrink:0}
+.tabs-nav::-webkit-scrollbar{display:none}
+.tab-btn{padding:14px 20px;font-size:0.85rem;font-weight:700;color:var(--muted);border:none;background:none;cursor:pointer;white-space:nowrap;border-bottom:3px solid transparent;transition:all 0.2s;flex-shrink:0}
+.tab-btn:hover{color:var(--ink)}
+.tab-btn.active{color:var(--red);border-bottom-color:var(--red)}
+.tab-pane{display:none;animation:fadeIn 0.2s ease}
+.tab-pane.active{display:block}
+@keyframes fadeIn{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+
+/* ════ OVERVIEW ════ */
+.overview-text{font-size:0.95rem;line-height:1.8;color:var(--mid);margin-bottom:20px}
+.pros-cons{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:20px}
+@media(max-width:600px){.pros-cons{grid-template-columns:1fr}}
+.pros-col,.cons-col{border-radius:10px;padding:16px}
+.pros-col{background:#f0fdf4;border:1px solid #bbf7d0}
+.cons-col{background:#fff1f1;border:1px solid #fecaca}
+.pros-cons-title{font-size:0.75rem;font-weight:800;text-transform:uppercase;letter-spacing:0.1em;margin-bottom:12px;display:flex;align-items:center;gap:6px}
+.pros-col .pros-cons-title{color:#16a34a}
+.cons-col .pros-cons-title{color:#dc2626}
+.pros-cons-list{list-style:none;display:flex;flex-direction:column;gap:7px}
+.pros-cons-list li{font-size:0.82rem;color:var(--dark);display:flex;align-items:flex-start;gap:8px;line-height:1.4}
+.pros-cons-list li::before{flex-shrink:0;margin-top:2px}
+.pros-col .pros-cons-list li::before{content:'✓';color:#16a34a;font-weight:900}
+.cons-col .pros-cons-list li::before{content:'✗';color:#dc2626;font-weight:900}
+
+/* ════ SCORE CARDS ════ */
+.score-section{margin-top:24px;padding:20px;background:var(--white);border:1px solid var(--border);border-radius:10px}
+.score-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px}
+.score-big{font-size:3rem;font-weight:900;line-height:1;color:var(--ink)}
+.score-big span{font-size:1rem;font-weight:400;color:var(--muted)}
+.score-label{font-size:0.75rem;color:var(--muted);margin-top:2px}
+.score-cats{display:flex;flex-direction:column;gap:10px}
+.score-row{display:grid;grid-template-columns:80px 1fr 36px;align-items:center;gap:12px}
+.score-name{font-size:0.8rem;font-weight:600;color:var(--dark)}
+.score-bar-wrap{background:var(--border);border-radius:4px;height:7px;overflow:hidden}
+.score-bar{height:100%;border-radius:4px;transition:width 1s ease}
+.score-num{font-size:0.8rem;font-weight:800;color:var(--ink);text-align:left}
+
+/* ════ SPECS TABLE ════ */
+.specs-group{margin-bottom:24px}
+.specs-group-title{font-size:0.75rem;font-weight:800;text-transform:uppercase;letter-spacing:0.1em;color:var(--muted);margin-bottom:10px;padding-bottom:6px;border-bottom:1px solid var(--border)}
+.specs-table{width:100%;border-collapse:collapse;border-radius:8px;overflow:hidden;border:1px solid var(--border)}
+.specs-table tr:nth-child(even) td{background:#fafaf9}
+.specs-table td{padding:10px 14px;font-size:0.85rem;border-bottom:1px solid var(--border)}
+.specs-table tr:last-child td{border-bottom:none}
+.specs-table td:first-child{color:var(--muted);font-weight:600;width:50%}
+.specs-table td:last-child{font-weight:700;color:var(--ink)}
+
+/* ════ FEATURES GRID ════ */
+.features-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px}
+.feature-card{display:flex;align-items:center;gap:10px;padding:11px 14px;background:var(--white);border:1px solid var(--border);border-radius:8px;font-size:0.82rem;color:var(--dark);font-weight:500}
+.feature-icon{font-size:1.2rem;flex-shrink:0}
+.safety-feature-card{border-color:rgba(22,163,74,0.25);background:#f8fff9}
+.safety-feature-card .feature-icon{font-size:1rem}
+
+/* ════ GALLERY ════ */
+.gallery-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+@media(max-width:600px){.gallery-grid{grid-template-columns:repeat(2,1fr)}}
+.gallery-item{aspect-ratio:16/9;overflow:hidden;border-radius:8px;cursor:pointer;position:relative}
+.gallery-item img{width:100%;height:100%;object-fit:cover;transition:transform 0.35s ease;display:block}
+.gallery-item:hover img{transform:scale(1.05)}
+.gallery-item-overlay{position:absolute;inset:0;background:rgba(0,0,0,0);transition:background 0.25s;display:flex;align-items:center;justify-content:center}
+.gallery-item:hover .gallery-item-overlay{background:rgba(0,0,0,0.25)}
+.gallery-zoom-icon{color:#fff;opacity:0;transition:opacity 0.25s;font-size:1.5rem}
+.gallery-item:hover .gallery-zoom-icon{opacity:1}
+
+/* ════ LIGHTBOX ════ */
+.lightbox{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.95);z-index:9000;align-items:center;justify-content:center;flex-direction:column;gap:12px;touch-action:pan-y}
+.lightbox.open{display:flex}
+.lightbox-img-wrap{position:relative;max-width:90vw;max-height:80vh}
+.lightbox-img{max-width:90vw;max-height:78vh;object-fit:contain;border-radius:8px;display:block}
+.lightbox-close{position:fixed;top:20px;left:20px;width:40px;height:40px;background:rgba(255,255,255,0.12);border:1px solid rgba(255,255,255,0.2);border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;cursor:pointer;font-size:1.1rem;transition:background 0.2s}
+.lightbox-close:hover{background:rgba(255,255,255,0.25)}
+.lightbox-nav{position:fixed;top:50%;transform:translateY(-50%);background:rgba(255,255,255,0.12);border:1px solid rgba(255,255,255,0.2);width:44px;height:44px;border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;cursor:pointer;font-size:1.4rem;transition:background 0.2s}
+.lightbox-nav:hover{background:rgba(255,255,255,0.25)}
+.lightbox-prev{right:20px}
+.lightbox-next{left:20px}
+.lightbox-count{color:rgba(255,255,255,0.55);font-size:0.78rem}
+
+/* ════ VIDEO ════ */
+.video-embed-wrap{position:relative;aspect-ratio:16/9;overflow:hidden;border-radius:10px;cursor:pointer;background:#000}
+.video-thumbnail{width:100%;height:100%;object-fit:cover}
+.video-play-btn{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:64px;height:64px;background:rgba(232,0,29,0.9);border-radius:50%;display:flex;align-items:center;justify-content:center;transition:all 0.2s}
+.video-play-btn:hover{background:var(--red);transform:translate(-50%,-50%) scale(1.1)}
+.video-play-btn svg{margin-right:-3px}
+
+/* ════ RELATED CARS ════ */
+.related-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+@media(max-width:700px){.related-grid{grid-template-columns:1fr 1fr}}
+@media(max-width:480px){.related-grid{grid-template-columns:1fr}}
+.related-card{border:1px solid var(--border);border-radius:10px;overflow:hidden;background:var(--white);transition:all 0.2s;text-decoration:none;color:inherit;display:block}
+.related-card:hover{box-shadow:0 6px 20px rgba(0,0,0,0.1);transform:translateY(-2px)}
+.related-card-img{aspect-ratio:16/9;overflow:hidden}
+.related-card-img img{width:100%;height:100%;object-fit:cover;transition:transform 0.35s}
+.related-card:hover .related-card-img img{transform:scale(1.04)}
+.related-card-body{padding:12px}
+.related-card-brand{font-size:0.65rem;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;color:var(--red);margin-bottom:2px}
+.related-card-name{font-size:0.88rem;font-weight:800;margin-bottom:4px;color:var(--ink)}
+.related-card-price{font-size:0.8rem;color:var(--muted)}
+
+/* ════ SIDEBAR ════ */
+.car-sidebar{}
+.sidebar-box{background:var(--white);border:1px solid var(--border);border-radius:12px;padding:20px;margin-bottom:18px}
+.sidebar-box-title{font-size:0.72rem;font-weight:800;text-transform:uppercase;letter-spacing:0.1em;color:var(--muted);margin-bottom:14px}
+.sidebar-price{font-size:1.8rem;font-weight:900;color:var(--ink);margin-bottom:4px}
+.sidebar-price-note{font-size:0.72rem;color:var(--muted);margin-bottom:18px}
+.btn-primary{display:block;width:100%;padding:12px 16px;background:var(--red);color:#fff;border:none;border-radius:8px;font-size:0.88rem;font-weight:700;cursor:pointer;text-align:center;transition:all 0.2s;text-decoration:none;margin-bottom:8px}
+.btn-primary:hover{background:#c0001a;transform:translateY(-1px)}
+.btn-secondary{display:block;width:100%;padding:11px 16px;background:none;color:var(--dark);border:1.5px solid var(--border);border-radius:8px;font-size:0.85rem;font-weight:700;cursor:pointer;text-align:center;transition:all 0.2s;text-decoration:none;margin-bottom:8px}
+.btn-secondary:hover{border-color:var(--ink)}
+.share-btn-row{display:flex;gap:8px}
+.share-btn{flex:1;padding:9px;border:1.5px solid var(--border);border-radius:8px;display:flex;align-items:center;justify-content:center;gap:6px;font-size:0.75rem;font-weight:600;color:var(--mid);transition:all 0.2s;cursor:pointer;text-decoration:none}
+.share-btn:hover{border-color:var(--ink);color:var(--ink)}
+.key-specs-list{display:flex;flex-direction:column;gap:10px}
+.key-spec-row{display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border)}
+.key-spec-row:last-child{border-bottom:none}
+.key-spec-label{font-size:0.8rem;color:var(--muted);display:flex;align-items:center;gap:6px}
+.key-spec-label svg{opacity:0.5}
+.key-spec-val{font-size:0.85rem;font-weight:700;color:var(--ink)}
+.colors-list{display:flex;gap:8px;flex-wrap:wrap;margin-top:4px}
+.color-chip{padding:4px 10px;border:1.5px solid var(--border);border-radius:20px;font-size:0.72rem;color:var(--mid);cursor:default;white-space:nowrap}
+
+/* ════ STICKY BOTTOM (mobile) ════ */
+.sticky-bottom{display:none;position:fixed;bottom:0;left:0;right:0;background:var(--white);border-top:1px solid var(--border);padding:12px 16px;z-index:90;gap:10px;box-shadow:0 -4px 20px rgba(0,0,0,0.1)}
+@media(max-width:768px){.sticky-bottom{display:flex}}
+.sticky-bottom .btn-primary{margin:0;flex:1;padding:13px 10px;font-size:0.9rem}
+.sticky-bottom .btn-secondary{margin:0;flex:1;padding:12px 10px;font-size:0.88rem}
+
+/* ════ SECTION HEADING ════ */
+.section-heading{font-size:0.85rem;font-weight:800;text-transform:uppercase;letter-spacing:0.1em;color:var(--dark);margin-bottom:16px;display:flex;align-items:center;gap:8px}
+.section-heading::after{content:'';flex:1;height:1px;background:var(--border)}
+
+/* ════ FOOTER ════ */
+footer{background:var(--black);color:rgba(255,255,255,0.45);text-align:center;padding:20px 24px;font-size:0.75rem}
+footer a{color:var(--red)}
+
+/* ════ LOADING STATE ════ */
+.car-page-loading{display:flex;align-items:center;justify-content:center;min-height:50vh;flex-direction:column;gap:16px;color:var(--muted)}
+.loading-spinner{width:36px;height:36px;border:3px solid var(--border);border-top-color:var(--red);border-radius:50%;animation:spin 0.7s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.error-state{text-align:center;padding:60px 20px;color:var(--muted)}
+.error-state h2{font-size:1.2rem;font-weight:800;margin-bottom:8px;color:var(--dark)}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-inner">
+    <a href="/" class="logo" aria-label="ספידומטר - עמוד הבית">
+      <span class="logo-name">ספידו<span>מטר</span></span>
+      <span class="logo-sub">רכב · טכנולוגיה · חדשנות</span>
+    </a>
+    <nav class="header-breadcrumb" id="breadcrumb" aria-label="נתיב ניווט">
+      <a href="/">בית</a>
+      <span class="sep">›</span>
+      <a href="cars-list.html">מאגר רכבים</a>
+      <span class="sep">›</span>
+      <span id="breadcrumb-name">טוען...</span>
+    </nav>
+  </div>
+</header>
+
+<!-- Dynamic content injected here -->
+<div id="car-page-root">
+  <div class="car-page-loading">
+    <div class="loading-spinner"></div>
+    <span>טוען מידע על הרכב...</span>
+  </div>
+</div>
+
+<!-- Lightbox -->
+<div class="lightbox" id="lightbox" role="dialog" aria-label="תמונה מוגדלת">
+  <button class="lightbox-close" onclick="closeLightbox()" aria-label="סגור">✕</button>
+  <button class="lightbox-nav lightbox-prev" onclick="lightboxNav(-1)" aria-label="תמונה הקודמת">›</button>
+  <div class="lightbox-img-wrap">
+    <img class="lightbox-img" id="lightbox-img" src="" alt="תמונת רכב מוגדלת">
+  </div>
+  <div class="lightbox-count" id="lightbox-count"></div>
+  <button class="lightbox-nav lightbox-next" onclick="lightboxNav(1)" aria-label="תמונה הבאה">‹</button>
+</div>
+
+<!-- Sticky mobile bar (filled by JS) -->
+<div class="sticky-bottom" id="sticky-bottom" style="display:none">
+  <a href="#price-section" class="btn-primary">💰 מחיר</a>
+  <button class="btn-secondary" onclick="shareCar()">שתף</button>
+</div>
+
+<footer>
+  <p>© 2025 <a href="/">ספידומטר</a> | כל הזכויות שמורות</p>
+</footer>
+
+<script>
+/* ══════════════════════════════
+   ספידומטר — דף רכב v1
+══════════════════════════════ */
+
+let carData = null;
+let galleryImages = [];
+let lightboxIndex = 0;
+
+// ── Load car data ──
+async function loadCar() {
+  const params = new URLSearchParams(window.location.search);
+  const slug = params.get('id');
+  if (!slug) { showError('לא סופק מזהה רכב'); return; }
+
+  try {
+    let cars;
+    try {
+      const res = await fetch('cars.json');
+      if (!res.ok) throw new Error('404');
+      cars = await res.json();
+    } catch(e) {
+      cars = FALLBACK_CARS;
+    }
+    carData = cars.find(c => c.slug === slug || c.id === slug);
+    if (!carData) { showError('הרכב לא נמצא: ' + slug); return; }
+    renderPage();
+  } catch(e) {
+    showError('שגיאה בטעינת הנתונים');
+    console.error(e);
+  }
+}
+
+function showError(msg) {
+  document.getElementById('car-page-root').innerHTML = `
+    <div class="error-state">
+      <h2>שגיאה</h2>
+      <p>${msg}</p>
+      <a href="cars-list.html" style="color:var(--red);font-weight:700;display:inline-block;margin-top:16px;">← חזרה למאגר הרכבים</a>
+    </div>`;
+}
+
+function formatPrice(p) {
+  return '₪' + Number(p).toLocaleString('he-IL');
+}
+
+// ── Render full page ──
+function renderPage() {
+  const c = carData;
+  galleryImages = c.gallery_images || [];
+  const isEV = !c.fuel_consumption;
+
+  // ── SEO ──
+  document.title = c.meta_title || `${c.brand} ${c.model} ${c.year} | ספידומטר`;
+  document.querySelector('meta[name=description]')?.setAttribute('content', c.meta_description || c.description);
+
+  // Update canonical
+  let canon = document.querySelector('link[rel=canonical]');
+  if (!canon) { canon = document.createElement('link'); canon.rel='canonical'; document.head.appendChild(canon); }
+  canon.href = location.origin + location.pathname + '?id=' + c.slug;
+
+  // JSON-LD
+  const ld = {
+    "@context": "https://schema.org", "@type": "Car",
+    "name": `${c.brand} ${c.model} ${c.year}`,
+    "brand": {"@type":"Brand","name":c.brand},
+    "modelDate": String(c.year),
+    "description": c.description,
+    "offers": {"@type":"Offer","price":c.price,"priceCurrency":"ILS"}
+  };
+  let ldScript = document.getElementById('json-ld');
+  if (!ldScript) { ldScript=document.createElement('script'); ldScript.id='json-ld'; ldScript.type='application/ld+json'; document.head.appendChild(ldScript); }
+  ldScript.textContent = JSON.stringify(ld);
+
+  // Breadcrumb
+  document.getElementById('breadcrumb-name').textContent = `${c.brand} ${c.model} ${c.year}`;
+
+  // ── Score bar color ──
+  function scoreBarColor(s) {
+    if (s >= 9) return '#16a34a';
+    if (s >= 7.5) return '#2563eb';
+    return '#e8001d';
+  }
+
+  // ── Score cats HTML ──
+  let scoreCatsHtml = '';
+  if (c.score_cats) {
+    scoreCatsHtml = `
+      <div class="score-section">
+        <div class="score-header">
+          <div>
+            <div class="score-big">${c.score} <span>/10</span></div>
+            <div class="score-label">ציון ספידומטר</div>
+          </div>
+          <svg width="48" height="48" viewBox="0 0 48 48" fill="none">
+            <circle cx="24" cy="24" r="22" stroke="${scoreBarColor(c.score)}" stroke-width="3" opacity="0.15"/>
+            <circle cx="24" cy="24" r="22" stroke="${scoreBarColor(c.score)}" stroke-width="3" stroke-dasharray="${Math.round(c.score/10*138)} 138" stroke-linecap="round" transform="rotate(-90 24 24)"/>
+          </svg>
+        </div>
+        <div class="score-cats">
+          ${c.score_cats.map(cat => `
+            <div class="score-row">
+              <div class="score-name">${cat.name}</div>
+              <div class="score-bar-wrap"><div class="score-bar" style="width:${cat.score*10}%;background:${scoreBarColor(cat.score)}"></div></div>
+              <div class="score-num">${cat.score}</div>
+            </div>
+          `).join('')}
+        </div>
+      </div>`;
+  }
+
+  // ── Gallery HTML ──
+  const galleryHtml = galleryImages.length > 0 ? `
+    <div class="gallery-grid">
+      ${galleryImages.map((img, i) => `
+        <div class="gallery-item" onclick="openLightbox(${i})" role="button" tabindex="0" 
+          aria-label="תמונה ${i+1}" onkeydown="if(event.key==='Enter')openLightbox(${i})">
+          <img src="${img}" alt="${c.brand} ${c.model} - תמונה ${i+1}" loading="lazy" width="300" height="169">
+          <div class="gallery-item-overlay">
+            <div class="gallery-zoom-icon">🔍</div>
+          </div>
+        </div>
+      `).join('')}
+    </div>` : '<p style="color:var(--muted);font-size:0.85rem">אין תמונות נוספות</p>';
+
+  // ── Video HTML ──
+  const videoHtml = c.youtube_video_url ? (() => {
+    let vid = c.youtube_video_url.match(/(?:v=|youtu\.be\/)([^&?]+)/)?.[1];
+    if (!vid) return '<p style="color:var(--muted);font-size:0.85rem">סרטון לא זמין</p>';
+    return `
+      <div class="video-embed-wrap" onclick="loadYoutube(this,'${vid}')" id="video-wrap">
+        <img class="video-thumbnail" src="https://img.youtube.com/vi/${vid}/hqdefault.jpg" 
+          alt="סרטון ${c.brand} ${c.model}" loading="lazy">
+        <div class="video-play-btn">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="#fff"><polygon points="5,3 19,12 5,21"/></svg>
+        </div>
+      </div>`;
+  })() : '<p style="color:var(--muted);font-size:0.85rem">סרטון לא זמין לדגם זה</p>';
+
+  // ── Specs groups ──
+  const specsHtml = `
+    <div class="specs-group">
+      <div class="specs-group-title">מנוע ובצועים</div>
+      <table class="specs-table">
+        <tr><td>מנוע</td><td>${c.engine}</td></tr>
+        <tr><td>כוחות סוס</td><td>${c.horsepower} כ"ס</td></tr>
+        ${c.torque ? `<tr><td>מומנט</td><td>${c.torque} Nm</td></tr>` : ''}
+        <tr><td>תאוצה 0-100</td><td>${c.acceleration_0_100} שניות</td></tr>
+        ${c.top_speed ? `<tr><td>מהירות מקסימלית</td><td>${c.top_speed} קמ"ש</td></tr>` : ''}
+        <tr><td>תיבת הילוכים</td><td>${c.transmission}</td></tr>
+        <tr><td>הנעה</td><td>${c.drive_type}</td></tr>
+      </table>
+    </div>
+    <div class="specs-group">
+      <div class="specs-group-title">צריכה ו${isEV ? 'טווח' : 'יעילות'}</div>
+      <table class="specs-table">
+        ${isEV
+          ? `<tr><td>טווח</td><td>${c.range} ק"מ</td></tr>`
+          : `<tr><td>צריכת דלק ממוצעת</td><td>${c.fuel_consumption} ל/100ק"מ</td></tr>`
+        }
+        ${c.country ? `<tr><td>ארץ ייצור</td><td>${c.country}</td></tr>` : ''}
+      </table>
+    </div>
+    ${c.trunk_volume || c.weight || c.length ? `
+    <div class="specs-group">
+      <div class="specs-group-title">ממדים ומשקל</div>
+      <table class="specs-table">
+        ${c.trunk_volume ? `<tr><td>תא מטען</td><td>${c.trunk_volume} ליטר</td></tr>` : ''}
+        ${c.weight ? `<tr><td>משקל</td><td>${c.weight.toLocaleString()} ק"ג</td></tr>` : ''}
+        ${c.length ? `<tr><td>אורך</td><td>${c.length} מ"מ</td></tr>` : ''}
+        ${c.width ? `<tr><td>רוחב</td><td>${c.width} מ"מ</td></tr>` : ''}
+        ${c.height ? `<tr><td>גובה</td><td>${c.height} מ"מ</td></tr>` : ''}
+      </table>
+    </div>` : ''}
+    ${c.trims ? `
+    <div class="specs-group">
+      <div class="specs-group-title">גרסאות זמינות</div>
+      <table class="specs-table">
+        ${c.trims.map((t,i) => `<tr><td>גרסה ${i+1}</td><td>${t}</td></tr>`).join('')}
+      </table>
+    </div>` : ''}`;
+
+  // ── Features ──
+  const featureIcons = {'מסך':'📱','Apple':'📱','Android':'📱','גג':'🌟','מושב':'💺','קרוז':'🎯','כניסה':'🔑','מזג':'❄️','Bose':'🔊','Harman':'🔊','Canton':'🔊','Meridian':'🔊','רמקול':'🔊','מצלמ':'📷','חניה':'🅿️','HUD':'🖥️','LED':'💡','ניווט':'🧭','Wi-Fi':'📶','כריות':'🛡️'};
+  function getFeatureIcon(f) {
+    for (const [k,v] of Object.entries(featureIcons)) {
+      if (f.includes(k)) return v;
+    }
+    return '✦';
+  }
+
+  const featuresHtml = c.features ? `
+    <div class="features-grid">
+      ${c.features.map(f => `
+        <div class="feature-card">
+          <span class="feature-icon">${getFeatureIcon(f)}</span>
+          <span>${f}</span>
+        </div>
+      `).join('')}
+    </div>` : '<p style="color:var(--muted)">אין מידע</p>';
+
+  const safetyHtml = c.safety_features ? `
+    <div class="features-grid">
+      ${c.safety_features.map(f => `
+        <div class="feature-card safety-feature-card">
+          <span class="feature-icon">🛡️</span>
+          <span>${f}</span>
+        </div>
+      `).join('')}
+    </div>` : '<p style="color:var(--muted)">אין מידע</p>';
+
+  // ── Related cars (same category, different id) ──
+  async function getRelated() {
+    let cars;
+    try {
+      const res = await fetch('cars.json');
+      cars = await res.json();
+    } catch(e) { cars = FALLBACK_CARS; }
+    return cars.filter(x => x.category === c.category && x.slug !== c.slug).slice(0,3);
+  }
+
+  // ── Build full HTML ──
+  document.getElementById('car-page-root').innerHTML = `
+    <!-- HERO -->
+    <div class="car-hero">
+      <img class="car-hero-img" id="hero-img" src="${c.image_main}" 
+        alt="${c.brand} ${c.model} ${c.year}" 
+        onload="this.classList.add('loaded')"
+        onerror="this.style.display='none'"
+        fetchpriority="high" width="1100" height="520">
+      <div class="car-hero-overlay"></div>
+      <div class="car-hero-content">
+        <div class="car-hero-inner">
+          <span class="car-hero-cat">${c.category}</span>
+          <h1 class="car-hero-title">${c.brand} ${c.model} ${c.year}</h1>
+          <p class="car-hero-sub">${(c.description||'').slice(0,120)}...</p>
+          <div class="car-hero-stats">
+            <div class="car-hero-stat">
+              <span class="car-hero-stat-val">${c.horsepower}</span>
+              <span class="car-hero-stat-label">כוחות סוס</span>
+            </div>
+            <div class="car-hero-stat">
+              <span class="car-hero-stat-val">${c.acceleration_0_100}s</span>
+              <span class="car-hero-stat-label">0-100</span>
+            </div>
+            <div class="car-hero-stat">
+              <span class="car-hero-stat-val">${formatPrice(c.price)}</span>
+              <span class="car-hero-stat-label">מחיר</span>
+            </div>
+            ${isEV && c.range ? `<div class="car-hero-stat"><span class="car-hero-stat-val">${c.range}</span><span class="car-hero-stat-label">ק"מ טווח</span></div>` : ''}
+          </div>
+        </div>
+      </div>
+      <div class="car-hero-cta">
+        ${c.score ? `<div style="background:${scoreBarColor(c.score)};color:#fff;font-size:1.4rem;font-weight:900;width:56px;height:56px;border-radius:10px;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 14px rgba(0,0,0,0.3)">${c.score}</div>` : ''}
+      </div>
+    </div>
+
+    <!-- QUICK SPECS STRIP -->
+    <div class="spec-strip-wrap">
+      <div class="spec-strip" role="list" aria-label="מפרט מהיר">
+        <div class="spec-strip-item" role="listitem">
+          <div class="spec-strip-icon">⚡</div>
+          <div class="spec-strip-val">${c.horsepower}</div>
+          <div class="spec-strip-label">כוחות סוס</div>
+        </div>
+        <div class="spec-strip-item" role="listitem">
+          <div class="spec-strip-icon">🏎️</div>
+          <div class="spec-strip-val">${c.acceleration_0_100}s</div>
+          <div class="spec-strip-label">0-100 קמ"ש</div>
+        </div>
+        ${isEV && c.range ? `
+        <div class="spec-strip-item" role="listitem">
+          <div class="spec-strip-icon">🔋</div>
+          <div class="spec-strip-val">${c.range}</div>
+          <div class="spec-strip-label">טווח (ק"מ)</div>
+        </div>` : ''}
+        ${!isEV ? `
+        <div class="spec-strip-item" role="listitem">
+          <div class="spec-strip-icon">⛽</div>
+          <div class="spec-strip-val">${c.fuel_consumption}</div>
+          <div class="spec-strip-label">ל/100ק"מ</div>
+        </div>` : ''}
+        <div class="spec-strip-item" role="listitem">
+          <div class="spec-strip-icon">🔧</div>
+          <div class="spec-strip-val" style="font-size:0.82rem;font-weight:700">${c.engine}</div>
+          <div class="spec-strip-label">מנוע</div>
+        </div>
+        <div class="spec-strip-item" role="listitem">
+          <div class="spec-strip-icon">🚗</div>
+          <div class="spec-strip-val" style="font-size:0.8rem;font-weight:700">${c.drive_type}</div>
+          <div class="spec-strip-label">הנעה</div>
+        </div>
+        <div class="spec-strip-item" role="listitem">
+          <div class="spec-strip-icon">⚙️</div>
+          <div class="spec-strip-val" style="font-size:0.78rem;font-weight:700">${c.transmission.split(' ').slice(0,2).join(' ')}</div>
+          <div class="spec-strip-label">תיבת הילוכים</div>
+        </div>
+        <div class="spec-strip-item" role="listitem">
+          <div class="spec-strip-icon">💰</div>
+          <div class="spec-strip-val" style="font-size:0.88rem">${formatPrice(c.price)}</div>
+          <div class="spec-strip-label">מחיר</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- CONTENT -->
+    <div class="car-content">
+      <div class="car-main">
+
+        <!-- TABS -->
+        <nav class="tabs-nav" role="tablist" aria-label="מידע על הרכב">
+          <button class="tab-btn active" role="tab" aria-selected="true" onclick="switchTab('overview', this)">סקירה כללית</button>
+          <button class="tab-btn" role="tab" aria-selected="false" onclick="switchTab('specs', this)">מפרט טכני</button>
+          <button class="tab-btn" role="tab" aria-selected="false" onclick="switchTab('features', this)">תכונות</button>
+          <button class="tab-btn" role="tab" aria-selected="false" onclick="switchTab('safety', this)">בטיחות</button>
+          <button class="tab-btn" role="tab" aria-selected="false" onclick="switchTab('gallery', this)">גלריה</button>
+          ${c.youtube_video_url ? `<button class="tab-btn" role="tab" aria-selected="false" onclick="switchTab('video', this)">סרטון</button>` : ''}
+        </nav>
+
+        <!-- Tab: Overview -->
+        <div class="tab-pane active" id="tab-overview" role="tabpanel">
+          <p class="overview-text">${c.description}</p>
+          ${c.pros && c.cons ? `
+          <div class="pros-cons">
+            <div class="pros-col">
+              <div class="pros-cons-title">✅ יתרונות</div>
+              <ul class="pros-cons-list">
+                ${c.pros.map(p=>`<li>${p}</li>`).join('')}
+              </ul>
+            </div>
+            <div class="cons-col">
+              <div class="pros-cons-title">❌ חסרונות</div>
+              <ul class="pros-cons-list">
+                ${c.cons.map(p=>`<li>${p}</li>`).join('')}
+              </ul>
+            </div>
+          </div>` : ''}
+          ${scoreCatsHtml}
+        </div>
+
+        <!-- Tab: Specs -->
+        <div class="tab-pane" id="tab-specs" role="tabpanel">
+          ${specsHtml}
+        </div>
+
+        <!-- Tab: Features -->
+        <div class="tab-pane" id="tab-features" role="tabpanel">
+          <div class="section-heading">אמצעי נוחות וטכנולוגיה</div>
+          ${featuresHtml}
+        </div>
+
+        <!-- Tab: Safety -->
+        <div class="tab-pane" id="tab-safety" role="tabpanel">
+          <div class="section-heading">מערכות בטיחות</div>
+          ${safetyHtml}
+        </div>
+
+        <!-- Tab: Gallery -->
+        <div class="tab-pane" id="tab-gallery" role="tabpanel">
+          <div class="section-heading">גלריית תמונות</div>
+          ${galleryHtml}
+        </div>
+
+        <!-- Tab: Video -->
+        <div class="tab-pane" id="tab-video" role="tabpanel">
+          <div class="section-heading">סרטון</div>
+          ${videoHtml}
+        </div>
+
+        <!-- Related cars placeholder -->
+        <div style="margin-top:36px" id="related-section">
+          <div class="section-heading">רכבים דומים</div>
+          <div id="related-grid" class="related-grid">
+            <div style="color:var(--muted);font-size:0.85rem;grid-column:1/-1">טוען...</div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- SIDEBAR -->
+      <aside class="car-sidebar">
+        <div class="sidebar-box" id="price-section">
+          <div class="sidebar-box-title">מחיר מחירון</div>
+          <div class="sidebar-price">${formatPrice(c.price)}</div>
+          <div class="sidebar-price-note">מחיר לפני אפשרויות. צור קשר לקבלת הצעה</div>
+          <a href="https://wa.me/972559365579" target="_blank" rel="noopener noreferrer" class="btn-primary" aria-label="ייעוץ בוואטסאפ">💬 ייעוץ בוואטסאפ</a>
+          <a href="cars-list.html" class="btn-secondary">← השווה רכבים</a>
+          <div class="share-btn-row">
+            <button class="share-btn" onclick="shareCar()" aria-label="שתף">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+              שתף
+            </button>
+            <button class="share-btn" onclick="copyLink()" aria-label="העתק קישור">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+              קישור
+            </button>
+          </div>
+        </div>
+
+        <div class="sidebar-box">
+          <div class="sidebar-box-title">נתוני מפתח</div>
+          <div class="key-specs-list">
+            <div class="key-spec-row">
+              <span class="key-spec-label"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg> ארץ ייצור</span>
+              <span class="key-spec-val">${c.country || '—'}</span>
+            </div>
+            <div class="key-spec-row">
+              <span class="key-spec-label">📅 שנה</span>
+              <span class="key-spec-val">${c.year}</span>
+            </div>
+            ${c.trunk_volume ? `<div class="key-spec-row"><span class="key-spec-label">🧳 תא מטען</span><span class="key-spec-val">${c.trunk_volume} ל'</span></div>` : ''}
+            ${c.top_speed ? `<div class="key-spec-row"><span class="key-spec-label">⚡ מהירות מקס'</span><span class="key-spec-val">${c.top_speed} קמ"ש</span></div>` : ''}
+            ${c.torque ? `<div class="key-spec-row"><span class="key-spec-label">🔩 מומנט</span><span class="key-spec-val">${c.torque} Nm</span></div>` : ''}
+          </div>
+        </div>
+
+        ${c.colors ? `
+        <div class="sidebar-box">
+          <div class="sidebar-box-title">צבעים זמינים</div>
+          <div class="colors-list">
+            ${c.colors.map(col => `<span class="color-chip" title="${col}">${col}</span>`).join('')}
+          </div>
+        </div>` : ''}
+      </aside>
+    </div>`;
+
+  // Show sticky bottom on mobile
+  document.getElementById('sticky-bottom').style.display = 'flex';
+
+  // Load related cars
+  getRelated().then(related => {
+    if (!related || !related.length) {
+      document.getElementById('related-section').style.display = 'none';
+      return;
+    }
+    document.getElementById('related-grid').innerHTML = related.map(r => `
+      <a class="related-card" href="car.html?id=${r.slug}" aria-label="${r.brand} ${r.model} ${r.year}">
+        <div class="related-card-img">
+          <img src="${r.image_main}" alt="${r.brand} ${r.model}" loading="lazy" width="260" height="146">
+        </div>
+        <div class="related-card-body">
+          <div class="related-card-brand">${r.brand}</div>
+          <div class="related-card-name">${r.model} ${r.year}</div>
+          <div class="related-card-price">${formatPrice(r.price)}</div>
+        </div>
+      </a>
+    `).join('');
+  });
+}
+
+// ── Tabs ──
+function switchTab(name, btn) {
+  document.querySelectorAll('.tab-btn').forEach(b => { b.classList.remove('active'); b.setAttribute('aria-selected','false'); });
+  document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
+  btn.classList.add('active'); btn.setAttribute('aria-selected','true');
+  document.getElementById('tab-'+name)?.classList.add('active');
+}
+
+// ── Lightbox ──
+function openLightbox(index) {
+  lightboxIndex = index;
+  document.getElementById('lightbox-img').src = galleryImages[index];
+  document.getElementById('lightbox-count').textContent = `${index+1} / ${galleryImages.length}`;
+  document.getElementById('lightbox').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+function closeLightbox() {
+  document.getElementById('lightbox').classList.remove('open');
+  document.body.style.overflow = '';
+}
+function lightboxNav(dir) {
+  lightboxIndex = (lightboxIndex + dir + galleryImages.length) % galleryImages.length;
+  document.getElementById('lightbox-img').src = galleryImages[lightboxIndex];
+  document.getElementById('lightbox-count').textContent = `${lightboxIndex+1} / ${galleryImages.length}`;
+}
+document.getElementById('lightbox').addEventListener('click', e => {
+  if (e.target === e.currentTarget) closeLightbox();
+});
+document.addEventListener('keydown', e => {
+  if (!document.getElementById('lightbox').classList.contains('open')) return;
+  if (e.key==='Escape') closeLightbox();
+  if (e.key==='ArrowRight') lightboxNav(-1);
+  if (e.key==='ArrowLeft') lightboxNav(1);
+});
+
+// ── YouTube ──
+function loadYoutube(wrap, vid) {
+  wrap.innerHTML = `<iframe width="100%" height="100%" src="https://www.youtube.com/embed/${vid}?autoplay=1&rel=0" 
+    frameborder="0" allow="autoplay; encrypted-media" allowfullscreen style="border-radius:10px"></iframe>`;
+}
+
+// ── Share ──
+function shareCar() {
+  if (navigator.share) {
+    navigator.share({ title: document.title, url: location.href }).catch(()=>{});
+  } else {
+    copyLink();
+  }
+}
+function copyLink() {
+  navigator.clipboard.writeText(location.href).then(() => {
+    const btn = document.querySelector('.share-btn:last-child');
+    if (btn) { const orig=btn.textContent; btn.textContent='הועתק!'; setTimeout(()=>btn.textContent=orig,2000); }
+  }).catch(()=>{});
+}
+
+// ── Fallback cars ──
+const FALLBACK_CARS = [
+  {id:"toyota-corolla-cross-2025",brand:"Toyota",model:"Corolla Cross",year:2025,category:"קרוסאובר",price:148000,engine:"1.8L היברידי",horsepower:140,torque:142,acceleration_0_100:8.1,top_speed:180,range:null,fuel_consumption:"4.5",transmission:"CVT אוטומטית",drive_type:"קידמי",trunk_volume:440,weight:1440,length:4460,width:1825,height:1620,image_main:"https://images.unsplash.com/photo-1549317661-bd32c8ce0db2?w=1200&q=80&fm=webp",gallery_images:["https://images.unsplash.com/photo-1549317661-bd32c8ce0db2?w=900&q=80&fm=webp","https://images.unsplash.com/photo-1552519507-da3b142c6e3d?w=900&q=80&fm=webp","https://images.unsplash.com/photo-1503376780353-7e6692767b70?w=900&q=80&fm=webp"],colors:["לבן פנינה","אפור מטאלי","שחור"],features:["מסך מגע 10.5 אינץ'","Apple CarPlay","גג פנורמי","קרוז קונטרול אדפטיבי"],safety_features:["Toyota Safety Sense 3.0","AEB בלימה אוטומטית","שמירת נתיב"],pros:["יעילות דלק מצוינת","אמינות גבוהה"],cons:["ביצועים מתונים"],description:"טויוטה קורולה קרוס 2025 — הקרוסאובר ההיברידי הפרקטי שמשלב חיסכון בדלק עם פנים מודרני. עם מערכת Toyota Safety Sense 3.0 ומנוע היברידי יעיל, הוא ממשיך להיות אחת הבחירות הפופולריות בשוק הישראלי.",youtube_video_url:"https://www.youtube.com/watch?v=example1",meta_title:"טויוטה קורולה קרוס 2025 | מחיר, מפרט | ספידומטר",meta_description:"כל המידע על טויוטה קורולה קרוס 2025.",slug:"toyota-corolla-cross-2025",score:8.4,score_cats:[{name:"נסיעה",score:7.8},{name:"עיצוב",score:8.2},{name:"טכנולוגיה",score:8.5},{name:"נוחות",score:8.8},{name:"ערך",score:8.7}],country:"יפן",trims:["Active","Active+","Luxury"],date_added:"2025-01-15"},
+  {id:"hyundai-ioniq6-2025",brand:"Hyundai",model:"Ioniq 6",year:2025,category:"סדאן חשמלי",price:228000,engine:"חשמלי",horsepower:228,torque:350,acceleration_0_100:5.1,top_speed:185,range:614,fuel_consumption:null,transmission:"אוטומטית חשמלית",drive_type:"אחורי",trunk_volume:401,weight:1875,length:4855,width:1880,height:1495,image_main:"https://images.unsplash.com/photo-1593941707882-a5bba14938c7?w=1200&q=80&fm=webp",gallery_images:["https://images.unsplash.com/photo-1593941707882-a5bba14938c7?w=900&q=80&fm=webp","https://images.unsplash.com/photo-1571127236794-81c0bbfe1ce3?w=900&q=80&fm=webp"],colors:["כחול בהיר","לבן","שחור"],features:["מסך 12.3 אינץ' כפול","Apple CarPlay אלחוטי","טעינה מהירה 800V","Vehicle-to-Load V2L"],safety_features:["Hyundai SmartSense מלא","AEB עם זיהוי הולכי רגל","חניה אוטומטית"],pros:['טווח מרשים 614 ק"מ',"טעינה מהירה 800V"],cons:["מחיר גבוה"],description:'יונדאי איוניק 6 2025 — הסדאן החשמלי שמגדיר מחדש את קטגוריית הרכבים החשמליים. עם טווח של עד 614 ק"מ, טעינה מהירה בטכנולוגיית 800V ועיצוב אאוורדינמי מדהים.',youtube_video_url:"https://www.youtube.com/watch?v=example2",meta_title:'יונדאי איוניק 6 2025 | טווח 614 ק"מ | ספידומטר',meta_description:"כל המידע על יונדאי איוניק 6 2025.",slug:"hyundai-ioniq6-2025",score:9.1,score_cats:[{name:"נסיעה",score:9.0},{name:"עיצוב",score:9.5},{name:"טכנולוגיה",score:9.4},{name:"נוחות",score:8.8},{name:"ערך",score:8.8}],country:"דרום קוריאה",trims:["Standard","Plus","Premium"],date_added:"2025-02-10"},
+  {id:"bmw-3-series-2025",brand:"BMW",model:"סדרה 3",year:2025,category:"סדאן",price:295000,engine:"2.0L טורבו",horsepower:258,torque:400,acceleration_0_100:5.8,top_speed:250,range:null,fuel_consumption:"6.8",transmission:"אוטומטית 8 הילוכים",drive_type:"אחורי",trunk_volume:480,weight:1545,image_main:"https://images.unsplash.com/photo-1555215695-3004980ad54e?w=1200&q=80&fm=webp",gallery_images:["https://images.unsplash.com/photo-1555215695-3004980ad54e?w=900&q=80&fm=webp","https://images.unsplash.com/photo-1503376780353-7e6692767b70?w=900&q=80&fm=webp"],colors:["לבן אלפין","שחור ספיר","כחול פלדה"],features:["BMW iDrive 8 14.9 אינץ'","Harman Kardon 16 רמקולים","גג פנורמי"],safety_features:["BMW Driving Assistant Pro","AEB עם זיהוי הולכי רגל","Lane Change Warning"],pros:["דינמיקת נסיעה מצוינת","פנים יוקרתי"],cons:["מחיר גבוה","עלויות תחזוקה"],description:'BMW סדרה 3 2025 — הסדאן הספורטיבי שמגדיר את קטגוריית הפרמיום. עם מנוע טורבו 258 כ"ס והנעה אחורית קלאסית.',youtube_video_url:"https://www.youtube.com/watch?v=example3",meta_title:"BMW סדרה 3 2025 | מחיר, מפרט | ספידומטר",slug:"bmw-3-series-2025",score:9.0,score_cats:[{name:"נסיעה",score:9.5},{name:"עיצוב",score:9.2},{name:"טכנולוגיה",score:9.0},{name:"נוחות",score:8.8},{name:"ערך",score:7.5}],country:"גרמניה",trims:["320i","330i","M340i"],date_added:"2025-01-20"},
+  {id:"mazda-cx5-2025",brand:"Mazda",model:"CX-5",year:2025,category:"קרוסאובר",price:172000,engine:"2.5L טורבו",horsepower:227,torque:420,acceleration_0_100:7.0,top_speed:200,range:null,fuel_consumption:"8.2",transmission:"אוטומטית 6 הילוכים",drive_type:"הנעה כפולה AWD",trunk_volume:506,image_main:"https://images.unsplash.com/photo-1546614042-7df3c24c9e5d?w=1200&q=80&fm=webp",gallery_images:["https://images.unsplash.com/photo-1546614042-7df3c24c9e5d?w=900&q=80&fm=webp"],colors:["אדום Kodo","לבן Crystal","כחול Eternal"],features:["Mazda Connect 10.25 אינץ'","Apple CarPlay","מושבים עור"],safety_features:["Mazda i-Activsense","AEB","שמירת נתיב"],pros:["עיצוב פנים יוקרתי","הנעה כפולה"],cons:["מסך קטן"],description:"מאזדה CX-5 2025 — הקרוסאובר היפני שמשלב עיצוב Kodo אייקוני עם ביצועים מרשימים.",slug:"mazda-cx5-2025",score:8.7,score_cats:[{name:"נסיעה",score:8.8},{name:"עיצוב",score:9.3},{name:"טכנולוגיה",score:8.0},{name:"נוחות",score:8.8},{name:"ערך",score:8.6}],country:"יפן",date_added:"2025-03-01"},
+  {id:"kia-ev6-gt-2025",brand:"Kia",model:"EV6 GT",year:2025,category:"קרוסאובר חשמלי",price:320000,engine:"חשמלי כפול",horsepower:585,torque:740,acceleration_0_100:3.5,top_speed:260,range:400,fuel_consumption:null,transmission:"אוטומטית חשמלית",drive_type:"הנעה כפולה AWD",trunk_volume:490,image_main:"https://images.unsplash.com/photo-1621007947382-bb3c3994e3fb?w=1200&q=80&fm=webp",gallery_images:["https://images.unsplash.com/photo-1621007947382-bb3c3994e3fb?w=900&q=80&fm=webp"],colors:["ירוק GT","שחור"],features:["מסכים כפולים 12 אינץ'","Meridian 14 רמקולים"],safety_features:["Kia DriveWise","AEB"],pros:["0-100 ב-3.5 שניות!","עיצוב GT אגרסיבי"],cons:["טווח מוגבל","מחיר גבוה"],description:'קיה EV6 GT 2025 — ה-EV החשמלי שמוכיח שמכונית ספורט לא חייבת לוותר על עתידנות. 585 כ"ס ו-0-100 ב-3.5 שניות.',slug:"kia-ev6-gt-2025",score:9.3,score_cats:[{name:"נסיעה",score:9.8},{name:"עיצוב",score:9.0},{name:"טכנולוגיה",score:9.2},{name:"נוחות",score:8.5},{name:"ערך",score:8.5}],country:"דרום קוריאה",date_added:"2025-02-20"},
+  {id:"tesla-model-y-2025",brand:"Tesla",model:"Model Y",year:2025,category:"קרוסאובר חשמלי",price:195000,engine:"חשמלי",horsepower:283,torque:430,acceleration_0_100:5.0,top_speed:217,range:533,fuel_consumption:null,transmission:"אוטומטית חשמלית",drive_type:"הנעה כפולה AWD",trunk_volume:854,image_main:"https://images.unsplash.com/photo-1561580125-028ee3bd62eb?w=1200&q=80&fm=webp",gallery_images:["https://images.unsplash.com/photo-1561580125-028ee3bd62eb?w=900&q=80&fm=webp"],colors:["לבן פנינה","שחור מוצק"],features:["מסך 15.4 אינץ'","Autopilot","גג זכוכית"],safety_features:["Tesla Autopilot","AEB אוטומטי","8 מצלמות"],pros:["טווח מצוין 533 ק\"מ","תא מטען ענק"],cons:["אין Apple CarPlay"],description:'טסלה מודל Y 2025 — המכונית החשמלית הנמכרת ביותר בעולם. עם טווח 533 ק"מ ו-Autopilot מתקדם.',slug:"tesla-model-y-2025",score:8.9,score_cats:[{name:"נסיעה",score:9.0},{name:"עיצוב",score:8.5},{name:"טכנולוגיה",score:9.8},{name:"נוחות",score:8.5},{name:"ערך",score:8.6}],country:"ארה\"ב",date_added:"2025-01-05"},
+  {id:"porsche-macan-electric-2025",brand:"Porsche",model:"Macan Electric",year:2025,category:"קרוסאובר יוקרה",price:480000,engine:"חשמלי",horsepower:408,torque:660,acceleration_0_100:5.2,top_speed:220,range:516,fuel_consumption:null,transmission:"אוטומטית חשמלית",drive_type:"הנעה כפולה AWD",trunk_volume:540,image_main:"https://images.unsplash.com/photo-1563720360172-67b8f3dce741?w=1200&q=80&fm=webp",gallery_images:["https://images.unsplash.com/photo-1563720360172-67b8f3dce741?w=900&q=80&fm=webp"],colors:["לבן Carrara","שחור Jet"],features:["PCM 11.9 אינץ'","Bose 14 רמקולים","Air Suspension"],safety_features:["Porsche InnoDrive","AEB"],pros:["דינמיקת נסיעה פורשה","עיצוב יוקרתי"],cons:["מחיר גבוה מאוד"],description:'פורשה מקאן חשמלי 2025 — 408 כ"ס, 0-100 ב-5.2 שניות, טווח 516 ק"מ. הגרסה החשמלית הראשונה של הקרוסאובר הספורטיבי.',slug:"porsche-macan-electric-2025",score:9.2,score_cats:[{name:"נסיעה",score:9.5},{name:"עיצוב",score:9.8},{name:"טכנולוגיה",score:9.0},{name:"נוחות",score:9.2},{name:"ערך",score:7.5}],country:"גרמניה",date_added:"2025-03-15"},
+  {id:"skoda-kodiaq-2025",brand:"Skoda",model:"Kodiaq",year:2025,category:"SUV",price:175000,engine:"2.0L TSI טורבו",horsepower:204,torque:320,acceleration_0_100:7.4,top_speed:210,range:null,fuel_consumption:"7.9",transmission:"DSG אוטומטית 7 הילוכים",drive_type:"הנעה כפולה 4x4",trunk_volume:910,image_main:"https://images.unsplash.com/photo-1585011664466-b7bbe92f34ef?w=1200&q=80&fm=webp",gallery_images:["https://images.unsplash.com/photo-1585011664466-b7bbe92f34ef?w=900&q=80&fm=webp"],colors:["לבן Moon","שחור Magic"],features:["Columbus 13 אינץ'","7 מקומות","Canton Sound"],safety_features:["Front Assist","Lane Assist"],pros:["תא מטען 910 ל'","7 מקומות"],cons:["עיצוב שמרני"],description:"סקודה קוידיאק 2025 — ה-SUV המשפחתי הפרקטי ביותר עם תא מטען של 910 ל' ו-7 מקומות מרכב.",slug:"skoda-kodiaq-2025",score:8.3,score_cats:[{name:"נסיעה",score:8.0},{name:"עיצוב",score:7.8},{name:"טכנולוגיה",score:8.5},{name:"נוחות",score:9.0},{name:"ערך",score:8.8}],country:"צ'כיה",date_added:"2025-02-05"}
+];
+
+// Helper inside renderPage (needed by scoreBarColor ref before it's defined there)
+function scoreBarColor(s) {
+  if (s >= 9) return '#16a34a';
+  if (s >= 7.5) return '#2563eb';
+  return '#e8001d';
+}
+
+// Init
+loadCar();
+</script>
+</body>
+</html>

@@ -1,0 +1,537 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="מאגר רכבים ספידומטר — השווה רכבים, מצא מחירים ומפרטים. מסנן לפי קטגוריה, מחיר ויצרן.">
+<meta property="og:title" content="מאגר רכבים | ספידומטר">
+<meta property="og:type" content="website">
+<title>מאגר רכבים | ספידומטר</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Rubik:wght@400;500;700;900&display=swap">
+
+<style>
+/* ════ RESET ════ */
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --black:#0a0a0a; --ink:#1a1a1a; --dark:#222; --mid:#555; --muted:#6f6f6f;
+  --border:#e8e8e8; --bg:#f7f7f5; --white:#fff; --red:#e8001d;
+  --font:'Rubik',sans-serif; --radius:6px; --max:1280px;
+  --shadow:0 2px 12px rgba(0,0,0,0.07); --shadow-hover:0 8px 28px rgba(0,0,0,0.13);
+}
+html{scroll-behavior:smooth;overflow-x:hidden}
+body{font-family:var(--font);background:var(--bg);color:var(--ink);font-size:16px;line-height:1.6;-webkit-font-smoothing:antialiased}
+a{text-decoration:none;color:inherit}
+img{max-width:100%;display:block}
+button{font-family:var(--font);cursor:pointer}
+
+/* ════ HEADER ════ */
+header{background:var(--white);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:100;box-shadow:0 1px 0 rgba(0,0,0,0.04)}
+.header-inner{max-width:var(--max);margin:0 auto;padding:0 24px;height:68px;display:flex;align-items:center;justify-content:space-between;gap:20px}
+.logo{display:flex;flex-direction:column;gap:1px;cursor:pointer;text-decoration:none}
+.logo-name{font-size:1.8rem;font-weight:900;letter-spacing:-0.04em;line-height:1;color:var(--black)}
+.logo-name span{color:var(--red)}
+.logo-sub{font-size:0.58rem;color:var(--muted);font-weight:400;letter-spacing:0.1em;text-transform:uppercase}
+.header-breadcrumb{display:flex;align-items:center;gap:8px;font-size:0.8rem;color:var(--muted)}
+.header-breadcrumb a{color:var(--muted);transition:color 0.2s}
+.header-breadcrumb a:hover{color:var(--red)}
+.header-breadcrumb .sep{color:var(--border)}
+
+/* ════ PAGE HERO ════ */
+.page-hero{background:linear-gradient(135deg,#0f0f1a 0%,#1a1a2e 50%,#16213e 100%);padding:52px 24px;text-align:center;position:relative;overflow:hidden}
+.page-hero::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at 30% 50%,rgba(232,0,29,0.12) 0%,transparent 70%),radial-gradient(ellipse at 70% 50%,rgba(0,100,255,0.08) 0%,transparent 70%)}
+.page-hero-content{position:relative;max-width:640px;margin:0 auto}
+.page-hero h1{font-size:clamp(1.8rem,4vw,2.8rem);font-weight:900;color:#fff;margin-bottom:10px;letter-spacing:-0.03em}
+.page-hero h1 span{color:var(--red)}
+.page-hero p{color:rgba(255,255,255,0.62);font-size:0.95rem;max-width:480px;margin:0 auto}
+.car-count-badge{display:inline-block;background:rgba(232,0,29,0.18);border:1px solid rgba(232,0,29,0.35);color:#ff4d6a;font-size:0.72rem;font-weight:700;padding:3px 10px;border-radius:20px;margin-top:14px}
+
+/* ════ MAIN LAYOUT ════ */
+.main-wrap{max-width:var(--max);margin:0 auto;padding:32px 24px 60px;display:grid;grid-template-columns:280px 1fr;gap:28px;align-items:start}
+@media(max-width:960px){.main-wrap{grid-template-columns:1fr;padding:20px 16px 60px}}
+
+/* ════ FILTERS SIDEBAR ════ */
+.filters-panel{position:sticky;top:84px;background:var(--white);border:1px solid var(--border);border-radius:12px;padding:20px;box-shadow:var(--shadow)}
+.filters-title{font-size:0.8rem;font-weight:800;text-transform:uppercase;letter-spacing:0.1em;color:var(--muted);margin-bottom:16px}
+.filter-group{margin-bottom:20px;padding-bottom:20px;border-bottom:1px solid var(--border)}
+.filter-group:last-child{border-bottom:none;margin-bottom:0;padding-bottom:0}
+.filter-label{font-size:0.82rem;font-weight:700;color:var(--dark);margin-bottom:10px;display:block}
+.filter-options{display:flex;flex-direction:column;gap:7px}
+.filter-option{display:flex;align-items:center;gap:9px;cursor:pointer;font-size:0.82rem;color:var(--mid);transition:color 0.2s}
+.filter-option:hover{color:var(--ink)}
+.filter-option input[type=checkbox]{width:16px;height:16px;accent-color:var(--red);cursor:pointer;flex-shrink:0}
+.filter-option-count{margin-right:auto;font-size:0.7rem;color:var(--muted);background:var(--bg);padding:1px 7px;border-radius:10px}
+.price-range{padding:4px 0}
+.price-inputs{display:flex;gap:8px;align-items:center;font-size:0.78rem;color:var(--muted)}
+.price-inputs input{flex:1;padding:7px 10px;border:1.5px solid var(--border);border-radius:6px;font-size:0.82rem;font-family:var(--font);outline:none;transition:border-color 0.2s;width:0}
+.price-inputs input:focus{border-color:var(--red)}
+.price-inputs span{flex-shrink:0}
+.btn-apply-filter{width:100%;padding:10px;background:var(--red);color:#fff;border:none;border-radius:8px;font-size:0.85rem;font-weight:700;cursor:pointer;margin-top:8px;transition:all 0.2s}
+.btn-apply-filter:hover{background:#c0001a}
+.btn-reset-filter{width:100%;padding:9px;background:none;color:var(--muted);border:1px solid var(--border);border-radius:8px;font-size:0.8rem;cursor:pointer;margin-top:6px;transition:all 0.2s}
+.btn-reset-filter:hover{border-color:var(--ink);color:var(--ink)}
+
+/* Mobile filter toggle */
+.mobile-filter-toggle{display:none;width:100%;padding:12px 16px;background:var(--white);border:1px solid var(--border);border-radius:10px;font-size:0.88rem;font-weight:700;text-align:right;cursor:pointer;align-items:center;justify-content:space-between;gap:10px;margin-bottom:16px;box-shadow:var(--shadow)}
+@media(max-width:960px){.mobile-filter-toggle{display:flex}.filters-panel{position:static;display:none}.filters-panel.open{display:block}}
+
+/* ════ RESULTS PANEL ════ */
+.results-panel{}
+.results-bar{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;gap:12px;flex-wrap:wrap}
+.results-count{font-size:0.85rem;color:var(--muted)}
+.results-count strong{color:var(--ink)}
+.sort-select{padding:8px 14px;border:1.5px solid var(--border);border-radius:8px;font-size:0.82rem;font-family:var(--font);background:var(--white);color:var(--dark);outline:none;cursor:pointer;transition:border-color 0.2s}
+.sort-select:focus{border-color:var(--red)}
+.view-toggle{display:flex;gap:4px}
+.view-btn{padding:7px 10px;border:1.5px solid var(--border);border-radius:6px;background:none;cursor:pointer;color:var(--muted);transition:all 0.2s;display:flex;align-items:center}
+.view-btn.active,.view-btn:hover{border-color:var(--red);color:var(--red)}
+
+/* ════ CARS GRID ════ */
+.cars-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:20px}
+.cars-grid.list-view{grid-template-columns:1fr}
+
+/* ════ CAR CARD ════ */
+.car-card{background:var(--white);border:1px solid var(--border);border-radius:12px;overflow:hidden;transition:all 0.25s;position:relative;cursor:pointer;display:flex;flex-direction:column}
+.car-card:hover{box-shadow:var(--shadow-hover);transform:translateY(-3px);border-color:rgba(232,0,29,0.2)}
+.car-card a{display:flex;flex-direction:column;height:100%;color:inherit;text-decoration:none}
+.card-img{aspect-ratio:16/9;overflow:hidden;background:#f0f0ee;position:relative;flex-shrink:0}
+.card-img img{width:100%;height:100%;object-fit:cover;transition:transform 0.4s ease;display:block}
+.car-card:hover .card-img img{transform:scale(1.04)}
+.card-cat-badge{position:absolute;top:10px;right:10px;background:rgba(0,0,0,0.65);color:#fff;font-size:0.65rem;font-weight:700;padding:3px 9px;border-radius:20px;backdrop-filter:blur(4px);white-space:nowrap}
+.card-score-badge{position:absolute;bottom:10px;left:10px;background:var(--red);color:#fff;font-size:0.75rem;font-weight:900;padding:4px 10px;border-radius:8px;line-height:1}
+.card-body{padding:16px;flex:1;display:flex;flex-direction:column}
+.card-brand{font-size:0.7rem;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;color:var(--red);margin-bottom:3px}
+.card-name{font-size:1rem;font-weight:800;color:var(--ink);line-height:1.25;margin-bottom:8px}
+.card-specs-row{display:flex;gap:14px;margin-bottom:12px;flex-wrap:wrap}
+.card-spec{display:flex;flex-direction:column;gap:2px}
+.card-spec-val{font-size:0.82rem;font-weight:700;color:var(--ink)}
+.card-spec-label{font-size:0.65rem;color:var(--muted);white-space:nowrap}
+.card-foot{display:flex;align-items:center;justify-content:space-between;margin-top:auto;padding-top:12px;border-top:1px solid var(--border)}
+.card-price{font-size:1rem;font-weight:900;color:var(--ink)}
+.card-price span{font-size:0.7rem;font-weight:400;color:var(--muted)}
+.btn-card-details{padding:8px 14px;background:var(--red);color:#fff;border:none;border-radius:6px;font-size:0.78rem;font-weight:700;cursor:pointer;transition:background 0.2s;text-decoration:none;white-space:nowrap}
+.btn-card-details:hover{background:#c0001a}
+
+/* ════ LIST VIEW ════ */
+.cars-grid.list-view .car-card a{flex-direction:row}
+.cars-grid.list-view .card-img{width:220px;aspect-ratio:auto;height:140px;flex-shrink:0}
+.cars-grid.list-view .card-body{padding:16px 20px}
+@media(max-width:600px){.cars-grid.list-view .car-card a{flex-direction:column}.cars-grid.list-view .card-img{width:100%;height:auto;aspect-ratio:16/9}}
+
+/* ════ SHIMMER SKELETON ════ */
+.shimmer{background:linear-gradient(90deg,#f0f0ee 25%,#e8e8e6 50%,#f0f0ee 75%);background-size:200%;animation:shimmer 1.5s infinite}
+@keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
+.skel-card{background:var(--white);border:1px solid var(--border);border-radius:12px;overflow:hidden}
+.skel-img{aspect-ratio:16/9;width:100%}
+.skel-body{padding:16px}
+.skel-line{height:14px;border-radius:4px;margin-bottom:10px}
+.skel-line.w60{width:60%}
+.skel-line.w40{width:40%}
+.skel-line.w80{width:80%}
+
+/* ════ EMPTY STATE ════ */
+.empty-state{text-align:center;padding:60px 20px;grid-column:1/-1}
+.empty-state-icon{font-size:3rem;margin-bottom:16px;opacity:0.4}
+.empty-state h3{font-size:1.1rem;font-weight:800;margin-bottom:8px;color:var(--dark)}
+.empty-state p{font-size:0.85rem;color:var(--muted)}
+
+/* ════ ACTIVE FILTERS ════ */
+.active-filters{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px}
+.filter-tag{display:inline-flex;align-items:center;gap:6px;padding:5px 12px;background:rgba(232,0,29,0.08);border:1px solid rgba(232,0,29,0.25);border-radius:20px;font-size:0.75rem;font-weight:600;color:var(--red);cursor:pointer;transition:all 0.18s}
+.filter-tag:hover{background:rgba(232,0,29,0.15)}
+.filter-tag svg{flex-shrink:0}
+
+/* ════ FOOTER ════ */
+footer{background:var(--black);color:rgba(255,255,255,0.45);text-align:center;padding:20px 24px;font-size:0.75rem}
+footer a{color:var(--red);text-decoration:none}
+
+/* ════ RESPONSIVE ════ */
+@media(max-width:600px){
+  .cars-grid{grid-template-columns:1fr}
+  .results-bar{flex-direction:column;align-items:flex-start}
+}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-inner">
+    <a href="/" class="logo" aria-label="ספידומטר - עמוד הבית">
+      <span class="logo-name">ספידו<span>מטר</span></span>
+      <span class="logo-sub">רכב · טכנולוגיה · חדשנות</span>
+    </a>
+    <nav class="header-breadcrumb" aria-label="נתיב ניווט">
+      <a href="/">בית</a>
+      <span class="sep">›</span>
+      <span>מאגר רכבים</span>
+    </nav>
+  </div>
+</header>
+
+<div class="page-hero">
+  <div class="page-hero-content">
+    <h1>מאגר <span>הרכבים</span></h1>
+    <p>השווה רכבים, מצא מפרטים ומחירים. הכל במקום אחד.</p>
+    <div class="car-count-badge" id="total-badge">טוען...</div>
+  </div>
+</div>
+
+<div class="main-wrap">
+
+  <!-- ══ MOBILE FILTER TOGGLE ══ -->
+  <button class="mobile-filter-toggle" onclick="toggleMobileFilters()" aria-expanded="false" id="filter-toggle-btn">
+    <span>🔍 סינון וחיפוש</span>
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 9l6 6 6-6"/></svg>
+  </button>
+
+  <!-- ══ FILTERS SIDEBAR ══ -->
+  <aside class="filters-panel" id="filters-panel" role="complementary" aria-label="סינון רכבים">
+    <div class="filters-title">סינון</div>
+
+    <!-- Search -->
+    <div class="filter-group">
+      <label class="filter-label" for="search-input">🔍 חיפוש</label>
+      <input type="search" id="search-input" placeholder="יצרן, דגם, קטגוריה..." 
+        style="width:100%;padding:9px 12px;border:1.5px solid var(--border);border-radius:8px;font-family:var(--font);font-size:0.85rem;outline:none;transition:border-color 0.2s"
+        onfocus="this.style.borderColor='var(--red)'" onblur="this.style.borderColor='var(--border)'"
+        oninput="applyFilters()">
+    </div>
+
+    <!-- Category -->
+    <div class="filter-group">
+      <span class="filter-label">קטגוריה</span>
+      <div class="filter-options" id="cat-filters"></div>
+    </div>
+
+    <!-- Brand -->
+    <div class="filter-group">
+      <span class="filter-label">יצרן</span>
+      <div class="filter-options" id="brand-filters"></div>
+    </div>
+
+    <!-- Price range -->
+    <div class="filter-group">
+      <span class="filter-label">טווח מחיר (₪)</span>
+      <div class="price-range">
+        <div class="price-inputs">
+          <input type="number" id="price-min" placeholder="מינימום" min="0" step="10000" oninput="applyFilters()">
+          <span>עד</span>
+          <input type="number" id="price-max" placeholder="מקסימום" min="0" step="10000" oninput="applyFilters()">
+        </div>
+      </div>
+    </div>
+
+    <!-- Drive type -->
+    <div class="filter-group">
+      <span class="filter-label">סוג הנעה</span>
+      <div class="filter-options">
+        <label class="filter-option">
+          <input type="checkbox" name="drive" value="הנעה כפולה" onchange="applyFilters()">
+          <span>הנעה כפולה AWD/4x4</span>
+        </label>
+        <label class="filter-option">
+          <input type="checkbox" name="drive" value="אחורי" onchange="applyFilters()">
+          <span>הנעה אחורית RWD</span>
+        </label>
+        <label class="filter-option">
+          <input type="checkbox" name="drive" value="קידמי" onchange="applyFilters()">
+          <span>הנעה קידמית FWD</span>
+        </label>
+      </div>
+    </div>
+
+    <button class="btn-reset-filter" onclick="resetFilters()">איפוס סינון</button>
+  </aside>
+
+  <!-- ══ RESULTS ══ -->
+  <section class="results-panel" aria-label="תוצאות">
+
+    <div id="active-filters-wrap" class="active-filters" style="display:none"></div>
+
+    <div class="results-bar">
+      <div class="results-count" id="results-count">טוען רכבים...</div>
+      <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+        <select class="sort-select" id="sort-select" onchange="applyFilters()" aria-label="מיון">
+          <option value="default">מיון: ברירת מחדל</option>
+          <option value="price-asc">מחיר: נמוך לגבוה</option>
+          <option value="price-desc">מחיר: גבוה לנמוך</option>
+          <option value="hp-desc">כוחות סוס: גבוה לנמוך</option>
+          <option value="score-desc">ציון: גבוה לנמוך</option>
+          <option value="year-desc">שנה: חדש לישן</option>
+        </select>
+        <div class="view-toggle" role="group" aria-label="אופן תצוגה">
+          <button class="view-btn active" id="btn-grid" onclick="setView('grid')" aria-label="תצוגת רשת" title="רשת">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+          </button>
+          <button class="view-btn" id="btn-list" onclick="setView('list')" aria-label="תצוגת רשימה" title="רשימה">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div class="cars-grid" id="cars-grid" role="list" aria-label="רשימת רכבים">
+      <!-- Shimmer skeletons shown while loading -->
+      <div class="skel-card"><div class="skel-img shimmer"></div><div class="skel-body"><div class="skel-line w40 shimmer"></div><div class="skel-line w80 shimmer"></div><div class="skel-line w60 shimmer"></div></div></div>
+      <div class="skel-card"><div class="skel-img shimmer"></div><div class="skel-body"><div class="skel-line w40 shimmer"></div><div class="skel-line w80 shimmer"></div><div class="skel-line w60 shimmer"></div></div></div>
+      <div class="skel-card"><div class="skel-img shimmer"></div><div class="skel-body"><div class="skel-line w40 shimmer"></div><div class="skel-line w80 shimmer"></div><div class="skel-line w60 shimmer"></div></div></div>
+    </div>
+
+  </section>
+</div>
+
+<footer>
+  <p>© 2025 <a href="/">ספידומטר</a> | כל הזכויות שמורות | <a href="tel:+972559365579">055-936-5579</a></p>
+</footer>
+
+<script>
+/* ══════════════════════════════
+   ספידומטר — מאגר רכבים v1
+══════════════════════════════ */
+
+let allCars = [];
+let filteredCars = [];
+let currentView = 'grid';
+
+// Load cars JSON
+async function loadCars() {
+  try {
+    const res = await fetch('cars.json');
+    if (!res.ok) throw new Error('Failed to load');
+    allCars = await res.json();
+  } catch(e) {
+    // Fallback: use inline sample data if fetch fails (local file / CORS)
+    console.warn('Could not fetch cars.json, using fallback');
+    allCars = FALLBACK_CARS;
+  }
+  filteredCars = [...allCars];
+  buildFilters();
+  renderCars();
+  document.getElementById('total-badge').textContent = allCars.length + ' רכבים במאגר';
+}
+
+function formatPrice(p) {
+  return '₪' + Number(p).toLocaleString('he-IL');
+}
+
+function buildFilters() {
+  // Categories
+  const cats = {};
+  allCars.forEach(c => { cats[c.category] = (cats[c.category]||0)+1; });
+  document.getElementById('cat-filters').innerHTML = Object.entries(cats)
+    .sort((a,b)=>b[1]-a[1])
+    .map(([cat,cnt]) => `
+      <label class="filter-option">
+        <input type="checkbox" name="cat" value="${cat}" onchange="applyFilters()">
+        <span>${cat}</span>
+        <span class="filter-option-count">${cnt}</span>
+      </label>
+    `).join('');
+
+  // Brands
+  const brands = {};
+  allCars.forEach(c => { brands[c.brand] = (brands[c.brand]||0)+1; });
+  document.getElementById('brand-filters').innerHTML = Object.entries(brands)
+    .sort((a,b)=>a[0].localeCompare(b[0]))
+    .map(([brand,cnt]) => `
+      <label class="filter-option">
+        <input type="checkbox" name="brand" value="${brand}" onchange="applyFilters()">
+        <span>${brand}</span>
+        <span class="filter-option-count">${cnt}</span>
+      </label>
+    `).join('');
+}
+
+function applyFilters() {
+  const q = (document.getElementById('search-input').value || '').trim().toLowerCase();
+  const selectedCats = [...document.querySelectorAll('input[name=cat]:checked')].map(i=>i.value);
+  const selectedBrands = [...document.querySelectorAll('input[name=brand]:checked')].map(i=>i.value);
+  const selectedDrives = [...document.querySelectorAll('input[name=drive]:checked')].map(i=>i.value);
+  const priceMin = parseInt(document.getElementById('price-min').value) || 0;
+  const priceMax = parseInt(document.getElementById('price-max').value) || Infinity;
+  const sort = document.getElementById('sort-select').value;
+
+  filteredCars = allCars.filter(c => {
+    // Search
+    if (q) {
+      const text = [c.brand, c.model, c.category, c.engine, String(c.year)].join(' ').toLowerCase();
+      if (!text.includes(q)) return false;
+    }
+    // Category
+    if (selectedCats.length && !selectedCats.includes(c.category)) return false;
+    // Brand
+    if (selectedBrands.length && !selectedBrands.includes(c.brand)) return false;
+    // Drive
+    if (selectedDrives.length && !selectedDrives.some(d => c.drive_type.includes(d))) return false;
+    // Price
+    if (c.price < priceMin || c.price > priceMax) return false;
+    return true;
+  });
+
+  // Sort
+  if (sort === 'price-asc') filteredCars.sort((a,b)=>a.price-b.price);
+  else if (sort === 'price-desc') filteredCars.sort((a,b)=>b.price-a.price);
+  else if (sort === 'hp-desc') filteredCars.sort((a,b)=>b.horsepower-a.horsepower);
+  else if (sort === 'score-desc') filteredCars.sort((a,b)=>(b.score||0)-(a.score||0));
+  else if (sort === 'year-desc') filteredCars.sort((a,b)=>b.year-a.year);
+
+  updateActiveFilterTags(selectedCats, selectedBrands, selectedDrives, q);
+  renderCars();
+}
+
+function updateActiveFilterTags(cats, brands, drives, q) {
+  const wrap = document.getElementById('active-filters-wrap');
+  const tags = [];
+  cats.forEach(c => tags.push({label: c, type:'cat', value:c}));
+  brands.forEach(b => tags.push({label: b, type:'brand', value:b}));
+  drives.forEach(d => tags.push({label: d, type:'drive', value:d}));
+  if (q) tags.push({label: `"${q}"`, type:'search', value:q});
+
+  if (tags.length === 0) { wrap.style.display='none'; return; }
+  wrap.style.display='flex';
+  wrap.innerHTML = tags.map(t => `
+    <button class="filter-tag" onclick="removeFilter('${t.type}','${t.value}')" title="הסר סינון">
+      ${t.label}
+      <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+    </button>
+  `).join('');
+}
+
+function removeFilter(type, value) {
+  if (type === 'cat') { const el = document.querySelector(`input[name=cat][value="${value}"]`); if(el) el.checked=false; }
+  else if (type === 'brand') { const el = document.querySelector(`input[name=brand][value="${value}"]`); if(el) el.checked=false; }
+  else if (type === 'drive') { const el = document.querySelector(`input[name=drive][value="${value}"]`); if(el) el.checked=false; }
+  else if (type === 'search') { document.getElementById('search-input').value=''; }
+  applyFilters();
+}
+
+function resetFilters() {
+  document.querySelectorAll('.filters-panel input[type=checkbox]').forEach(i=>i.checked=false);
+  document.getElementById('search-input').value='';
+  document.getElementById('price-min').value='';
+  document.getElementById('price-max').value='';
+  document.getElementById('sort-select').value='default';
+  filteredCars=[...allCars];
+  document.getElementById('active-filters-wrap').style.display='none';
+  renderCars();
+}
+
+function renderCars() {
+  const grid = document.getElementById('cars-grid');
+  document.getElementById('results-count').innerHTML = `<strong>${filteredCars.length}</strong> רכבים נמצאו`;
+
+  if (!filteredCars.length) {
+    grid.innerHTML = `
+      <div class="empty-state">
+        <div class="empty-state-icon">🔍</div>
+        <h3>לא נמצאו רכבים</h3>
+        <p>נסה לשנות את הסינון או לאפס את כל הפילטרים</p>
+      </div>`;
+    return;
+  }
+
+  grid.innerHTML = filteredCars.map(car => {
+    const scoreColor = car.score >= 9 ? '#16a34a' : car.score >= 8 ? '#2563eb' : '#e8001d';
+    const isEV = !car.fuel_consumption;
+    const spec1 = isEV
+      ? { val: car.range+'', label:'טווח (ק"מ)' }
+      : { val: car.fuel_consumption, label:'ל/100ק"מ' };
+
+    return `
+      <article class="car-card" role="listitem">
+        <a href="car.html?id=${car.slug}" aria-label="${car.brand} ${car.model} ${car.year}">
+          <div class="card-img">
+            <img src="${car.image_main}" alt="${car.brand} ${car.model} ${car.year}" loading="lazy" width="400" height="225">
+            <span class="card-cat-badge">${car.category}</span>
+            ${car.score ? `<span class="card-score-badge" style="background:${scoreColor}">${car.score}</span>` : ''}
+          </div>
+          <div class="card-body">
+            <div class="card-brand">${car.brand}</div>
+            <div class="card-name">${car.model} ${car.year}</div>
+            <div class="card-specs-row">
+              <div class="card-spec">
+                <span class="card-spec-val">${car.horsepower}</span>
+                <span class="card-spec-label">כ"ס</span>
+              </div>
+              <div class="card-spec">
+                <span class="card-spec-val">${car.acceleration_0_100}s</span>
+                <span class="card-spec-label">0-100</span>
+              </div>
+              <div class="card-spec">
+                <span class="card-spec-val">${spec1.val}</span>
+                <span class="card-spec-label">${spec1.label}</span>
+              </div>
+              <div class="card-spec">
+                <span class="card-spec-val" style="font-size:0.72rem;max-width:80px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${car.drive_type}</span>
+                <span class="card-spec-label">הנעה</span>
+              </div>
+            </div>
+            <div class="card-foot">
+              <div class="card-price">${formatPrice(car.price)} <span>מחיר</span></div>
+              <span class="btn-card-details">לפרטים ←</span>
+            </div>
+          </div>
+        </a>
+      </article>`;
+  }).join('');
+}
+
+function setView(v) {
+  currentView = v;
+  const grid = document.getElementById('cars-grid');
+  const btnGrid = document.getElementById('btn-grid');
+  const btnList = document.getElementById('btn-list');
+  if (v === 'list') {
+    grid.classList.add('list-view');
+    btnList.classList.add('active');
+    btnGrid.classList.remove('active');
+  } else {
+    grid.classList.remove('list-view');
+    btnGrid.classList.add('active');
+    btnList.classList.remove('active');
+  }
+}
+
+function toggleMobileFilters() {
+  const panel = document.getElementById('filters-panel');
+  const btn = document.getElementById('filter-toggle-btn');
+  const isOpen = panel.classList.toggle('open');
+  btn.setAttribute('aria-expanded', isOpen);
+}
+
+// Check for URL params on load (e.g. ?cat=קרוסאובר)
+function applyURLParams() {
+  const params = new URLSearchParams(window.location.search);
+  const cat = params.get('cat');
+  const brand = params.get('brand');
+  if (cat) {
+    const el = document.querySelector(`input[name=cat][value="${cat}"]`);
+    if (el) { el.checked = true; applyFilters(); }
+  }
+  if (brand) {
+    const el = document.querySelector(`input[name=brand][value="${brand}"]`);
+    if (el) { el.checked = true; applyFilters(); }
+  }
+}
+
+// ════ FALLBACK DATA (used if cars.json can't be fetched locally) ════
+const FALLBACK_CARS = [
+  {id:"toyota-corolla-cross-2025",brand:"Toyota",model:"Corolla Cross",year:2025,category:"קרוסאובר",price:148000,engine:"1.8L היברידי",horsepower:140,acceleration_0_100:8.1,range:null,fuel_consumption:"4.5",transmission:"CVT אוטומטית",drive_type:"קידמי",image_main:"https://images.unsplash.com/photo-1549317661-bd32c8ce0db2?w=800&q=75&fm=webp",slug:"toyota-corolla-cross-2025",score:8.4},
+  {id:"hyundai-ioniq6-2025",brand:"Hyundai",model:"Ioniq 6",year:2025,category:"סדאן חשמלי",price:228000,engine:"חשמלי",horsepower:228,acceleration_0_100:5.1,range:614,fuel_consumption:null,transmission:"אוטומטית חשמלית",drive_type:"אחורי",image_main:"https://images.unsplash.com/photo-1593941707882-a5bba14938c7?w=800&q=75&fm=webp",slug:"hyundai-ioniq6-2025",score:9.1},
+  {id:"bmw-3-series-2025",brand:"BMW",model:"סדרה 3",year:2025,category:"סדאן",price:295000,engine:"2.0L טורבו",horsepower:258,acceleration_0_100:5.8,range:null,fuel_consumption:"6.8",transmission:"אוטומטית 8 הילוכים",drive_type:"אחורי",image_main:"https://images.unsplash.com/photo-1555215695-3004980ad54e?w=800&q=75&fm=webp",slug:"bmw-3-series-2025",score:9.0},
+  {id:"mazda-cx5-2025",brand:"Mazda",model:"CX-5",year:2025,category:"קרוסאובר",price:172000,engine:"2.5L טורבו",horsepower:227,acceleration_0_100:7.0,range:null,fuel_consumption:"8.2",transmission:"אוטומטית 6 הילוכים",drive_type:"הנעה כפולה AWD",image_main:"https://images.unsplash.com/photo-1546614042-7df3c24c9e5d?w=800&q=75&fm=webp",slug:"mazda-cx5-2025",score:8.7},
+  {id:"kia-ev6-gt-2025",brand:"Kia",model:"EV6 GT",year:2025,category:"קרוסאובר חשמלי",price:320000,engine:"חשמלי כפול",horsepower:585,acceleration_0_100:3.5,range:400,fuel_consumption:null,transmission:"אוטומטית חשמלית",drive_type:"הנעה כפולה AWD",image_main:"https://images.unsplash.com/photo-1621007947382-bb3c3994e3fb?w=800&q=75&fm=webp",slug:"kia-ev6-gt-2025",score:9.3},
+  {id:"tesla-model-y-2025",brand:"Tesla",model:"Model Y",year:2025,category:"קרוסאובר חשמלי",price:195000,engine:"חשמלי",horsepower:283,acceleration_0_100:5.0,range:533,fuel_consumption:null,transmission:"אוטומטית חשמלית",drive_type:"הנעה כפולה AWD",image_main:"https://images.unsplash.com/photo-1561580125-028ee3bd62eb?w=800&q=75&fm=webp",slug:"tesla-model-y-2025",score:8.9},
+  {id:"porsche-macan-electric-2025",brand:"Porsche",model:"Macan Electric",year:2025,category:"קרוסאובר יוקרה",price:480000,engine:"חשמלי",horsepower:408,acceleration_0_100:5.2,range:516,fuel_consumption:null,transmission:"אוטומטית חשמלית",drive_type:"הנעה כפולה AWD",image_main:"https://images.unsplash.com/photo-1563720360172-67b8f3dce741?w=800&q=75&fm=webp",slug:"porsche-macan-electric-2025",score:9.2},
+  {id:"skoda-kodiaq-2025",brand:"Skoda",model:"Kodiaq",year:2025,category:"SUV",price:175000,engine:"2.0L TSI טורבו",horsepower:204,acceleration_0_100:7.4,range:null,fuel_consumption:"7.9",transmission:"DSG אוטומטית 7 הילוכים",drive_type:"הנעה כפולה 4x4",image_main:"https://images.unsplash.com/photo-1585011664466-b7bbe92f34ef?w=800&q=75&fm=webp",slug:"skoda-kodiaq-2025",score:8.3}
+];
+
+// Init
+loadCars().then(() => {
+  setTimeout(applyURLParams, 100);
+});
+</script>
+</body>
+</html>
