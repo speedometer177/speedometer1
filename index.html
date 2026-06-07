@@ -1238,18 +1238,7 @@ nav { display: flex; align-items: center; gap: 2px; flex: 1; justify-content: ce
 }
 .card:hover .card-img img { transform: scale(1.04); }
 
-/* Skeleton loading */
-.skeleton {
-  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
-  background-size: 200% 100%;
-  animation: shimmer 1.4s infinite;
-  border-radius: 4px;
-}
-@keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
-.skeleton-card { height: 280px; border-radius: 6px; }
-.skeleton-img { height: 160px; border-radius: 4px 4px 0 0; }
-.skeleton-text { height: 14px; margin: 12px 16px 8px; }
-.skeleton-text.short { width: 60%; }
+
 
 .card-cat {
   position: absolute;
@@ -4532,7 +4521,7 @@ function __initSb(){
 window.__initSb = __initSb;
 __initSb();
 
-const STORAGE_KEY = 'speedometer_articles_v2';
+const STORAGE_KEY = 'speedometer_articles_v3';
 
 // ── LABELS / IMAGES ──
 const CAT_LABELS = {
@@ -4552,82 +4541,6 @@ const CAT_IMAGES = {
   quick:'https://images.unsplash.com/photo-1504711434969-e33886168f5c?w=800&q=75&fm=webp&auto=format'
 };
 
-const DEFAULT_ARTICLES = [
-  { id:1, time:'08:30', title:'יונדאי סונטה 2025: פנים חדשות, טכנולוגיה מרשימה',
-    sub:'יונדאי מציגה את הדור החדש של הסדאן הפופולרי עם תצוגה דיגיטלית ענקית',
-    cat:'local', author:'מערכת ספידומטר', date:'10.05.2025', readTime:'4 דק׳ קריאה',
-    img:'https://images.unsplash.com/photo-1580273916550-e323be2ae537?w=900&q=75&fm=webp&auto=format',
-    imgCaption:'יונדאי סונטה 2025. צילום: יחצ',
-    body:'## עיצוב חדש\n\nיונדאי חשפה את הסונטה 2025 עם לוח מחוונים דיגיטלי בגודל 27 אינץ.\n\n## מנוע וביצועים\n\nהמנוע ההיברידי מייצר 230 כוחות סוס ומשפר צריכת דלק ב-15%.\n\n> הסונטה החדשה היא הצעד הגדול ביותר שעשינו — מנכ"ל יונדאי',
-    score:null, views:1842, featured:true },
-  { id:2, time:'11:15', title:'מבחן: טסלה מודל 3 ריפרש — האם שווה לשדרג?',
-    sub:'נסענו עם הטסלה מודל 3 החדשה ובדקנו אם השיפורים מצדיקים את הקפיצה במחיר',
-    cat:'review', author:'נועם לוי', date:'09.05.2025', readTime:'8 דק׳ קריאה',
-    img:'https://images.unsplash.com/photo-1561580125-028ee3bd62eb?w=900&q=75&fm=webp&auto=format',
-    imgCaption:'טסלה מודל 3 2024.',
-    body:'## ראשון רושם\n\nהפנים שופצו לחלוטין — ריפוד איכותי יותר ועיצוב נעים.\n\n## ביצועים\n\nטווח של 629 קמ לפי EPA.\n\n> הטסלה מודל 3 נשארת הבחירה הכי שקולה בקטגוריה החשמלית.\n\n## ציון: **8.5/10**',
-    score:'8.5', views:3210, featured:true,
-    specs:{power:'358',zeroToHundred:'4.4',range:'629',price:'230K',engine:'חשמלי',cats:[{name:'נסיעה',score:9.0},{name:'עיצוב',score:8.0},{name:'טכנולוגיה',score:9.5},{name:'נוחות',score:8.5},{name:'ערך',score:7.5}]},
-    gallery:['https://images.unsplash.com/photo-1561580125-028ee3bd62eb?w=900&q=80','https://images.unsplash.com/photo-1617788138017-80ad40651399?w=900&q=80','https://images.unsplash.com/photo-1536700503339-1e771d4360f7?w=900&q=80'] },
-  { id:3, time:'14:00', title:'BMW מכריזה: סוף לדגמי בנזין ב-2030',
-    sub:'יצרנית הרכב הגרמנית מאשרת שעד 2030 תפסיק לייצר מנועי בנזין לחלוטין',
-    cat:'world', author:'מערכת ספידומטר', date:'08.05.2025', readTime:'3 דק׳ קריאה',
-    img:'https://images.unsplash.com/photo-1494976388531-d1058494cdd8?w=900&q=75&fm=webp&auto=format',
-    imgCaption:'מפעל BMW. צילום: AP',
-    body:'## הצהרה היסטורית\n\nBMW הכריזה שעד 2030 תפסיק לייצר רכבי בנזין ודיזל.\n\n## השקעה\n\nהחברה תשקיע 30 מיליארד יורו בפיתוח פלטפורמות חשמליות.',
-    score:null, views:2500, featured:false },
-  { id:4, time:'09:45', title:'מאזדה CX-5 2025: כמה עלה המחיר?',
-    sub:'מאזדה ישראל מציגה את מחיר ה-CX-5 המשודרג — ורוב הלקוחות יופתעו לטובה',
-    cat:'local', author:'אורי כהן', date:'07.05.2025', readTime:'3 דק׳ קריאה',
-    img:'https://images.unsplash.com/photo-1546614042-7df3c24c9e5d?w=900&q=75&fm=webp&auto=format',
-    imgCaption:'מאזדה CX-5 2025.',
-    body:'## פתיחת הזמנות\n\nמחיר מתחיל מ-168,000 שח — פחות מקודמו.\n\n## מה חדש?\n\nמסך גדול יותר ומערכת Mazda Connect Gen.4.',
-    score:null, views:1980, featured:false },
-  { id:5, time:'16:20', title:'ריביאן R2 — הג\'יפ החשמלי הזול שמשנה הכל',
-    sub:'ריביאן הציגה את ה-R2 במחיר שיתחיל מ-45,000 דולר',
-    cat:'world', author:'דינה שמעוני', date:'06.05.2025', readTime:'5 דק׳ קריאה',
-    img:'https://images.unsplash.com/photo-1494976388531-d1058494cdd8?w=900&q=75&fm=webp&auto=format',
-    imgCaption:'ריביאן R2.',
-    body:'## הרכב שכולם חיכו לו\n\nריביאן הציגה את ה-R2 עם טווח 500 קמ ומנוע 300 כוחות סוס.',
-    score:null, views:4100, featured:false },
-  { id:6, time:'07:00', title:'מבחן: קיה EV6 GT — אגרסיה ברמות',
-    sub:'נסענו עם ה-EV6 GT — 585 כוחות סוס, 0-100 ב-3.5 שניות',
-    cat:'review', author:'יניב רוזן', date:'05.05.2025', readTime:'7 דק׳ קריאה',
-    img:'https://images.unsplash.com/photo-1621007947382-bb3c3994e3fb?w=900&q=75&fm=webp&auto=format',
-    imgCaption:'קיה EV6 GT.',
-    body:'## כך מגיעים ל-100 ב-3.5 שניות\n\nשני מנועים מייצרים 585 כוחות סוס.\n\n> ה-EV6 GT הוא הוכחה שמכונית ספורט חשמלית לא חייבת להתפשר\n\n## ציון: 9.2/10',
-    score:'9.2', views:5800, featured:true,
-    specs:{power:'585',zeroToHundred:'3.5',range:'400',price:'310K',engine:'חשמלי',cats:[{name:'נסיעה',score:9.8},{name:'עיצוב',score:9.0},{name:'טכנולוגיה',score:9.2},{name:'נוחות',score:8.5},{name:'ערך',score:8.5}]} },
-  { id:7, time:'12:30', title:'סיטרואן C3: הרכב הזול שמשגע את שוק הקומפקט',
-    sub:'סיטרואן מציגה את ה-C3 החדש במחיר מתחיל של 85,000 שח',
-    cat:'local', author:'מערכת ספידומטר', date:'04.05.2025', readTime:'3 דק׳ קריאה',
-    img:'https://images.unsplash.com/photo-1585011664466-b7bbe92f34ef?w=900&q=75&fm=webp&auto=format',
-    imgCaption:'סיטרואן C3 2025.',
-    body:'## מחיר שלא ראינו זמן רב\n\n85,000 שח — מיוצרת בהודו.\n\n## איכות\n\nגמר טוב מאוד בהתחשב במחיר.',
-    score:null, views:3300, featured:false },
-  { id:8, time:'10:00', title:'מה קורה עם מחירי הרכב ב-2025? המדריך המלא',
-    sub:'ניתוח שוק: למה המחירים עולים ואיפה יש הזדמנויות',
-    cat:'buying', author:'נועם לוי', date:'03.05.2025', readTime:'10 דק׳ קריאה',
-    img:'https://images.unsplash.com/photo-1549317661-bd32c8ce0db2?w=900&q=75&fm=webp&auto=format',
-    imgCaption:'שוק הרכב.',
-    body:'## המצב בשוק\n\nמחירי הרכב בישראל עלו ב-12%.\n\n## מתי לקנות?\n\nספטמבר-נובמבר — הזמן הטוב ביותר.',
-    score:null, views:7200, featured:false },
-  { id:9, time:'13:15', title:'פורשה פאנמרה 2025: יוקרה שאין שני לה',
-    sub:'פורשה מציגה את הפאנמרה החדשה עם 630 כוחות סוס ועיצוב מחודש לחלוטין',
-    cat:'luxury', author:'מערכת ספידומטר', date:'02.05.2025', readTime:'6 דק׳ קריאה',
-    img:'https://images.unsplash.com/photo-1563720360172-67b8f3dce741?w=900&q=75&fm=webp&auto=format',
-    imgCaption:'פורשה פאנמרה 2025.',
-    body:'## עיצוב מחודש\n\nהפאנמרה החדשה מגיעה עם עיצוב דינמי יותר ולוח מחוונים דיגיטלי.\n\n## כוח\n\n630 כוחות סוס בגרסת ה-Turbo E-Hybrid.',
-    score:'9.4', views:2800, featured:true,
-    specs:{power:'630',zeroToHundred:'3.2',range:'70',price:'1.2M',engine:'היברידי',cats:[{name:'נסיעה',score:9.5},{name:'עיצוב',score:9.8},{name:'טכנולוגיה',score:9.2},{name:'נוחות',score:9.8},{name:'ערך',score:7.5}]} },
-  { id:10, time:'06:45', title:'חדשות בקליק: 3 עדכונים מעולם הרכב של הבוקר',
-    sub:'טויוטה מגדילה ייצור | ולוו מנסה AI | יונדאי מוריד מחיר',
-    cat:'quick', author:'מערכת ספידומטר', date:'01.05.2025', readTime:'1 דק׳ קריאה',
-    img:'https://images.unsplash.com/photo-1504711434969-e33886168f5c?w=900&q=75&fm=webp&auto=format',
-    imgCaption:'עדכוני הבוקר.',
-    body:'## טויוטה מגדילה ייצור\n\nטויוטה הכריזה על הגדלת קו הייצור ב-20% לשנת 2025.\n\n## ולוו משלבת AI\n\nבטיחות משולבת בינה מלאכותית בגרסת 2026.\n\n## יונדאי מוריד מחיר\n\nאיונייק 5 יוזל ב-15,000 שח מיולי.',
-    score:null, views:1200, featured:false }
-];
 
 let articles = [];
 let currentFilter = 'all';
@@ -4664,8 +4577,7 @@ function loadLocal() {
 
 // ── SUPABASE SYNC — Supabase is source of truth ──
 function mapRow(r) {
-  var def = DEFAULT_ARTICLES.find(function(d){ return d.title === r.title; });
-  var imgFallback = (def && def.img) ? def.img : CAT_IMAGES[r.cat||'local'];
+  var imgFallback = CAT_IMAGES[r.cat||'local'];
   return {
     id: r.id, title: r.title||'', sub: r.sub||'', cat: r.cat||'local',
     author: r.author||'מערכת ספידומטר', date: r.date||'', time: r.time||'',
@@ -6536,31 +6448,39 @@ function updateCatBreadcrumbPreview(cat) {
 
   // Always show something immediately
   const local = loadLocal();
-  if (local && local.length > 0) {
+  const hasLocal = local && local.length > 0;
+  if (hasLocal) {
     // Filter out anything already marked deleted, so deleted articles don't
     // flash on first paint before Supabase (the source of truth) responds.
     articles = local.filter(a => !deletedIds.has(a.id));
     nextId = Math.max(...articles.map(a=>a.id), 0) + 1;
-  } else {
-    articles = DEFAULT_ARTICLES.slice();
-    saveLocal();
   }
 
-  // Show skeletons first if no local data
-  if (!local || local.length === 0) {
+  // Show full skeleton when no local data — avoids stale default articles flashing
+  if (!hasLocal) {
+    const skCard = () => `<div class="skeleton-card"><div class="skeleton-img"></div><div class="skeleton-text"></div><div class="skeleton-text short"></div></div>`;
+    const heroArea = document.getElementById('hero-area');
+    if (heroArea) heroArea.innerHTML = `
+      <div class="hero-grid" style="pointer-events:none;">
+        <div class="hero-main" style="border-radius:8px;overflow:hidden;">
+          <div class="skeleton-img" style="height:100%;min-height:220px;border-radius:0;"></div>
+        </div>
+        <div class="hero-side">
+          <div class="skeleton-card" style="flex:1;">${skCard()}</div>
+          <div class="skeleton-card" style="flex:1;">${skCard()}</div>
+        </div>
+      </div>`;
     const lg = document.getElementById('latest-grid');
-    if (lg) lg.innerHTML = Array(4).fill(0).map(() => `
-      <div class="skeleton-card">
-        <div class="skeleton-img"></div>
-        <div class="skeleton-text"></div>
-        <div class="skeleton-text short"></div>
-      </div>`).join('');
+    if (lg) lg.innerHTML = Array(6).fill(0).map(skCard).join('');
   }
-  // Build UI immediately with local/default data (synchronous, no delays)
-  buildHero();
-  buildSections();
-  buildTicker();
-  buildBreakingTicker();
+  // Build UI immediately with local data (synchronous, no delays)
+  // If no local data — skeleton stays until syncFromSupabase fills articles
+  if (hasLocal) {
+    buildHero();
+    buildSections();
+    buildTicker();
+    buildBreakingTicker();
+  }
   showHome(false);
   handleMobileHero();
 
@@ -6610,7 +6530,7 @@ function updateCatBreadcrumbPreview(cat) {
   }
 
   // Then sync from Supabase in background
-  setTimeout(syncFromSupabase, 800);
+  syncFromSupabase();
   // סנכרון תקופתי חסכוני — בודק רק אם היה שינוי לפני שמוריד הכל מחדש,
   // ולא מסנכרן כשהטאב לא פעיל. חוסך משמעותית ב-Egress.
   setInterval(maybeSyncFromSupabase, 30000);
