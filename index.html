@@ -179,19 +179,19 @@ body.dark-mode .flash-read-badge{background:#222;border-color:#333;color:#777;}
 .sp-cc-tt svg{color:#fff;}
 
 /* ── #3 שורה עליונה בתפריט ההמבורגר (רשתות + נגישות) ── */
-.mm-top-row{display:flex;align-items:center;justify-content:space-between;gap:12px;
-  padding-bottom:18px;margin-bottom:6px;border-bottom:1px solid var(--border);}
-.mm-social{display:flex;gap:10px;}
-.mm-social-btn{width:42px;height:42px;border-radius:13px;display:flex;align-items:center;justify-content:center;
-  color:#fff;transition:transform 0.18s ease,box-shadow 0.18s ease;}
+.mm-top-row{display:flex;align-items:center;justify-content:space-between;gap:8px;
+  padding-bottom:16px;margin-bottom:8px;border-bottom:1px solid var(--border);flex-wrap:nowrap;}
+.mm-social{display:flex;gap:8px;flex-shrink:0;}
+.mm-social-btn{width:40px;height:40px;border-radius:12px;display:flex;align-items:center;justify-content:center;
+  color:#fff;transition:transform 0.18s ease,box-shadow 0.18s ease;flex-shrink:0;}
 .mm-social-btn:hover{transform:translateY(-2px);box-shadow:0 6px 16px rgba(0,0,0,0.18);}
-.mm-social-btn svg{width:22px;height:22px;}
+.mm-social-btn svg{width:20px;height:20px;}
 .mm-yt{background:#ff0000;}
 .mm-wa{background:#25D366;}
-.mm-access{display:flex;gap:8px;}
-.mm-acc-btn{width:42px;height:42px;border-radius:13px;border:1.5px solid var(--border);background:none;
-  font-size:0.95rem;font-weight:800;color:var(--dark);font-family:var(--font);cursor:pointer;
-  display:flex;align-items:center;justify-content:center;transition:all 0.18s ease;}
+.mm-access{display:flex;gap:6px;align-items:center;flex-shrink:0;}
+.mm-acc-btn{width:40px;height:40px;border-radius:12px;border:1.5px solid var(--border);background:none;
+  font-size:0.9rem;font-weight:800;color:var(--dark);font-family:var(--font);cursor:pointer;
+  display:flex;align-items:center;justify-content:center;transition:all 0.18s ease;flex-shrink:0;}
 .mm-acc-btn:hover{border-color:var(--red);color:var(--red);}
 body.dark-mode .mm-acc-btn{border-color:#333;color:#ccc;}
 body.dark-mode .mm-top-row{border-color:var(--dm-border);}
@@ -439,7 +439,7 @@ body.dark-mode .sp-cc-tile span{color:#eee;}
 
 /* ── #4 הלוגו לפי התמונה — עיגול קטן מעל האות ו' (מחשב + מובייל) ── */
 .logo-name .sp-vav{position:relative;color:inherit;}
-.logo-name .sp-vav::after{content:'';position:absolute;left:50%;top:0.06em;transform:translateX(-50%);
+.logo-name .sp-vav::after{content:'';position:absolute;left:50%;top:0.12em;transform:translateX(-50%);
   width:0.19em;height:0.19em;border-radius:50%;background:currentColor;}
 
 /* ── מתג מצב לילה בסגנון אפל (בתפריט, ליד נגישות) ── */
@@ -473,10 +473,13 @@ body.dark-mode .mm-ic-moon{display:block;color:#0a84ff;}
     border-left:1px solid rgba(255,255,255,0.08);}
   body.sp-menu-open::before{content:'';position:fixed;inset:0;z-index:499;
     background:rgba(0,0,0,0.38);animation:spFade 0.3s ease;}
-  .mobile-nav-link{border-bottom:1px solid rgba(0,0,0,0.08);}
+  .mobile-nav-link{border-bottom:1px solid rgba(0,0,0,0.08);padding:13px 0;font-size:1rem;}
   body.dark-mode .mobile-nav-link{border-bottom:1px solid rgba(255,255,255,0.1);}
 }
 @keyframes spFade{from{opacity:0;}to{opacity:1;}}
+
+/* עיגול לבן בלוגו בפוטר */
+.footer-brand .sp-vav::after{background:#fff!important;}
 
 /* ═══════════════════════════════════════════════════════════
    עדכון סבב 3 — יציבות, אינדוקס וביצועים
@@ -484,7 +487,7 @@ body.dark-mode .mm-ic-moon{display:block;color:#0a84ff;}
 
 /* ── חדשות בקליק: הרקע קבוע במקומו, רק ההודעות נגללות מעליו (כמו צ'אט) ── */
 @media (max-width:680px){
-  body.sp-quick{overflow:hidden;}
+  /* כתובת האתר ממשיכה לרדת עם גלילה — header נשאר sticky כרגיל */
   /* ביטול ה-containment של .section שחותך תוכן ממוקם (content-visibility/contain) */
   body.sp-quick #home-page>#flash-feed-wrap{display:block!important;position:fixed;top:58px;bottom:60px;left:0;right:0;
     margin:0!important;padding:0!important;z-index:150;
@@ -1473,7 +1476,7 @@ body.dark-mode .mm-ic-moon{display:block;color:#0a84ff;}
     <div class="footer-grid">
       <div class="footer-brand">
         <div class="logo">
-          <span class="logo-name">ספידו<span>מטר</span></span>
+          <span class="logo-name">ספיד<span class="sp-vav" style="color:#fff;">ו</span><span>מטר</span></span>
           <span class="logo-sub" style="color:rgba(255,255,255,0.4)">רכב · טכנולוגיה · חדשנות</span>
         </div>
         <p>פורטל הרכב הטכנולוגי והמדויק בישראל. מספקים מעטפת מקצועית ומבוססת דאטה לרוכש המקומי — חדשות, מבחני רכב ועדכוני שוק עם נוכחות דינמית ברשתות החברתיות.</p>
