@@ -1,6 +1,17 @@
 <!DOCTYPE html>
 <html lang="he" dir="rtl">
 <head>
+<!-- Google Analytics GA4 -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-15058247810"></script>
+<script>
+window.dataLayer=window.dataLayer||[];
+function gtag(){dataLayer.push(arguments);}
+gtag('js',new Date());
+gtag('config','G-15058247810',{
+  page_title:document.title,
+  page_location:window.location.href
+});
+</script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="description" content="ספידומטר - אתר חדשות הרכב המוביל בישראל. מבחני רכב, רכב יוקרה, חדשות מקומיות ועולמיות, וייעוץ בקניית רכב.">
@@ -56,6 +67,8 @@
 <link rel="preconnect" href="https://kaykrrnmykqrfhawgtqt.supabase.co" crossorigin>
 <link rel="dns-prefetch" href="//kaykrrnmykqrfhawgtqt.supabase.co">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="preconnect" href="https://images.unsplash.com">
+<link rel="dns-prefetch" href="//images.unsplash.com">
 <link rel="dns-prefetch" href="//fonts.googleapis.com">
 <link rel="dns-prefetch" href="//fonts.gstatic.com">
 <link rel="dns-prefetch" href="//cdn.jsdelivr.net">
@@ -426,7 +439,7 @@ body.dark-mode .sp-cc-tile span{color:#eee;}
 
 /* ── #4 הלוגו לפי התמונה — עיגול קטן מעל האות ו' (מחשב + מובייל) ── */
 .logo-name .sp-vav{position:relative;color:inherit;}
-.logo-name .sp-vav::after{content:'';position:absolute;left:50%;top:-0.04em;transform:translateX(-50%);
+.logo-name .sp-vav::after{content:'';position:absolute;left:50%;top:0.06em;transform:translateX(-50%);
   width:0.19em;height:0.19em;border-radius:50%;background:currentColor;}
 
 /* ── מתג מצב לילה בסגנון אפל (בתפריט, ליד נגישות) ── */
@@ -445,21 +458,54 @@ body.dark-mode .mm-ic-moon{display:block;color:#0a84ff;}
 
 /* ── תפריט צד זכוכית שנשלף מהצד (מובייל) ── */
 @media (max-width:680px){
-  .mobile-menu{display:flex;top:0;right:0;bottom:0;left:auto;width:min(330px,82vw);padding:20px 18px;
-    background:linear-gradient(160deg,rgba(255,255,255,0.6),rgba(247,249,252,0.46));
+  .mobile-menu{display:flex;top:0;right:0;bottom:0;left:auto;width:min(360px,88vw);padding:20px 20px 32px;
+    background:linear-gradient(160deg,rgba(255,255,255,0.72),rgba(247,249,252,0.58));
     -webkit-backdrop-filter:blur(30px) saturate(185%);backdrop-filter:blur(30px) saturate(185%);
     border-left:1px solid rgba(255,255,255,0.5);box-shadow:-18px 0 50px rgba(0,0,0,0.24);
-    transform:translateX(100%);visibility:hidden;
-    transition:transform 0.36s cubic-bezier(0.4,0,0.2,1),visibility 0.36s;}
-  .mobile-menu.open{transform:translateX(0);visibility:visible;}
+    transform:translate3d(100%,0,0);visibility:hidden;will-change:transform;
+    backface-visibility:hidden;-webkit-backface-visibility:hidden;
+    overscroll-behavior:contain;touch-action:pan-y;
+    transition:transform 0.32s cubic-bezier(0.32,0.72,0.24,1),visibility 0.32s;}
+  .mobile-menu.open{transform:translate3d(0,0,0);visibility:visible;}
+  .mm-top-row{flex-wrap:wrap;row-gap:10px;}
+  .mobile-nav-link{padding:13px 0;font-size:0.98rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
   body.dark-mode .mobile-menu{background:linear-gradient(160deg,rgba(26,26,30,0.72),rgba(15,15,20,0.55));
     border-left:1px solid rgba(255,255,255,0.08);}
   body.sp-menu-open::before{content:'';position:fixed;inset:0;z-index:499;
-    background:rgba(0,0,0,0.34);-webkit-backdrop-filter:blur(2px);backdrop-filter:blur(2px);animation:spFade 0.3s ease;}
+    background:rgba(0,0,0,0.38);animation:spFade 0.3s ease;}
   .mobile-nav-link{border-bottom:1px solid rgba(0,0,0,0.08);}
   body.dark-mode .mobile-nav-link{border-bottom:1px solid rgba(255,255,255,0.1);}
 }
 @keyframes spFade{from{opacity:0;}to{opacity:1;}}
+
+/* ═══════════════════════════════════════════════════════════
+   עדכון סבב 3 — יציבות, אינדוקס וביצועים
+   ═══════════════════════════════════════════════════════════ */
+
+/* ── חדשות בקליק: הרקע קבוע במקומו, רק ההודעות נגללות מעליו (כמו צ'אט) ── */
+@media (max-width:680px){
+  body.sp-quick{overflow:hidden;}
+  /* ביטול ה-containment של .section שחותך תוכן ממוקם (content-visibility/contain) */
+  body.sp-quick #home-page>#flash-feed-wrap{display:block!important;position:fixed;top:58px;bottom:60px;left:0;right:0;
+    margin:0!important;padding:0!important;z-index:150;
+    content-visibility:visible!important;contain:none!important;contain-intrinsic-size:auto!important;}
+  body.sp-quick #flash-feed{position:absolute;inset:0;max-width:none;width:100%;height:100%;
+    margin:0;padding:0;border-radius:0;display:flex!important;flex-direction:column;overflow:hidden;}
+  body.sp-quick #flash-feed #flash-list{flex:1;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch;
+    overscroll-behavior:contain;padding:16px 14px 28px;position:relative;z-index:1;}
+  body.sp-quick #flash-feed .sp-chat-msg:last-child{margin-bottom:6px;}
+}
+
+/* ── חדשות בקליק מבוטל במחשב (מובייל בלבד) ── */
+@media (min-width:681px){
+  .nav-link-quick,.cat-tag-quick,.cat-tag[data-cat="quick"]{display:none!important;}
+  #flash-feed-wrap{display:none!important;}
+}
+
+/* ── ביצועים: ייצוב גלילה והרכבת שכבות ── */
+@media (max-width:680px){
+  .mobile-menu .mm-social-btn,.mobile-menu .mm-acc-btn{flex-shrink:0;}
+}
 </style>
 </head>
 <body>
@@ -1543,7 +1589,7 @@ area.innerHTML=`
 function cardThumb(url){if(typeof url==='string'&&url.indexOf('images.unsplash.com')!==-1){return url.replace(/([?&])w=\d+/,'$1w=500');}
 return url;}
 function responsiveAttrs(url,sizesAttr){if(typeof url!=='string'||url.indexOf('images.unsplash.com')===-1)return'';const widths=[320,500,800,1200];const srcset=widths.map(w=>url.replace(/([?&])w=\d+/,'$1w='+w)+' '+w+'w').join(', ');return` srcset="${srcset}" sizes="${sizesAttr}"`;}
-function cardHTML(a){const score=a.score?`<div class="review-score ${parseFloat(a.score)>=8?'high':parseFloat(a.score)>=6?'mid':''}">${a.score}</div>`:'';return`<a href="#article-${a.id}" class="card" onclick="openArticle(${a.id});return false;" aria-label="${a.title}">
+function cardHTML(a){const score=a.score?`<div class="review-score ${parseFloat(a.score)>=8?'high':parseFloat(a.score)>=6?'mid':''}">${a.score}</div>`:'';return`<a href="/?article=${a.id}" class="card" onclick="openArticle(${a.id});return false;" aria-label="${a.title}">
     <div class="card-img">
       <img src="${cardThumb(a.img||CAT_IMAGES[a.cat])}"${responsiveAttrs(a.img||CAT_IMAGES[a.cat], '(max-width:680px) 45vw, 400px')} alt="${a.title}" loading="lazy" width="400" height="225" decoding="async" onload="this.classList.add('loaded')" onerror="this.classList.add('loaded')">
       ${score}<span class="card-cat">${CAT_LABELS[a.cat]}</span>
@@ -1574,7 +1620,7 @@ function flashHTML(a){const timeStr=a.time?a.time:'';const txt=(a.body||a.sub||'
     ${a.img?`<div class="sp-chat-img"><img src="${a.img}" alt="${safeTitle}" loading="lazy" decoding="async" onload="this.classList.add('loaded')" onerror="this.classList.add('loaded')"></div>`:''}
     <div class="sp-chat-title">${a.title}</div>
     ${txt?`<div class="sp-chat-text">${txt}</div>`:''}
-    <a class="sp-chat-link" href="#article-${openId}" onclick="event.stopPropagation();openArticle(${openId});return false;">הכתבה המלאה <span aria-hidden="true">‹‹‹</span></a>
+    <a class="sp-chat-link" href="/?article=${openId}" onclick="event.stopPropagation();openArticle(${openId});return false;">הכתבה המלאה <span aria-hidden="true">‹‹‹</span></a>
     <div class="sp-chat-time">${a.date||''}${timeStr?' · '+timeStr:''}</div>
   </div>
 </div>`;}
@@ -1621,7 +1667,7 @@ document.getElementById('art-body').innerHTML=parseBody(a.body||'',a.bodyImages|
         <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:10px;">
           ${a.gallery.map((src,i)=>`<div style="cursor:zoom-in;"onclick="openLightbox('${src}')"><img src="${src}"alt="${captions[i]||'תמונה '+(i+1)}"loading="lazy"decoding="async"width="200"height="150"style="width:100%;aspect-ratio:4/3;object-fit:cover;border-radius:6px;border:1px solid var(--border);transition:transform 0.2s;"onmouseover="this.style.transform='scale(1.02)'"onmouseout="this.style.transform='scale(1)'">${captions[i]?`<p style="font-size:0.72rem;color:var(--muted);margin-top:4px;text-align:center;">${captions[i]}</p>`:''}</div>`).join('')}
         </div>`;}else{galleryWrap.style.display='none';}}
-document.getElementById('related-articles').innerHTML=(related.length?related:fallback).map(r=>cardHTML(r)).join('');document.getElementById('sidebar-related').innerHTML=articles.filter(x=>x.id!==id).sort((x,y)=>(y.views||0)-(x.views||0)).slice(0,5).map((r,i)=>latestItemHTML(r,i+1)).join('');if(window.history){window.history.pushState({page:'article',id:id},'','#article-'+id);}
+document.getElementById('related-articles').innerHTML=(related.length?related:fallback).map(r=>cardHTML(r)).join('');document.getElementById('sidebar-related').innerHTML=articles.filter(x=>x.id!==id).sort((x,y)=>(y.views||0)-(x.views||0)).slice(0,5).map((r,i)=>latestItemHTML(r,i+1)).join('');if(window.history){window.history.pushState({page:'article',id:id},'','?article='+id);}
 window.scrollTo({top:0,behavior:'smooth'});}
 function buildSliderHTML(images){const dots=images.map((_,i)=>`<button class="slider-dot ${i===0?'active':''}" onclick="goSlide('art-slider',${i})" aria-label="תמונה ${i+1}"></button>`).join('');const imgs=images.map((src,i)=>`<img src="${src}" alt="תמונה ${i+1}" loading="lazy" decoding="async">`).join('');return`<div class="img-slider" id="art-slider"><div class="slider-track" id="ast">${imgs}</div><button class="slider-btn slider-prev" onclick="moveSlide('art-slider',-1)" aria-label="תמונה קודמת">&#8250;</button><button class="slider-btn slider-next" onclick="moveSlide('art-slider',1)" aria-label="תמונה הבאה">&#8249;</button><div class="slider-dots" role="tablist">${dots}</div><div class="slider-count" id="asc" aria-live="polite">1 / ${images.length}</div></div>`;}
 function moveSlide(id,dir){const wrap=document.getElementById(id);if(!wrap)return;const track=wrap.querySelector('.slider-track');const total=track.querySelectorAll('img').length;if(!sliderState[id])sliderState[id]={current:0};let cur=(sliderState[id].current+dir+total)%total;sliderState[id].current=cur;track.style.transform=`translateX(${cur*100}%)`;wrap.querySelectorAll('.slider-dot').forEach((d,i)=>d.classList.toggle('active',i===cur));const cnt=wrap.querySelector('.slider-count');if(cnt)cnt.textContent=`${cur+1} / ${total}`;}
@@ -1695,9 +1741,68 @@ preview.innerHTML=galleryImages.map((img,i)=>`
 function removeGalleryImg(i){galleryImages.splice(i,1);renderGalleryPreview();}
 function openLightbox(src){let lb=document.getElementById('lightbox-overlay');if(!lb){lb=document.createElement('div');lb.id='lightbox-overlay';lb.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,0.92);z-index:99999;display:flex;align-items:center;justify-content:center;cursor:zoom-out;';lb.onclick=()=>lb.remove();document.body.appendChild(lb);}
 lb.innerHTML=`<img src="${src}" alt="תמונה מוגדלת" style="max-width:95vw;max-height:95vh;object-fit:contain;border-radius:4px;">`;lb.style.display='flex';}
+
+/* ══════════════════════════════════════════════════════
+   Google Indexing API — שליחה אוטומטית בכל פרסום כתבה
+   ══════════════════════════════════════════════════════ */
+async function notifyGoogleIndexing(articleId){
+  try{
+    // JWT Header
+    const header={alg:'RS256',typ:'JWT'};
+    const now=Math.floor(Date.now()/1000);
+    const claim={
+      iss:'speedometer-indexing@speedometer-googl.iam.gserviceaccount.com',
+      scope:'https://www.googleapis.com/auth/indexing',
+      aud:'https://oauth2.googleapis.com/token',
+      exp:now+3600,iat:now
+    };
+    const b64=s=>btoa(unescape(encodeURIComponent(JSON.stringify(s)))).replace(/\+/g,'-').replace(/\//g,'_').replace(/=/g,'');
+    const sigInput=b64(header)+'.'+b64(claim);
+
+    // ייבוא המפתח הפרטי
+    const keyPem=`-----BEGIN PRIVATE KEY-----\nMIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQC4KpOs/4J2QT3m\nFWgXvtawN6utT5QpFOJ4Hs0wlbE+gW4Uuly0TbgnsGZLd1/9qpcaJCwjDLOzTQBz\nbJTLK6GLmTaHWeMOBq7d3qcNwZeKQK3/99wIzdrZwz3NuLqdoraF6cRARoqfeS0E\nQpoRZWOW+E0rScQtQEumYkcjsE84+hAFzfiIQorz/2IUBvoDmredRLdzC4KvemL0\nBPfCxIDloRt5NA/hvHjqlf2RQ4x6I5wxIupWakwgi35EODsyrsqctP6Xxmpc84Oz\nDwm/0NbTbW8ADj4CsMWiWG80tOYQZz8WQvtQeEsDBU2zC/dzYBxavHG60XARWeMk\nmeQxPYDPAgMBAAECggEAIiVKwh2Rm8lW56z6YsSwW3XG79g8WS2VG75iPurSNQuc\nVF2FSKzMQxeSr9VPR+H0KBWi1VDKlKjnN39fSxgo2JAsqwXAcl5M17grcwJ8zVZW\nrInRExTPyeZINDdW6lk7zDJef6hUlWLLNOoAVM9emqQo8qi3pcgw/oVkOTq8RYzO\n1pfkMuSnrlRva1Vj+xKXQ/tVnyZon/AATkiqrH1N4Q4SxgqehWDz0IaKKmRFPkCg\n9XvFIoR6RDvrP5htxp5jAUijHEpvQAFDjIZLFYKpQPaZ3BfedSugNv45F4D2TPA0\nrPU+Gk/2qi3iSEBrZ1uAAR30ho3AuMcHrFhEcrcjaQKBgQDr40svZ15IYgOWlqcA\nC8JRD8gOhH27BinvyJA4Z1WprGMhPqoGzapuGbJFz0+nqG9DS/PVfeaXixH/0tC7\nyVTZmHcJR15e0Z3nV5gy/Y+jYEOqCC3rjPnooB3kWlGDH2QRJnH9Jb65Jqmo1V0v\nZ7T81sj47AniKWpM3efqld9/2wKBgQDH3lxh9kCsm2CnXNQZDho16kejt8E2U1JX\nRPhh9VueZSDSmM+s131Gg2SkCgn7I/UgqWtICRW728Z89RZl9cnn7ArL2nR8Km5K\ngv3Uzbie4ng7MEKy+Pe0BJmkf7WesWr4Ov1RsNKe0JG8y+2yyt1XlgdIl8kbiVhD\n+cwlaHmfHQKBgDxusNZmLxtwMOcllYdHe/L0jhZaDzQY8imCQqCQqLuddJAR09GG\nY0Ftx+RmpkuXtVmSXde2N5tff68AvYU+oURV8TkpVZ4JKeEY6d82YtRCV1N6YPlV\n1rioPMBB+1wScLqMFOv7/Y7FvvWIJCV+9jlIdZiAMFAGuDsVJtNMrkO9AoGAUivZ\nT20uqcg3tJc1nBdwLzpiuaySgwM+lyKD+8IkKLrrA6pPt3/gwVzDw61c7SObZBJD\nSRpzFQkGUdlxm/mxSOiCh80IlwPa1EeGlDb/8FKrm6n7whkZvakmgbr/sH7Au82E\n2FEaRrD5OeWdlCRTW+8Sj4XX6LpOz6Ojir2pQwECgYEAjIl8CuafgFa0r8VAzfkr\nBopns7BQ3QiyAgqy2vH5DITaCIEjhfI/nGOAkbZshQzZoA4XXJBTXqZqm6cKp+C9\np3o44FXadQu1x186gKB5WOgWnvRyMGSp2Xjr9lEuTay6KOei/hwwZLUWIaUuOGbB\njhdJglshWqStvsH19bDxD34=\n-----END PRIVATE KEY-----\n`;
+    const pemBody=keyPem.replace(/-----BEGIN PRIVATE KEY-----|-----END PRIVATE KEY-----|\n/g,'');
+    const binaryDer=Uint8Array.from(atob(pemBody),c=>c.charCodeAt(0));
+    const cryptoKey=await crypto.subtle.importKey('pkcs8',binaryDer.buffer,{name:'RSASSA-PKCS1-v1_5',hash:'SHA-256'},false,['sign']);
+
+    // חתימה
+    const enc=new TextEncoder();
+    const sig=await crypto.subtle.sign('RSASSA-PKCS1-v1_5',cryptoKey,enc.encode(sigInput));
+    const sigB64=btoa(String.fromCharCode(...new Uint8Array(sig))).replace(/\+/g,'-').replace(/\//g,'_').replace(/=/g,'');
+    const jwt=sigInput+'.'+sigB64;
+
+    // קבל Access Token
+    const tokenRes=await fetch('https://oauth2.googleapis.com/token',{
+      method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},
+      body:'grant_type=urn%3Aietf%3Aparams%3Aoauth%3Agrant-type%3Ajwt-bearer&assertion='+jwt
+    });
+    const tokenData=await tokenRes.json();
+    if(!tokenData.access_token)throw new Error('no token: '+JSON.stringify(tokenData));
+
+    // שלח לגוגל
+    const url='https://speedometer10.co.il/?article='+articleId;
+    const idxRes=await fetch('https://indexing.googleapis.com/v3/urlNotifications:publish',{
+      method:'POST',
+      headers:{'Content-Type':'application/json','Authorization':'Bearer '+tokenData.access_token},
+      body:JSON.stringify({url:url,type:'URL_UPDATED'})
+    });
+    const idxData=await idxRes.json();
+    if(idxRes.ok){
+      console.log('✅ Google Indexing הצליח:',url);
+      return true;
+    }else{
+      console.warn('⚠️ Google Indexing נכשל:',idxData);
+      return false;
+    }
+  }catch(e){
+    console.warn('Google Indexing error:',e.message);
+    return false;
+  }
+}
+
 async function publishArticle(){const title=(document.getElementById('a-title').value||'').trim();const body=(document.getElementById('a-body').value||'').trim();if(!title){alert('חובה להזין כותרת!');return;}
 if(!body){alert('חובה להזין תוכן!');return;}
-const editId=document.getElementById('a-title').dataset.editId;const now=new Date();const readMin=Math.max(1,Math.ceil(body.split(/\s+/).length/200));const data={id:editId?parseInt(editId):nextId++,title,sub:(document.getElementById('a-sub').value||'').trim(),cat:document.getElementById('a-cat').value,author:(document.getElementById('a-author').value||'').trim()||'מערכת ספידומטר',date:now.toLocaleDateString('he-IL'),time:now.toLocaleTimeString('he-IL',{hour:'2-digit',minute:'2-digit'}),readTime:readMin+' דק׳ קריאה',img:(document.getElementById('a-img').value||'').trim(),imgCaption:(document.getElementById('a-img-cap').value||'').trim(),gallery:galleryImages.length>0?galleryImages.map(g=>g.src):null,galleryCaptions:galleryImages.length>0?galleryImages.map(g=>g.caption||''):null,ytUrls:[1,2].map(i=>(document.getElementById('yt-url-'+i)?.value||'').trim()).filter(Boolean),bodyImages:[1,2,3,4,5].map(i=>({src:(document.getElementById('body-img-'+i)?.value||'').trim(),cap:(document.getElementById('body-img-cap-'+i)?.value||'').trim()})).filter(x=>x.src),body,score:(document.getElementById('a-score').value||'').trim()||null,scheduledAt:(document.getElementById('a-scheduled')?.value||'').trim()||null,readTime:document.getElementById('a-read-time')?.value?.trim()?document.getElementById('a-read-time').value.trim()+" דק׳ קריאה":Math.max(1,Math.ceil(body.split(/\s+/).length/200))+" דק׳ קריאה",tags:(document.getElementById('a-tags')?.value||'').split(',').map(t=>t.trim()).filter(Boolean),views:editId?(articles.find(a=>a.id===parseInt(editId))?.views||0):0,featured:false,specs:(document.getElementById('a-cat').value==='review')?(()=>{const p=document.getElementById('spec-power')?.value?.trim();const t=document.getElementById('spec-torque')?.value?.trim();const z=document.getElementById('spec-zero')?.value?.trim();const r=document.getElementById('spec-range')?.value?.trim();const pr=document.getElementById('spec-price')?.value?.trim();const eng=document.getElementById('spec-engine')?.value;const cats=[{name:'נסיעה',score:parseFloat(document.getElementById('score-driving')?.value)||0},{name:'עיצוב',score:parseFloat(document.getElementById('score-design')?.value)||0},{name:'טכנולוגיה',score:parseFloat(document.getElementById('score-tech')?.value)||0},{name:'נוחות',score:parseFloat(document.getElementById('score-comfort')?.value)||0},{name:'ערך',score:parseFloat(document.getElementById('score-value')?.value)||0},].filter(x=>x.score>0);const prosRaw=(document.getElementById('spec-pros')?.value||'').trim();const consRaw=(document.getElementById('spec-cons')?.value||'').trim();return{engine:eng,power:p,torque:t,zeroToHundred:z,range:r||null,price:pr,cats,model:document.getElementById('spec-model')?.value?.trim()||null,year:document.getElementById('spec-year')?.value?.trim()||null,segment:document.getElementById('spec-segment')?.value||null,country:document.getElementById('spec-country')?.value?.trim()||null,trims:document.getElementById('spec-trims')?.value?.trim()||null,gearbox:document.getElementById('spec-gearbox')?.value||null,topspeed:document.getElementById('spec-topspeed')?.value?.trim()||null,trunk:document.getElementById('spec-trunk')?.value?.trim()||null,consumption:document.getElementById('spec-consumption')?.value?.trim()||null,emission:document.getElementById('spec-emission')?.value||null,pros:prosRaw?prosRaw.split('\n').map(s=>s.trim()).filter(Boolean):[],cons:consRaw?consRaw.split('\n').map(s=>s.trim()).filter(Boolean):[],};})():null};if(editId){const idx=articles.findIndex(a=>a.id===parseInt(editId));if(idx>-1)articles[idx]=data;delete document.getElementById('a-title').dataset.editId;saveLocal();await maybeAddQuickVersion(data);buildHero();buildSections();buildTicker();buildBreakingTicker();clearForm();await updateInSupabase(data);syncFromSupabase();alert('הכתבה עודכנה בהצלחה!');}else{articles.unshift(data);saveLocal();await maybeAddQuickVersion(data);buildHero();buildSections();buildTicker();buildBreakingTicker();clearForm();const ok=await pushToSupabase(data);if(ok){syncFromSupabase();alert('הכתבה פורסמה בהצלחה!');}else{alert('⚠️ ההעלאה ל-Supabase נכשלה.\n\nהשגיאה המדויקת מ-Supabase:\n'+(window._lastPushError||'(לא התקבלה הודעת שגיאה)'));}}}
+const editId=document.getElementById('a-title').dataset.editId;const now=new Date();const readMin=Math.max(1,Math.ceil(body.split(/\s+/).length/200));const data={id:editId?parseInt(editId):nextId++,title,sub:(document.getElementById('a-sub').value||'').trim(),cat:document.getElementById('a-cat').value,author:(document.getElementById('a-author').value||'').trim()||'מערכת ספידומטר',date:now.toLocaleDateString('he-IL'),time:now.toLocaleTimeString('he-IL',{hour:'2-digit',minute:'2-digit'}),readTime:readMin+' דק׳ קריאה',img:(document.getElementById('a-img').value||'').trim(),imgCaption:(document.getElementById('a-img-cap').value||'').trim(),gallery:galleryImages.length>0?galleryImages.map(g=>g.src):null,galleryCaptions:galleryImages.length>0?galleryImages.map(g=>g.caption||''):null,ytUrls:[1,2].map(i=>(document.getElementById('yt-url-'+i)?.value||'').trim()).filter(Boolean),bodyImages:[1,2,3,4,5].map(i=>({src:(document.getElementById('body-img-'+i)?.value||'').trim(),cap:(document.getElementById('body-img-cap-'+i)?.value||'').trim()})).filter(x=>x.src),body,score:(document.getElementById('a-score').value||'').trim()||null,scheduledAt:(document.getElementById('a-scheduled')?.value||'').trim()||null,readTime:document.getElementById('a-read-time')?.value?.trim()?document.getElementById('a-read-time').value.trim()+" דק׳ קריאה":Math.max(1,Math.ceil(body.split(/\s+/).length/200))+" דק׳ קריאה",tags:(document.getElementById('a-tags')?.value||'').split(',').map(t=>t.trim()).filter(Boolean),views:editId?(articles.find(a=>a.id===parseInt(editId))?.views||0):0,featured:false,specs:(document.getElementById('a-cat').value==='review')?(()=>{const p=document.getElementById('spec-power')?.value?.trim();const t=document.getElementById('spec-torque')?.value?.trim();const z=document.getElementById('spec-zero')?.value?.trim();const r=document.getElementById('spec-range')?.value?.trim();const pr=document.getElementById('spec-price')?.value?.trim();const eng=document.getElementById('spec-engine')?.value;const cats=[{name:'נסיעה',score:parseFloat(document.getElementById('score-driving')?.value)||0},{name:'עיצוב',score:parseFloat(document.getElementById('score-design')?.value)||0},{name:'טכנולוגיה',score:parseFloat(document.getElementById('score-tech')?.value)||0},{name:'נוחות',score:parseFloat(document.getElementById('score-comfort')?.value)||0},{name:'ערך',score:parseFloat(document.getElementById('score-value')?.value)||0},].filter(x=>x.score>0);const prosRaw=(document.getElementById('spec-pros')?.value||'').trim();const consRaw=(document.getElementById('spec-cons')?.value||'').trim();return{engine:eng,power:p,torque:t,zeroToHundred:z,range:r||null,price:pr,cats,model:document.getElementById('spec-model')?.value?.trim()||null,year:document.getElementById('spec-year')?.value?.trim()||null,segment:document.getElementById('spec-segment')?.value||null,country:document.getElementById('spec-country')?.value?.trim()||null,trims:document.getElementById('spec-trims')?.value?.trim()||null,gearbox:document.getElementById('spec-gearbox')?.value||null,topspeed:document.getElementById('spec-topspeed')?.value?.trim()||null,trunk:document.getElementById('spec-trunk')?.value?.trim()||null,consumption:document.getElementById('spec-consumption')?.value?.trim()||null,emission:document.getElementById('spec-emission')?.value||null,pros:prosRaw?prosRaw.split('\n').map(s=>s.trim()).filter(Boolean):[],cons:consRaw?consRaw.split('\n').map(s=>s.trim()).filter(Boolean):[],};})():null};if(editId){const idx=articles.findIndex(a=>a.id===parseInt(editId));if(idx>-1)articles[idx]=data;delete document.getElementById('a-title').dataset.editId;saveLocal();await maybeAddQuickVersion(data);buildHero();buildSections();buildTicker();buildBreakingTicker();clearForm();await updateInSupabase(data);syncFromSupabase();notifyGoogleIndexing(data.id).catch(()=>{});alert('הכתבה עודכנה! 🔍 נשלחה מחדש לגוגל');}else{articles.unshift(data);saveLocal();await maybeAddQuickVersion(data);buildHero();buildSections();buildTicker();buildBreakingTicker();clearForm();const ok=await pushToSupabase(data);if(ok){syncFromSupabase();notifyGoogleIndexing(data.id).catch(()=>{});alert('הכתבה פורסמה בהצלחה! 🔍 נשלחה לאינדוקס גוגל');}else{alert('⚠️ ההעלאה ל-Supabase נכשלה.\n\nהשגיאה המדויקת מ-Supabase:\n'+(window._lastPushError||'(לא התקבלה הודעת שגיאה)'));}}}
 function editArticle(id){const a=articles.find(x=>x.id===id);if(!a)return;adminTab('new',document.querySelectorAll('.admin-tab')[0]);const tabBtn=document.querySelectorAll('.admin-tab')[0];if(tabBtn)tabBtn.textContent='✏️ עריכת כתבה';document.getElementById('a-title').value=a.title;document.getElementById('a-title').dataset.editId=id;document.getElementById('a-title').dataset.srcUid=a._uid||'';(function(){var q=articles.find(function(x){return x.cat==='quick'&&(((a._uid)&&x._srcUid===a._uid)||x._sourceId===a.id);});var ftEl=document.getElementById('a-flash-title');var fxEl=document.getElementById('a-flash-text');if(ftEl)ftEl.value=q?(q.title||''):'';if(fxEl)fxEl.value=q?(q.sub||q.body||''):'';try{spFlashWordCount();}catch(e){}})();document.getElementById('a-sub').value=a.sub||'';document.getElementById('a-cat').value=a.cat;document.getElementById('a-author').value=a.author;document.getElementById('a-img').value=a.img||'';document.getElementById('a-img-cap').value=a.imgCaption||'';document.getElementById('a-score').value=a.score||'';const schedEl=document.getElementById('a-scheduled');if(schedEl&&a.scheduledAt)schedEl.value=a.scheduledAt;const rtEl=document.getElementById('a-read-time');if(rtEl)rtEl.value=a.readTime?a.readTime.replace(/[^0-9]/g,''):'';const tagsEl=document.getElementById('a-tags');if(tagsEl)tagsEl.value=(a.tags||[]).filter(function(t){return !(typeof t==='string'&&(t.indexOf('uid:')===0||t.indexOf('src:')===0));}).join(', ');if(a.bodyImages)a.bodyImages.forEach((img,i)=>{const si=document.getElementById('body-img-'+(i+1));if(si)si.value=img.src||'';const ci=document.getElementById('body-img-cap-'+(i+1));if(ci)ci.value=img.cap||'';});document.getElementById('a-body').value=a.body||'';if(a.ytUrls){a.ytUrls.forEach((url,i)=>{const el=document.getElementById('yt-url-'+(i+1));if(el)el.value=url;});}
 const ytWrap=document.getElementById('youtube-section-wrap');if(ytWrap)ytWrap.style.display='block';toggleSpecsSection(a.cat);if(a.cat==='review'&&a.specs){const s=a.specs;const setV=(id,val)=>{const el=document.getElementById(id);if(el&&val!=null)el.value=val;};setV('spec-engine',s.engine||'בנזין');setV('spec-power',s.power||'');setV('spec-torque',s.torque||'');setV('spec-zero',s.zeroToHundred||'');setV('spec-range',s.range||'');setV('spec-price',s.price||'');setV('spec-model',s.model||'');setV('spec-year',s.year||'');setV('spec-segment',s.segment||'');setV('spec-country',s.country||'');setV('spec-trims',s.trims||'');setV('spec-gearbox',s.gearbox||'');setV('spec-topspeed',s.topspeed||'');setV('spec-trunk',s.trunk||'');setV('spec-consumption',s.consumption||'');setV('spec-emission',s.emission||'');if(s.pros&&s.pros.length)setV('spec-pros',s.pros.join('\n'));if(s.cons&&s.cons.length)setV('spec-cons',s.cons.join('\n'));if(s.cats){const map={נסיעה:'score-driving',עיצוב:'score-design',טכנולוגיה:'score-tech',נוחות:'score-comfort',ערך:'score-value'};s.cats.forEach(ct=>{const el=document.getElementById(map[ct.name]);if(el)el.value=ct.score;});}
 toggleRangeField(s.engine||'בנזין');}
@@ -1732,17 +1837,18 @@ function toggleDark(){document.body.classList.toggle('dark-mode');const isDark=d
 function toggleSpecsSection(cat){const sec=document.getElementById('specs-section');if(sec)sec.style.display=(cat==='review')?'block':'none';const engineEl=document.getElementById('spec-engine');if(engineEl)toggleRangeField(engineEl.value);}
 function toggleRangeField(engine){const rg=document.getElementById('spec-range-group');if(rg)rg.style.display=(engine==='חשמלי'||engine==='PHEV')?'flex':'none';const gb=document.getElementById('spec-gearbox-row');if(gb)gb.style.display=(engine==='חשמלי')?'none':'flex';}
 document.addEventListener('keydown',e=>{if(e.ctrlKey&&e.shiftKey&&e.key==='A'){e.preventDefault();openAdminLogin();}if(e.key==='Escape'){closeAdminLogin();document.getElementById('access-overlay').classList.remove('open');}});function toSlug(title){return title.replace(/[^\u0590-\u05FF\w\s-]/g,'').trim().replace(/\s+/g,'-').toLowerCase().slice(0,60);}
-function getArticleUrl(a){return'#article-'+a.id;}
+function getArticleUrl(a){return'/?article='+a.id;}
 function setupRealtimeSync(){if(!sbClient)return;try{let _rtTimer;const _rtSync=()=>{clearTimeout(_rtTimer);_rtTimer=setTimeout(()=>{if(!document.hidden)syncFromSupabase();},1500);};sbClient.channel('articles-changes').on('postgres_changes',{event:'INSERT',schema:'public',table:'articles'},_rtSync).on('postgres_changes',{event:'DELETE',schema:'public',table:'articles'},_rtSync).subscribe();}catch(e){}}
 function previewArticle(){const title=document.getElementById('a-title').value.trim();const body=document.getElementById('a-body').value.trim();const img=document.getElementById('a-img').value.trim();const sub=document.getElementById('a-sub').value.trim();const author=document.getElementById('a-author').value.trim()||'מערכת ספידומטר';const cat=document.getElementById('a-cat').value;if(!title){alert('הזן כותרת כדי לצפות בתצוגה מקדימה');return;}
 const previewData={id:99999,title,sub,cat,author,date:new Date().toLocaleDateString('he-IL'),img:img||CAT_IMAGES[cat],imgCaption:document.getElementById('a-img-cap').value.trim(),body,score:document.getElementById('a-score').value.trim()||null,readTime:document.getElementById('a-read-time').value.trim()||'3 דק׳ קריאה',views:0,featured:false};const existing=articles.find(a=>a.id===99999);if(existing)articles.splice(articles.indexOf(existing),1);articles.unshift(previewData);openArticle(99999);setTimeout(()=>{const banner=document.createElement('div');banner.id='preview-banner';banner.style.cssText='position:fixed;top:0;left:0;right:0;background:#f59e0b;color:#000;text-align:center;padding:8px;font-size:0.85rem;font-weight:700;z-index:9999;';banner.id='preview-banner';banner.innerHTML="👁 תצוגה מקדימה &nbsp; <button onclick=\"showAdmin();document.getElementById('preview-banner').remove()\" style=\"background:rgba(0,0,0,0.25);border:none;color:#fff;padding:3px 12px;border-radius:4px;cursor:pointer;font-family:inherit\">חזור לעריכה</button>";document.body.prepend(banner);},100);}
 function toggleReadingMode(){document.body.classList.toggle('reading-mode');window.scrollTo({top:0,behavior:'smooth'});}
-let isNavigating=false;window.addEventListener('popstate',function(e){window.scrollTo({top:0});if(isNavigating)return;isNavigating=true;setTimeout(()=>isNavigating=false,400);if(e.state&&e.state.page==='article'){openArticle(e.state.id);}else if(e.state&&e.state.page==='home'){showHome(false);if(e.state&&e.state.filter){currentFilter=e.state.filter;buildHero();buildSections();}}else{const path=window.location.pathname;const hash=window.location.hash;if(path.startsWith('/article/')){const id=parseInt(path.replace('/article/','').split('-')[0]);if(id&&articles.find(a=>a.id===id))openArticle(id);else showHome(false);}else if(hash.startsWith('#article-')){const id=parseInt(hash.replace('#article-',''));if(id&&articles.find(a=>a.id===id))openArticle(id);else showHome(false);}else if(hash==='#admin177'){}else{showHome(false);}}});function slugify(title){return title.replace(/[^\u0590-\u05FF\w\s-]/g,'').replace(/\s+/g,'-').replace(/-+/g,'-').trim().substring(0,60);}
-function getArticleUrl(a){return'#article-'+a.id;}
+let isNavigating=false;window.addEventListener('popstate',function(e){window.scrollTo({top:0});if(isNavigating)return;isNavigating=true;setTimeout(()=>isNavigating=false,400);if(e.state&&e.state.page==='article'){openArticle(e.state.id);}else if(e.state&&e.state.page==='home'){showHome(false);if(e.state&&e.state.filter){currentFilter=e.state.filter;buildHero();buildSections();}}else{const path=window.location.pathname;const hash=window.location.hash;const _qid=parseInt(new URLSearchParams(window.location.search).get('article')||'');if(_qid&&articles.find(a=>a.id===_qid)){openArticle(_qid);}else if(path.startsWith('/article/')){const id=parseInt(path.replace('/article/','').split('-')[0]);if(id&&articles.find(a=>a.id===id))openArticle(id);else showHome(false);}else if(hash.startsWith('#article-')){const id=parseInt(hash.replace('#article-',''));if(id&&articles.find(a=>a.id===id))openArticle(id);else showHome(false);}else if(hash==='#admin177'){}else{showHome(false);}}});function slugify(title){return title.replace(/[^\u0590-\u05FF\w\s-]/g,'').replace(/\s+/g,'-').replace(/-+/g,'-').trim().substring(0,60);}
+function getArticleUrl(a){return'/?article='+a.id;}
 function checkHashAdmin(){if(window.location.hash==='#admin177'){window.location.hash='';setTimeout(openAdminLogin,300);}}
 window.addEventListener('hashchange',checkHashAdmin);checkHashAdmin();function openAdminLogin(){document.getElementById('admin-login-overlay').style.display='flex';setTimeout(()=>document.getElementById('admin-pwd-input').focus(),100);document.getElementById('admin-pwd-err').textContent='';document.getElementById('admin-pwd-input').value='';}
 function closeAdminLogin(){document.getElementById('admin-login-overlay').style.display='none';}
-function checkAdminPwd(){if(document.getElementById('admin-pwd-input').value==='SHIMI2153'){closeAdminLogin();showAdmin();}else{document.getElementById('admin-pwd-err').textContent='סיסמה שגויה';document.getElementById('admin-pwd-input').value='';document.getElementById('admin-pwd-input').focus();}}
+async function checkAdminPwd(){let _ok=false;try{const _v=document.getElementById('admin-pwd-input').value;const _b=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(_v));const _h=Array.from(new Uint8Array(_b)).map(x=>x.toString(16).padStart(2,'0')).join('');_ok=(_h==='9985d62160505f32d5b42050b63079ee53cc435bdc2eceb22808c82d830bc06b');}catch(e){_ok=false;}
+if(_ok){closeAdminLogin();showAdmin();}else{document.getElementById('admin-pwd-err').textContent='סיסמה שגויה';document.getElementById('admin-pwd-input').value='';document.getElementById('admin-pwd-input').focus();}}
 const NEWS_CATS=['local','world','electric','tech','buying'];async function aiSummarize(article){function cleanMd(t){return t.replace(/^[#>]+\s*/gm,'').replace(/\*\*(.*?)\*\*/g,'$1').replace(/[\n\r]+/g,' ').trim();}
 var fullText=cleanMd([article.title,article.sub||'',article.body||''].join(' '));try{var res=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:200,messages:[{role:'user',content:'אתה עורך חדשות רכב. צור: 1) כותרת עד 8 מילים 2) תקציר 30 מילים. ענה רק JSON: {"title":"...","summary":"..."}\n\nכתבה: '+fullText.slice(0,800)}]})});if(res.ok){var d=await res.json();var txt=((d.content&&d.content[0]&&d.content[0].text)||'').replace(/```json|```/g,'').trim();var p=JSON.parse(txt);if(p.title&&p.summary)return{title:p.title,summary:p.summary};}}catch(e){}
 var titleW=cleanMd(article.title).split(' ').filter(Boolean);var subW=cleanMd(article.sub||'').split(' ').filter(Boolean);var bodyW=cleanMd(article.body||'').split(' ').filter(Boolean);var shortTitle=titleW.slice(0,8).join(' ');var pool=titleW.concat(subW).concat(bodyW);var summary30=pool.slice(0,30).join(' ')+(pool.length>30?' ...':'');return{title:shortTitle,summary:summary30};}
@@ -1767,11 +1873,11 @@ Allow: /
 Disallow: /admin
 Disallow: /?admin=true
 
-Sitemap: https://speedometer10.co.il/sitemap.xml`;function generateSitemap(){const base='https://speedometer10.co.il/';const today=new Date().toISOString().split('T')[0];const urls=[`<url><loc>${base}</loc><lastmod>${today}</lastmod><priority>1.0</priority></url>`,...articles.map(a=>`<url><loc>${base}article/${a.id}-${toSlug(a.title)}</loc><lastmod>${today}</lastmod><priority>0.8</priority></url>`)].join('\n  ');return`<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n  ${urls}\n</urlset>`;}
+Sitemap: https://speedometer10.co.il/sitemap.xml`;function generateSitemap(){const base='https://speedometer10.co.il/';const today=new Date().toISOString().split('T')[0];const urls=[`<url><loc>${base}</loc><lastmod>${today}</lastmod><priority>1.0</priority></url>`,...articles.filter(a=>a.cat!=='quick').map(a=>`<url><loc>${base}?article=${a.id}</loc><lastmod>${today}</lastmod><priority>0.8</priority></url>`)].join('\n  ');return`<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n  ${urls}\n</urlset>`;}
 function downloadSitemap(){const blob=new Blob([generateSitemap()],{type:'application/xml'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='sitemap.xml';a.click();}
 function downloadRobots(){const blob=new Blob([ROBOTS_TXT],{type:'text/plain'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='robots.txt';a.click();}
 function updateMeta(a){const base='https://speedometer10.co.il/';const title=a.title+' | ספידומטר';const desc=a.sub||a.title;const img=a.img||'https://images.unsplash.com/photo-1555215695-3004980ad54e?w=1200&q=80';document.title=title;setOG('og:type','article');if(a.date)setMeta('article:published_time',a.date);setMeta('article:author',a.author||'מערכת ספידומטר');setMeta('article:section',CAT_LABELS[a.cat]||a.cat);let can=document.querySelector('link[rel="canonical"]');if(!can){can=document.createElement('link');can.rel='canonical';document.head.appendChild(can);}
-can.href=window.location.origin+window.location.pathname+'#article-'+a.id;let auth=document.querySelector('meta[name="author"]');if(!auth){auth=document.createElement('meta');auth.name='author';document.head.appendChild(auth);}
+can.href='https://speedometer10.co.il/?article='+a.id;let auth=document.querySelector('meta[name="author"]');if(!auth){auth=document.createElement('meta');auth.name='author';document.head.appendChild(auth);}
 auth.content=a.author||'מערכת ספידומטר';let desc2=document.querySelector('meta[name="description"]');if(desc2)desc2.content=a.sub||a.title;setMeta('description',desc);setOG('og:title',title);setOG('og:description',desc);setOG('og:image',img);setOG('og:url',base+'?article='+a.id);setOG('og:type',a.cat==='review'?'article':'website');setMeta('twitter:title',title);setMeta('twitter:description',desc);setMeta('twitter:image',img);}
 function setOG(prop,val){let el=document.querySelector('meta[property="'+prop+'"]');if(!el){el=document.createElement('meta');el.setAttribute('property',prop);document.head.appendChild(el);}
 el.setAttribute('content',val);}
@@ -1815,7 +1921,7 @@ if(!hasLocal){const skCard=()=>`<div class="skeleton-card"><div class="skeleton-
       </div>`;const lg=document.getElementById('latest-grid');if(lg)lg.innerHTML=Array(6).fill(0).map(skCard).join('');}
 if(hasLocal){buildHero();buildSections();buildTicker();buildBreakingTicker();}
 showHome(false);handleMobileHero();function checkScheduledArticles(){const now=new Date();let changed=false;articles.forEach(a=>{if(a.scheduledAt&&new Date(a.scheduledAt)<=now){a.scheduledAt=null;a.date=now.toLocaleDateString('he-IL');a.time=now.toLocaleTimeString('he-IL',{hour:'2-digit',minute:'2-digit'});changed=true;if(sbClient)pushToSupabase(a).catch(()=>{});}});if(changed){saveLocal();buildHero();buildSections();buildTicker();buildBreakingTicker();renderAdminTable();}}
-checkScheduledArticles();setInterval(checkScheduledArticles,60000);document.addEventListener('load',function(e){if(e.target.tagName==='IMG'){e.target.classList.add('loaded');const parent=e.target.closest('.card-img');if(parent)parent.style.animation='none';}},true);document.querySelectorAll('.card-img img').forEach(img=>{if(img.complete){img.classList.add('loaded');const p=img.closest('.card-img');if(p)p.style.animation='none';}});requestAnimationFrame(()=>handleMobileHero());const initPath=window.location.pathname;const initHash=window.location.hash;if(initPath.startsWith('/article/')){const initId=parseInt(initPath.replace('/article/','').split('-')[0]);if(initId)setTimeout(()=>openArticle(initId),900);}else if(initHash.startsWith('#article-')){const initId=parseInt(initHash.replace('#article-',''));if(initId)setTimeout(()=>openArticle(initId),900);}
+checkScheduledArticles();setInterval(checkScheduledArticles,60000);document.addEventListener('load',function(e){if(e.target.tagName==='IMG'){e.target.classList.add('loaded');const parent=e.target.closest('.card-img');if(parent)parent.style.animation='none';}},true);document.querySelectorAll('.card-img img').forEach(img=>{if(img.complete){img.classList.add('loaded');const p=img.closest('.card-img');if(p)p.style.animation='none';}});requestAnimationFrame(()=>handleMobileHero());const initPath=window.location.pathname;const initHash=window.location.hash;const initParams=new URLSearchParams(window.location.search);const initQId=parseInt(initParams.get('article')||'');const initQCat=initParams.get('cat');if(initQId){setTimeout(()=>openArticle(initQId),900);}else if(initQCat){setTimeout(()=>{try{filterCat(initQCat);}catch(e){}},900);}else if(initPath.startsWith('/article/')){const initId=parseInt(initPath.replace('/article/','').split('-')[0]);if(initId){try{window.history.replaceState({page:'article',id:initId},'','/?article='+initId);}catch(e){}setTimeout(()=>openArticle(initId),900);}}else if(initHash.startsWith('#article-')){const initId=parseInt(initHash.replace('#article-',''));if(initId){try{window.history.replaceState({page:'article',id:initId},'','/?article='+initId);}catch(e){}setTimeout(()=>openArticle(initId),900);}}
 syncFromSupabase();setInterval(maybeSyncFromSupabase,30000);document.addEventListener('visibilitychange',()=>{if(!document.hidden)maybeSyncFromSupabase();});setTimeout(async()=>{if(!sbClient)return;try{const{data,error}=await sbClient.from('articles').select('id').limit(1);if(!error&&(!data||data.length===0)){console.log('Supabase empty — pushing all articles...');for(const a of articles){await pushToSupabase(a);}
 console.log('Done pushing',articles.length,'articles');}}catch(e){}},1500);})();function setBottomNav(el){document.querySelectorAll('.bottom-nav-item').forEach(b=>b.classList.remove('active'));if(el)el.classList.add('active');}
 function updateReadingProgress(){const bar=document.getElementById('reading-progress');if(!bar)return;const ap=document.getElementById('article-page');if(!ap||ap.style.display==='none'){bar.style.width='0%';bar.style.display='none';return;}
@@ -2130,7 +2236,9 @@ if('serviceWorker'in navigator){window.addEventListener('load',()=>{navigator.se
   }
   if(typeof window.filterCat==='function'){
     var _spFc=window.filterCat;
-    window.filterCat=function(cat,el){spFilter=cat;spInFilter=true;var r;try{r=_spFc.apply(this,arguments);}finally{spInFilter=false;}try{spSyncUI();}catch(e){}return r;};
+    window.filterCat=function(cat,el){
+      if(cat==='quick'&&window.innerWidth>680){cat='all';el=null;}
+      spFilter=cat;spInFilter=true;var r;try{r=_spFc.call(this,cat,el);}finally{spInFilter=false;}try{spSyncUI();}catch(e){}return r;};
   }
   if(typeof window.showHome==='function'){
     var _spSh=window.showHome;
