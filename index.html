@@ -494,22 +494,22 @@ body.dark-mode .mm-ic-moon{display:block;color:#0a84ff;}
 body.dark-mode .show-more-grid-btn{background:var(--dm-surface);border-color:var(--dm-border);color:#ff6b6b;}
 body.dark-mode .show-more-grid-btn:hover{background:rgba(232,0,29,0.12);border-color:var(--red);}
 
-/* ── כפתור מד מהירות מרכזי בסרגל הניווט התחתון — עיצוב ספורטיבי זוהר ── */
+/* ── כפתור מד מהירות מרכזי בסרגל הניווט התחתון — עיצוב ספורטיבי ── */
 .bnav-speedo-wrap{
   position:relative;
   display:flex;
   align-items:flex-start;
   justify-content:center;
-  flex:0 0 78px;
+  flex:0 0 72px;
   pointer-events:none;
 }
 .bnav-speedo-btn{
   position:absolute;
-  top:-30px;
+  top:-14px;
   left:50%;
   transform:translateX(-50%);
-  width:68px;
-  height:68px;
+  width:58px;
+  height:58px;
   border-radius:50%;
   border:none;
   padding:0;
@@ -521,51 +521,41 @@ body.dark-mode .show-more-grid-btn:hover{background:rgba(232,0,29,0.12);border-c
   justify-content:center;
   -webkit-tap-highlight-color:transparent;
   pointer-events:auto;
-  transition:transform 0.2s ease;
 }
-.bnav-speedo-btn:active{transform:translateX(-50%) scale(0.93);}
-/* הילה ספורטיבית מסתובבת מסביב לעיגול */
-.bnav-speedo-glow-ring{
-  position:absolute;
-  inset:-6px;
-  border-radius:50%;
-  pointer-events:none;
-  z-index:0;
-  background:conic-gradient(from 0deg,rgba(255,122,0,0) 0%,rgba(232,0,29,0.95) 15%,rgba(255,90,0,0.9) 30%,rgba(232,0,29,0) 50%,rgba(255,122,0,0) 70%,rgba(232,0,29,0.95) 85%,rgba(255,90,0,0) 100%);
-  -webkit-mask:radial-gradient(farthest-side,transparent calc(100% - 3px),#000 calc(100% - 3px));
-  mask:radial-gradient(farthest-side,transparent calc(100% - 3px),#000 calc(100% - 3px));
-  animation:bnavRingSpin 3.2s linear infinite;
-  filter:drop-shadow(0 0 6px rgba(232,0,29,0.55));
-}
+.bnav-speedo-btn:active{transform:translateX(-50%);}
+/* ההילה המסתובבת בוטלה */
+.bnav-speedo-glow-ring{display:none;}
 .bnav-speedo-disc{
   position:relative;
   z-index:1;
-  width:68px;
-  height:68px;
+  width:58px;
+  height:58px;
   border-radius:50%;
   border:2.5px solid rgba(255,255,255,0.95);
   background:radial-gradient(circle at 50% 35%,#2e2e36 0%,#15151a 55%,#050507 100%);
-  box-shadow:0 4px 16px rgba(0,0,0,0.5),0 0 22px 2px rgba(232,0,29,0.35),inset 0 1px 0 rgba(255,255,255,0.12);
+  box-shadow:0 4px 14px rgba(0,0,0,0.5),0 0 16px 1px rgba(232,0,29,0.3),inset 0 1px 0 rgba(255,255,255,0.12);
   display:flex;
   align-items:center;
   justify-content:center;
-  animation:bnavFabPulse 2.6s ease-in-out infinite;
+  overflow:hidden;
 }
-.bnav-speedo-btn .sp-speedo-svg{width:50px;height:50px;display:block;position:relative;z-index:1;}
+/* ברק זכוכית מבריק */
+.bnav-speedo-disc::before{content:'';position:absolute;top:5%;left:14%;width:72%;height:42%;border-radius:50%;
+  background:linear-gradient(180deg,rgba(255,255,255,0.3),rgba(255,255,255,0.04) 70%,transparent);
+  pointer-events:none;z-index:3;}
+.bnav-speedo-btn .sp-speedo-svg{width:44px;height:44px;display:block;position:relative;z-index:2;}
 .bnav-speedo-btn .sp-speedo-ring{display:none;}
 .bnav-speedo-btn .sp-speedo-halo{display:none;}
-@keyframes bnavRingSpin{to{transform:rotate(360deg);}}
-@keyframes bnavFabPulse{
-  0%,100%{box-shadow:0 4px 16px rgba(0,0,0,0.5),0 0 22px 2px rgba(232,0,29,0.35),inset 0 1px 0 rgba(255,255,255,0.12);}
-  50%{box-shadow:0 4px 16px rgba(0,0,0,0.5),0 0 30px 6px rgba(232,0,29,0.55),inset 0 1px 0 rgba(255,255,255,0.12);}
-}
+/* אנימציית הלחיצה — רק המחוג והקשת, הכפתור עצמו נשאר במקום ולא קופץ */
+.bnav-speedo-btn.rev .sp-needle{animation:spNeedleSweep 0.8s cubic-bezier(0.34,1.56,0.64,1) forwards;}
+.bnav-speedo-btn.rev .sp-speedo-trail{animation:spTrailFill 0.8s cubic-bezier(0.34,1.56,0.64,1) forwards;}
 /* כיתוב "בקליק" - מתחת לעיגול בלי חיתוך */
 .bnav-speedo-label{
   position:absolute;
-  top:40px;
+  top:34px;
   left:50%;
   transform:translateX(-50%);
-  font-size:0.62rem;
+  font-size:0.6rem;
   font-weight:800;
   color:var(--red);
   letter-spacing:0.03em;
@@ -578,15 +568,14 @@ body.dark-mode .show-more-grid-btn:hover{background:rgba(232,0,29,0.12);border-c
 }
 body.dark-mode .bnav-speedo-label{color:#ff5a5a;text-shadow:0 1px 3px rgba(0,0,0,0.8);}
 @media (prefers-reduced-motion:reduce){
-  .bnav-speedo-glow-ring{animation:none!important;}
-  .bnav-speedo-disc{animation:none!important;}
+  .bnav-speedo-btn.rev .sp-needle,.bnav-speedo-btn.rev .sp-speedo-trail{animation:none!important;}
 }
 /* הסתרת כפתור הFAB הישן במובייל */
 @media (max-width:680px){
   .sp-speedo-fab{display:none!important;}
   .bottom-nav-inner{padding-bottom:env(safe-area-inset-bottom);overflow:visible;}
   .bottom-nav{overflow:visible;}
-  .bnav-speedo-wrap{flex:0 0 78px;}
+  .bnav-speedo-wrap{flex:0 0 72px;}
 }
 @media (min-width:681px){
   .bnav-speedo-wrap{display:none;}
@@ -1707,8 +1696,10 @@ area.innerHTML=`
         ${side2?`<div class="hero-side-card"onclick="openArticle(${side2.id})"role="button"tabindex="0"aria-label="${side2.title}"onkeydown="if(event.key==='Enter')openArticle(${side2.id})"><img src="${cardThumb(side2.img||CAT_IMAGES[side2.cat])}"${responsiveAttrs(side2.img||CAT_IMAGES[side2.cat],'(max-width:980px) 50vw, 340px')}alt="${side2.title}"loading="lazy"width="340"height="210"decoding="async"><div class="hero-side-content"><div class="hero-side-cat">${CAT_LABELS[side2.cat]}</div><div class="hero-side-title">${side2.title}</div></div></div>`:''}
       </div>
     </div>`;}
-function cardThumb(url){if(typeof url==='string'&&url.indexOf('images.unsplash.com')!==-1){return url.replace(/([?&])w=\d+/,'$1w=500');}
-return url;}
+function cardThumb(url){if(typeof url!=='string')return url;
+  if(url.indexOf('images.unsplash.com')!==-1){return url.replace(/([?&])w=\d+/,'$1w=500');}
+  if(url.indexOf('/storage/v1/object/public/')!==-1){var base=url.replace('/storage/v1/object/public/','/storage/v1/render/image/public/');return base+(base.indexOf('?')!==-1?'&':'?')+'width=500&quality=70&resize=contain';}
+  return url;}
 function responsiveAttrs(url,sizesAttr){if(typeof url!=='string'||url.indexOf('images.unsplash.com')===-1)return'';const widths=[320,500,800,1200];const srcset=widths.map(w=>url.replace(/([?&])w=\d+/,'$1w='+w)+' '+w+'w').join(', ');return` srcset="${srcset}" sizes="${sizesAttr}"`;}
 function cardHTML(a){const score=a.score?`<div class="review-score ${parseFloat(a.score)>=8?'high':parseFloat(a.score)>=6?'mid':''}">${a.score}</div>`:'';return`<a href="/?article=${a.id}" class="card" onclick="openArticle(${a.id});return false;" aria-label="${a.title}">
     <div class="card-img">
@@ -1730,7 +1721,7 @@ const _gridExpandState={};
 function renderExpandableGrid(gridEl,items,stateKey){
   if(!gridEl)return;
   const expanded=!!_gridExpandState[stateKey];
-  const LIMIT=6;
+  const LIMIT=8;
   const shown=expanded?items:items.slice(0,LIMIT);
   const cardsHtml=shown.map(a=>cardHTML(a)).join('')||'<p style="color:var(--muted);font-size:0.9rem;grid-column:1/-1;padding:20px 0;">לא נמצאו כתבות בקטגוריה זו.</p>';
   const showMoreBtn=(items.length>LIMIT)?`<button class="show-more-grid-btn" onclick="toggleGridExpand('${stateKey}')" aria-expanded="${expanded}">${expanded?'הצג פחות ↑':'לכל הכתבות ('+items.length+') →'}</button>`:'';
@@ -1758,7 +1749,7 @@ function flashHTML(a){const timeStr=a.time?a.time:'';const txt=(a.body||a.sub||'
   <div class="sp-chat-avatar" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M12 3a9 9 0 1 0 9 9"/><path d="M12 12l5-3"/><circle cx="12" cy="12" r="1.6" fill="#fff" stroke="none"/></svg></div>
   <div class="sp-chat-bubble" onclick="openArticle(${openId})" role="article" tabindex="0" aria-label="${safeTitle}" onkeydown="if(event.key==='Enter')openArticle(${openId})">
     <div class="sp-chat-head"><span class="sp-chat-author">${author}</span><span class="sp-chat-badge">מבזק</span></div>
-    ${a.img?`<div class="sp-chat-img"><img src="${a.img}" alt="${safeTitle}" loading="lazy" decoding="async" onload="this.classList.add('loaded')" onerror="this.classList.add('loaded')"></div>`:''}
+    ${a.img?`<div class="sp-chat-img"><img src="${cardThumb(a.img)}" alt="${safeTitle}" loading="lazy" decoding="async" onload="this.classList.add('loaded')" onerror="this.classList.add('loaded')"></div>`:''}
     <div class="sp-chat-title">${a.title}</div>
     ${txt?`<div class="sp-chat-text">${txt}</div>`:''}
     <a class="sp-chat-link" href="/?article=${openId}" onclick="event.stopPropagation();openArticle(${openId});return false;">הכתבה המלאה <span aria-hidden="true">‹‹‹</span></a>
@@ -1797,7 +1788,7 @@ document.getElementById('art-author').textContent=a.author;document.getElementBy
 const ogTitle=document.querySelector('meta[property="og:title"]');const ogDesc=document.querySelector('meta[property="og:description"]');const ogImg=document.querySelector('meta[property="og:image"]');const twTitle=document.querySelector('meta[name="twitter:title"]');const twDesc=document.querySelector('meta[name="twitter:description"]');if(ogTitle)ogTitle.setAttribute('content',a.title+' | ספידומטר');if(ogDesc)ogDesc.setAttribute('content',a.sub||a.title);if(ogImg&&a.img)ogImg.setAttribute('content',a.img);if(twTitle)twTitle.setAttribute('content',a.title+' | ספידומטר');if(twDesc)twDesc.setAttribute('content',a.sub||a.title);document.title=a.title+' | ספידומטר';let sc=document.getElementById('article-schema');if(!sc){sc=document.createElement('script');sc.id='article-schema';sc.type='application/ld+json';document.head.appendChild(sc);}
 const schema={"@context":"https://schema.org","@type":a.cat==='review'?'Review':'NewsArticle',"headline":a.title,"description":a.sub||a.title,"author":{"@type":"Person","name":a.author},"datePublished":a.date,"image":a.img||CAT_IMAGES[a.cat],"inLanguage":"he","publisher":{"@type":"Organization","name":"ספידומטר","logo":{"@type":"ImageObject","url":"https://speedometer10.co.il/logo.png"},"url":"https://speedometer10.co.il/"},"mainEntityOfPage":{"@type":"WebPage","@id":"https://speedometer10.co.il/?article="+a.id}};if(a.cat==='review'&&a.score){schema.reviewRating={"@type":"Rating","ratingValue":parseFloat(a.score),"bestRating":10,"worstRating":1};schema.itemReviewed={"@type":"Car","name":a.title,"offers":a.specs&&a.specs.price?{"@type":"Offer","price":a.specs.price,"priceCurrency":"ILS"}:undefined};}
 if(a.specs&&a.specs.power){schema.about={"@type":"Car","name":a.title,"vehicleEngine":{"@type":"EngineSpecification","enginePower":{"@type":"QuantitativeValue","value":a.specs.power,"unitCode":"BHP"}}};}
-if(a.tags&&a.tags.length)schema.keywords=a.tags.join(', ');schema.articleSection=CAT_LABELS[a.cat]||a.cat;schema.inLanguage='he';schema.publisher={"@type":"Organization","name":"ספידומטר","url":"https://speedometer10.co.il/","logo":{"@type":"ImageObject","url":"https://speedometer10.co.il/logo.png"}};sc.textContent=JSON.stringify(schema,(k,v)=>v===undefined?undefined:v);const imgEl=document.getElementById('art-img');const oldSl=document.getElementById('art-slider');if(oldSl)oldSl.remove();if(a.gallery&&a.gallery.length>1){imgEl.style.display='none';const sl=document.createElement('div');sl.id='art-slider';imgEl.parentElement.insertBefore(sl,imgEl);sl.innerHTML=buildSliderHTML(a.gallery);sliderState['art-slider']={current:0};}else{imgEl.style.display='block';const rawSrc=a.img||CAT_IMAGES[a.cat];if(rawSrc&&rawSrc.includes('unsplash.com')){const url=rawSrc.includes('fm=webp')?rawSrc:rawSrc.replace(/\?(.*)/,'?$1&fm=webp&q=75&w=900&auto=format').replace(/^([^?]+)$/,'$1?fm=webp&q=75&w=900&auto=format');imgEl.src=url;}else{imgEl.src=rawSrc;}
+if(a.tags&&a.tags.length)schema.keywords=a.tags.join(', ');schema.articleSection=CAT_LABELS[a.cat]||a.cat;schema.inLanguage='he';schema.publisher={"@type":"Organization","name":"ספידומטר","url":"https://speedometer10.co.il/","logo":{"@type":"ImageObject","url":"https://speedometer10.co.il/logo.png"}};sc.textContent=JSON.stringify(schema,(k,v)=>v===undefined?undefined:v);const imgEl=document.getElementById('art-img');const oldSl=document.getElementById('art-slider');if(oldSl)oldSl.remove();if(a.gallery&&a.gallery.length>1){imgEl.style.display='none';const sl=document.createElement('div');sl.id='art-slider';imgEl.parentElement.insertBefore(sl,imgEl);sl.innerHTML=buildSliderHTML(a.gallery);sliderState['art-slider']={current:0};}else{imgEl.style.display='block';const rawSrc=a.img||CAT_IMAGES[a.cat];if(rawSrc&&rawSrc.includes('unsplash.com')){const url=rawSrc.includes('fm=webp')?rawSrc:rawSrc.replace(/\?(.*)/,'?$1&fm=webp&q=75&w=900&auto=format').replace(/^([^?]+)$/,'$1?fm=webp&q=75&w=900&auto=format');imgEl.src=url;}else if(rawSrc&&rawSrc.indexOf('/storage/v1/object/public/')!==-1){const b=rawSrc.replace('/storage/v1/object/public/','/storage/v1/render/image/public/');imgEl.src=b+(b.indexOf('?')!==-1?'&':'?')+'width=900&quality=75&resize=contain';}else{imgEl.src=rawSrc;}
 imgEl.alt=a.title;}
 document.getElementById('art-img-caption').textContent=a.imgCaption||'';const specWrap=document.getElementById('art-spec');if(a.cat==='review'&&a.specs){specWrap.innerHTML=buildSpecCard(a.specs);specWrap.style.display='block';setTimeout(()=>document.querySelectorAll('.score-bar-fill').forEach(b=>{b.style.width=b.dataset.pct+'%';}),150);}else{specWrap.innerHTML='';specWrap.style.display='none';}
 document.getElementById('art-body').innerHTML=parseBody(a.body||'',a.bodyImages||[],a.title);const tagsWrap=document.getElementById('art-tags');var _dispTags=(a.tags||[]).filter(function(t){return !(typeof t==='string'&&(t.indexOf('uid:')===0||t.indexOf('src:')===0));});if(tagsWrap&&_dispTags.length){tagsWrap.innerHTML=_dispTags.map(t=>`<span onclick="doSearch('${t}')" style="display:inline-block;padding:4px 12px;background:var(--bg);border:1px solid var(--border);border-radius:20px;font-size:0.78rem;cursor:pointer;margin:4px 2px;transition:all 0.15s;" onmouseover="this.style.borderColor='var(--red)'" onmouseout="this.style.borderColor='var(--border)'">${t}</span>`).join('');tagsWrap.style.display='block';}else if(tagsWrap)tagsWrap.style.display='none';const related=articles.filter(x=>x.id!==id&&x.cat===a.cat).sort((x,y)=>(y.views||0)-(x.views||0)).slice(0,3);const fallback=articles.filter(x=>x.id!==id).sort((x,y)=>(y.views||0)-(x.views||0)).slice(0,3);const galleryWrap=document.getElementById('art-gallery');if(galleryWrap){if(a.gallery&&a.gallery.length>1){const captions=a.galleryCaptions||[];galleryWrap.style.display='block';galleryWrap.innerHTML=`
@@ -2261,7 +2252,6 @@ if('serviceWorker'in navigator){window.addEventListener('load',()=>{navigator.se
     <!-- מד מהירות באמצע - צף מעל הסרגל, עיצוב ספורטיבי -->
     <div class="bnav-speedo-wrap">
       <button class="bnav-speedo-btn" onclick="spSpeedoGo(this)" aria-label="חדשות בקליק" title="חדשות בקליק">
-        <span class="bnav-speedo-glow-ring" aria-hidden="true"></span>
         <span class="bnav-speedo-disc" aria-hidden="true">
           <svg class="sp-speedo-svg" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
             <defs>
