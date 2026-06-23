@@ -39,6 +39,7 @@ jobs:
         env:
           SUPABASE_URL: 'https://kaykrrnmykqrfhawgtqt.supabase.co'
           SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+          GH_TOKEN: ${{ secrets.GH_TOKEN }}
           TARGET_ARTICLE_ID: ${{ github.event.client_payload.articleId || github.event.inputs.articleId }}
         run: npm run generate
 
