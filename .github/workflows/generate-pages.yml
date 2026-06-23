@@ -1,0 +1,49 @@
+name: Generate Static Article Pages
+
+on:
+  repository_dispatch:
+    types: [article-changed]
+  schedule:
+    - cron: '0 */4 * * *'
+  workflow_dispatch:
+    inputs:
+      articleId:
+        description: 'מזהה כתבה ספציפית לרינדור ממוקד (השאר ריק לרינדור מלא)'
+        required: false
+        type: string
+
+permissions:
+  contents: write
+  issues: write
+
+concurrency:
+  group: generate-static-pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Run static generator script
+        env:
+          SUPABASE_URL: 'https://kaykrrnmykqrfhawgtqt.supabase.co'
+          SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+          TARGET_ARTICLE_ID: ${{ github.event.client_payload.articleId || github.event.inputs.articleId }}
+        run: npm run generate
+
+      - name: Commit and push changes
+        uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: "🤖 אוטומציה: רענון דפים סטטיים ומפת אתר [skip ci]"
+          file_pattern: "article/* sitemap.xml"
