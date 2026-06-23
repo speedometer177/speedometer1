@@ -1,0 +1,13 @@
+{
+  "name": "speedometer-static-generator",
+  "version": "1.0.0",
+  "description": "סקריפט יצירת עמודי כתבות סטטיים לאינדקס גוגל - ספידומטר",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "generate": "node scripts/generate-static-pages.mjs"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.108.2"
+  }
+}
