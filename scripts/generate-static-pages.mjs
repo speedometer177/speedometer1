@@ -1,5 +1,3 @@
-Visual Studio Code 1.125
-
 Show release notes after an update
 
 Follow us on LinkedIn, X, Bluesky | View online
