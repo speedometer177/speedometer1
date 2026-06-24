@@ -2080,7 +2080,7 @@ if(!hasLocal){const skCard=()=>`<div class="skeleton-card"><div class="skeleton-
       </div>`;const lg=document.getElementById('latest-grid');if(lg)lg.innerHTML=Array(6).fill(0).map(skCard).join('');}
 if(hasLocal&&!isStaticPrerender){buildHero();buildSections();buildTicker();buildBreakingTicker();}
 if(!isStaticPrerender){showHome(false);}
-handleMobileHero();function checkScheduledArticles(){const now=new Date();let changed=false;articles.forEach(a=>{if(a.scheduledAt&&new Date(a.scheduledAt)<=now){a.scheduledAt=null;a.date=now.toLocaleDateString('he-IL');a.time=now.toLocaleTimeString('he-IL',{hour:'2-digit',minute:'2-digit'});changed=true;if(sbClient)pushToSupabase(a).catch(()=>{});}});if(changed){saveLocal();buildHero();buildSections();buildTicker();buildBreakingTicker();renderAdminTable();}}
+function checkScheduledArticles(){const now=new Date();let changed=false;articles.forEach(a=>{if(a.scheduledAt&&new Date(a.scheduledAt)<=now){a.scheduledAt=null;a.date=now.toLocaleDateString('he-IL');a.time=now.toLocaleTimeString('he-IL',{hour:'2-digit',minute:'2-digit'});changed=true;if(sbClient)pushToSupabase(a).catch(()=>{});}});if(changed){saveLocal();buildHero();buildSections();buildTicker();buildBreakingTicker();renderAdminTable();}}
 checkScheduledArticles();setInterval(checkScheduledArticles,60000);document.addEventListener('load',function(e){if(e.target.tagName==='IMG'){e.target.classList.add('loaded');const parent=e.target.closest('.card-img');if(parent)parent.style.animation='none';}},true);document.querySelectorAll('.card-img img').forEach(img=>{if(img.complete){img.classList.add('loaded');const p=img.closest('.card-img');if(p)p.style.animation='none';}});requestAnimationFrame(()=>handleMobileHero());
 /* --- ניתוב בעת עליית האפליקציה ---
    סדר עדיפויות: /article/{id}/ (הצורה הנקייה, אינה נכתבת מעל) > ?article= (לאחור, מנורמל) > #article- (לאחור, מנורמל)
@@ -2096,7 +2096,7 @@ function waitForArticleThenOpen(id,maxWaitMs=6000){
     setTimeout(tick,80);
   })();
 }
-(function initRouter(){
+function initRouter(){
   const initPath=window.location.pathname;
   const initHash=window.location.hash;
   const initParams=new URLSearchParams(window.location.search);
@@ -2119,7 +2119,18 @@ function waitForArticleThenOpen(id,maxWaitMs=6000){
       waitForArticleThenOpen(initId);
     }
   }
-})();
+}
+/* קריטי: initRouter נדחה ב-setTimeout(0) ולא נקרא באופן סינכרוני.
+   הסיבה: openArticle() ופונקציות נוספות שהוא קורא להן (למשל handleMobileHero)
+   מפנות למשתנים שמוגדרים עם let/const מאוחר יותר בקובץ (_progressTop, heroBannerTimer וכו').
+   קריאה סינכרונית הייתה גורמת ל-ReferenceError (Temporal Dead Zone) בכל פעם
+   שmaitForArticleThenOpen מצליח לפתוח כתבה באופן מיידי מ-localStorage,
+   כיוון שב-JS, אזכור של משתנה let/const לפני שורת ההגדרה שלו בקובץ זורק שגיאה -
+   גם אם הקריאה התבצעה מתוך פונקציה, לא משנה היכן בקובץ הפונקציה עצמה הוגדרה.
+   setTimeout(...,0) מבטיח שהריצה תתבצע רק אחרי שכל הסקריפט הסינכרוני הסתיים,
+   כלומר אחרי שכל הצהרות ה-let/const כבר "רצו" - בלי לפגוע בתחושת המהירות
+   (0 מילישניות אינן מורגשות), ובלי להחזיר את ה-delay הקבוע של 900ms שהיה קודם. */
+setTimeout(initRouter,0);
 syncFromSupabase();setInterval(maybeSyncFromSupabase,30000);document.addEventListener('visibilitychange',()=>{if(!document.hidden)maybeSyncFromSupabase();});setTimeout(async()=>{if(!sbClient)return;try{const{data,error}=await sbClient.from('articles').select('id').limit(1);if(!error&&(!data||data.length===0)){console.log('Supabase empty — pushing all articles...');for(const a of articles){await pushToSupabase(a);}
 console.log('Done pushing',articles.length,'articles');}}catch(e){}},1500);})();function setBottomNav(el){document.querySelectorAll('.bottom-nav-item').forEach(b=>b.classList.remove('active'));if(el)el.classList.add('active');}
 function updateReadingProgress(){const bar=document.getElementById('reading-progress');if(!bar)return;const ap=document.getElementById('article-page');if(!ap||ap.style.display==='none'){bar.style.width='0%';bar.style.display='none';return;}
