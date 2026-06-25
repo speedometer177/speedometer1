@@ -43,6 +43,9 @@ jobs:
           TARGET_ARTICLE_ID: ${{ github.event.client_payload.articleId || github.event.inputs.articleId }}
         run: npm run generate
 
+      - name: Sync with remote before commit
+        run: git pull --rebase -X theirs origin ${{ github.ref_name }} || true
+
       - name: Commit and push changes
         uses: stefanzweifel/git-auto-commit-action@v5
         with:
