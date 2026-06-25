@@ -68,13 +68,27 @@ function esc(s = '') {
 
 function toISODate(dateStr) {
   if (!dateStr) return null;
+  // קודם כל מנסים להתאים פורמט יום-חודש-שנה מפורש (D.M.YYYY / DD/MM/YYYY וכו'),
+  // כיוון שזה הפורמט הישראלי הסטנדרטי באתר. *חובה* לבדוק את זה לפני שימוש
+  // ב-new Date() הגנרי, כי הפענוח המובנה של JS מניח לעיתים סדר אמריקאי
+  // (חודש-יום-שנה) לתאריכים עם נקודות/לוכסנים - וכש-היום הוא 12 ומטה
+  // (למשל "11.6.2026"), זה "מצליח" לפענח בלי שגיאה, אבל לתאריך הלא נכון
+  // (היה מפענח כ-6 בנובמבר במקום 11 ביוני). באג זה אומת בפועל מול הנתונים
+  // האמיתיים של האתר (כתבה 173, תאריך "11.6.2026" שהתפענח שגויות ל-2026-11-06).
+  const m = String(dateStr).match(/^(\d{1,2})[./](\d{1,2})[./](\d{4})$/);
+  if (m) {
+    const day = parseInt(m[1], 10);
+    const month = parseInt(m[2], 10);
+    const year = parseInt(m[3], 10);
+    if (month >= 1 && month <= 12 && day >= 1 && day <= 31) {
+      const d2 = new Date(`${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}T00:00:00Z`);
+      if (!isNaN(d2.getTime())) return d2.toISOString();
+    }
+  }
+  // נופלים חזרה ל-new Date() הגנרי רק לפורמטים שאינם יום.חודש.שנה מפורש
+  // (לדוגמה תאריכי ISO שכבר תקינים, כמו "2026-06-11").
   const d = new Date(dateStr);
   if (!isNaN(d.getTime())) return d.toISOString();
-  const m = String(dateStr).match(/(\d{1,2})[./](\d{1,2})[./](\d{4})/);
-  if (m) {
-    const d2 = new Date(`${m[3]}-${m[2].padStart(2, '0')}-${m[1].padStart(2, '0')}T00:00:00Z`);
-    if (!isNaN(d2.getTime())) return d2.toISOString();
-  }
   return null;
 }
 
