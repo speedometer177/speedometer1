@@ -257,10 +257,12 @@ function hydrateTemplateForArticle(template, a) {
     '<span id="art-read" class="read-time-badge"></span>',
     `<span id="art-read" class="read-time-badge">${readMins} דק׳ קריאה</span>`
   );
+  const displayImg = isProxyable(img) ? wsrvW(img, 1000) : img; // זהה לנוסחת הלקוח (wsrvW 1000)
   html = html.replace(
     /<img class="article-hero-img" id="art-img" src="" alt=""/,
-    `<img class="article-hero-img" id="art-img" src="${esc(img)}" alt="${esc(a.title)}"`
+    `<img class="article-hero-img" id="art-img" src="${esc(displayImg)}" alt="${esc(a.title)}" fetchpriority="high"`
   );
+  html = injectBetween(html, 'HERO_PRELOAD', `<link rel="preload" as="image" href="${esc(displayImg)}" fetchpriority="high">`);
   html = html.replace(
     '<div class="article-body" id="art-body"></div>',
     `<div class="article-body" id="art-body">${bodyHTML}</div>`
@@ -288,6 +290,61 @@ function buildSitemap(articles) {
   return `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n  ${urls}\n</urlset>\n`;
 }
 
+/* ═══ אופטימיזציית LCP: פונקציות זהות 1:1 לצד הלקוח (index.html) ═══
+   קריטי: אם הנוסחה כאן שונה מהלקוח, ה-preload יוריד URL אחר ממה שהדף מרנדר
+   והדפדפן יוריד את התמונה פעמיים. כל שינוי כאן מחייב שינוי זהה ב-index.html. */
+function wsrvW(url, w) { return 'https://wsrv.nl/?url=' + encodeURIComponent(url) + '&w=' + w + '&fit=cover&output=webp&q=75'; }
+function isProxyable(url) { return typeof url === 'string' && /^https?:\/\//.test(url) && url.indexOf('wsrv.nl') === -1 && url.indexOf('images.unsplash.com') === -1; }
+function heroSrc(url) { return isProxyable(url) ? wsrvW(url, 800) : url; }
+function heroSrcset(url) {
+  if (typeof url !== 'string') return '';
+  if (url.indexOf('images.unsplash.com') !== -1) {
+    return [320, 500, 800, 1200].map(w => url.replace(/([?&])w=\d+/, '$1w=' + w) + ' ' + w + 'w').join(', ');
+  }
+  if (isProxyable(url)) {
+    return [400, 640, 800, 1200].map(w => wsrvW(url, w) + ' ' + w + 'w').join(', ');
+  }
+  return '';
+}
+
+/* שליפת שדות light לצורך ה-snapshot המוטמע בדף הבית (אותם שדות שהלקוח מסנכרן) */
+async function fetchLightRows(supabase) {
+  const LIGHT = 'id,title,sub,cat,author,date,time,read_time,img,img_caption,score,views,featured,specs,gallery_captions,yt_urls,tags,scheduled_at,deleted';
+  const { data, error } = await supabase.from('articles').select(LIGHT).order('id', { ascending: false });
+  if (error) throw new Error(`Supabase light fetch failed: ${error.message}`);
+  const now = new Date();
+  return (data || []).filter(r =>
+    !r.deleted &&
+    (!r.scheduled_at || new Date(r.scheduled_at) <= now) // לא מדליפים כתבות מתוזמנות עתידיות
+  ).map(r => { const c = { ...r }; delete c.deleted; return c; });
+}
+
+/* בונה תג snapshot: 16 הכתבות האחרונות מוטמעות ב-HTML — הלקוח מרנדר מיידית בלי לחכות ל-fetch */
+function buildSnapshotTag(lightRows) {
+  const top = lightRows.slice(0, 16);
+  const json = JSON.stringify(top).replace(/</g, '\\u003c'); // מנטרל </script> וכל תג בתוך התוכן
+  return `<script>window.__PRELOADED_ARTICLES=${json};</script>`;
+}
+
+/* בונה תג preload לתמונת ה-hero — אותה בחירת כתבה כמו buildHero בלקוח: featured ראשון, אחרת החדשה ביותר */
+function buildHeroPreloadTag(lightRows) {
+  const pool = lightRows.filter(r => r.cat !== 'quick');
+  const main = pool.find(r => r.featured) || pool[0];
+  if (!main || !main.img || String(main.img).trim().length <= 5) return '';
+  const raw = String(main.img).trim();
+  const href = heroSrc(raw);
+  const srcset = heroSrcset(raw);
+  const srcsetAttrs = srcset ? ` imagesrcset="${srcset}" imagesizes="(max-width:980px) 100vw, 800px"` : '';
+  return `<link rel="preload" as="image" href="${href}"${srcsetAttrs} fetchpriority="high">`;
+}
+
+/* מזריק תוכן בין סמני BUILD — אידמפוטנטי (מחליף את מה שהיה שם בריצה הקודמת) */
+function injectBetween(html, name, content) {
+  const re = new RegExp(`<!-- BUILD:${name}:START -->[\\s\\S]*?<!-- BUILD:${name}:END -->`);
+  if (!re.test(html)) return html; // תבנית ישנה בלי סמנים - לא נוגעים
+  return html.replace(re, `<!-- BUILD:${name}:START -->${content}<!-- BUILD:${name}:END -->`);
+}
+
 async function fetchArticles(supabase) {
   const { data, error } = await supabase
     .from('articles')
@@ -308,7 +365,22 @@ async function main() {
   console.log(`✅ נשלפו ${liveArticles.length} כתבות פעילות.`);
 
   console.log('📄 קורא את תבנית האתר (index.html)...');
-  const template = await readFile(TEMPLATE_PATH, 'utf-8');
+  let template = await readFile(TEMPLATE_PATH, 'utf-8');
+
+  // ═══ אופטימיזציית LCP לדף הבית ═══
+  console.log('⚡ בונה snapshot נתונים + hero preload...');
+  const lightRows = await fetchLightRows(supabase);
+  const snapshotTag = buildSnapshotTag(lightRows);
+  const heroPreloadTag = buildHeroPreloadTag(lightRows);
+
+  // ה-snapshot נכנס לתבנית עצמה → גם דפי הכתבות מקבלים רינדור מיידי של המקטעים
+  template = injectBetween(template, 'DATA_SNAPSHOT', snapshotTag);
+
+  // דף הבית (+404 הזהה) מקבל בנוסף preload לתמונת ה-hero
+  const rootHtml = injectBetween(template, 'HERO_PRELOAD', heroPreloadTag);
+  await writeFile(TEMPLATE_PATH, rootHtml, 'utf-8');
+  await writeFile(path.join(SITE_DIR, '404.html'), rootHtml, 'utf-8');
+  console.log(`✅ index.html + 404.html עודכנו (snapshot: ${Math.min(lightRows.length,16)} כתבות, preload: ${heroPreloadTag ? 'כן' : 'אין תמונת hero'})`);
   if (!template.includes('id="art-body"')) {
     throw new Error('התבנית לא מכילה את המבנה הצפוי (#art-body) - בדוק את index.html בשורש הריפו');
   }
