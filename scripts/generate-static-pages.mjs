@@ -35,7 +35,7 @@ import { readFile, writeFile, mkdir, rm, readdir } from 'fs/promises';
 import path from 'path';
 
 const SB_URL = 'https://kaykrrnmykqrfhawgtqt.supabase.co';
-const SB_KEY = 'sb_publishable_Ms6YFTnADm-qAd9617Ey9A_D3x-Zumi'; // מפתח ציבורי (publishable) - בטוח לחשיפה, אינו ה-service role key
+const SB_KEY = process.env.SUPABASE_ANON_KEY || 'sb_publishable_Ms6YFTnADm-qAd9617Ey9A_D3x-Zumi'; // מפתח ציבורי (publishable) - בטוח לחשיפה, אינו ה-service role key
 const SITE = 'https://speedometer10.co.il';
 
 const SITE_DIR = path.resolve(process.cwd());                  // שורש הריפו - מכיל את index.html המלא
