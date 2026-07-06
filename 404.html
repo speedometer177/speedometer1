@@ -7,16 +7,13 @@
 <meta name="referrer" content="strict-origin-when-cross-origin">
 <script>try{if(top!==self)top.location.replace(self.location.href);}catch(e){}</script>
 <script src="https://cdn.jsdelivr.net/npm/dompurify@3.2.4/dist/purify.min.js" integrity="sha384-eEu5CTj3qGvu9PdJuS+YlkNi7d2XxQROAFYOr59zgObtlcux1ae1Il3u7jvdCSWu" crossorigin="anonymous" defer></script>
-<!-- Google Analytics GA4 -->
-<script async src="https://www.googletagmanager.com/gtag/js?id=G-9H371FM362"></script>
+<!-- Google Analytics GA4 — נטען אחרי window.load כדי לא להתחרות במשאבי ה-LCP -->
 <script>
 window.dataLayer=window.dataLayer||[];
 function gtag(){dataLayer.push(arguments);}
 gtag('js',new Date());
-gtag('config','G-9H371FM362',{
-  page_title:document.title,
-  page_location:window.location.href
-});
+gtag('config','G-9H371FM362',{page_title:document.title,page_location:window.location.href});
+window.addEventListener('load',function(){setTimeout(function(){var s=document.createElement('script');s.async=true;s.src='https://www.googletagmanager.com/gtag/js?id=G-9H371FM362';document.head.appendChild(s);},1200);});
 </script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="description" content="ספידומטר - אתר חדשות הרכב המוביל בישראל. מבחני רכב, רכב יוקרה, חדשות מקומיות ועולמיות, וייעוץ בקניית רכב.">
@@ -625,6 +622,8 @@ body.dark-mode .bnav-speedo-label{color:#ff5a5a;text-shadow:0 1px 3px rgba(0,0,0
   .mobile-menu .mm-social-btn,.mobile-menu .mm-acc-btn{flex-shrink:0;}
 }
 </style>
+<!-- BUILD:HERO_PRELOAD:START --><!-- BUILD:HERO_PRELOAD:END -->
+<!-- BUILD:DATA_SNAPSHOT:START --><!-- BUILD:DATA_SNAPSHOT:END -->
 </head>
 <body>
 
@@ -1726,7 +1725,7 @@ function buildHero(){const area=document.getElementById('hero-area');if(!area)re
 area.innerHTML=`
     <div class="hero-grid">
       <div class="hero-main" onclick="openArticle(${main.id})" role="button" tabindex="0" aria-label="${main.title}" onkeydown="if(event.key==='Enter')openArticle(${main.id})">
-        <img src="${main.img||CAT_IMAGES[main.cat]}"${responsiveAttrs(main.img||CAT_IMAGES[main.cat], '(max-width:980px) 100vw, 800px')} alt="${main.title}" loading="eager" fetchpriority="high" decoding="async" width="800" height="450">
+        <img src="${heroSrc(main.img||CAT_IMAGES[main.cat])}"${responsiveAttrs(main.img||CAT_IMAGES[main.cat], '(max-width:980px) 100vw, 800px')} alt="${main.title}" loading="eager" fetchpriority="high" decoding="async" width="800" height="450">
         <div class="hero-main-content">
           <span class="hero-cat-badge">${CAT_LABELS[main.cat]}</span>
           <h2 class="hero-main-title">${main.title}</h2>
@@ -1743,16 +1742,21 @@ area.innerHTML=`
         ${side2?`<div class="hero-side-card"onclick="openArticle(${side2.id})"role="button"tabindex="0"aria-label="${side2.title}"onkeydown="if(event.key==='Enter')openArticle(${side2.id})"><img src="${cardThumb(side2.img||CAT_IMAGES[side2.cat])}"${responsiveAttrs(side2.img||CAT_IMAGES[side2.cat],'(max-width:980px) 50vw, 340px')}alt="${side2.title}"loading="lazy"width="340"height="210"decoding="async"><div class="hero-side-content"><div class="hero-side-cat">${CAT_LABELS[side2.cat]}</div><div class="hero-side-title">${side2.title}</div></div></div>`:''}
       </div>
     </div>`;}
+function wsrvW(url,w){return 'https://wsrv.nl/?url='+encodeURIComponent(url)+'&w='+w+'&fit=cover&output=webp&q=75';}
+function isProxyable(url){return typeof url==='string'&&/^https?:\/\//.test(url)&&url.indexOf('wsrv.nl')===-1&&url.indexOf('images.unsplash.com')===-1;}
+function heroSrc(url){return isProxyable(url)?wsrvW(url,800):url;}
 function getImageUrl(originalUrl,width,fit){
   if(typeof originalUrl!=='string')return originalUrl;
-  fit=fit||'cover';
-  return 'https://wsrv.nl/?url='+encodeURIComponent(originalUrl)+'&w='+width+'&fit='+fit+'&output=webp&q=80&sharp=1&dpr=2';
+  return wsrvW(originalUrl,width||800);
 }
 function cardThumb(url){if(typeof url!=='string')return url;
   if(url.indexOf('images.unsplash.com')!==-1){return url.replace(/([?&])w=\d+/,'$1w=500');}
-  if(url.indexOf('/storage/v1/object/public/')!==-1){return getImageUrl(url,500);}
+  if(isProxyable(url)){return wsrvW(url,400);}
   return url;}
-function responsiveAttrs(url,sizesAttr){if(typeof url!=='string'||url.indexOf('images.unsplash.com')===-1)return'';const widths=[320,500,800,1200];const srcset=widths.map(w=>url.replace(/([?&])w=\d+/,'$1w='+w)+' '+w+'w').join(', ');return` srcset="${srcset}" sizes="${sizesAttr}"`;}
+function responsiveAttrs(url,sizesAttr){if(typeof url!=='string')return'';
+  if(url.indexOf('images.unsplash.com')!==-1){const widths=[320,500,800,1200];const srcset=widths.map(w=>url.replace(/([?&])w=\d+/,'$1w='+w)+' '+w+'w').join(', ');return` srcset="${srcset}" sizes="${sizesAttr}"`;}
+  if(isProxyable(url)){const widths=[400,640,800,1200];const srcset=widths.map(w=>wsrvW(url,w)+' '+w+'w').join(', ');return` srcset="${srcset}" sizes="${sizesAttr}"`;}
+  return'';}
 function cardHTML(a){const score=a.score?`<div class="review-score ${parseFloat(a.score)>=8?'high':parseFloat(a.score)>=6?'mid':''}">${a.score}</div>`:'';return`<a href="/article/${a.id}/" class="card" onclick="openArticle(${a.id});return false;" aria-label="${a.title}">
     <div class="card-img">
       <img src="${cardThumb(a.img||CAT_IMAGES[a.cat])}"${responsiveAttrs(a.img||CAT_IMAGES[a.cat], '(max-width:680px) 45vw, 400px')} alt="${a.title}" loading="lazy" width="400" height="225" decoding="async" onload="this.classList.add('loaded')" onerror="this.classList.add('loaded')">
@@ -1841,7 +1845,7 @@ document.getElementById('art-author').textContent=a.author;document.getElementBy
 const ogTitle=document.querySelector('meta[property="og:title"]');const ogDesc=document.querySelector('meta[property="og:description"]');const ogImg=document.querySelector('meta[property="og:image"]');const twTitle=document.querySelector('meta[name="twitter:title"]');const twDesc=document.querySelector('meta[name="twitter:description"]');if(ogTitle)ogTitle.setAttribute('content',a.title+' | ספידומטר');if(ogDesc)ogDesc.setAttribute('content',a.sub||a.title);if(ogImg&&a.img)ogImg.setAttribute('content',a.img);if(twTitle)twTitle.setAttribute('content',a.title+' | ספידומטר');if(twDesc)twDesc.setAttribute('content',a.sub||a.title);document.title=a.title+' | ספידומטר';let sc=document.getElementById('article-schema');if(!sc){sc=document.createElement('script');sc.id='article-schema';sc.type='application/ld+json';document.head.appendChild(sc);}
 const schema={"@context":"https://schema.org","@type":a.cat==='review'?'Review':'NewsArticle',"headline":a.title,"description":a.sub||a.title,"author":{"@type":"Person","name":a.author},"datePublished":spISODate(a.date),"dateModified":spISODate(a.date),"image":a.img||CAT_IMAGES[a.cat],"inLanguage":"he","publisher":{"@type":"Organization","name":"ספידומטר","logo":{"@type":"ImageObject","url":"https://speedometer10.co.il/logo.png"},"url":"https://speedometer10.co.il/"},"mainEntityOfPage":{"@type":"WebPage","@id":"https://speedometer10.co.il/article/"+a.id+"/"}};if(a.cat==='review'&&a.score){schema.reviewRating={"@type":"Rating","ratingValue":parseFloat(a.score),"bestRating":10,"worstRating":1};schema.itemReviewed={"@type":"Car","name":a.title,"offers":a.specs&&a.specs.price?{"@type":"Offer","price":a.specs.price,"priceCurrency":"ILS"}:undefined};}
 if(a.specs&&a.specs.power){schema.about={"@type":"Car","name":a.title,"vehicleEngine":{"@type":"EngineSpecification","enginePower":{"@type":"QuantitativeValue","value":a.specs.power,"unitCode":"BHP"}}};}
-if(a.tags&&a.tags.length)schema.keywords=a.tags.join(', ');schema.articleSection=CAT_LABELS[a.cat]||a.cat;schema.inLanguage='he';schema.publisher={"@type":"Organization","name":"ספידומטר","url":"https://speedometer10.co.il/","logo":{"@type":"ImageObject","url":"https://speedometer10.co.il/logo.png"}};sc.textContent=JSON.stringify(schema,(k,v)=>v===undefined?undefined:v);const imgEl=document.getElementById('art-img');const oldSl=document.getElementById('art-slider');if(oldSl)oldSl.remove();if(a.gallery&&a.gallery.length>1){imgEl.style.display='none';const sl=document.createElement('div');sl.id='art-slider';imgEl.parentElement.insertBefore(sl,imgEl);sl.innerHTML=buildSliderHTML(a.gallery);sliderState['art-slider']={current:0};}else{imgEl.style.display='block';const rawSrc=a.img||CAT_IMAGES[a.cat];if(rawSrc&&rawSrc.includes('unsplash.com')){const url=rawSrc.includes('fm=webp')?rawSrc:rawSrc.replace(/\?(.*)/,'?$1&fm=webp&q=75&w=900&auto=format').replace(/^([^?]+)$/,'$1?fm=webp&q=75&w=900&auto=format');imgEl.src=url;}else if(rawSrc&&rawSrc.indexOf('/storage/v1/object/public/')!==-1){imgEl.src=getImageUrl(rawSrc,900);}else{imgEl.src=rawSrc;}
+if(a.tags&&a.tags.length)schema.keywords=a.tags.join(', ');schema.articleSection=CAT_LABELS[a.cat]||a.cat;schema.inLanguage='he';schema.publisher={"@type":"Organization","name":"ספידומטר","url":"https://speedometer10.co.il/","logo":{"@type":"ImageObject","url":"https://speedometer10.co.il/logo.png"}};sc.textContent=JSON.stringify(schema,(k,v)=>v===undefined?undefined:v);const imgEl=document.getElementById('art-img');const oldSl=document.getElementById('art-slider');if(oldSl)oldSl.remove();if(a.gallery&&a.gallery.length>1){imgEl.style.display='none';const sl=document.createElement('div');sl.id='art-slider';imgEl.parentElement.insertBefore(sl,imgEl);sl.innerHTML=buildSliderHTML(a.gallery);sliderState['art-slider']={current:0};}else{imgEl.style.display='block';const rawSrc=a.img||CAT_IMAGES[a.cat];if(rawSrc&&rawSrc.includes('unsplash.com')){const url=rawSrc.includes('fm=webp')?rawSrc:rawSrc.replace(/\?(.*)/,'?$1&fm=webp&q=75&w=900&auto=format').replace(/^([^?]+)$/,'$1?fm=webp&q=75&w=900&auto=format');imgEl.src=url;}else if(isProxyable(rawSrc)){imgEl.src=wsrvW(rawSrc,1000);}else{imgEl.src=rawSrc;}
 imgEl.alt=a.title;}
 document.getElementById('art-img-caption').textContent=a.imgCaption||'';const specWrap=document.getElementById('art-spec');if(a.cat==='review'&&a.specs){specWrap.innerHTML=buildSpecCard(a.specs);specWrap.style.display='block';setTimeout(()=>document.querySelectorAll('.score-bar-fill').forEach(b=>{b.style.width=b.dataset.pct+'%';}),150);}else{specWrap.innerHTML='';specWrap.style.display='none';}
 document.getElementById('art-body').innerHTML=parseBody(a.body||'',a.bodyImages||[],a.title);const tagsWrap=document.getElementById('art-tags');var _dispTags=(a.tags||[]).filter(function(t){return !(typeof t==='string'&&(t.indexOf('uid:')===0||t.indexOf('src:')===0));});if(tagsWrap&&_dispTags.length){tagsWrap.innerHTML=_dispTags.map(t=>`<span onclick="doSearch('${t}')" style="display:inline-block;padding:4px 12px;background:var(--bg);border:1px solid var(--border);border-radius:20px;font-size:0.78rem;cursor:pointer;margin:4px 2px;transition:all 0.15s;" onmouseover="this.style.borderColor='var(--red)'" onmouseout="this.style.borderColor='var(--border)'">${t}</span>`).join('');tagsWrap.style.display='block';}else if(tagsWrap)tagsWrap.style.display='none';const related=articles.filter(x=>x.id!==id&&x.cat===a.cat).sort((x,y)=>(y.views||0)-(x.views||0)).slice(0,3);const fallback=articles.filter(x=>x.id!==id).sort((x,y)=>(y.views||0)-(x.views||0)).slice(0,3);const galleryWrap=document.getElementById('art-gallery');if(galleryWrap){if(a.gallery&&a.gallery.length>1){const captions=a.galleryCaptions||[];galleryWrap.style.display='block';galleryWrap.innerHTML=`
@@ -2054,8 +2058,10 @@ function canvasSupportsWebp(canvas){try{return canvas.toDataURL('image/webp').in
 catch(e){return false;}}
 function updateCatBreadcrumbPreview(cat){const el=document.getElementById('cat-breadcrumb-preview');if(!el)return;const bcMap={local:'חדשות › חדשות מקומיות',world:'חדשות › חדשות עולמיות',review:'מבחנים › מבחני רכב',electric:'מדריכים › רכב חשמלי',tech:'מדריכים › טכנולוגיה ובטיחות',buying:'מדריכים › מדריך קניית רכב',sport:'מבחנים › רכב ספורט',luxury:'יוקרה › רכב יוקרה',quick:'חדשות › חדשות בקליק'};const path=bcMap[cat]||'חדשות › '+(CAT_LABELS[cat]||cat);el.innerHTML='תג הניווט: <strong>'+path+'</strong>';}
 (function init(){restorePrefs();const local=loadLocal();const hasLocal=local&&local.length>0;if(hasLocal){articles=local.filter(a=>!deletedIds.has(a.id));nextId=Math.max(...articles.map(a=>a.id),0)+1;}
+else if(Array.isArray(window.__PRELOADED_ARTICLES)&&window.__PRELOADED_ARTICLES.length>0){try{const _now=new Date();articles=window.__PRELOADED_ARTICLES.map(mapRow).filter(a=>!deletedIds.has(a.id)&&(!a.scheduledAt||new Date(a.scheduledAt)<=_now));if(articles.length>0)nextId=Math.max(...articles.map(a=>a.id),0)+1;}catch(e){articles=[];}}
+const hasData=articles.length>0;
 if(isStaticPrerender){const _hp=document.getElementById('home-page');if(_hp)_hp.style.display='none';const _ap=document.getElementById('article-page');if(_ap)_ap.style.display='block';}
-if(!hasLocal){const skCard=()=>`<div class="skeleton-card"><div class="skeleton-img"></div><div class="skeleton-text"></div><div class="skeleton-text short"></div></div>`;const heroArea=document.getElementById('hero-area');if(heroArea)heroArea.innerHTML=`
+if(!hasData){const skCard=()=>`<div class="skeleton-card"><div class="skeleton-img"></div><div class="skeleton-text"></div><div class="skeleton-text short"></div></div>`;const heroArea=document.getElementById('hero-area');if(heroArea)heroArea.innerHTML=`
       <div class="hero-grid" style="pointer-events:none;">
         <div class="hero-main" style="border-radius:8px;overflow:hidden;">
           <div class="skeleton-img" style="height:100%;min-height:220px;border-radius:0;"></div>
@@ -2065,7 +2071,7 @@ if(!hasLocal){const skCard=()=>`<div class="skeleton-card"><div class="skeleton-
           <div class="skeleton-card" style="flex:1;">${skCard()}</div>
         </div>
       </div>`;const lg=document.getElementById('latest-grid');if(lg)lg.innerHTML=Array(6).fill(0).map(skCard).join('');}
-if(hasLocal){buildHero();buildSections();buildTicker();buildBreakingTicker();}
+if(hasData){buildHero();buildSections();buildTicker();buildBreakingTicker();}
 if(!isStaticPrerender){showHome(false);}
 function checkScheduledArticles(){const now=new Date();let changed=false;articles.forEach(a=>{if(a.scheduledAt&&new Date(a.scheduledAt)<=now){a.scheduledAt=null;a.date=now.toLocaleDateString('he-IL');a.time=now.toLocaleTimeString('he-IL',{hour:'2-digit',minute:'2-digit'});changed=true;if(sbClient)updateInSupabase(a).catch(()=>{});}});if(changed){saveLocal();buildHero();buildSections();buildTicker();buildBreakingTicker();renderAdminTable();}}
 checkScheduledArticles();setInterval(checkScheduledArticles,60000);document.addEventListener('load',function(e){if(e.target.tagName==='IMG'){e.target.classList.add('loaded');const parent=e.target.closest('.card-img');if(parent)parent.style.animation='none';}},true);document.querySelectorAll('.card-img img').forEach(img=>{if(img.complete){img.classList.add('loaded');const p=img.closest('.card-img');if(p)p.style.animation='none';}});requestAnimationFrame(()=>handleMobileHero());
