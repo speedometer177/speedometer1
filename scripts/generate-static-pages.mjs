@@ -321,7 +321,9 @@ async function fetchLightRows(supabase) {
 
 /* בונה תג snapshot: 16 הכתבות האחרונות מוטמעות ב-HTML — הלקוח מרנדר מיידית בלי לחכות ל-fetch */
 function buildSnapshotTag(lightRows) {
-  const top = lightRows.slice(0, 16);
+  // views מושמט בכוונה: הוא משתנה כל רגע ויוצר diff חדש ב-index.html בכל ריצה,
+  // מה שמגביר קונפליקטים בין ריצות מקבילות. הלקוח מרענן views מ-Supabase תוך שנייה ממילא.
+  const top = lightRows.slice(0, 16).map(r => { const c = { ...r }; delete c.views; return c; });
   const json = JSON.stringify(top).replace(/</g, '\\u003c'); // מנטרל </script> וכל תג בתוך התוכן
   return `<script>window.__PRELOADED_ARTICLES=${json};</script>`;
 }
