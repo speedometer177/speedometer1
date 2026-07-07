@@ -78,12 +78,10 @@ window.addEventListener('load',function(){setTimeout(function(){var s=document.c
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="ספידומטר">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://kaykrrnmykqrfhawgtqt.supabase.co" crossorigin>
 <link rel="dns-prefetch" href="//kaykrrnmykqrfhawgtqt.supabase.co">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="preconnect" href="https://wsrv.nl">
 <link rel="dns-prefetch" href="//wsrv.nl">
-<link rel="preconnect" href="https://images.unsplash.com">
 <link rel="dns-prefetch" href="//images.unsplash.com">
 <link rel="dns-prefetch" href="//fonts.googleapis.com">
 <link rel="dns-prefetch" href="//fonts.gstatic.com">
@@ -2092,7 +2090,7 @@ if(!hasData){const skCard=()=>`<div class="skeleton-card"><div class="skeleton-i
           <div class="skeleton-card" style="flex:1;">${skCard()}</div>
         </div>
       </div>`;const lg=document.getElementById('latest-grid');if(lg)lg.innerHTML=Array(6).fill(0).map(skCard).join('');}
-if(hasData){buildHero();buildSections();buildTicker();buildBreakingTicker();}
+if(hasData){buildHero();try{handleMobileHero();}catch(e){}setTimeout(function(){buildSections();buildTicker();buildBreakingTicker();try{document.querySelectorAll('.card-img img').forEach(function(img){if(img.complete){img.classList.add('loaded');var p=img.closest('.card-img');if(p)p.style.animation='none';}});}catch(e){}},0);}
 if(!isStaticPrerender){showHome(false);}
 function checkScheduledArticles(){const now=new Date();let changed=false;articles.forEach(a=>{if(a.scheduledAt&&new Date(a.scheduledAt)<=now){a.scheduledAt=null;a.date=now.toLocaleDateString('he-IL');a.time=now.toLocaleTimeString('he-IL',{hour:'2-digit',minute:'2-digit'});changed=true;if(sbClient)updateInSupabase(a).catch(()=>{});}});if(changed){saveLocal();buildHero();buildSections();buildTicker();buildBreakingTicker();renderAdminTable();}}
 checkScheduledArticles();setInterval(checkScheduledArticles,60000);document.addEventListener('load',function(e){if(e.target.tagName==='IMG'){e.target.classList.add('loaded');const parent=e.target.closest('.card-img');if(parent)parent.style.animation='none';}},true);document.querySelectorAll('.card-img img').forEach(img=>{if(img.complete){img.classList.add('loaded');const p=img.closest('.card-img');if(p)p.style.animation='none';}});requestAnimationFrame(()=>handleMobileHero());
