@@ -59,16 +59,26 @@ jobs:
           fi
           git commit -m "🤖 אוטומציה: רענון דפים סטטיים ומפת אתר [skip ci]"
 
-          # מנגנון retry: אם push נכשל בגלל מירוץ עם ריצה מקבילה,
-          # מנסים rebase מחדש על המצב העדכני ולדחוף שוב, עד 5 פעמים.
+          # מנגנון retry: אם push נכשל בגלל מירוץ עם ריצה אחרת,
+          # לא עושים rebase (הקבצים גנרטיביים - rebase נתקע על קונפליקט תוכן).
+          # במקום: מתאפסים למצב העדכני ב-origin ומריצים את הגנרטור מחדש עליו.
+          # התוצר הוא פונקציה טהורה של הדאטהבייס + התבנית, אז אין מה "למזג".
           for i in 1 2 3 4 5; do
             if git push origin HEAD:${{ github.ref_name }}; then
               echo "✅ Push succeeded on attempt $i"
               exit 0
             fi
-            echo "⚠️ Push failed (attempt $i) — fetching and rebasing onto latest origin..."
+            echo "⚠️ Push failed (attempt $i) — resetting to latest origin and regenerating..."
+            git rebase --abort 2>/dev/null || true
             git fetch origin ${{ github.ref_name }}
-            git rebase origin/${{ github.ref_name }}
+            git reset --hard origin/${{ github.ref_name }}
+            npm run generate
+            git add article/* sitemap.xml index.html 404.html
+            if git diff --cached --quiet; then
+              echo "✅ Origin already up to date after regeneration — nothing to push."
+              exit 0
+            fi
+            git commit -m "🤖 אוטומציה: רענון דפים סטטיים ומפת אתר [skip ci]"
             sleep $((i * 3))
           done
           echo "❌ Push failed after 5 attempts."
