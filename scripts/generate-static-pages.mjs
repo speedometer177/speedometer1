@@ -328,6 +328,25 @@ function buildSnapshotTag(lightRows) {
   return `<script>window.__PRELOADED_ARTICLES=${json};</script>`;
 }
 
+/* בונה שקופית ראשונה סטטית לקרוסולת המובייל — זהה למבנה ש-buildHeroBanner מייצר בלקוח,
+   כך שכשה-JS עולה ובונה את הקרוסולה המלאה, ההחלפה בלתי נראית (אותה תמונה, אותם classes).
+   התוצאה: תמונת ה-LCP קיימת ב-DOM מהבית הראשון של ה-HTML - הדפדפן מצייר אותה בלי לחכות ל-JS. */
+function buildStaticHeroSlide(lightRows) {
+  const pool = lightRows.filter(r => r.cat !== 'quick');
+  const main = pool.find(r => r.featured) || pool[0];
+  if (!main || !main.img || String(main.img).trim().length <= 5) return '';
+  const img = heroSrc(String(main.img).trim());
+  const badge = esc(CAT_LABELS[main.cat] || '');
+  return '<div class="hero-banner"><div class="hero-banner-track" style="direction:ltr;">'
+    + '<div class="hero-banner-slide" style="direction:rtl;">'
+    + `<img src="${esc(img)}" alt="${esc(main.title)}" loading="eager" fetchpriority="high" decoding="sync" width="900" height="506">`
+    + '<div class="hero-banner-content" style="direction:rtl;text-align:right;">'
+    + `<span style="display:inline-block;background:var(--red);color:#fff;font-size:0.65rem;font-weight:700;padding:3px 10px;border-radius:2px;margin-bottom:6px;">${badge}</span>`
+    + `<div style="font-size:1.08rem;font-weight:800;color:#fff;line-height:1.3;margin-bottom:5px;">${esc(main.title)}</div>`
+    + `<div style="font-size:0.73rem;color:rgba(255,255,255,0.7);">${esc(main.author || 'מערכת ספידומטר')} · ${esc(main.date || '')}</div>`
+    + '</div></div></div></div>';
+}
+
 /* בונה תג preload לתמונת ה-hero — אותה בחירת כתבה כמו buildHero בלקוח: featured ראשון, אחרת החדשה ביותר */
 function buildHeroPreloadTag(lightRows) {
   const pool = lightRows.filter(r => r.cat !== 'quick');
@@ -336,8 +355,8 @@ function buildHeroPreloadTag(lightRows) {
   const raw = String(main.img).trim();
   const href = heroSrc(raw);
   const srcset = heroSrcset(raw);
-  const srcsetAttrs = srcset ? ` imagesrcset="${srcset}" imagesizes="(max-width:980px) 100vw, 800px"` : '';
-  return `<link rel="preload" as="image" href="${href}"${srcsetAttrs} fetchpriority="high">`;
+  const srcsetAttrs = srcset ? ` imagesrcset="${esc(srcset)}" imagesizes="(max-width:980px) 100vw, 800px"` : '';
+  return `<link rel="preload" as="image" href="${esc(href)}"${srcsetAttrs} fetchpriority="high">`;
 }
 
 /* מזריק תוכן בין סמני BUILD — אידמפוטנטי (מחליף את מה שהיה שם בריצה הקודמת) */
@@ -378,8 +397,9 @@ async function main() {
   // ה-snapshot נכנס לתבנית עצמה → גם דפי הכתבות מקבלים רינדור מיידי של המקטעים
   template = injectBetween(template, 'DATA_SNAPSHOT', snapshotTag);
 
-  // דף הבית (+404 הזהה) מקבל בנוסף preload לתמונת ה-hero
-  const rootHtml = injectBetween(template, 'HERO_PRELOAD', heroPreloadTag);
+  // דף הבית (+404 הזהה) מקבל בנוסף preload לתמונת ה-hero + שקופית ראשונה סטטית לקרוסולת המובייל
+  let rootHtml = injectBetween(template, 'HERO_PRELOAD', heroPreloadTag);
+  rootHtml = injectBetween(rootHtml, 'HERO_SLIDE', buildStaticHeroSlide(lightRows));
   await writeFile(TEMPLATE_PATH, rootHtml, 'utf-8');
   await writeFile(path.join(SITE_DIR, '404.html'), rootHtml, 'utf-8');
   console.log(`✅ index.html + 404.html עודכנו (snapshot: ${Math.min(lightRows.length,16)} כתבות, preload: ${heroPreloadTag ? 'כן' : 'אין תמונת hero'})`);
