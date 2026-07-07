@@ -1,0 +1,26 @@
+{
+  "name": "ספידומטר - חדשות רכב, מבחני דרכים וטכנולוגיה",
+  "short_name": "ספידומטר",
+  "description": "האתר המוביל בישראל לחדשות רכב, מבחני דרכים, רכב יוקרה וטכנולוגיה אוטומוטיב",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#e8001d",
+  "lang": "he",
+  "dir": "rtl",
+  "icons": [
+    {
+      "src": "/sp-favicon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/sp-favicon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ]
+}
