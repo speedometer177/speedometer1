@@ -84,7 +84,7 @@ track.innerHTML=seq+seq;
 // משך ההנפשה יחסי לרוחב למהירות אחידה (~70px/שנייה)
 try{const oneW=track.scrollWidth/2;const dur=Math.min(120,Math.max(18,Math.round(oneW/70)));track.style.setProperty('--sp-bt-dur',dur+'s');}catch(e){}
 // הפעלה מחדש נקייה של ההנפשה כדי שתתחיל מההתחלה אחרי כל רענון
-track.style.animation='none';void track.offsetWidth;requestAnimationFrame(function(){requestAnimationFrame(function(){var d=getComputedStyle(track).getPropertyValue('--sp-bt-dur')||'42s';track.style.animation='spBreakingScroll '+d.trim()+' linear infinite';});});}
+track.style.animation='none';track.style.willChange='transform';if(window._spTickRaf)cancelAnimationFrame(window._spTickRaf);var _half=0,_pos=0,_last=performance.now();function _spTick(now){var dt=Math.min(100,now-_last);_last=now;if(!_half||!track.isConnected){_half=track.scrollWidth/2;}if(_half>0&&!document.hidden){_pos+=0.06*dt;if(_pos>=_half)_pos-=_half;track.style.transform='translateX('+(-_pos)+'px)';}window._spTickRaf=requestAnimationFrame(_spTick);}window._spTickRaf=requestAnimationFrame(_spTick);}
 function buildTicker(){const track=document.getElementById('ticker-track');if(!track||!articles.length)return;const content=articles.slice(0,10).map(a=>`<span class="ticker-item" onclick="openArticle(${a.id})">${a.title}</span>`).join('');track.innerHTML=content+content;}
 function buildMobileLatestStrip(articles){if(window.innerWidth>680)return;const strip=document.getElementById('mobile-latest-strip');const dotsEl=document.getElementById('mobile-latest-dots');const badge=document.getElementById('latest-count-badge');if(!strip)return;const items=articles.slice(0,10);if(badge)badge.textContent=items.length;const allItems=[...items,...items.slice(0,2)];strip.innerHTML=allItems.map(a=>cardHTML(a)).join('');if(dotsEl){dotsEl.innerHTML=items.map((_,i)=>`<div class="mc-dot${i===0?' active':''}" data-idx="${i}"></div>`).join('');dotsEl.querySelectorAll('.mc-dot').forEach(dot=>{dot.addEventListener('click',()=>{const idx=parseInt(dot.dataset.idx);scrollToCard(strip,idx);});});}
 let isScrolling=false;let _cardW=0;const getCardW=()=>{if(!_cardW)_cardW=strip.querySelector('.card')?.offsetWidth||strip.offsetWidth;return _cardW;};window.addEventListener('resize',()=>{_cardW=0;},{passive:true});strip.addEventListener('scroll',()=>{if(isScrolling)return;isScrolling=true;requestAnimationFrame(()=>{updateMobileDots(strip,dotsEl,items.length,getCardW());const gap=14;const step=getCardW()+gap;const maxReal=step*items.length;if(strip.scrollLeft>=maxReal){strip.scrollLeft=strip.scrollLeft-maxReal;}
@@ -146,22 +146,29 @@ function cardHTML(a){const score=a.score?`<div class="review-score ${parseFloat(
 const _gridExpandState={};
 function renderExpandableGrid(gridEl,items,stateKey){
   if(!gridEl)return;
-  const expanded=!!_gridExpandState[stateKey];
-  const LIMIT=8;
-  const shown=expanded?items:items.slice(0,LIMIT);
+  const BASE=8,STEP=6;
+  let shownCount=_gridExpandState[stateKey];
+  if(typeof shownCount!=='number'||shownCount<BASE)shownCount=BASE;
+  const shown=items.slice(0,shownCount);
   const cardsHtml=shown.map(a=>cardHTML(a)).join('')||'<p style="color:var(--muted);font-size:0.9rem;grid-column:1/-1;padding:20px 0;">לא נמצאו כתבות בקטגוריה זו.</p>';
-  const showMoreBtn=(items.length>LIMIT)?`<button class="show-more-grid-btn" onclick="toggleGridExpand('${stateKey}')" aria-expanded="${expanded}">${expanded?'הצג פחות ↑':'לכל הכתבות ('+items.length+') →'}</button>`:'';
-  gridEl.innerHTML=cardsHtml+showMoreBtn;
+  let btn='';
+  if(items.length>shownCount){btn=`<button class="show-more-grid-btn" onclick="expandGridMore('${stateKey}')" aria-label="טען עוד כתבות">קרא עוד ↓</button>`;}
+  else if(shownCount>BASE){btn=`<button class="show-more-grid-btn" onclick="resetGridExpand('${stateKey}')" aria-label="צמצם רשימה">הצג פחות ↑</button>`;}
+  gridEl.innerHTML=cardsHtml+btn;
   gridEl.dataset.stateKey=stateKey;
 }
-function toggleGridExpand(stateKey){
-  _gridExpandState[stateKey]=!_gridExpandState[stateKey];
+function expandGridMore(stateKey){
+  const cur=typeof _gridExpandState[stateKey]==='number'?_gridExpandState[stateKey]:8;
+  _gridExpandState[stateKey]=cur+6;
   buildSections();
-  if(!_gridExpandState[stateKey]){
-    const grid=document.querySelector('[data-state-key="'+stateKey+'"]');
-    if(grid)grid.scrollIntoView({behavior:'smooth',block:'start'});
-  }
 }
+function resetGridExpand(stateKey){
+  _gridExpandState[stateKey]=8;
+  buildSections();
+  const grid=document.querySelector('[data-state-key="'+stateKey+'"]');
+  if(grid)grid.scrollIntoView({behavior:'smooth',block:'start'});
+}
+function toggleGridExpand(stateKey){expandGridMore(stateKey);}
 function latestItemHTML(a,num){return`<div class="latest-item" onclick="openArticle(${a.id})" role="button" tabindex="0" aria-label="${a.title}" onkeydown="if(event.key==='Enter')openArticle(${a.id})">
     <span class="latest-num">${num<10?'0'+num:num}</span>
     <div class="latest-body">
@@ -192,7 +199,7 @@ const rg=document.getElementById('reviews-grid');if(rg){const r=articles.filter(
 const wg=document.getElementById('world-grid');if(wg){const w=articles.filter(a=>a.cat==='world');wg.style.display=w.length?'grid':'none';renderExpandableGrid(wg,w,'world-more-btn');}
 const pl=document.getElementById('popular-list');if(pl)pl.innerHTML=[...articles].sort((a,b)=>(b.views||0)-(a.views||0)).slice(0,5).map((a,i)=>latestItemHTML(a,i+1)).join('');}
 function filterCat(cat,el){currentFilter=cat;_gridExpandState['latest-more-btn']=false;document.querySelectorAll('.cat-tag').forEach(b=>b.classList.remove('active'));if(el&&el.classList){el.classList.add('active');}else{const map={all:'הכל',local:'חדשות מקומיות',world:'עולמי',review:'מבחני רכב',electric:'חשמלי',tech:'טכנולוגיה',buying:'קניית רכב',sport:'ספורט',luxury:'יוקרה',quick:'בקליק'};document.querySelectorAll('.cat-tag').forEach(b=>{if(map[cat]&&b.textContent.trim()===map[cat])b.classList.add('active');});}
-buildHero();buildSections();showHome();window.scrollTo({top:0,behavior:'smooth'});}
+buildHero();buildSections();showHome();window.scrollTo(0,0);}
 function _clearPrerenderOverride(){try{var s=document.getElementById('prerender-override');if(s&&s.parentNode)s.parentNode.removeChild(s);}catch(e){}}
 function showHome(pushState=true){_clearPrerenderOverride();if(articles&&articles.length){const _lg=document.getElementById('latest-grid');if(_lg&&currentFilter!=='quick'&&_lg.children.length===0){try{buildHero();buildSections();buildTicker();buildBreakingTicker();}catch(e){}}}resetMeta();const artSubEl=document.getElementById('art-sub');if(artSubEl)artSubEl.style.display='';const hp=document.getElementById('home-page');const ap2=document.getElementById('article-page');const adp=document.getElementById('admin-page');if(hp){hp.style.display='block';hp.style.animation='fadeIn 0.2s ease';}
 if(ap2)ap2.style.display='none';if(adp)adp.style.display='none';document.getElementById('main-footer').style.display='block';if(pushState&&window.history){window.history.pushState({page:'home',filter:currentFilter},'','/');}
@@ -217,7 +224,7 @@ const schema={"@context":"https://schema.org","@type":a.cat==='review'?'Review':
 if(a.specs&&a.specs.power){schema.about={"@type":"Car","name":a.title,"vehicleEngine":{"@type":"EngineSpecification","enginePower":{"@type":"QuantitativeValue","value":a.specs.power,"unitCode":"BHP"}}};}
 if(a.tags&&a.tags.length)schema.keywords=a.tags.join(', ');schema.articleSection=CAT_LABELS[a.cat]||a.cat;schema.inLanguage='he';schema.publisher={"@type":"Organization","name":"ספידומטר","url":"https://speedometer10.co.il/","logo":{"@type":"ImageObject","url":"https://speedometer10.co.il/logo.png"}};sc.textContent=JSON.stringify(schema,(k,v)=>v===undefined?undefined:v);const imgEl=document.getElementById('art-img');const oldSl=document.getElementById('art-slider');if(oldSl)oldSl.remove();if(a.gallery&&a.gallery.length>1){imgEl.style.display='none';const sl=document.createElement('div');sl.id='art-slider';imgEl.parentElement.insertBefore(sl,imgEl);sl.innerHTML=buildSliderHTML(a.gallery);sliderState['art-slider']={current:0};}else{imgEl.style.display='block';const rawSrc=a.img||CAT_IMAGES[a.cat];imgEl.classList.remove('loaded');imgEl.removeAttribute('src');if(rawSrc&&rawSrc.includes('unsplash.com')){const url=rawSrc.includes('fm=webp')?rawSrc:rawSrc.replace(/\?(.*)/,'?$1&fm=webp&q=75&w=900&auto=format').replace(/^([^?]+)$/,'$1?fm=webp&q=75&w=900&auto=format');imgEl.src=url;}else if(isProxyable(rawSrc)){imgEl.src=wsrvW(rawSrc,1000);}else{imgEl.src=rawSrc;}
 imgEl.alt=a.title;imgEl.setAttribute('data-lightbox',imgEl.src);if(imgEl.complete&&imgEl.naturalWidth)imgEl.classList.add('loaded');}
-document.getElementById('art-img-caption').textContent=a.imgCaption||'';try{renderVote(a.id);}catch(e){}const specWrap=document.getElementById('art-spec');if(a.cat==='review'&&a.specs){specWrap.innerHTML='<button class="spec-toggle" onclick="var b=this.closest(\'#art-spec\').querySelector(\'.spec-collapse\');var o=b.classList.toggle(\'open\');this.classList.toggle(\'open\',o);this.setAttribute(\'aria-expanded\',o)" aria-expanded="false"><span class="spec-toggle-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M14.7 6.3a5 5 0 0 0-7.07 7.07l-4.2 4.2a1.5 1.5 0 0 0 2.12 2.12l4.2-4.2a5 5 0 0 0 7.07-7.07l-2.83 2.83-2.12-2.12z"/></svg></span><span class="spec-toggle-label">מפרט טכני מלא</span><span class="spec-toggle-chev"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6"><polyline points="6 9 12 15 18 9"/></svg></span></button><div class="spec-collapse">'+buildSpecCard(a.specs)+'</div>';specWrap.style.display='block';setTimeout(()=>document.querySelectorAll('.score-bar-fill').forEach(b=>{b.style.width=b.dataset.pct+'%';}),150);}else{specWrap.innerHTML='';specWrap.style.display='none';}
+document.getElementById('art-img-caption').textContent=a.imgCaption||'';try{renderVote(a.id);}catch(e){}const specWrap=document.getElementById('art-spec');if(a.cat==='review'&&a.specs){specWrap.innerHTML=quickCubesHTML(a.specs)+prosConsHTML(a.specs)+'<button class="spec-toggle" onclick="var b=this.closest(\'#art-spec\').querySelector(\'.spec-collapse\');var o=b.classList.toggle(\'open\');this.classList.toggle(\'open\',o);this.setAttribute(\'aria-expanded\',o)" aria-expanded="false"><span class="spec-toggle-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M14.7 6.3a5 5 0 0 0-7.07 7.07l-4.2 4.2a1.5 1.5 0 0 0 2.12 2.12l4.2-4.2a5 5 0 0 0 7.07-7.07l-2.83 2.83-2.12-2.12z"/></svg></span><span class="spec-toggle-label">מפרט טכני מלא</span><span class="spec-toggle-chev"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6"><polyline points="6 9 12 15 18 9"/></svg></span></button><div class="spec-collapse">'+buildSpecCard(a.specs,true)+'</div>';specWrap.style.display='block';setTimeout(()=>document.querySelectorAll('.score-bar-fill').forEach(b=>{b.style.width=b.dataset.pct+'%';}),150);}else{specWrap.innerHTML='';specWrap.style.display='none';}
 document.getElementById('art-body').innerHTML=parseBody(a.body||'',a.bodyImages||[],a.title);const tagsWrap=document.getElementById('art-tags');var _dispTags=(a.tags||[]).filter(function(t){return !(typeof t==='string'&&(t.indexOf('uid:')===0||t.indexOf('src:')===0));});if(tagsWrap&&_dispTags.length){tagsWrap.innerHTML=_dispTags.map(t=>`<span onclick="doSearch('${t}')" style="display:inline-block;padding:4px 12px;background:var(--bg);border:1px solid var(--border);border-radius:20px;font-size:0.78rem;cursor:pointer;margin:4px 2px;transition:all 0.15s;" onmouseover="this.style.borderColor='var(--red)'" onmouseout="this.style.borderColor='var(--border)'">${t}</span>`).join('');tagsWrap.style.display='block';}else if(tagsWrap)tagsWrap.style.display='none';const related=articles.filter(x=>x.id!==id&&x.cat===a.cat).sort((x,y)=>(y.views||0)-(x.views||0)).slice(0,3);const fallback=articles.filter(x=>x.id!==id).sort((x,y)=>(y.views||0)-(x.views||0)).slice(0,3);const galleryWrap=document.getElementById('art-gallery');if(galleryWrap){if(a.gallery&&a.gallery.length>1){const captions=a.galleryCaptions||[];galleryWrap.style.display='block';galleryWrap.innerHTML=`
         <div style="font-size:0.82rem;font-weight:700;color:var(--muted);letter-spacing:0.06em;text-transform:uppercase;margin-bottom:14px;display:flex;align-items:center;gap:8px;">
           <span style="display:block;width:3px;height:14px;background:var(--red);border-radius:2px;"></span>
@@ -231,11 +238,35 @@ window.scrollTo({top:0,behavior:'smooth'});}
 function buildSliderHTML(images){const dots=images.map((_,i)=>`<button class="slider-dot ${i===0?'active':''}" onclick="goSlide('art-slider',${i})" aria-label="תמונה ${i+1}"></button>`).join('');const imgs=images.map((src,i)=>`<img src="${src}" alt="תמונה ${i+1}" loading="lazy" decoding="async">`).join('');return`<div class="img-slider" id="art-slider"><div class="slider-track" id="ast">${imgs}</div><button class="slider-btn slider-prev" onclick="moveSlide('art-slider',-1)" aria-label="תמונה קודמת">&#8250;</button><button class="slider-btn slider-next" onclick="moveSlide('art-slider',1)" aria-label="תמונה הבאה">&#8249;</button><div class="slider-dots" role="tablist">${dots}</div><div class="slider-count" id="asc" aria-live="polite">1 / ${images.length}</div></div>`;}
 function moveSlide(id,dir){const wrap=document.getElementById(id);if(!wrap)return;const track=wrap.querySelector('.slider-track');const total=track.querySelectorAll('img').length;if(!sliderState[id])sliderState[id]={current:0};let cur=(sliderState[id].current+dir+total)%total;sliderState[id].current=cur;track.style.transform=`translateX(${cur*100}%)`;wrap.querySelectorAll('.slider-dot').forEach((d,i)=>d.classList.toggle('active',i===cur));const cnt=wrap.querySelector('.slider-count');if(cnt)cnt.textContent=`${cur+1} / ${total}`;}
 function goSlide(id,idx){if(!sliderState[id])sliderState[id]={current:0};moveSlide(id,idx-sliderState[id].current);}
-function buildSpecCard(specs){const cats=specs.cats||[];const row=(icon,label,val)=>val?`
+
+/* ═══ קוביות מפרט מהיר + יתרונות/חסרונות למבחני רכב ═══ */
+function quickCubesHTML(specs){
+  const ic={
+    year:'<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>',
+    segment:'<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 17h14l-1.5-4.5a2 2 0 0 0-1.9-1.5H8.4a2 2 0 0 0-1.9 1.5z"/><circle cx="7.5" cy="17.5" r="1.5"/><circle cx="16.5" cy="17.5" r="1.5"/></svg>',
+    engine:'<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12V7h4l2-2h4v3h3v2h2v6h-2v2h-3l-2 2H7v-3H5v-3H3v-2z"/></svg>',
+    power:'<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>',
+    accel:'<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="13" r="8"/><path d="M12 13l4-4"/><path d="M9 2h6"/></svg>',
+    price:'<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>'};
+  const cube=(icon,label,val)=>val?`<div class="qs-cube"><div class="qs-icon">${icon}</div><div class="qs-label">${label}</div><div class="qs-val">${escapeHtml(val)}</div></div>`:'';
+  const html=cube(ic.year,'שנה',specs.year)+cube(ic.segment,'סגמנט',specs.segment)+cube(ic.engine,'מנוע',specs.engine)+cube(ic.power,'הספק',specs.power)+cube(ic.accel,'0-100 קמ"ש',specs.zeroToHundred)+cube(ic.price,'מחיר',specs.price);
+  return html?`<div class="qs-grid">${html}</div>`:'';
+}
+function prosConsHTML(specs){
+  const pros=(specs.pros||[]),cons=(specs.cons||[]);
+  if(!pros.length&&!cons.length)return '';
+  const v='<span class="pc-badge v"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4"><polyline points="20 6 9 17 4 12"/></svg></span>';
+  const x='<span class="pc-badge x"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></span>';
+  let h='<div class="pc-wrap">';
+  if(pros.length)h+='<div class="pc-col"><div class="pc-title pros">'+v+'יתרונות</div>'+pros.map(p=>'<div class="pc-item">'+v+escapeHtml(p)+'</div>').join('')+'</div>';
+  if(cons.length)h+='<div class="pc-col"><div class="pc-title cons">'+x+'חסרונות</div>'+cons.map(c=>'<div class="pc-item">'+x+escapeHtml(c)+'</div>').join('')+'</div>';
+  return h+'</div>';
+}
+function buildSpecCard(specs,skipPC){const cats=specs.cats||[];const row=(icon,label,val)=>val?`
     <div class="si-row">
       <div class="si-label">${icon}<span>${label}</span></div>
       <div class="si-val">${val}</div>
-    </div>`:'';const prosHTML=(specs.pros||[]).length?`
+    </div>`:'';const prosHTML=(!skipPC&&(specs.pros||[]).length)?`
     <div class="si-proscons">
       <div class="si-pros">
         <div class="si-pc-title">
@@ -499,7 +530,7 @@ console.log('Done pushing',articles.length,'articles');}}catch(e){}},1500);})();
 function updateReadingProgress(){const bar=document.getElementById('reading-progress');if(!bar)return;const ap=document.getElementById('article-page');if(!ap||ap.style.display==='none'){bar.style.width='0%';bar.style.display='none';return;}
 bar.style.display='block';if(_progressTop===null)measureProgressBounds();if(_progressTop===null)return;const scrollTop=window.scrollY;const total=_progressBottom-_progressTop;const progress=scrollTop-_progressTop;const pct=total>0?Math.min(100,Math.max(0,(progress/total)*100)):0;if(_progressRaf)return;_progressRaf=requestAnimationFrame(()=>{_progressRaf=0;bar.style.width=pct+'%';});}
 function measureProgressBounds(){const artBody=document.getElementById('art-body');if(!artBody){_progressTop=null;return;}
-const rect=artBody.getBoundingClientRect();_progressBottom=rect.bottom+window.scrollY;_progressTop=rect.top+window.scrollY-100;}
+const title=document.getElementById('art-title');const bRect=artBody.getBoundingClientRect();const tRect=(title||artBody).getBoundingClientRect();_progressTop=tRect.top+window.scrollY-90;_progressBottom=bRect.bottom+window.scrollY-Math.min(280,Math.max(120,bRect.height*0.12));}
 window.addEventListener('resize',()=>{_progressTop=null;},{passive:true});window.addEventListener('scroll',updateReadingProgress,{passive:true});function buildHeroBanner(){try{const wrap=document.getElementById('hero-banner-mobile');if(!wrap||wrap.style.display==='none')return;const _nowH=new Date();const _visH=articles.filter(a=>!a.scheduledAt||new Date(a.scheduledAt)<=_nowH);let pool=(currentFilter==='all'?_visH.filter(a=>a.cat!=='quick'):_visH.filter(a=>a.cat===currentFilter)).map(a=>Object.assign({},a,{img:(a.img&&a.img.length>5)?a.img:CAT_IMAGES[a.cat]||CAT_IMAGES['local']}));const _featIdx=pool.findIndex(a=>a.featured);if(_featIdx>0){pool.unshift(pool.splice(_featIdx,1)[0]);}pool=pool.slice(0,5);if(!pool.length){wrap.innerHTML='';return;}
 heroBannerArticles=pool;heroBannerIdx=0;const n=pool.length;const extended=[pool[n-1],...pool,pool[0]];const startIdx=1;const slideHTML=(a,i)=>'<div class="hero-banner-slide" onclick="openArticle('+a.id+')" role="button" tabindex="0" data-id="'+a.id+'">'+'<img src="'+heroSrc(a.img)+'" alt="'+escapeHtml(a.title)+'" loading="'+(i===1?'eager':'lazy')+'" fetchpriority="'+(i===1?'high':'auto')+'" decoding="'+(i===1?'sync':'async')+'" width="900" height="506">'+'<div class="hero-banner-content" style="direction:rtl;text-align:right;">'+'<span style="display:inline-block;background:var(--red);color:#fff;font-size:0.65rem;font-weight:700;padding:3px 10px;border-radius:2px;margin-bottom:6px;">'+(CAT_LABELS[a.cat]||'')+'</span>'+'<div style="font-size:1.08rem;font-weight:800;color:#fff;line-height:1.3;margin-bottom:5px;">'+escapeHtml(a.title)+'</div>'+'<div style="font-size:0.73rem;color:rgba(255,255,255,0.7);">'+escapeHtml(a.author)+' · '+escapeHtml(a.date)+'</div>'+'</div></div>';const slidesHTML=extended.map((a,i)=>slideHTML(a,i)).join('');const dotsHTML=pool.map((_,i)=>'<button class="hero-banner-dot'+(i===0?' active':'')+'" onclick="goHeroBanner('+i+')" aria-label="שקופית '+(i+1)+'"></button>').join('');wrap.innerHTML='<div class="hero-banner" id="hb-viewport">'+'<div class="hero-banner-track" id="hbt" style="direction:ltr;">'+slidesHTML+'</div>'+'<div class="hero-banner-dots">'+dotsHTML+'</div>'+'</div>';const viewport=document.getElementById('hb-viewport');const track=document.getElementById('hbt');if(!track||!viewport)return;heroBannerIdx=0;let _extIdx=startIdx;const _snapTo=(extIdx,animate)=>{const w=viewport.offsetWidth||window.innerWidth;requestAnimationFrame(()=>{track.style.transition=animate?'transform 0.35s cubic-bezier(0.25,0.46,0.45,0.94)':'none';track.style.transform='translateX('+(extIdx*-w)+'px)';});};_snapTo(_extIdx,false);const _updateDots=()=>{document.querySelectorAll('.hero-banner-dot').forEach((d,i)=>d.classList.toggle('active',i===heroBannerIdx));};track.addEventListener('transitionend',function(){const total=extended.length;if(_extIdx===0){_extIdx=n;_snapTo(_extIdx,false);}else if(_extIdx===total-1){_extIdx=1;_snapTo(_extIdx,false);}});let _sx=0,_sy=0,_dragging=false,_slideW=0,_lockedDir=null;viewport.addEventListener('touchstart',function(e){if(_extIdx===0){_extIdx=n;_snapTo(_extIdx,false);}else if(_extIdx===extended.length-1){_extIdx=1;_snapTo(_extIdx,false);}_slideW=viewport.offsetWidth;_sx=e.touches[0].clientX;_sy=e.touches[0].clientY;_dragging=false;_lockedDir=null;track.style.transition='none';},{passive:true});viewport.addEventListener('touchmove',function(e){const dx=e.touches[0].clientX-_sx;const dy=e.touches[0].clientY-_sy;if(!_lockedDir){if(Math.abs(dx)<5&&Math.abs(dy)<5)return;_lockedDir=Math.abs(dx)>=Math.abs(dy)?'h':'v';}
 if(_lockedDir==='v')return;e.preventDefault();_dragging=true;const base=_extIdx*-_slideW;track.style.transform='translateX('+(base+dx)+'px)';},{passive:false});viewport.addEventListener('touchend',function(e){if(_dragging){const dx=e.changedTouches[0].clientX-_sx;if(dx<-_slideW*0.22){_extIdx++;heroBannerIdx=(heroBannerIdx+1)%n;}else if(dx>_slideW*0.22){_extIdx--;heroBannerIdx=(heroBannerIdx-1+n)%n;}else{_snapTo(_extIdx,true);_updateDots();_dragging=false;_lockedDir=null;return;}
@@ -511,7 +542,7 @@ function autoAdvanceBanner(){_heroBannerSnap(heroBannerIdx+1);}
 function goHeroBanner(idx){_heroBannerSnap(idx);clearInterval(heroBannerTimer);}
 let artSwipeSX=0,artSwipeSY=0;document.addEventListener('touchstart',e=>{if(document.getElementById('article-page').style.display!=='none'){artSwipeSX=e.touches[0].clientX;artSwipeSY=e.touches[0].clientY;}},{passive:true});document.addEventListener('touchend',e=>{const ap=document.getElementById('article-page');if(ap&&ap.style.display!=='none'){const dx=e.changedTouches[0].clientX-artSwipeSX;const dy=e.changedTouches[0].clientY-artSwipeSY;if(Math.abs(dx)>100&&Math.abs(dx)>Math.abs(dy)*2.5){const idx=articles.findIndex(a=>a.id===currentArticleId);if(dx<0&&idx<articles.length-1)openArticle(articles[idx+1].id);if(dx>0&&idx>0)openArticle(articles[idx-1].id);}}},{passive:true});async function nativeShare(){const a=articles.find(x=>x.id===currentArticleId);if(!a)return;if(navigator.share){try{await navigator.share({title:a.title,text:a.sub||a.title,url:window.location.href});return;}catch(e){}}
 shareArticle('whatsapp');}
-function handleMobileHero(){try{const isMobile=window.innerWidth<=680;var _wa=document.querySelector('.wa-community-panel');var _rev=document.getElementById('reviews-grid');if(_wa&&_rev){if(!_wa._origNext){_wa._origNext=_wa.nextElementSibling;_wa._origParent=_wa.parentElement;}var _revBox=_rev.closest('.two-col')||_rev.closest('section')||_rev.parentElement;if(isMobile&&_revBox){_revBox.insertAdjacentElement('afterend',_wa);}else if(!isMobile&&_wa._origParent){try{_wa._origParent.insertBefore(_wa,_wa._origNext);}catch(e){}}}const mb=document.getElementById('hero-banner-mobile');const dt=document.getElementById('hero-area');if(mb&&dt){if(isMobile){mb.style.display='block';dt.style.display='none';buildHeroBanner();}else{mb.style.display='none';dt.style.display='block';clearInterval(heroBannerTimer);}}}catch(e){console.log('handleMobileHero error:',e);}}
+function handleMobileHero(){try{const isMobile=window.innerWidth<=680;const mb=document.getElementById('hero-banner-mobile');const dt=document.getElementById('hero-area');if(mb&&dt){if(isMobile){mb.style.display='block';dt.style.display='none';buildHeroBanner();}else{mb.style.display='none';dt.style.display='block';clearInterval(heroBannerTimer);}}}catch(e){console.log('handleMobileHero error:',e);}}
 if('serviceWorker'in navigator){window.addEventListener('load',()=>{navigator.serviceWorker.register('/sw.js').catch(()=>{});});}
 
 /* ─────────────────────────────── */
@@ -604,13 +635,14 @@ if('serviceWorker'in navigator){window.addEventListener('load',()=>{navigator.se
       }
     }catch(e){}
     setTimeout(function(){
+      if(window._spQuickBusy)return;window._spQuickBusy=true;
       try{
-        var ap=document.getElementById('article-page');
-        if(ap&&ap.style.display!=='none'){try{if(typeof showHome==='function')showHome();}catch(e){}}
-        if(typeof filterCat==='function'){filterCat('quick');}
-        else if(typeof window.filterCat==='function'){window.filterCat('quick');}
-        try{window.scrollTo({top:0,behavior:'smooth'});}catch(e){window.scrollTo(0,0);}
-      }catch(e){try{console.warn('quick nav:',e);showHome();filterCat('quick');}catch(e2){}}
+        try{window.scrollTo(0,0);}catch(e){}
+        var fc=(typeof filterCat==='function')?filterCat:window.filterCat;
+        if(typeof fc==='function'){fc('quick');}
+        try{window.scrollTo(0,0);}catch(e){}
+      }catch(e){try{console.warn('quick nav:',e);}catch(e2){}}
+      finally{setTimeout(function(){window._spQuickBusy=false;},400);}
     },620);
   };
 
