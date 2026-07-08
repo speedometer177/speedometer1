@@ -320,8 +320,77 @@ async function subscribeNewsletter(){const emailEl=document.getElementById('news
 try{const r=await fetchT(SB_URL+'/rest/v1/newsletter_subscribers',{method:'POST',headers:{'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY,'Content-Type':'application/json','Prefer':'return=minimal'},body:JSON.stringify({email:email.toLowerCase()})});
 if(r.ok||r.status===409){alert('תודה! נרשמתם בהצלחה לניוזלטר של ספידומטר 🏁');if(emailEl)emailEl.value='';}
 else{alert('אופס — ההרשמה נכשלה כרגע, נסו שוב בעוד רגע');}}catch(e){alert('אופס — ההרשמה נכשלה כרגע, נסו שוב בעוד רגע');}}
-function adminTab(tab,el){document.querySelectorAll('.admin-tab').forEach(b=>b.classList.remove('active'));el.classList.add('active');document.getElementById('admin-new').style.display=tab==='new'?'block':'none';document.getElementById('admin-list').style.display=tab==='list'?'block':'none';if(tab==='list')renderAdminTable();}
-function renderAdminTable(){const tbl=document.getElementById('admin-table');if(!tbl)return;tbl.innerHTML=`<thead><tr><th>כותרת</th><th>קטגוריה</th><th>כותב</th><th>תאריך</th><th>צפיות</th><th>פעולות</th></tr></thead><tbody>${
+
+/* ═══════════════════════════════════════════════
+   פאנל סדר תצוגה — קרוסולה ו-Hero
+   ═══════════════════════════════════════════════ */
+function openCarouselPanel(){
+  var panel=document.getElementById('carousel-order-panel');
+  if(panel){panel.style.display='block';renderCarouselPanel();return;}
+  // בנייה ראשונה
+  panel=document.createElement('div');
+  panel.id='carousel-order-panel';
+  panel.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:99999;display:flex;align-items:center;justify-content:center;padding:16px';
+  panel.innerHTML=`
+    <div style="background:#fff;border-radius:18px;width:min(560px,96vw);max-height:90vh;overflow-y:auto;padding:24px 20px;font-family:var(--font);direction:rtl">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px">
+        <h2 style="font-size:1.18rem;font-weight:900;margin:0">סדר תצוגה — Hero / קרוסולה</h2>
+        <button onclick="document.getElementById('carousel-order-panel').style.display='none'"
+          style="background:#f0f0f0;border:none;border-radius:8px;width:32px;height:32px;font-size:1.2rem;cursor:pointer;display:flex;align-items:center;justify-content:center">✕</button>
+      </div>
+      <p style="font-size:0.82rem;color:#666;margin-bottom:16px">
+        הכתבה המסומנת ב-★ תופיע ראשונה ב-Hero (מחשב) ובקרוסולה (מובייל). 
+        רק כתבה אחת יכולה להיות featured בכל זמן נתון.
+      </p>
+      <div id="carousel-list" style="display:flex;flex-direction:column;gap:10px"></div>
+    </div>`;
+  document.body.appendChild(panel);
+  panel.addEventListener('click',function(e){if(e.target===panel)panel.style.display='none';});
+  renderCarouselPanel();
+}
+
+function renderCarouselPanel(){
+  var list=document.getElementById('carousel-list');
+  if(!list)return;
+  var visible=articles.filter(a=>a.cat!=='quick').slice(0,20);
+  list.innerHTML=visible.map(function(a){
+    var isFeat=!!a.featured;
+    var img=a.img&&a.img.length>5?('https://wsrv.nl/?url='+encodeURIComponent(a.img)+'&w=80&h=50&fit=cover&output=webp&q=60'):'';
+    return '<div style="display:flex;align-items:center;gap:12px;padding:10px 12px;border:1.5px solid '+(isFeat?'#e8001d':'#eee')+';border-radius:12px;background:'+(isFeat?'#fff5f5':'#fafafa')+'">'
+      +(img?'<img src="'+img+'" width="72" height="45" style="border-radius:7px;object-fit:cover;flex-shrink:0" loading="lazy">':'<div style="width:72px;height:45px;background:#eee;border-radius:7px;flex-shrink:0"></div>')
+      +'<div style="flex:1;min-width:0">'
+      +'<div style="font-size:0.88rem;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:320px">'+escapeHtml(a.title)+'</div>'
+      +'<div style="font-size:0.74rem;color:#888;margin-top:2px">'+escapeHtml(a.cat)+' · '+escapeHtml(a.date||'')+'</div>'
+      +'</div>'
+      +'<button onclick="setFeatured('+a.id+')" title="הגדר כראשי" style="flex-shrink:0;width:38px;height:38px;border-radius:50%;border:2px solid '+(isFeat?'#e8001d':'#ddd')+';background:'+(isFeat?'#e8001d':'#fff')+';cursor:pointer;font-size:1.2rem;display:flex;align-items:center;justify-content:center;transition:all 0.2s">'+(isFeat?'<span style=color:#fff>★</span>':'<span style=color:#bbb>☆</span>')+'</button>'
+      +'</div>';
+  }).join('');
+}
+
+async function setFeatured(id){
+  var tok=await getAuthToken();if(!tok){alert('יש להתחבר קודם');return;}
+  // מסיר featured מהכל + מגדיר על הנבחר
+  var prev=articles.find(a=>a.featured&&a.id!==id);
+  if(prev){
+    try{
+      await fetchT(SB_URL+'/rest/v1/articles?id=eq.'+prev.id,{method:'PATCH',
+        headers:{'apikey':SB_KEY,'Authorization':'Bearer '+tok,'Content-Type':'application/json','Prefer':'return=minimal'},
+        body:JSON.stringify({featured:false})});
+      var pa=articles.find(a=>a.id===prev.id);if(pa)pa.featured=false;
+    }catch(e){}
+  }
+  try{
+    await fetchT(SB_URL+'/rest/v1/articles?id=eq.'+id,{method:'PATCH',
+      headers:{'apikey':SB_KEY,'Authorization':'Bearer '+tok,'Content-Type':'application/json','Prefer':'return=minimal'},
+      body:JSON.stringify({featured:true})});
+    var na=articles.find(a=>a.id===id);if(na){na.featured=true;}
+    buildHero();buildSections();buildHeroBanner&&buildHeroBanner();
+    renderCarouselPanel();
+  }catch(e){alert('שגיאה בשמירה: '+e.message);}
+}
+
+function adminTab(tab,el){document.querySelectorAll('.admin-tab').forEach(b=>b.classList.remove('active'));el.classList.add('active');document.getElementById('admin-new').style.display=tab==='new'?'block':'none';document.getElementById('admin-list').style.display=tab==='list'?'block':'none';if(tab==='list'){renderAdminTable();if(!document.getElementById('admin-carousel-btn')){var ab=document.createElement('button');ab.id='admin-carousel-btn';ab.innerHTML='🎠 סדר Hero / קרוסולה';ab.style.cssText='display:block;margin:12px 0;padding:10px 20px;background:linear-gradient(135deg,#e8001d,#ff6a00);color:#fff;border:none;border-radius:10px;font-family:var(--font);font-weight:800;font-size:0.9rem;cursor:pointer;width:100%';ab.onclick=openCarouselPanel;var adminList=document.getElementById('admin-list');if(adminList)adminList.insertBefore(ab,adminList.firstChild);}}}
+/* הכפתור מוזרק ב-adminTab כשנפתח הטאב */ function renderAdminTable(){const tbl=document.getElementById('admin-table');if(!tbl)return;tbl.innerHTML=`<thead><tr><th>כותרת</th><th>קטגוריה</th><th>כותב</th><th>תאריך</th><th>צפיות</th><th>פעולות</th></tr></thead><tbody>${
     articles.map(a=>`<tr><td><div class="tbl-title">${a.title}${a.scheduledAt?'<span style="font-size:0.68rem;background:#f59e0b;color:#fff;padding:1px 7px;border-radius:10px;margin-right:6px;">⏰ תזמון</span>':''}</div></td><td><span class="tbl-cat">${CAT_LABELS[a.cat]||a.cat}</span></td><td style="color:var(--mid);font-size:0.8rem">${a.author}</td><td style="color:var(--muted);font-size:0.78rem">${a.date}</td><td style="color:var(--muted);font-size:0.78rem">${a.views||0}</td><td><div class="tbl-actions"><button class="tbl-btn"onclick="viewArticle(${a.id})">צפה</button><button class="tbl-btn"onclick="editArticle(${a.id})">ערוך</button><button class="tbl-btn del"onclick="deleteArticle(${a.id})">מחק</button></div></td></tr>`).join('')
   }</tbody>`;}
 let galleryImages=[];async function handleGalleryUpload(input){const files=Array.from(input.files).slice(0,10-galleryImages.length);for(const file of files){const compressedFile=await compressImageFile(file,300);const src=await uploadImageOrBase64(compressedFile||null);if(src)galleryImages.push({src,caption:''});}
