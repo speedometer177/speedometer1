@@ -295,14 +295,15 @@ function buildSitemap(articles) {
    והדפדפן יוריד את התמונה פעמיים. כל שינוי כאן מחייב שינוי זהה ב-index.html. */
 function wsrvW(url, w) { return 'https://wsrv.nl/?url=' + encodeURIComponent(url) + '&w=' + w + '&fit=cover&output=webp&q=75'; }
 function isProxyable(url) { return typeof url === 'string' && /^https?:\/\//.test(url) && url.indexOf('wsrv.nl') === -1 && url.indexOf('images.unsplash.com') === -1; }
-function heroSrc(url) { return isProxyable(url) ? wsrvW(url, 800) : url; }
+function wsrvHero(url, w) { return 'https://wsrv.nl/?url=' + encodeURIComponent(url) + '&w=' + w + '&fit=cover&output=webp&q=82'; }
+function heroSrc(url) { return isProxyable(url) ? wsrvHero(url, 1400) : url; }
 function heroSrcset(url) {
   if (typeof url !== 'string') return '';
   if (url.indexOf('images.unsplash.com') !== -1) {
-    return [320, 500, 800, 1200].map(w => url.replace(/([?&])w=\d+/, '$1w=' + w) + ' ' + w + 'w').join(', ');
+    return [480, 800, 1200, 1600].map(w => url.replace(/([?&])w=\d+/, '$1w=' + w) + ' ' + w + 'w').join(', ');
   }
   if (isProxyable(url)) {
-    return [400, 640, 800, 1200].map(w => wsrvW(url, w) + ' ' + w + 'w').join(', ');
+    return [640, 960, 1400, 2000].map(w => wsrvHero(url, w) + ' ' + w + 'w').join(', ');
   }
   return '';
 }
@@ -335,16 +336,22 @@ function buildStaticHeroSlide(lightRows) {
   const pool = lightRows.filter(r => r.cat !== 'quick');
   const main = pool.find(r => r.featured) || pool[0];
   if (!main || !main.img || String(main.img).trim().length <= 5) return '';
-  const img = heroSrc(String(main.img).trim());
+  const raw = String(main.img).trim();
+  const img = heroSrc(raw);
+  const srcset = heroSrcset(raw);
   const badge = esc(CAT_LABELS[main.cat] || '');
+  const when = esc(main.date || '') + (main.time ? '<span class="hb-dot">·</span><span class="hb-when">' + esc(main.time) + '</span>' : '');
   return '<div class="hero-banner"><div class="hero-banner-track" style="direction:ltr;">'
     + '<div class="hero-banner-slide" style="direction:rtl;">'
-    + `<img src="${esc(img)}" alt="${esc(main.title)}" loading="eager" fetchpriority="high" decoding="sync" width="900" height="506">`
-    + '<div class="hero-banner-content" style="direction:rtl;text-align:right;">'
-    + `<span style="display:inline-block;background:var(--red);color:#fff;font-size:0.65rem;font-weight:700;padding:3px 10px;border-radius:2px;margin-bottom:6px;">${badge}</span>`
-    + `<div style="font-size:1.08rem;font-weight:800;color:#fff;line-height:1.3;margin-bottom:5px;">${esc(main.title)}</div>`
-    + `<div style="font-size:0.73rem;color:rgba(255,255,255,0.7);">${esc(main.author || 'מערכת ספידומטר')} · ${esc(main.date || '')}</div>`
-    + '</div></div></div></div>';
+    + `<img src="${esc(img)}"${srcset ? ` srcset="${esc(srcset)}" sizes="100vw"` : ''} alt="${esc(main.title)}" loading="eager" fetchpriority="high" decoding="sync" width="1600" height="900">`
+    + '<div class="hb-grad" aria-hidden="true"></div>'
+    + '<div class="hb-overlay">'
+    + `<span class="hb-cat">${badge}</span>`
+    + `<div class="hb-title">${esc(main.title)}</div>`
+    + '<div class="hb-meta-row">'
+    + `<span class="hb-author">${esc(main.author || 'ספידומטר')}</span>`
+    + `<span class="hb-dot">·</span><span class="hb-when">${when}</span>`
+    + '</div></div></div></div></div>';
 }
 
 /* בונה תג preload לתמונת ה-hero — אותה בחירת כתבה כמו buildHero בלקוח: featured ראשון, אחרת החדשה ביותר */
