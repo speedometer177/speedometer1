@@ -295,15 +295,15 @@ function buildSitemap(articles) {
    והדפדפן יוריד את התמונה פעמיים. כל שינוי כאן מחייב שינוי זהה ב-index.html. */
 function wsrvW(url, w) { return 'https://wsrv.nl/?url=' + encodeURIComponent(url) + '&w=' + w + '&fit=cover&output=webp&q=75'; }
 function isProxyable(url) { return typeof url === 'string' && /^https?:\/\//.test(url) && url.indexOf('wsrv.nl') === -1 && url.indexOf('images.unsplash.com') === -1; }
-function wsrvHero(url, w) { return 'https://wsrv.nl/?url=' + encodeURIComponent(url) + '&w=' + w + '&fit=cover&output=webp&q=82'; }
-function heroSrc(url) { return isProxyable(url) ? wsrvHero(url, 1400) : url; }
+function heroSrc(url) { return isProxyable(url) ? wsrvW(url, 800) : url; }
+
 function heroSrcset(url) {
   if (typeof url !== 'string') return '';
   if (url.indexOf('images.unsplash.com') !== -1) {
-    return [480, 800, 1200, 1600].map(w => url.replace(/([?&])w=\d+/, '$1w=' + w) + ' ' + w + 'w').join(', ');
+    return [320, 500, 800, 1200].map(w => url.replace(/([?&])w=\d+/, '$1w=' + w) + ' ' + w + 'w').join(', ');
   }
   if (isProxyable(url)) {
-    return [640, 960, 1400, 2000].map(w => wsrvHero(url, w) + ' ' + w + 'w').join(', ');
+    return [400, 640, 800, 1200].map(w => wsrvW(url, w) + ' ' + w + 'w').join(', ');
   }
   return '';
 }
@@ -340,18 +340,14 @@ function buildStaticHeroSlide(lightRows) {
   const img = heroSrc(raw);
   const srcset = heroSrcset(raw);
   const badge = esc(CAT_LABELS[main.cat] || '');
-  const when = esc(main.date || '') + (main.time ? '<span class="hb-dot">·</span><span class="hb-when">' + esc(main.time) + '</span>' : '');
   return '<div class="hero-banner"><div class="hero-banner-track" style="direction:ltr;">'
     + '<div class="hero-banner-slide" style="direction:rtl;">'
-    + `<img src="${esc(img)}"${srcset ? ` srcset="${esc(srcset)}" sizes="100vw"` : ''} alt="${esc(main.title)}" loading="eager" fetchpriority="high" decoding="sync" width="1600" height="900">`
-    + '<div class="hb-grad" aria-hidden="true"></div>'
-    + '<div class="hb-overlay">'
-    + `<span class="hb-cat">${badge}</span>`
-    + `<div class="hb-title">${esc(main.title)}</div>`
-    + '<div class="hb-meta-row">'
-    + `<span class="hb-author">${esc(main.author || 'ספידומטר')}</span>`
-    + `<span class="hb-dot">·</span><span class="hb-when">${when}</span>`
-    + '</div></div></div></div></div>';
+    + `<div class="hb2-img"><img src="${esc(img)}"${srcset ? ` srcset="${esc(srcset)}" sizes="100vw"` : ''} alt="${esc(main.title)}" loading="eager" fetchpriority="high" decoding="sync" width="800" height="400"><span class="hb2-fade" aria-hidden="true"></span></div>`
+    + '<div class="hb2-info">'
+    + `<span class="hb2-cat">${badge}</span>`
+    + `<div class="hb2-title">${esc(main.title)}</div>`
+    + `<div class="hb2-meta"><span class="hb2-author">${esc(main.author || 'ספידומטר')}</span><span class="hb2-sep">·</span><span class="hb2-when">${esc(main.date || '')}</span>${main.time ? `<span class="hb2-sep">·</span><span class="hb2-when">${esc(main.time)}</span>` : ''}</div>`
+    + '</div></div></div></div>';
 }
 
 /* בונה תג preload לתמונת ה-hero — אותה בחירת כתבה כמו buildHero בלקוח: featured ראשון, אחרת החדשה ביותר */
