@@ -703,10 +703,7 @@ body.dark-mode .pc-item{color:#eee}
 .breaking-track{animation:none!important;transition:none!important}.breaking-track *{animation:none!important}
 
 
-  .hero-banner-wrap{height:290px!important;min-height:290px!important;max-height:290px!important;aspect-ratio:unset!important;border-radius:12px!important;overflow:hidden!important;background:transparent!important;box-shadow:none!important;margin:0!important}
-  .hero-banner-slide{height:290px!important;aspect-ratio:unset!important;border-radius:12px!important;background:#111!important}
   .hero-banner-slide img{height:100%!important;width:100%!important;object-fit:cover!important;border-radius:12px!important}
-  .hero-banner-track{height:290px!important}
 }
 /* ══ מובייל: בלי מבזקים, מדורים צמודים ══ */
 @media screen and (max-width:680px){
@@ -718,40 +715,39 @@ body.dark-mode .pc-item{color:#eee}
 }
 
 /* ══ כפתור חזרה צף בכתבה ══ */
-#art-back-btn{position:fixed;top:14px;right:14px;z-index:8800;width:38px;height:38px;border-radius:50%;background:rgba(255,255,255,0.95);border:1px solid rgba(0,0,0,0.1);box-shadow:0 2px 10px rgba(0,0,0,0.15);display:none;align-items:center;justify-content:center;cursor:pointer;transition:all 0.2s;-webkit-tap-highlight-color:transparent}#art-back-btn:hover{box-shadow:0 4px 16px rgba(0,0,0,0.2);transform:scale(1.05)}body.article-open #art-back-btn{display:flex}
-
-/* ══ כפתור גדלי גופן בכתבה ══ */
-.art-font-bar{display:none;align-items:center;gap:6px;margin:10px 0 0}body.article-open .art-font-bar{display:flex}.art-font-btn{padding:5px 10px;border:1.5px solid var(--border);border-radius:20px;background:transparent;cursor:pointer;font-family:var(--font);font-weight:700;color:var(--muted);transition:all 0.18s;font-size:0.78rem}.art-font-btn:hover,.art-font-btn.active{border-color:var(--red);color:var(--red);background:var(--red-light)}
+#art-back-btn{position:fixed;top:14px;right:14px;z-index:8800;width:38px;height:38px;border-radius:50%;background:rgba(255,255,255,0.95);border:1px solid rgba(0,0,0,0.1);box-shadow:0 2px 10px rgba(0,0,0,0.15);display:none;align-items:center;justify-content:center;cursor:pointer;transition:all 0.2s;-webkit-tap-highlight-color:transparent}#art-back-btn:hover{box-shadow:0 4px 16px rgba(0,0,0,0.2);transform:scale(1.05)}#art-back-btn{opacity:0;pointer-events:none;transform:translateY(-6px)}body.article-open #art-back-btn.show{display:flex;opacity:1;pointer-events:auto;transform:translateY(0)}body.article-open #art-back-btn{display:flex}
 
 
-/* ══ קרוסולה — תמונה מלאה ללא חיתוך, גרדיאנט וכיתוב בתוך התמונה ══ */
-.hero-banner{height:auto!important;background:transparent!important}
-.hero-banner-wrap{height:auto!important;min-height:0!important;max-height:none!important;
-  aspect-ratio:unset!important;border-radius:14px!important;overflow:hidden!important;
-  background:transparent!important;box-shadow:none!important}
-.hero-banner-track{height:auto!important;align-items:stretch}
-.hero-banner-slide{height:auto!important;aspect-ratio:unset!important;position:relative;
-  border-radius:14px!important;overflow:hidden!important;background:transparent!important}
-.hero-banner-slide img{width:100%!important;height:auto!important;max-height:none!important;
-  object-fit:contain!important;display:block;border-radius:0!important}
-.hero-banner-slide:has(.hb-overlay) .hero-banner-content{display:none!important}
-.hb-grad{position:absolute;inset:0;pointer-events:none;background:linear-gradient(to bottom,
-  transparent 0%,transparent 62%,rgba(6,6,10,0.18) 72%,rgba(6,6,10,0.55) 82%,
-  rgba(6,6,10,0.82) 92%,rgba(6,6,10,0.94) 100%)}
-.hb-overlay{position:absolute;bottom:0;left:0;right:0;padding:10px 14px 30px;direction:rtl;text-align:right}
-.hb-cat{display:inline-block;background:var(--red);color:#fff;font-size:0.65rem;font-weight:800;
-  padding:2px 10px;border-radius:3px;margin-bottom:6px;letter-spacing:0.04em}
-.hb-title{font-size:1.02rem;font-weight:800;color:#fff;line-height:1.32;margin-bottom:6px;
-  text-shadow:0 1px 8px rgba(0,0,0,0.55)}
-.hb-meta-row{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
-.hb-author{font-size:0.8rem;font-weight:800;color:#fff;text-shadow:0 1px 4px rgba(0,0,0,0.6)}
-.hb-dot{color:rgba(255,255,255,0.45);font-size:0.75rem}
-.hb-when{font-size:0.8rem;font-weight:600;color:rgba(255,255,255,0.92);text-shadow:0 1px 4px rgba(0,0,0,0.6)}
-.hero-banner-dots{position:absolute!important;bottom:9px!important;left:50%!important;
-  transform:translateX(-50%)!important;display:flex;background:transparent;padding:0;margin:0}
+
+
+/* ══════ קרוסולה hb2 — סופית: תמונה 2:1, טשטוש נמזג, כותרת מתחת ══════ */
+.hb2-img{position:relative;width:100%;aspect-ratio:2/1;overflow:hidden;background:#15151a}
+.hb2-img img{width:100%;height:100%;object-fit:cover;display:block}
+.hb2-fade{position:absolute;bottom:0;left:0;right:0;height:34%;pointer-events:none;
+  background:linear-gradient(to bottom,transparent 0%,rgba(11,11,15,0.5) 58%,#0b0b0f 100%)}
+.hb2-info{background:#0b0b0f;padding:3px 16px 30px;direction:rtl;text-align:right;min-height:96px;box-sizing:border-box}
+.hb2-cat{display:inline-block;background:var(--red);color:#fff;font-size:0.64rem;font-weight:800;
+  padding:2px 10px;border-radius:3px;margin-bottom:7px;letter-spacing:0.04em}
+.hb2-title{color:#fff;font-size:0.98rem;font-weight:800;line-height:1.34;margin-bottom:6px;
+  display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.hb2-meta{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.hb2-author{color:rgba(255,255,255,0.92);font-size:0.78rem;font-weight:700}
+.hb2-sep{color:rgba(255,255,255,0.35);font-size:0.72rem}
+.hb2-when{color:rgba(255,255,255,0.72);font-size:0.78rem;font-weight:500}
 @media screen and (max-width:680px){
   #hero-banner-mobile.hero{padding:0 12px!important;margin:8px 0 14px!important}
+  .hero-banner-wrap{height:auto!important;min-height:0!important;max-height:none!important;
+    aspect-ratio:unset!important;border-radius:14px!important;overflow:hidden!important;
+    background:transparent!important;box-shadow:none!important}
+  .hero-banner{height:auto!important;border-radius:14px!important;background:#0b0b0f!important}
+  .hero-banner-track{height:auto!important;align-items:stretch}
+  .hero-banner-slide{height:auto!important;aspect-ratio:unset!important;display:block!important;background:#0b0b0f!important}
+  .hero-banner-content{display:none!important}
+  .hero-banner-dots{position:absolute!important;bottom:9px!important;left:50%!important;
+    transform:translateX(-50%)!important;background:transparent;padding:0;margin:0}
   .breaking-ticker{display:none!important}
+  .wa-join-strip{margin:4px 4px 6px!important}
+  .section:has(#reviews-grid){margin-top:12px!important;padding-top:0!important}
 }
 </style>
 <!-- BUILD:HERO_PRELOAD:START --><link rel="preload" as="image" href="https://wsrv.nl/?url=https%3A%2F%2Fwww.yomyom.net%2FUploadImg%2FArticlesNew%2Fimages%2F3153%2F2.jpg&amp;w=1000&amp;fit=cover&amp;output=webp&amp;q=75" fetchpriority="high"><!-- BUILD:HERO_PRELOAD:END -->
@@ -1048,7 +1044,7 @@ body.dark-mode .pc-item{color:#eee}
   <!-- Desktop hero -->
   <div class="hero hero-grid-wrap" id="hero-area"></div>
   <!-- Mobile hero banner (auto-rotating) -->
-  <div class="hero hero-banner-wrap" id="hero-banner-mobile"><!-- BUILD:HERO_SLIDE:START --><div class="hero-banner"><div class="hero-banner-track" style="direction:ltr;"><div class="hero-banner-slide" style="direction:rtl;"><img src="https://wsrv.nl/?url=https%3A%2F%2Fkaykrrnmykqrfhawgtqt.supabase.co%2Fstorage%2Fv1%2Fobject%2Fpublic%2Farticle-images%2F1783670794097-rj6eju.jpg&amp;w=1400&amp;fit=cover&amp;output=webp&amp;q=82" srcset="https://wsrv.nl/?url=https%3A%2F%2Fkaykrrnmykqrfhawgtqt.supabase.co%2Fstorage%2Fv1%2Fobject%2Fpublic%2Farticle-images%2F1783670794097-rj6eju.jpg&amp;w=640&amp;fit=cover&amp;output=webp&amp;q=82 640w, https://wsrv.nl/?url=https%3A%2F%2Fkaykrrnmykqrfhawgtqt.supabase.co%2Fstorage%2Fv1%2Fobject%2Fpublic%2Farticle-images%2F1783670794097-rj6eju.jpg&amp;w=960&amp;fit=cover&amp;output=webp&amp;q=82 960w, https://wsrv.nl/?url=https%3A%2F%2Fkaykrrnmykqrfhawgtqt.supabase.co%2Fstorage%2Fv1%2Fobject%2Fpublic%2Farticle-images%2F1783670794097-rj6eju.jpg&amp;w=1400&amp;fit=cover&amp;output=webp&amp;q=82 1400w, https://wsrv.nl/?url=https%3A%2F%2Fkaykrrnmykqrfhawgtqt.supabase.co%2Fstorage%2Fv1%2Fobject%2Fpublic%2Farticle-images%2F1783670794097-rj6eju.jpg&amp;w=2000&amp;fit=cover&amp;output=webp&amp;q=82 2000w" sizes="100vw" alt="בשורה לנהגים: רישיון B יאפשר נהיגה ברכבים חשמליים כבדים" loading="eager" fetchpriority="high" decoding="sync" width="1600" height="900"><div class="hb-grad" aria-hidden="true"></div><div class="hb-overlay"><span class="hb-cat">חדשות מקומיות</span><div class="hb-title">בשורה לנהגים: רישיון B יאפשר נהיגה ברכבים חשמליים כבדים</div><div class="hb-meta-row"><span class="hb-author">שמעון כהן</span><span class="hb-dot">·</span><span class="hb-when">10.7.2026<span class="hb-dot">·</span><span class="hb-when">11:07</span></span></div></div></div></div></div><!-- BUILD:HERO_SLIDE:END --></div>
+  <div class="hero hero-banner-wrap" id="hero-banner-mobile"><!-- BUILD:HERO_SLIDE:START --><div class="hero-banner"><div class="hero-banner-track" style="direction:ltr;"><div class="hero-banner-slide" style="direction:rtl;"><div class="hb2-img"><img src="https://wsrv.nl/?url=https%3A%2F%2Fkaykrrnmykqrfhawgtqt.supabase.co%2Fstorage%2Fv1%2Fobject%2Fpublic%2Farticle-images%2F1783615000361-0skgbs.jpg&amp;w=800&amp;fit=cover&amp;output=webp&amp;q=75" alt="דנזה Z: מכונית הספורט החשמלית עם 1,600 כ&quot;ס בדרך לישראל" loading="eager" fetchpriority="high" decoding="sync" width="900" height="506"><span class="hb2-fade" aria-hidden="true"></span></div><div class="hero-banner-content" style="direction:rtl;text-align:right;"><span style="display:inline-block;background:var(--red);color:#fff;font-size:0.65rem;font-weight:700;padding:3px 10px;border-radius:2px;margin-bottom:6px;">חדשות מקומיות</span><div style="font-size:1.08rem;font-weight:800;color:#fff;line-height:1.3;margin-bottom:5px;">דנזה Z: מכונית הספורט החשמלית עם 1,600 כ&quot;ס בדרך לישראל</div><div style="font-size:0.73rem;color:rgba(255,255,255,0.7);">שמעון כהן · 9.7.2026</div></div></div></div></div><!-- BUILD:HERO_SLIDE:END --></div>
 
   <!-- LATEST NEWS -->
   <section class="section" aria-label="חדשות אחרונות">
@@ -1226,8 +1222,7 @@ body.dark-mode .pc-item{color:#eee}
             <span id="art-date">26.5.2026</span>
             <span id="art-read" class="read-time-badge">2 דק׳ קריאה</span>
             <span id="art-time" style="color:var(--muted);font-size:0.8rem;"></span>
-            <div class="art-font-bar" role="group" aria-label="גודל טקסט"><span style="font-size:0.75rem;color:var(--muted);font-weight:600">גודל:</span><button class="art-font-btn" id="fs-small" onclick="setFontSize('small')" title="קטן">א׳</button><button class="art-font-btn active" id="fs-normal" onclick="setFontSize('normal')" title="רגיל">א</button><button class="art-font-btn" id="fs-large" onclick="setFontSize('large')" title="גדול">A</button><button class="art-font-btn" id="fs-larger" onclick="setFontSize('larger')" title="גדול מאוד">A+</button></div>
-<button class="reading-mode-btn" onclick="toggleReadingMode()" title="מצב קריאה">
+            <button class="reading-mode-btn" onclick="toggleReadingMode()" title="מצב קריאה">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
               קריאה נוחה
             </button>
