@@ -332,6 +332,13 @@ function buildSnapshotTag(lightRows) {
 /* בונה שקופית ראשונה סטטית לקרוסולת המובייל — זהה למבנה ש-buildHeroBanner מייצר בלקוח,
    כך שכשה-JS עולה ובונה את הקרוסולה המלאה, ההחלפה בלתי נראית (אותה תמונה, אותם classes).
    התוצאה: תמונת ה-LCP קיימת ב-DOM מהבית הראשון של ה-HTML - הדפדפן מצייר אותה בלי לחכות ל-JS. */
+function hbReadTime(main) {
+  if (main.time && /\d/.test(main.time) === false && main.readTime) { /* noop */ }
+  if (main.readTime) { const m = String(main.readTime).match(/\d+/); if (m) return m[0]; }
+  const words = String(main.body || '').replace(/<[^>]+>/g, ' ').trim().split(/\s+/).filter(Boolean).length;
+  return String(Math.max(1, Math.round(words / 200)));
+}
+
 function buildStaticHeroSlide(lightRows) {
   const pool = lightRows.filter(r => r.cat !== 'quick');
   const main = pool.find(r => r.featured) || pool[0];
@@ -345,6 +352,7 @@ function buildStaticHeroSlide(lightRows) {
     + '<div class="hero-banner-slide" style="direction:rtl;">'
     + `<img src="${esc(img)}"${srcset ? ` srcset="${esc(srcset)}" sizes="100vw"` : ''} alt="${esc(main.title)}" loading="eager" fetchpriority="high" decoding="sync" width="850" height="500">`
     + '<div class="hb3-fade" aria-hidden="true"></div>'
+    + `<div class="hb3-read">${hbReadTime(main)}<span>דק'</span></div>`
     + '<div class="hb3-txt">'
     + `<span class="hb3-cat">${badge}</span>`
     + `<div class="hb3-title">${esc(main.title)}</div>`
