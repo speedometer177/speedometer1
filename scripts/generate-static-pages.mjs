@@ -340,13 +340,15 @@ function buildStaticHeroSlide(lightRows) {
   const img = heroSrc(raw);
   const srcset = heroSrcset(raw);
   const badge = esc(CAT_LABELS[main.cat] || '');
+  const timeStr = main.time ? (' · ' + esc(main.time)) : '';
   return '<div class="hero-banner"><div class="hero-banner-track" style="direction:ltr;">'
     + '<div class="hero-banner-slide" style="direction:rtl;">'
-    + `<div class="hb2-img"><img src="${esc(img)}"${srcset ? ` srcset="${esc(srcset)}" sizes="100vw"` : ''} alt="${esc(main.title)}" loading="eager" fetchpriority="high" decoding="sync" width="800" height="400"><span class="hb2-fade" aria-hidden="true"></span></div>`
-    + '<div class="hb2-info">'
-    + `<span class="hb2-cat">${badge}</span>`
-    + `<div class="hb2-title">${esc(main.title)}</div>`
-    + `<div class="hb2-meta"><span class="hb2-author">${esc(main.author || 'ספידומטר')}</span><span class="hb2-sep">·</span><span class="hb2-when">${esc(main.date || '')}</span>${main.time ? `<span class="hb2-sep">·</span><span class="hb2-when">${esc(main.time)}</span>` : ''}</div>`
+    + `<img src="${esc(img)}"${srcset ? ` srcset="${esc(srcset)}" sizes="100vw"` : ''} alt="${esc(main.title)}" loading="eager" fetchpriority="high" decoding="sync" width="850" height="500">`
+    + '<div class="hb3-fade" aria-hidden="true"></div>'
+    + '<div class="hb3-txt">'
+    + `<span class="hb3-cat">${badge}</span>`
+    + `<div class="hb3-title">${esc(main.title)}</div>`
+    + `<div class="hb3-meta"><span class="hb3-author">${esc(main.author || 'ספידומטר')}</span><span class="hb3-sep">·</span><span class="hb3-when">${esc(main.date || '')}</span>${timeStr}</div>`
     + '</div></div></div></div>';
 }
 
