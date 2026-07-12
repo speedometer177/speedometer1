@@ -121,12 +121,12 @@ function getImageUrl(originalUrl,width,fit){
   return wsrvW(originalUrl,width||800);
 }
 function cardThumb(url){if(typeof url!=='string')return url;
-  if(url.indexOf('images.unsplash.com')!==-1){return url.replace(/([?&])w=\d+/,'$1w=500');}
-  if(isProxyable(url)){return wsrvW(url,400);}
+  if(url.indexOf('images.unsplash.com')!==-1){return url.replace(/([?&])w=\d+/,'$1w=320');}
+  if(isProxyable(url)){return wsrvW(url,320);}
   return url;}
 function responsiveAttrs(url,sizesAttr){if(typeof url!=='string')return'';
-  if(url.indexOf('images.unsplash.com')!==-1){const widths=[320,500,800,1200];const srcset=widths.map(w=>url.replace(/([?&])w=\d+/,'$1w='+w)+' '+w+'w').join(', ');return` srcset="${srcset}" sizes="${sizesAttr}"`;}
-  if(isProxyable(url)){const widths=[400,640,800,1200];const srcset=widths.map(w=>wsrvW(url,w)+' '+w+'w').join(', ');return` srcset="${srcset}" sizes="${sizesAttr}"`;}
+  if(url.indexOf('images.unsplash.com')!==-1){const widths=[240,320,500,800,1200];const srcset=widths.map(w=>url.replace(/([?&])w=\d+/,'$1w='+w)+' '+w+'w').join(', ');return` srcset="${srcset}" sizes="${sizesAttr}"`;}
+  if(isProxyable(url)){const widths=[240,400,640,800,1200];const srcset=widths.map(w=>wsrvW(url,w)+' '+w+'w').join(', ');return` srcset="${srcset}" sizes="${sizesAttr}"`;}
   return'';}
 function cardHTML(a){const score=a.score?`<div class="review-score ${parseFloat(a.score)>=8?'high':parseFloat(a.score)>=6?'mid':''}">${a.score}</div>`:'';return`<a href="/article/${a.id}/" class="card" onclick="openArticle(${a.id});return false;" aria-label="${a.title}">
     <div class="card-img">
@@ -607,7 +607,7 @@ heroBannerArticles=pool;heroBannerIdx=0;const n=pool.length;const extended=[pool
   const words=(a.body||'').replace(/<[^>]+>/g,' ').trim().split(/\s+/).filter(Boolean).length;
   return String(Math.max(1,Math.round(words/200)));
 }
-const slideHTML=(a,i)=>{const timeStr=a.time?(' · '+escapeHtml(a.time)):'';return '<div class="hero-banner-slide" onclick="openArticle('+a.id+')" role="button" tabindex="0" data-id="'+a.id+'">'
+const slideHTML=(a,i)=>{const timeStr=a.time?('<span class="hb3-sep">·</span><span class="hb3-when">'+escapeHtml(a.time)+'</span>'):'';return '<div class="hero-banner-slide" onclick="openArticle('+a.id+')" role="button" tabindex="0" data-id="'+a.id+'">'
 +'<img src="'+heroSrc(a.img)+'"'+(heroSrcset(a.img)?' srcset="'+heroSrcset(a.img)+'" sizes="100vw"':'')+' alt="'+escapeHtml(a.title)+'" loading="'+(i===1?'eager':'lazy')+'" fetchpriority="'+(i===1?'high':'auto')+'" decoding="'+(i===1?'sync':'async')+'" width="850" height="500">'
 +'<div class="hb3-fade" aria-hidden="true"></div>'
 +'<div class="hb3-read">'+_hbReadTime(a)+'<span>דק\'</span></div>'
