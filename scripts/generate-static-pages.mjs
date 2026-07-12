@@ -347,7 +347,7 @@ function buildStaticHeroSlide(lightRows) {
   const img = heroSrc(raw);
   const srcset = heroSrcset(raw);
   const badge = esc(CAT_LABELS[main.cat] || '');
-  const timeStr = main.time ? (' · ' + esc(main.time)) : '';
+  const timeStr = main.time ? ('<span class="hb3-sep">·</span><span class="hb3-when">' + esc(main.time) + '</span>') : '';
   return '<div class="hero-banner"><div class="hero-banner-track" style="direction:ltr;">'
     + '<div class="hero-banner-slide" style="direction:rtl;">'
     + `<img src="${esc(img)}"${srcset ? ` srcset="${esc(srcset)}" sizes="100vw"` : ''} alt="${esc(main.title)}" loading="eager" fetchpriority="high" decoding="sync" width="850" height="500">`
