@@ -324,7 +324,7 @@ async function fetchLightRows(supabase) {
 function buildSnapshotTag(lightRows) {
   // views מושמט בכוונה: הוא משתנה כל רגע ויוצר diff חדש ב-index.html בכל ריצה,
   // מה שמגביר קונפליקטים בין ריצות מקבילות. הלקוח מרענן views מ-Supabase תוך שנייה ממילא.
-  const top = lightRows.slice(0, 16).map(r => { const c = { ...r }; delete c.views; return c; });
+  const top = lightRows.slice(0, 40).map(r => { const c = { ...r }; delete c.views; return c; });
   const json = JSON.stringify(top).replace(/</g, '\\u003c'); // מנטרל </script> וכל תג בתוך התוכן
   return `<script>window.__PRELOADED_ARTICLES=${json};</script>`;
 }
@@ -337,6 +337,61 @@ function hbReadTime(main) {
   if (main.readTime) { const m = String(main.readTime).match(/\d+/); if (m) return m[0]; }
   const words = String(main.body || '').replace(/<[^>]+>/g, ' ').trim().split(/\s+/).filter(Boolean).length;
   return String(Math.max(1, Math.round(words / 200)));
+}
+
+
+function cardThumb(url) {
+  if (typeof url !== 'string') return url;
+  if (url.indexOf('images.unsplash.com') !== -1) return url.replace(/([?&])w=\d+/, '$1w=320');
+  if (isProxyable(url)) return wsrvW(url, 320);
+  return url;
+}
+
+function responsiveAttrs(url, sizesAttr) {
+  if (typeof url !== 'string') return '';
+  if (url.indexOf('images.unsplash.com') !== -1) {
+    const widths = [240, 320, 500, 800, 1200];
+    const srcset = widths.map(w => url.replace(/([?&])w=\d+/, '$1w=' + w) + ' ' + w + 'w').join(', ');
+    return ` srcset="${esc(srcset)}" sizes="${esc(sizesAttr)}"`;
+  }
+  if (isProxyable(url)) {
+    const widths = [240, 400, 640, 800, 1200];
+    const srcset = widths.map(w => wsrvW(url, w) + ' ' + w + 'w').join(', ');
+    return ` srcset="${esc(srcset)}" sizes="${esc(sizesAttr)}"`;
+  }
+  return '';
+}
+
+/* בונה כרטיס כתבה זהה 1:1 ל-cardHTML() בלקוח — כדי שהגריד יגיע מוכן ב-HTML,
+   בלי לחכות ל-JS, ובלי שום ניחוש גובה (אפס CLS אמיתי) */
+function buildStaticCard(a) {
+  const img = a.img && String(a.img).trim().length > 5 ? a.img : (CAT_IMAGES[a.cat] || CAT_IMAGES.local);
+  const score = a.score
+    ? `<div class="review-score ${parseFloat(a.score) >= 8 ? 'high' : parseFloat(a.score) >= 6 ? 'mid' : ''}">${esc(a.score)}</div>`
+    : '';
+  const readTime = a.read_time
+    ? `<span class="card-readtime">${esc(a.read_time)}</span>`
+    : '';
+  return `<a href="/article/${a.id}/" class="card" onclick="openArticle(${a.id});return false;" aria-label="${esc(a.title)}">
+    <div class="card-img">
+      <img src="${esc(cardThumb(img))}"${responsiveAttrs(img, '(max-width:680px) 45vw, 400px')} alt="${esc(a.title)}" loading="lazy" width="400" height="225" decoding="async" onload="this.classList.add('loaded')" onerror="this.classList.add('loaded')" class="loaded">
+      ${score}<span class="card-cat">${esc(CAT_LABELS[a.cat] || '')}</span>
+    </div>
+    <div class="card-body">
+      <div class="card-title">${esc(a.title)}</div>
+      <div class="card-foot">
+        <span class="card-author">${esc(a.author || '')}</span>
+        <span class="card-date">${esc(a.date || '')}${a.time ? ' · ' + esc(a.time) : ''}</span>
+        ${readTime}
+      </div>
+    </div>
+  </a>`;
+}
+
+/* בונה גריד סטטי שלם — עד 8 כרטיסים ראשונים, זהה למה ש-BASE=8 בלקוח מציג */
+function buildStaticGrid(lightRows, filterFn, limit = 8) {
+  const items = lightRows.filter(filterFn).slice(0, limit);
+  return items.map(buildStaticCard).join('');
 }
 
 function buildStaticHeroSlide(lightRows) {
@@ -413,6 +468,8 @@ async function main() {
   // דף הבית (+404 הזהה) מקבל בנוסף preload לתמונת ה-hero + שקופית ראשונה סטטית לקרוסולת המובייל
   let rootHtml = injectBetween(template, 'HERO_PRELOAD', heroPreloadTag);
   rootHtml = injectBetween(rootHtml, 'HERO_SLIDE', buildStaticHeroSlide(lightRows));
+  rootHtml = injectBetween(rootHtml, 'LATEST_GRID', buildStaticGrid(lightRows, r => r.cat !== 'quick'));
+  rootHtml = injectBetween(rootHtml, 'REVIEWS_GRID', buildStaticGrid(lightRows, r => r.cat === 'review'));
   await writeFile(TEMPLATE_PATH, rootHtml, 'utf-8');
   await writeFile(path.join(SITE_DIR, '404.html'), rootHtml, 'utf-8');
   console.log(`✅ index.html + 404.html עודכנו (snapshot: ${Math.min(lightRows.length,16)} כתבות, preload: ${heroPreloadTag ? 'כן' : 'אין תמונת hero'})`);
