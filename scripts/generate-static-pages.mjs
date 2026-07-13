@@ -324,7 +324,7 @@ async function fetchLightRows(supabase) {
 function buildSnapshotTag(lightRows) {
   // views מושמט בכוונה: הוא משתנה כל רגע ויוצר diff חדש ב-index.html בכל ריצה,
   // מה שמגביר קונפליקטים בין ריצות מקבילות. הלקוח מרענן views מ-Supabase תוך שנייה ממילא.
-  const top = lightRows.slice(0, 40).map(r => { const c = { ...r }; delete c.views; return c; });
+  const top = lightRows.slice(0, 16).map(r => { const c = { ...r }; delete c.views; return c; });
   const json = JSON.stringify(top).replace(/</g, '\\u003c'); // מנטרל </script> וכל תג בתוך התוכן
   return `<script>window.__PRELOADED_ARTICLES=${json};</script>`;
 }
@@ -468,8 +468,6 @@ async function main() {
   // דף הבית (+404 הזהה) מקבל בנוסף preload לתמונת ה-hero + שקופית ראשונה סטטית לקרוסולת המובייל
   let rootHtml = injectBetween(template, 'HERO_PRELOAD', heroPreloadTag);
   rootHtml = injectBetween(rootHtml, 'HERO_SLIDE', buildStaticHeroSlide(lightRows));
-  rootHtml = injectBetween(rootHtml, 'LATEST_GRID', buildStaticGrid(lightRows, r => r.cat !== 'quick'));
-  rootHtml = injectBetween(rootHtml, 'REVIEWS_GRID', buildStaticGrid(lightRows, r => r.cat === 'review'));
   await writeFile(TEMPLATE_PATH, rootHtml, 'utf-8');
   await writeFile(path.join(SITE_DIR, '404.html'), rootHtml, 'utf-8');
   console.log(`✅ index.html + 404.html עודכנו (snapshot: ${Math.min(lightRows.length,16)} כתבות, preload: ${heroPreloadTag ? 'כן' : 'אין תמונת hero'})`);
