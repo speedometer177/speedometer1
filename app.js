@@ -157,6 +157,7 @@ function renderExpandableGrid(gridEl,items,stateKey){
   else if(shownCount>BASE){btn=`<button class="show-more-grid-btn" onclick="resetGridExpand('${stateKey}')" aria-label="צמצם רשימה">הצג פחות ↑</button>`;}
   gridEl.innerHTML=cardsHtml+btn;
   gridEl.dataset.stateKey=stateKey;
+  gridEl.style.minHeight='';
 }
 function expandGridMore(stateKey){
   const cur=typeof _gridExpandState[stateKey]==='number'?_gridExpandState[stateKey]:8;
