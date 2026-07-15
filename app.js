@@ -86,7 +86,7 @@ try{const oneW=track.scrollWidth/2;const dur=Math.min(120,Math.max(18,Math.round
 // rAF מנוע: לא CSS animation — ביטול מוחלט כדי שלא יתנגשו
 track.style.animation='none';track.style.transition='none';track.style.willChange='transform';track.style.transform='translateX(0)';if(window._spTickRaf)cancelAnimationFrame(window._spTickRaf);var _half=0,_pos=0,_last=performance.now();function _spTick(now){var dt=Math.min(100,now-_last);_last=now;if(!_half||!track.isConnected){_half=track.scrollWidth/2;}if(_half>0&&!document.hidden){_pos+=0.06*dt;if(_pos>=_half)_pos-=_half;track.style.transform='translateX('+(-_pos)+'px)';}window._spTickRaf=requestAnimationFrame(_spTick);}window._spTickRaf=requestAnimationFrame(_spTick);}
 function buildTicker(){const track=document.getElementById('ticker-track');if(!track||!articles.length)return;const content=articles.slice(0,10).map(a=>`<span class="ticker-item" onclick="openArticle(${a.id})">${a.title}</span>`).join('');track.innerHTML=content+content;}
-function buildMobileLatestStrip(articles){if(window.innerWidth>680)return;const strip=document.getElementById('mobile-latest-strip');const dotsEl=document.getElementById('mobile-latest-dots');const badge=document.getElementById('latest-count-badge');if(!strip)return;const items=articles.slice(0,10);if(badge)badge.textContent=items.length;const allItems=[...items,...items.slice(0,2)];strip.innerHTML=allItems.map(a=>cardHTML(a)).join('');if(dotsEl){dotsEl.innerHTML=items.map((_,i)=>`<div class="mc-dot${i===0?' active':''}" data-idx="${i}"></div>`).join('');dotsEl.querySelectorAll('.mc-dot').forEach(dot=>{dot.addEventListener('click',()=>{const idx=parseInt(dot.dataset.idx);scrollToCard(strip,idx);});});}
+function buildMobileLatestStrip(articles){if(window.innerWidth>680)return;const strip=document.getElementById('mobile-latest-strip');const dotsEl=document.getElementById('mobile-latest-dots');const badge=document.getElementById('latest-count-badge');if(!strip)return;const items=articles.slice(0,10);if(badge)badge.textContent=items.length;const allItems=[...items,...items.slice(0,2)];strip.innerHTML=allItems.map((a,i)=>cardHTML(a,i<2)).join('');if(dotsEl){dotsEl.innerHTML=items.map((_,i)=>`<div class="mc-dot${i===0?' active':''}" data-idx="${i}"></div>`).join('');dotsEl.querySelectorAll('.mc-dot').forEach(dot=>{dot.addEventListener('click',()=>{const idx=parseInt(dot.dataset.idx);scrollToCard(strip,idx);});});}
 let isScrolling=false;let _cardW=0;const getCardW=()=>{if(!_cardW)_cardW=strip.querySelector('.card')?.offsetWidth||strip.offsetWidth;return _cardW;};window.addEventListener('resize',()=>{_cardW=0;},{passive:true});strip.addEventListener('scroll',()=>{if(isScrolling)return;isScrolling=true;requestAnimationFrame(()=>{updateMobileDots(strip,dotsEl,items.length,getCardW());const gap=14;const step=getCardW()+gap;const maxReal=step*items.length;if(strip.scrollLeft>=maxReal){strip.scrollLeft=strip.scrollLeft-maxReal;}
 isScrolling=false;});},{passive:true});}
 function scrollToCard(strip,idx){const card=strip.querySelectorAll('.card')[idx];if(card)card.scrollIntoView({behavior:'smooth',block:'nearest',inline:'start'});}
@@ -128,9 +128,9 @@ function responsiveAttrs(url,sizesAttr){if(typeof url!=='string')return'';
   if(url.indexOf('images.unsplash.com')!==-1){const widths=[240,320,500,800,1200];const srcset=widths.map(w=>url.replace(/([?&])w=\d+/,'$1w='+w)+' '+w+'w').join(', ');return` srcset="${srcset}" sizes="${sizesAttr}"`;}
   if(isProxyable(url)){const widths=[240,400,640,800,1200];const srcset=widths.map(w=>wsrvW(url,w)+' '+w+'w').join(', ');return` srcset="${srcset}" sizes="${sizesAttr}"`;}
   return'';}
-function cardHTML(a){const score=a.score?`<div class="review-score ${parseFloat(a.score)>=8?'high':parseFloat(a.score)>=6?'mid':''}">${a.score}</div>`:'';return`<a href="/article/${a.id}/" class="card" onclick="openArticle(${a.id});return false;" aria-label="${a.title}">
+function cardHTML(a,eager){const score=a.score?`<div class="review-score ${parseFloat(a.score)>=8?'high':parseFloat(a.score)>=6?'mid':''}">${a.score}</div>`:'';return`<a href="/article/${a.id}/" class="card" onclick="openArticle(${a.id});return false;" aria-label="${a.title}">
     <div class="card-img">
-      <img src="${cardThumb(a.img||CAT_IMAGES[a.cat])}"${responsiveAttrs(a.img||CAT_IMAGES[a.cat], '(max-width:680px) 45vw, 400px')} alt="${a.title}" loading="lazy" width="400" height="225" decoding="async" onload="this.classList.add('loaded')" onerror="this.classList.add('loaded')">
+      <img src="${cardThumb(a.img||CAT_IMAGES[a.cat])}"${responsiveAttrs(a.img||CAT_IMAGES[a.cat], '(max-width:680px) 45vw, 400px')} alt="${a.title}" loading="${eager?'eager':'lazy'}" width="400" height="225" decoding="async" onload="this.classList.add('loaded')" onerror="this.classList.add('loaded')">
       ${score}<span class="card-cat">${CAT_LABELS[a.cat]}</span>
     </div>
     <div class="card-body">
@@ -151,7 +151,7 @@ function renderExpandableGrid(gridEl,items,stateKey){
   let shownCount=_gridExpandState[stateKey];
   if(typeof shownCount!=='number'||shownCount<BASE)shownCount=BASE;
   const shown=items.slice(0,shownCount);
-  const cardsHtml=shown.map(a=>cardHTML(a)).join('')||'<p style="color:var(--muted);font-size:0.9rem;grid-column:1/-1;padding:20px 0;">לא נמצאו כתבות בקטגוריה זו.</p>';
+  const eagerN=stateKey==='latest-more-btn'?4:0;const cardsHtml=shown.map((a,i)=>cardHTML(a,i<eagerN)).join('')||'<p style="color:var(--muted);font-size:0.9rem;grid-column:1/-1;padding:20px 0;">לא נמצאו כתבות בקטגוריה זו.</p>';
   let btn='';
   if(items.length>shownCount){btn=`<button class="show-more-grid-btn" onclick="expandGridMore('${stateKey}')" aria-label="טען עוד כתבות">קרא עוד ↓</button>`;}
   else if(shownCount>BASE){btn=`<button class="show-more-grid-btn" onclick="resetGridExpand('${stateKey}')" aria-label="צמצם רשימה">הצג פחות ↑</button>`;}
