@@ -27,6 +27,15 @@
  *     (כך שכתבה חדשה מקבלת עמוד 200 OK תוך דקות, לא שעות)
  *   - תומך גם בהרצה ממוקדת לכתבה בודדת (כש-articleId מועבר ב-payload),
  *     כדי שריצה מהירה לא תיצור עומס מיותר על כל 30+ הכתבות בכל פעם.
+ *
+ * ═══ עדכון: Rich Results + שיתוף ווטסאפ ═══
+ *   - JSON-LD: תמונות כ-ImageObject בשלושה יחסי גובה-רוחב (16:9, 4:3, 1:1)
+ *     דרך wsrv - הפורמט שגוגל ממליץ עליו לתוצאות עשירות.
+ *   - datePublished כולל את שעת הפרסום האמיתית (שדה time) עם אזור זמן ישראל.
+ *   - og:type הוא תמיד "article" בדפי כתבה (היה "website" לכתבות שאינן מבחן).
+ *   - og:image / twitter:image עוברים דרך wsrv ב-1200x630 JPG - הגודל
+ *     והפורמט שווטסאפ ופייסבוק מציגים כתמונה גדולה באופן אמין.
+ *   - נוסף og:locale=he_IL.
  * ---------------------------------------------------------------
  */
 
@@ -90,6 +99,72 @@ function toISODate(dateStr) {
   const d = new Date(dateStr);
   if (!isNaN(d.getTime())) return d.toISOString();
   return null;
+}
+
+/**
+ * כמו toISODate, אבל משלב גם את שעת הפרסום (שדה time בפורמט "HH:MM")
+ * עם אזור זמן ישראל (+03:00). כך datePublished ב-JSON-LD משקף את זמן
+ * הפרסום האמיתי ולא חצות - גוגל מציג את זה בתוצאות ("לפני 3 שעות" וכו').
+ * אם אין שעה תקינה - נופלים ל-00:00 (התנהגות זהה לקודם).
+ */
+function toISODateTime(dateStr, timeStr) {
+  if (!dateStr) return null;
+  let base = null;
+  const m = String(dateStr).match(/^(\d{1,2})[./](\d{1,2})[./](\d{4})$/);
+  if (m) {
+    const day = parseInt(m[1], 10);
+    const month = parseInt(m[2], 10);
+    const year = parseInt(m[3], 10);
+    if (month >= 1 && month <= 12 && day >= 1 && day <= 31) {
+      base = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+    }
+  }
+  if (!base) {
+    const d = new Date(dateStr);
+    if (isNaN(d.getTime())) return null;
+    base = d.toISOString().split('T')[0];
+  }
+  let hh = '00', mm = '00';
+  const t = String(timeStr || '').trim().match(/^(\d{1,2}):(\d{2})$/);
+  if (t) {
+    hh = String(parseInt(t[1], 10)).padStart(2, '0');
+    mm = t[2];
+  }
+  const d = new Date(`${base}T${hh}:${mm}:00+03:00`);
+  return isNaN(d.getTime()) ? null : d.toISOString();
+}
+
+/* ═══ תמונות לשיתוף ולסכמה ═══ */
+
+/**
+ * תמונת OG לשיתוף (ווטסאפ/פייסבוק/טוויטר):
+ * 1200x630 JPG דרך wsrv. ווטסאפ מציג תמונה גדולה באופן אמין רק כשהתמונה
+ * ביחס ~1.91:1, במשקל סביר, ובפורמט שכל הגרסאות תומכות בו (JPG בטוח,
+ * webp לא תמיד). wsrv עושה את ההמרה בזמן אמת מהמקור ב-Supabase.
+ */
+function ogImage(url) {
+  if (typeof url !== 'string' || !/^https?:\/\//.test(url)) return url;
+  if (url.indexOf('wsrv.nl') !== -1) return url;
+  return 'https://wsrv.nl/?url=' + encodeURIComponent(url) + '&w=1200&h=630&fit=cover&output=jpg&q=80';
+}
+
+/**
+ * מערך תמונות ל-JSON-LD לפי המלצת גוגל לתוצאות עשירות:
+ * שלושה יחסי גובה-רוחב (16:9, 4:3, 1:1) כ-ImageObject עם מידות מפורשות.
+ * גוגל בוחר את היחס המתאים לכל משטח תצוגה (Discover, חיפוש, וכו').
+ */
+function schemaImages(url) {
+  if (typeof url !== 'string' || !/^https?:\/\//.test(url) || url.indexOf('wsrv.nl') !== -1) {
+    return url ? [url] : [];
+  }
+  const enc = encodeURIComponent(url);
+  const v = (w, h) => ({
+    '@type': 'ImageObject',
+    url: `https://wsrv.nl/?url=${enc}&w=${w}&h=${h}&fit=cover&output=jpg&q=80`,
+    width: w,
+    height: h
+  });
+  return [v(1200, 675), v(1200, 900), v(1200, 1200)];
 }
 
 /** מקביל ל-parseBody בקליינט (index.html) - שומר על אותה לוגיקה בדיוק כדי שהתוכן הראשוני יתאים למה שה-JS ירנדר מחדש */
@@ -158,9 +233,10 @@ function hydrateTemplateForArticle(template, a) {
   const img = a.img || CAT_IMAGES[a.cat] || CAT_IMAGES.local;
   const canonicalUrl = `${SITE}/article/${a.id}/`;
   const catLabel = CAT_LABELS[a.cat] || a.cat;
-  const isoDate = toISODate(a.date);
+  const isoDate = toISODateTime(a.date, a.time);
   const bodyHTML = parseBodyToHTML(a.body, a.body_images, a.title);
   const readMins = Math.max(1, Math.ceil((a.body || '').split(/\s+/).filter(Boolean).length / 200));
+  const shareImg = ogImage(img); // תמונת שיתוף 1200x630 JPG
 
   const schema = {
     '@context': 'https://schema.org',
@@ -168,7 +244,7 @@ function hydrateTemplateForArticle(template, a) {
     headline: a.title,
     description: desc,
     author: { '@type': 'Person', name: a.author || 'מערכת ספידומטר' },
-    image: img,
+    image: schemaImages(img),
     inLanguage: 'he',
     publisher: {
       '@type': 'Organization',
@@ -208,17 +284,19 @@ function hydrateTemplateForArticle(template, a) {
   html = html
     .replace(/<meta property="og:title" content="[^"]*">/, `<meta property="og:title" content="${esc(title)}">`)
     .replace(/<meta property="og:description" content="[^"]*">/, `<meta property="og:description" content="${esc(desc)}">`)
-    .replace(/<meta property="og:type" content="[^"]*">/, `<meta property="og:type" content="${a.cat === 'review' ? 'article' : 'website'}">`)
+    .replace(/<meta property="og:type" content="[^"]*">/, `<meta property="og:type" content="article">`)
     .replace(/<meta property="og:url" content="[^"]*">/, `<meta property="og:url" content="${canonicalUrl}">`)
-    .replace(/<meta property="og:image" content="[^"]*">/, `<meta property="og:image" content="${esc(img)}">`)
+    .replace(/<meta property="og:image" content="[^"]*">/, `<meta property="og:image" content="${esc(shareImg)}">`)
     .replace(/<meta name="twitter:title" content="[^"]*">/, `<meta name="twitter:title" content="${esc(title)}">`)
     .replace(/<meta name="twitter:description" content="[^"]*">/, `<meta name="twitter:description" content="${esc(desc)}">`)
-    .replace(/<meta name="twitter:image" content="[^"]*">/, `<meta name="twitter:image" content="${esc(img)}">`);
+    .replace(/<meta name="twitter:image" content="[^"]*">/, `<meta name="twitter:image" content="${esc(shareImg)}">`);
 
   const extraMeta = [
     isoDate ? `<meta property="article:published_time" content="${isoDate}">` : '',
+    isoDate ? `<meta property="article:modified_time" content="${isoDate}">` : '',
     `<meta property="article:author" content="${esc(a.author || 'מערכת ספידומטר')}">`,
     `<meta property="article:section" content="${esc(catLabel)}">`,
+    `<meta property="og:locale" content="he_IL">`,
     `<meta name="author" content="${esc(a.author || 'מערכת ספידומטר')}">`
   ].filter(Boolean).join('\n');
   html = html.replace('</head>', `${extraMeta}\n</head>`);
