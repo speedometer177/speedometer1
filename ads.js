@@ -70,12 +70,25 @@
     } catch (e) { return null; }
   }
 
-  function renderAd(container, ad) {
+  function renderAd(container, ad, slot) {
     if (!container || !ad) return;
-    container.innerHTML =
+    const showTag = (slot === 'home_banner' || slot === 'feed_native');
+    const linkHtml =
       '<a href="' + escapeAttr(ad.link_url) + '" target="_blank" rel="noopener sponsored" data-ad-id="' + ad.id + '">' +
       '<img loading="lazy" src="' + escapeAttr(ad.image_url) + '" alt="' + escapeAttr(ad.alt_text || 'מודעה') + '" onload="this.classList.add(\'loaded\')">' +
+      (showTag ? '<span class="ad-tag"><svg viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="9"/></svg>מודעה</span>' : '') +
       '</a>';
+
+    if (slot === 'sidebar') {
+      const body = container.querySelector('.ad-slot-sidebar-body');
+      if (body) body.innerHTML = linkHtml;
+    } else if (slot === 'article_body') {
+      const body = container.querySelector('.ad-slot-article-body');
+      if (body) body.innerHTML = linkHtml;
+    } else {
+      container.innerHTML = linkHtml;
+    }
+
     container.classList.add('has-ad');
     const link = container.querySelector('a');
     if (link) {
@@ -104,8 +117,10 @@
   async function loadAndRender(container, slot) {
     const ad = await fetchRandomAd(slot);
     if (ad) {
-      renderAd(container, ad);
+      renderAd(container, ad, slot);
       trackImpressionOnce(container, ad.id);
+    } else {
+      container.classList.add('no-ad');
     }
   }
 
@@ -137,8 +152,9 @@
     const mo = new MutationObserver(function () {
       const slot = document.getElementById('ad-article-body');
       if (!slot) return;
-      slot.classList.remove('has-ad');
-      slot.innerHTML = '';
+      slot.classList.remove('has-ad', 'no-ad');
+      const inner = slot.querySelector('.ad-slot-article-body');
+      if (inner) inner.innerHTML = '';
       setupLazySlot(slot);
     });
     mo.observe(artBody, { childList: true });
@@ -198,6 +214,16 @@
     if (!/^https?:\/\//i.test(linkUrl)) { alert('הקישור חייב להתחיל ב-http:// או https://'); return; }
     if (!currentAdImageFile) { alert('נא לבחור תמונה למודעה.'); return; }
 
+    // דוחסים את התמונה בדיוק כמו שקורה בהעלאת תמונות לכתבות —
+    // אותה פונקציה (compressImageFile) שכבר קיימת ב-app.js, ללא כפילות קוד.
+    let fileToUpload = currentAdImageFile;
+    if (typeof window.compressImageFile === 'function') {
+      try {
+        const compressed = await window.compressImageFile(currentAdImageFile, 250);
+        if (compressed) fileToUpload = compressed;
+      } catch (e) { /* אם הדחיסה נכשלת, ממשיכים עם הקובץ המקורי */ }
+    }
+
     try {
       const { data: sessData } = await adsClient.auth.getSession();
       if (!sessData || !sessData.session) {
@@ -207,12 +233,12 @@
       }
     } catch (e) {}
 
-    const ext = (currentAdImageFile.name.split('.').pop() || 'jpg').toLowerCase();
+    const ext = (fileToUpload.name.split('.').pop() || 'jpg').toLowerCase();
     const path = Date.now() + '-' + Math.random().toString(36).slice(2, 8) + '.' + ext;
     let publicUrl = null;
     try {
       const { error: upErr } = await adsClient.storage.from('ad-images')
-        .upload(path, currentAdImageFile, { contentType: currentAdImageFile.type, upsert: false, cacheControl: '31536000' });
+        .upload(path, fileToUpload, { contentType: fileToUpload.type, upsert: false, cacheControl: '31536000' });
       if (upErr) { alert('שגיאה בהעלאת התמונה: ' + upErr.message); return; }
       const { data: pub } = adsClient.storage.from('ad-images').getPublicUrl(path);
       publicUrl = pub && pub.publicUrl ? pub.publicUrl : null;
