@@ -76,19 +76,36 @@
   }
 
   function initAdsClient() {
-    if (window.supabase && !adsClient) {
+    if (adsClient) return adsClient;
+    // עדיפות ראשונה תמיד: אותו client מאומת שכבר קיים ב-app.js —
+    // כך פעולות ניהול (הפעלה/כיבוי/מחיקה/עריכה/פרסום) עובדות עם אותה הרשאה בדיוק,
+    // ולא נוצרות שתי instances נפרדות של GoTrueClient על אותו מפתח אחסון.
+    if (window.sbClient) { adsClient = window.sbClient; return adsClient; }
+    // גיבוי בלבד: אם משום מה app.js לא חשף client — ממשיכים עם client עצמאי,
+    // כדי שלפחות התצוגה הציבורית (קריאה בלבד) תמשיך לעבוד.
+    if (window.supabase) {
       try { adsClient = window.supabase.createClient(SB_URL, SB_KEY); } catch (e) { console.error('[ads.js] יצירת חיבור ל-Supabase נכשלה:', e); }
     }
     return adsClient;
   }
 
   function whenSupabaseReady(cb) {
-    if (window.supabase) { initAdsClient(); cb(); return; }
+    if (window.sbClient) { initAdsClient(); cb(); return; }
     let tries = 0;
     const iv = setInterval(function () {
       tries++;
-      if (window.supabase) { clearInterval(iv); initAdsClient(); cb(); }
-      else if (tries > 100) { clearInterval(iv); console.error('[ads.js] Supabase לא נטען תוך 10 שניות — המודעות לא יוצגו.'); } // ~10 שניות ואז מוותר
+      if (window.sbClient) {
+        // עדיפות ראשונה תמיד: ה-client המשותף שנוצר ב-app.js. מחכים לו
+        // באופן פעיל כדי למנוע מצב שבו שני client-ים נפרדים נוצרים
+        // (אותה התחברות ב-localStorage) — זו הסיבה ל-"Multiple GoTrueClient instances".
+        clearInterval(iv); initAdsClient(); cb();
+      } else if (tries > 30 && window.supabase) {
+        // גיבוי בלבד: אחרי 3 שניות בלי client משותף (אבל הספרייה עצמה נטענה) —
+        // נוצר client עצמאי, למקרה ש-app.js נכשל מסיבה כלשהי.
+        clearInterval(iv); initAdsClient(); cb();
+      } else if (tries > 100) {
+        clearInterval(iv); console.error('[ads.js] Supabase לא נטען תוך 10 שניות — המודעות לא יוצגו.');
+      }
     }, 100);
   }
 
