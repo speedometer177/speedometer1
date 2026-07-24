@@ -9,7 +9,7 @@
 var __ls=null;try{__ls=window.localStorage;__ls.getItem('__probe');}catch(e){__ls=null;}
 var safeStorage={getItem:function(k){try{return __ls?__ls.getItem(k):null;}catch(e){return null;}},setItem:function(k,v){try{if(__ls)__ls.setItem(k,v);}catch(e){}},removeItem:function(k){try{if(__ls)__ls.removeItem(k);}catch(e){}}};
 
-const SB_URL='https://kaykrrnmykqrfhawgtqt.supabase.co';const SB_KEY='sb_publishable_Ms6YFTnADm-qAd9617Ey9A_D3x-Zumi';let sbClient=null;function __initSb(){if(window.supabase&&!sbClient){try{sbClient=supabase.createClient(SB_URL,SB_KEY);}catch(e){}}}
+const SB_URL='https://kaykrrnmykqrfhawgtqt.supabase.co';const SB_KEY='sb_publishable_Ms6YFTnADm-qAd9617Ey9A_D3x-Zumi';let sbClient=null;function __initSb(){if(window.supabase&&!sbClient){try{sbClient=supabase.createClient(SB_URL,SB_KEY);window.sbClient=sbClient;}catch(e){}}}
 window.__initSb=__initSb;__initSb();const STORAGE_KEY='speedometer_articles_v3';const CAT_LABELS={local:'חדשות מקומיות',world:'חדשות עולמיות',review:'מבחן רכב',electric:'רכב חשמלי',tech:'טכנולוגיה',buying:'קניית רכב',sport:'ספורט',luxury:'רכב יוקרה',quick:'חדשות בקליק'};const CAT_IMAGES={local:'https://images.unsplash.com/photo-1571127236794-81c0bbfe1ce3?w=800&q=75&fm=webp&auto=format',world:'https://images.unsplash.com/photo-1494976388531-d1058494cdd8?w=800&q=75&fm=webp&auto=format',review:'https://images.unsplash.com/photo-1555215695-3004980ad54e?w=800&q=75&fm=webp&auto=format',electric:'https://images.unsplash.com/photo-1593941707882-a5bba14938c7?w=800&q=75&fm=webp&auto=format',tech:'https://images.unsplash.com/photo-1518770660439-4636190af475?w=800&q=75&fm=webp&auto=format',buying:'https://images.unsplash.com/photo-1552519507-da3b142c6e3d?w=800&q=75&fm=webp&auto=format',sport:'https://images.unsplash.com/photo-1544636331-e26879cd4d9b?w=800&q=75&fm=webp&auto=format',luxury:'https://images.unsplash.com/photo-1563720360172-67b8f3dce741?w=800&q=75&fm=webp&auto=format',quick:'https://images.unsplash.com/photo-1504711434969-e33886168f5c?w=800&q=75&fm=webp&auto=format'};let articles=[];let currentFilter='all';let currentArticleId=null;let nextId=11;let sliderState={};let deletedIds=new Set(JSON.parse(safeStorage.getItem('sp_deleted_ids')||'[]'));
 /* הועתק לכאן (מוקדם בקובץ) כדי לתקן באג TDZ: handleMobileHero/openArticle/buildHeroBanner/updateReadingProgress
    נקראים מנקודות סינכרוניות מוקדמות (init, showHome, buildSections) שרצות לפני
@@ -25,11 +25,12 @@ const directArticleId=isStaticPrerender?parseInt(__directArticlePathMatch[1]):nu
 function saveLocal(){try{const light=articles.map(a=>{const c=Object.assign({},a);delete c.body;delete c.gallery;delete c.bodyImages;return c;});safeStorage.setItem(STORAGE_KEY,JSON.stringify(light));}catch(e){}}
 function loadLocal(){try{const d=safeStorage.getItem(STORAGE_KEY);if(d){const p=JSON.parse(d);if(p&&p.length>0)return p;}}catch(e){}
 return null;}
-function mapRow(r){var imgFallback=CAT_IMAGES[r.cat||'local'];var rawTags=r.tags||[];var _uid=null,_srcUid=null;(rawTags||[]).forEach(function(t){if(typeof t==='string'){if(t.indexOf('uid:')===0)_uid=t.slice(4);else if(t.indexOf('src:')===0)_srcUid=t.slice(4);}});return{id:r.id,title:r.title||'',sub:r.sub||'',cat:r.cat||'local',author:r.author||'מערכת ספידומטר',date:r.date||'',time:r.time||'',readTime:r.read_time||'',img:(r.img&&r.img.trim().length>5)?r.img.trim():imgFallback,imgCaption:r.img_caption||'',body:r.body||'',score:r.score||null,views:r.views||0,featured:r.featured||false,specs:r.specs||null,gallery:r.gallery||null,galleryCaptions:r.gallery_captions||null,bodyImages:r.body_images||null,ytUrls:r.yt_urls||null,tags:rawTags,_uid:_uid,_srcUid:_srcUid,scheduledAt:r.scheduled_at||null,};}
-async function syncFromSupabase(){try{const LIGHT='id,title,sub,cat,author,date,time,read_time,img,img_caption,score,views,featured,specs,gallery_captions,yt_urls,tags,scheduled_at';let rows;if(sbClient){const{data,error}=await sbClient.from('articles').select(LIGHT).order('id',{ascending:false});if(error)throw error;rows=data;}else{const r=await fetchT(SB_URL+'/rest/v1/articles?select='+LIGHT+'&order=id.desc',{headers:{'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY}});if(!r.ok)throw new Error('fetch failed');rows=await r.json();}
+function mapRow(r){var imgFallback=CAT_IMAGES[r.cat||'local'];var rawTags=r.tags||[];var _uid=null,_srcUid=null;(rawTags||[]).forEach(function(t){if(typeof t==='string'){if(t.indexOf('uid:')===0)_uid=t.slice(4);else if(t.indexOf('src:')===0)_srcUid=t.slice(4);}});return{id:r.id,title:r.title||'',sub:r.sub||'',cat:r.cat||'local',author:r.author||'מערכת ספידומטר',date:r.date||'',time:r.time||'',readTime:r.read_time||'',img:(r.img&&r.img.trim().length>5)?r.img.trim():imgFallback,imgCaption:r.img_caption||'',body:r.body||'',score:r.score||null,views:r.views||0,featured:r.featured||false,heroPosition:r.hero_position||null,specs:r.specs||null,gallery:r.gallery||null,galleryCaptions:r.gallery_captions||null,bodyImages:r.body_images||null,ytUrls:r.yt_urls||null,tags:rawTags,_uid:_uid,_srcUid:_srcUid,scheduledAt:r.scheduled_at||null,};}
+async function syncFromSupabase(){try{const LIGHT='id,title,sub,cat,author,date,time,read_time,img,img_caption,score,views,featured,hero_position,specs,gallery_captions,yt_urls,tags,scheduled_at';let rows;if(sbClient){const{data,error}=await sbClient.from('articles').select(LIGHT).order('id',{ascending:false});if(error)throw error;rows=data;}else{const r=await fetchT(SB_URL+'/rest/v1/articles?select='+LIGHT+'&order=id.desc',{headers:{'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY}});if(!r.ok)throw new Error('fetch failed');rows=await r.json();}
 if(!Array.isArray(rows)||rows.length===0)return;const sbArticles=rows.map(mapRow);const _prev={};articles.forEach(a=>{_prev[a.id]=a;});sbArticles.forEach(a=>{const p=_prev[a.id];if(p&&p.body&&!a.body){a.body=p.body;a.gallery=p.gallery;a.bodyImages=p.bodyImages;}});articles=sbArticles;nextId=Math.max(...articles.map(a=>a.id),0)+1;_lastSyncSig=articles.map(a=>a.id).join(',');saveLocal();buildHero();buildSections();try{buildBreakingTicker();}catch(e){}
 try{buildTicker();}catch(e){}
 try{handleMobileHero();}catch(e){}
+if(document.getElementById('admin-page')&&document.getElementById('admin-page').style.display!=='none'){try{renderAdminTable();renderAdminAnalytics();}catch(e){}}
 }catch(e){console.log('Sync error:',e);}}
 let _heavyLoaded=false;async function fetchHeavyFields(){if(_heavyLoaded)return;try{let rows;const HEAVY='id,body,gallery,body_images';if(sbClient){const{data,error}=await sbClient.from('articles').select(HEAVY);if(error)throw error;rows=data;}else{const r=await fetchT(SB_URL+'/rest/v1/articles?select='+HEAVY,{headers:{'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY}});if(!r.ok)throw new Error('heavy fetch failed');rows=await r.json();}
 if(!Array.isArray(rows))return;const byId={};rows.forEach(r=>{byId[r.id]=r;});articles.forEach(a=>{const h=byId[a.id];if(h){a.body=h.body||'';a.gallery=h.gallery||null;a.bodyImages=h.body_images||null;}});_heavyLoaded=true;saveLocal();try{if(typeof currentArticleId!=='undefined'&&currentArticleId)openArticle(currentArticleId);}catch(e){}}catch(e){console.log('Heavy fetch error:',e);}}
@@ -99,7 +100,7 @@ let isScrolling=false;let _cardW=0;const getCardW=()=>{if(!_cardW)_cardW=strip.q
 isScrolling=false;});},{passive:true});}
 function scrollToCard(strip,idx){const card=strip.querySelectorAll('.card')[idx];if(card)card.scrollIntoView({behavior:'smooth',block:'nearest',inline:'start'});}
 function updateMobileDots(strip,dotsEl,count,cardW){if(!dotsEl)return;if(!cardW)cardW=strip.querySelector('.card')?.offsetWidth||strip.offsetWidth;const gap=14;const activeIdx=Math.round(strip.scrollLeft/(cardW+gap))%count;dotsEl.querySelectorAll('.mc-dot').forEach((d,i)=>d.classList.toggle('active',i===activeIdx));}
-function buildHero(){const area=document.getElementById('hero-area');if(!area)return;const pool=currentFilter==='all'?articles.filter(a=>a.cat!=='quick'):articles.filter(a=>a.cat===currentFilter);const featured=pool.filter(a=>a.featured);const main=featured[0]||pool[0];const side1=featured[1]||pool[1];const side2=featured[2]||pool[2];if(!main){area.innerHTML='';return;}
+function buildHero(){const area=document.getElementById('hero-area');if(!area)return;const pool=currentFilter==='all'?articles.filter(a=>a.cat!=='quick'):articles.filter(a=>a.cat===currentFilter);const rest=pool.filter(a=>!a.heroPosition);const main=pool.find(a=>a.heroPosition===1)||rest[0];const side1=pool.find(a=>a.heroPosition===2)||rest.filter(a=>a!==main)[0];const side2=pool.find(a=>a.heroPosition===3)||rest.filter(a=>a!==main&&a!==side1)[0];if(!main){area.innerHTML='';return;}
 area.innerHTML=`
     <div class="hero-grid">
       <div class="hero-main" onclick="openArticle(${main.id})" role="button" tabindex="0" aria-label="${main.title}" onkeydown="if(event.key==='Enter')openArticle(${main.id})">
@@ -214,7 +215,27 @@ function _clearPrerenderOverride(){try{var s=document.getElementById('prerender-
 function showHome(pushState=true){_clearPrerenderOverride();if(articles&&articles.length){const _lg=document.getElementById('latest-grid');if(_lg&&currentFilter!=='quick'&&_lg.children.length===0){try{buildHero();buildSections();buildTicker();buildBreakingTicker();}catch(e){}}}resetMeta();const artSubEl=document.getElementById('art-sub');if(artSubEl)artSubEl.style.display='';const hp=document.getElementById('home-page');const ap2=document.getElementById('article-page');const adp=document.getElementById('admin-page');document.body.classList.remove('article-open');if(hp){hp.style.display='block';}
 if(ap2)ap2.style.display='none';if(adp)adp.style.display='none';document.getElementById('main-footer').style.display='block';if(pushState&&window.history){window.history.pushState({page:'home',filter:currentFilter},'','/');}
 updateReadingProgress();const homeBtn=document.querySelector('.bottom-nav-item:first-child');if(homeBtn)setBottomNav(homeBtn);try{handleMobileHero();}catch(e){}}
-function showAdmin(){_clearPrerenderOverride();document.getElementById('home-page').style.display='none';document.getElementById('article-page').style.display='none';document.getElementById('admin-page').style.display='block';document.getElementById('main-footer').style.display='none';renderAdminTable();window.scrollTo({top:0});}
+function showAdmin(){_clearPrerenderOverride();document.getElementById('home-page').style.display='none';document.getElementById('article-page').style.display='none';document.getElementById('admin-page').style.display='block';document.getElementById('main-footer').style.display='none';renderAdminTable();renderAdminAnalytics();window.scrollTo({top:0});}
+
+function renderAdminAnalytics(){
+  var box=document.getElementById('adm-analytics');if(!box)return;
+  var real=articles.filter(a=>a.cat!=='quick');
+  var totalViews=real.reduce((s,a)=>s+(a.views||0),0);
+  var count=real.length;
+  var avg=count?Math.round(totalViews/count):0;
+  var top=real.slice().sort((x,y)=>(y.views||0)-(x.views||0))[0];
+  var gaugeVal=document.getElementById('adm-gauge-value');if(gaugeVal)gaugeVal.textContent=totalViews.toLocaleString('he-IL');
+  var statArticles=document.getElementById('adm-stat-articles');if(statArticles)statArticles.textContent=count.toLocaleString('he-IL');
+  var statAvg=document.getElementById('adm-stat-avg');if(statAvg)statAvg.textContent=avg.toLocaleString('he-IL');
+  var topTitle=document.getElementById('adm-stat-top-title');
+  var topViews=document.getElementById('adm-stat-top-views');
+  var topCard=document.getElementById('adm-stat-top');
+  if(top&&topTitle&&topViews){
+    topTitle.textContent=top.title;
+    topViews.textContent=(top.views||0).toLocaleString('he-IL')+' צפיות';
+    if(topCard){topCard.onclick=function(){editArticle(top.id);};topCard.style.cursor='pointer';}
+  }else if(topTitle){topTitle.textContent='אין עדיין נתונים';if(topViews)topViews.textContent='';}
+}
 function openArticle(id,pushState=true){_clearPrerenderOverride();const a=articles.find(x=>x.id===id);if(!a)return;currentArticleId=id;if(typeof _progressTop!=='undefined')_progressTop=null;if(!_heavyLoaded&&(!a.body||a.body.length===0)){try{const fetchOne=async()=>{try{let row=null;if(sbClient){const{data}=await sbClient.from('articles').select('id,body,gallery,body_images').eq('id',id).single();row=data;}else{const r=await fetchT(SB_URL+'/rest/v1/articles?select=id,body,gallery,body_images&id=eq.'+id,{headers:{'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY}});if(r.ok){const arr=await r.json();row=arr&&arr[0];}}
 if(row){a.body=row.body||'';a.gallery=row.gallery||null;a.bodyImages=row.body_images||null;saveLocal();if(currentArticleId===id)openArticle(id);}}catch(e){}};fetchOne();}catch(e){}}
 a.views=(a.views||0)+1;saveLocal();if(sbClient)Promise.resolve(sbClient.rpc('increment_article_views',{article_id:id})).catch(()=>{});document.getElementById('home-page').style.display='none';document.getElementById('article-page').style.display='block';document.body.classList.add('article-open');document.getElementById('admin-page').style.display='none';updateMeta(a);const artCatEl=document.getElementById('art-cat');if(artCatEl){artCatEl.textContent=CAT_LABELS[a.cat];artCatEl.onclick=()=>{showHome();filterCat(a.cat);};artCatEl.style.cursor='pointer';artCatEl.title='לכל '+CAT_LABELS[a.cat];}
@@ -334,75 +355,162 @@ else{alert('אופס — ההרשמה נכשלה כרגע, נסו שוב בעו�
 /* ═══════════════════════════════════════════════
    פאנל סדר תצוגה — קרוסולה ו-Hero
    ═══════════════════════════════════════════════ */
-function openCarouselPanel(){
-  var panel=document.getElementById('carousel-order-panel');
-  if(panel){panel.style.display='block';renderCarouselPanel();return;}
-  // בנייה ראשונה
+// ═══════════ בורר מיקומי Hero — תצוגה מקדימה אמיתית, מחשב+מובייל, עם ביטול ═══════════
+var _heroPickerActiveTab='desktop';
+var _heroPickerActiveSlot=null; // כשפתוח, מציג את רשימת בחירת הכתבה לסלוט הזה
+
+function openHeroPositionPicker(){
+  var panel=document.getElementById('hero-picker-overlay');
+  if(panel){panel.style.display='flex';renderHeroPicker();return;}
   panel=document.createElement('div');
-  panel.id='carousel-order-panel';
-  panel.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:99999;display:flex;align-items:center;justify-content:center;padding:16px';
-  panel.innerHTML=`
-    <div style="background:#fff;border-radius:18px;width:min(560px,96vw);max-height:90vh;overflow-y:auto;padding:24px 20px;font-family:var(--font);direction:rtl">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px">
-        <h2 style="font-size:1.18rem;font-weight:900;margin:0">סדר תצוגה — Hero / קרוסולה</h2>
-        <button onclick="document.getElementById('carousel-order-panel').style.display='none'"
-          style="background:#f0f0f0;border:none;border-radius:8px;width:32px;height:32px;font-size:1.2rem;cursor:pointer;display:flex;align-items:center;justify-content:center">✕</button>
-      </div>
-      <p style="font-size:0.82rem;color:#666;margin-bottom:16px">
-        הכתבה המסומנת ב-★ תופיע ראשונה ב-Hero (מחשב) ובקרוסולה (מובייל). 
-        רק כתבה אחת יכולה להיות featured בכל זמן נתון.
-      </p>
-      <div id="carousel-list" style="display:flex;flex-direction:column;gap:10px"></div>
-    </div>`;
+  panel.id='hero-picker-overlay';
+  panel.className='hero-picker-overlay';
+  panel.innerHTML='<div class="hero-picker-modal" id="hero-picker-modal"></div>';
   document.body.appendChild(panel);
   panel.addEventListener('click',function(e){if(e.target===panel)panel.style.display='none';});
-  renderCarouselPanel();
+  renderHeroPicker();
 }
 
-function renderCarouselPanel(){
-  var list=document.getElementById('carousel-list');
-  if(!list)return;
-  var visible=articles.filter(a=>a.cat!=='quick').slice(0,20);
-  list.innerHTML=visible.map(function(a){
-    var isFeat=!!a.featured;
-    var img=a.img&&a.img.length>5?('https://wsrv.nl/?url='+encodeURIComponent(a.img)+'&w=80&h=50&fit=cover&output=webp&q=60'):'';
-    return '<div style="display:flex;align-items:center;gap:12px;padding:10px 12px;border:1.5px solid '+(isFeat?'#e8001d':'#eee')+';border-radius:12px;background:'+(isFeat?'#fff5f5':'#fafafa')+'">'
-      +(img?'<img src="'+img+'" width="72" height="45" style="border-radius:7px;object-fit:cover;flex-shrink:0" loading="lazy">':'<div style="width:72px;height:45px;background:#eee;border-radius:7px;flex-shrink:0"></div>')
-      +'<div style="flex:1;min-width:0">'
-      +'<div style="font-size:0.88rem;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:320px">'+escapeHtml(a.title)+'</div>'
-      +'<div style="font-size:0.74rem;color:#888;margin-top:2px">'+escapeHtml(a.cat)+' · '+escapeHtml(a.date||'')+'</div>'
+function heroPickerThumb(a){
+  if(!a)return '';
+  return a.img&&a.img.length>5?('https://wsrv.nl/?url='+encodeURIComponent(a.img)+'&w=160&fit=cover&output=webp&q=65'):(CAT_IMAGES[a.cat]||'');
+}
+
+function heroSlotCardHTML(position,label){
+  var a=articles.find(x=>x.heroPosition===position);
+  if(a){
+    return '<div class="hp-slot hp-slot-filled" data-pos="'+position+'">'
+      +'<div class="hp-slot-label">'+label+'</div>'
+      +'<div class="hp-slot-thumb" style="background-image:url(\''+heroPickerThumb(a)+'\')"></div>'
+      +'<div class="hp-slot-title">'+escapeHtml(a.title)+'</div>'
+      +'<div class="hp-slot-actions">'
+        +'<button class="hp-btn hp-btn-swap" onclick="openHeroSlotSearch('+position+')">החלף</button>'
+        +'<button class="hp-btn hp-btn-clear" onclick="clearHeroPosition('+position+')">✕ הסר</button>'
+      +'</div></div>';
+  }
+  return '<div class="hp-slot hp-slot-empty" data-pos="'+position+'" onclick="openHeroSlotSearch('+position+')">'
+    +'<div class="hp-slot-label">'+label+'</div>'
+    +'<div class="hp-slot-plus">+</div>'
+    +'<div class="hp-slot-empty-txt">בחר כתבה</div>'
+    +'</div>';
+}
+
+function renderHeroPicker(){
+  var modal=document.getElementById('hero-picker-modal');
+  if(!modal)return;
+  var isDesktop=_heroPickerActiveTab==='desktop';
+  var previewHTML=isDesktop
+    ? '<div class="hp-preview hp-preview-desktop">'
+        +'<div class="hp-preview-main">'+heroSlotCardHTML(1,'ראשי — Hero גדול')+'</div>'
+        +'<div class="hp-preview-sides">'+heroSlotCardHTML(2,'צדדי עליון')+heroSlotCardHTML(3,'צדדי תחתון')+'</div>'
       +'</div>'
-      +'<button onclick="setFeatured('+a.id+')" title="הגדר כראשי" style="flex-shrink:0;width:38px;height:38px;border-radius:50%;border:2px solid '+(isFeat?'#e8001d':'#ddd')+';background:'+(isFeat?'#e8001d':'#fff')+';cursor:pointer;font-size:1.2rem;display:flex;align-items:center;justify-content:center;transition:all 0.2s">'+(isFeat?'<span style=color:#fff>★</span>':'<span style=color:#bbb>☆</span>')+'</button>'
+    : '<div class="hp-preview hp-preview-mobile">'
+        +'<div class="hp-phone-frame">'
+          +'<div class="hp-phone-notch"></div>'
+          +heroSlotCardHTML(1,'שקופית 1 (ראשונה)')
+        +'</div>'
+        +'<div class="hp-mobile-stack">'+heroSlotCardHTML(2,'שקופית 2')+heroSlotCardHTML(3,'שקופית 3')+'</div>'
       +'</div>';
-  }).join('');
+
+  var searchHTML='';
+  if(_heroPickerActiveSlot){
+    var pos=_heroPickerActiveSlot;
+    var visible=articles.filter(a=>a.cat!=='quick').slice(0,40);
+    var q=(document.getElementById('hp-search-input')?.value||'').trim().toLowerCase();
+    if(q)visible=visible.filter(a=>(a.title||'').toLowerCase().indexOf(q)!==-1);
+    searchHTML='<div class="hp-search-panel">'
+      +'<div class="hp-search-head">'
+        +'<input type="text" id="hp-search-input" placeholder="חפש כתבה לפי כותרת..." oninput="renderHeroPicker()" autocomplete="off">'
+        +'<button class="hp-btn hp-btn-clear" onclick="_heroPickerActiveSlot=null;renderHeroPicker()">חזור</button>'
+      +'</div>'
+      +'<div class="hp-search-list">'
+        +(visible.length?visible.map(function(a){
+          var isHere=a.heroPosition===pos;
+          var otherPos=(a.heroPosition&&!isHere)?a.heroPosition:null;
+          return '<div class="hp-search-item'+(isHere?' hp-search-item-active':'')+'" onclick="assignHeroPosition('+a.id+','+pos+')">'
+            +'<div class="hp-search-thumb" style="background-image:url(\''+heroPickerThumb(a)+'\')"></div>'
+            +'<div class="hp-search-info"><div class="hp-search-title">'+escapeHtml(a.title)+'</div>'
+            +'<div class="hp-search-meta">'+escapeHtml(CAT_LABELS[a.cat]||a.cat)+' · '+escapeHtml(a.date||'')+(otherPos?' · כרגע במיקום '+otherPos:'')+'</div></div>'
+            +(isHere?'<div class="hp-search-check">✓</div>':'')
+          +'</div>';
+        }).join(''):'<div class="hp-search-empty">לא נמצאו כתבות</div>')
+      +'</div></div>';
+  }
+
+  modal.innerHTML='<div class="hp-head">'
+      +'<div><h2>סידור Hero וקרוסולה</h2><p>קבע אילו כתבות יופיעו בכל מיקום — בדף הבית ובקרוסולת המובייל. לחץ "✕ הסר" כדי לבטל כתבה ולהחזיר למילוי אוטומטי לפי תאריך.</p></div>'
+      +'<button class="hp-close" onclick="document.getElementById(\'hero-picker-overlay\').style.display=\'none\'">✕</button>'
+    +'</div>'
+    +'<div class="hp-tabs">'
+      +'<button class="hp-tab'+(isDesktop?' active':'')+'" onclick="_heroPickerActiveTab=\'desktop\';_heroPickerActiveSlot=null;renderHeroPicker()">💻 תצוגת מחשב</button>'
+      +'<button class="hp-tab'+(!isDesktop?' active':'')+'" onclick="_heroPickerActiveTab=\'mobile\';_heroPickerActiveSlot=null;renderHeroPicker()">📱 תצוגת מובייל</button>'
+    +'</div>'
+    +'<div class="hp-body">'+(_heroPickerActiveSlot?searchHTML:previewHTML)+'</div>';
 }
 
-async function setFeatured(id){
+function openHeroSlotSearch(position){_heroPickerActiveSlot=position;renderHeroPicker();}
+
+async function assignHeroPosition(articleId,position){
   var tok=await getAuthToken();if(!tok){alert('יש להתחבר קודם');return;}
-  // מסיר featured מהכל + מגדיר על הנבחר
-  var prev=articles.find(a=>a.featured&&a.id!==id);
-  if(prev){
-    try{
+  try{
+    // מפנים את המיקום אם כתבה אחרת כבר מחזיקה בו
+    var prev=articles.find(a=>a.heroPosition===position&&a.id!==articleId);
+    if(prev){
       await fetchT(SB_URL+'/rest/v1/articles?id=eq.'+prev.id,{method:'PATCH',
         headers:{'apikey':SB_KEY,'Authorization':'Bearer '+tok,'Content-Type':'application/json','Prefer':'return=minimal'},
-        body:JSON.stringify({featured:false})});
-      var pa=articles.find(a=>a.id===prev.id);if(pa)pa.featured=false;
-    }catch(e){}
-  }
-  try{
-    await fetchT(SB_URL+'/rest/v1/articles?id=eq.'+id,{method:'PATCH',
+        body:JSON.stringify({hero_position:null})});
+      prev.heroPosition=null;
+    }
+    // אם לכתבה שנבחרה כבר יש מיקום אחר — מפנים אותו קודם
+    var chosen=articles.find(a=>a.id===articleId);
+    if(chosen&&chosen.heroPosition&&chosen.heroPosition!==position){
+      await fetchT(SB_URL+'/rest/v1/articles?id=eq.'+chosen.id,{method:'PATCH',
+        headers:{'apikey':SB_KEY,'Authorization':'Bearer '+tok,'Content-Type':'application/json','Prefer':'return=minimal'},
+        body:JSON.stringify({hero_position:null})});
+    }
+    await fetchT(SB_URL+'/rest/v1/articles?id=eq.'+articleId,{method:'PATCH',
       headers:{'apikey':SB_KEY,'Authorization':'Bearer '+tok,'Content-Type':'application/json','Prefer':'return=minimal'},
-      body:JSON.stringify({featured:true})});
-    var na=articles.find(a=>a.id===id);if(na){na.featured=true;}
-    buildHero();buildSections();buildHeroBanner&&buildHeroBanner();
-    renderCarouselPanel();
+      body:JSON.stringify({hero_position:position})});
+    if(chosen)chosen.heroPosition=position;
+    _heroPickerActiveSlot=null;
+    buildHero();buildSections();typeof buildHeroBanner==='function'&&buildHeroBanner();
+    renderHeroPicker();
   }catch(e){alert('שגיאה בשמירה: '+e.message);}
 }
 
-function adminTab(tab,el){document.querySelectorAll('.admin-tab').forEach(b=>b.classList.remove('active'));el.classList.add('active');document.getElementById('admin-new').style.display=tab==='new'?'block':'none';document.getElementById('admin-list').style.display=tab==='list'?'block':'none';if(tab==='list'){renderAdminTable();if(!document.getElementById('admin-carousel-btn')){var ab=document.createElement('button');ab.id='admin-carousel-btn';ab.innerHTML='🎠 סדר Hero / קרוסולה';ab.style.cssText='display:block;margin:12px 0;padding:10px 20px;background:linear-gradient(135deg,#e8001d,#ff6a00);color:#fff;border:none;border-radius:10px;font-family:var(--font);font-weight:800;font-size:0.9rem;cursor:pointer;width:100%';ab.onclick=openCarouselPanel;var adminList=document.getElementById('admin-list');if(adminList)adminList.insertBefore(ab,adminList.firstChild);}}}
-/* הכפתור מוזרק ב-adminTab כשנפתח הטאב */ function renderAdminTable(){const tbl=document.getElementById('admin-table');if(!tbl)return;tbl.innerHTML=`<thead><tr><th>כותרת</th><th>קטגוריה</th><th>כותב</th><th>תאריך</th><th>צפיות</th><th>פעולות</th></tr></thead><tbody>${
-    articles.map(a=>`<tr><td><div class="tbl-title">${a.title}${a.scheduledAt?'<span style="font-size:0.68rem;background:#f59e0b;color:#fff;padding:1px 7px;border-radius:10px;margin-right:6px;">⏰ תזמון</span>':''}</div></td><td><span class="tbl-cat">${CAT_LABELS[a.cat]||a.cat}</span></td><td style="color:var(--mid);font-size:0.8rem">${a.author}</td><td style="color:var(--muted);font-size:0.78rem">${a.date}</td><td style="color:var(--muted);font-size:0.78rem">${a.views||0}</td><td><div class="tbl-actions"><button class="tbl-btn"onclick="viewArticle(${a.id})">צפה</button><button class="tbl-btn"onclick="editArticle(${a.id})">ערוך</button><button class="tbl-btn del"onclick="deleteArticle(${a.id})">מחק</button></div></td></tr>`).join('')
-  }</tbody>`;}
+async function clearHeroPosition(position){
+  var tok=await getAuthToken();if(!tok){alert('יש להתחבר קודם');return;}
+  var a=articles.find(x=>x.heroPosition===position);
+  if(!a){renderHeroPicker();return;}
+  try{
+    await fetchT(SB_URL+'/rest/v1/articles?id=eq.'+a.id,{method:'PATCH',
+      headers:{'apikey':SB_KEY,'Authorization':'Bearer '+tok,'Content-Type':'application/json','Prefer':'return=minimal'},
+      body:JSON.stringify({hero_position:null})});
+    a.heroPosition=null;
+    buildHero();buildSections();typeof buildHeroBanner==='function'&&buildHeroBanner();
+    renderHeroPicker();
+  }catch(e){alert('שגיאה בשמירה: '+e.message);}
+}
+
+function adminTab(tab,el){document.querySelectorAll('.admin-tab').forEach(b=>b.classList.remove('active'));el.classList.add('active');document.getElementById('admin-new').style.display=tab==='new'?'block':'none';document.getElementById('admin-list').style.display=tab==='list'?'block':'none';if(tab==='list'){renderAdminTable();if(!document.getElementById('admin-carousel-btn')){var ab=document.createElement('button');ab.id='admin-carousel-btn';ab.innerHTML='🎠 סדר Hero וקרוסולה';ab.className='adm-hero-btn';ab.onclick=openHeroPositionPicker;var adminList=document.getElementById('admin-list');if(adminList)adminList.insertBefore(ab,adminList.firstChild);}}}
+/* הכפתור מוזרק ב-adminTab כשנפתח הטאב */ function renderAdminTable(){const tbl=document.getElementById('admin-table');if(!tbl)return;
+  function thumbOf(a){return a.img&&a.img.length>5?('https://wsrv.nl/?url='+encodeURIComponent(a.img)+'&w=140&fit=cover&output=webp&q=65'):(CAT_IMAGES[a.cat]||'');}
+  tbl.innerHTML=articles.length?articles.map(a=>
+    '<div class="adm-row">'
+      +'<div class="adm-row-top">'
+        +'<div class="adm-row-thumb" style="background-image:url(\''+thumbOf(a)+'\')"></div>'
+        +'<div class="adm-row-info">'
+          +'<div class="adm-row-title">'+a.title+(a.scheduledAt?'<span class="adm-badge-scheduled">⏰ תזמון</span>':'')+(a.heroPosition?'<span class="adm-badge-hero">★ Hero '+a.heroPosition+'</span>':'')+'</div>'
+          +'<div class="adm-row-meta"><span class="adm-cat-pill">'+(CAT_LABELS[a.cat]||a.cat)+'</span><span>'+a.author+'</span><span>'+a.date+'</span></div>'
+        +'</div>'
+      +'</div>'
+      +'<div class="adm-row-bottom">'
+        +'<div class="adm-row-views"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>'+(a.views||0)+' צפיות</div>'
+        +'<div class="tbl-actions"><button class="tbl-btn"onclick="viewArticle('+a.id+')">צפה</button><button class="tbl-btn"onclick="editArticle('+a.id+')">ערוך</button><button class="tbl-btn del"onclick="deleteArticle('+a.id+')">מחק</button></div>'
+      +'</div>'
+    +'</div>'
+  ).join(''):'<div class="adm-empty-state">אין עדיין כתבות שפורסמו.</div>';
+}
 let galleryImages=[];async function handleGalleryUpload(input){const files=Array.from(input.files).slice(0,10-galleryImages.length);for(const file of files){const compressedFile=await compressImageFile(file,300);const src=await uploadImageOrBase64(compressedFile||null);if(src)galleryImages.push({src,caption:''});}
 renderGalleryPreview();input.value='';}
 function renderGalleryPreview(){const preview=document.getElementById('gallery-preview');if(!preview)return;if(galleryImages.length===0){preview.innerHTML='';return;}
@@ -436,7 +544,7 @@ async function deleteArticle(id){if(!confirm('למחוק את הכתבה לצמ�
 if(!deleted){try{const _t=await getAuthToken();if(_t){const r=await fetchT(SB_URL+'/rest/v1/articles?id=eq.'+id,{method:'DELETE',headers:{'apikey':SB_KEY,'Authorization':'Bearer '+_t,'Content-Type':'application/json','Prefer':'return=minimal'}});if(r.ok)deleted=true;}}catch(e){}}
 if(!deleted){alert('שגיאה במחיקה — נסה שוב');return;}
 deletedIds.add(id);saveDeletedIds();articles=articles.filter(a=>a.id!==id);saveLocal();buildHero();buildSections();try{buildBreakingTicker();}catch(e){}
-renderAdminTable();alert('הכתבה נמחקה');}
+renderAdminTable();renderAdminAnalytics();alert('הכתבה נמחקה');}
 function viewArticle(id){showHome();openArticle(id);}
 function clearForm(){['a-title','a-sub','a-author','a-img','a-img-cap','a-score','a-body','a-flash-title','a-flash-text','a-read-time','a-tags','a-scheduled','yt-url-1','yt-url-2','body-img-1','body-img-cap-1','body-img-2','body-img-cap-2','body-img-3','body-img-cap-3','body-img-4','body-img-cap-4','body-img-5','body-img-cap-5','spec-power','spec-torque','spec-zero','spec-range','spec-price','spec-model','spec-year','spec-country','spec-trims','spec-topspeed','spec-trunk','spec-consumption','spec-pros','spec-cons','score-driving','score-design','score-tech','score-comfort','score-value'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});const specSec=document.getElementById('specs-section');if(specSec)specSec.style.display='none';delete document.getElementById('a-title').dataset.editId;delete document.getElementById('a-title').dataset.srcUid;try{spFlashWordCount();}catch(e){}document.getElementById('a-cat').value='local';document.querySelectorAll('input[name="extra-cat"]').forEach(cb=>{cb.checked=false;const lbl=cb.closest('label');if(lbl){lbl.classList.remove('active');lbl.style.background='';lbl.style.color='';lbl.style.borderColor='var(--border)';}});galleryImages=[];renderGalleryPreview();const us=document.getElementById('upload-status');if(us)us.textContent='';const tabBtn=document.querySelectorAll('.admin-tab')[0];if(tabBtn)tabBtn.textContent='+ כתבה חדשה';}
 function doSearch(q){const res=document.getElementById('search-results');if(!res)return;if(!q||q.length<2){res.innerHTML='';return;}
@@ -610,7 +718,7 @@ function updateReadingProgress(){var _bb=document.getElementById('art-back-btn')
 bar.style.display='block';if(_progressTop===null)measureProgressBounds();if(_progressTop===null)return;const scrollTop=window.scrollY;const total=_progressBottom-_progressTop;const progress=scrollTop-_progressTop;const pct=total>0?Math.min(100,Math.max(0,(progress/total)*100)):0;if(_progressRaf)return;_progressRaf=requestAnimationFrame(()=>{_progressRaf=0;bar.style.width=pct+'%';});}
 function measureProgressBounds(){const artBody=document.getElementById('art-body');if(!artBody){_progressTop=null;return;}
 const title=document.getElementById('art-title');const bRect=artBody.getBoundingClientRect();const tRect=(title||artBody).getBoundingClientRect();_progressTop=tRect.top+window.scrollY-90;_progressBottom=bRect.bottom+window.scrollY-Math.min(280,Math.max(120,bRect.height*0.12));}
-window.addEventListener('resize',()=>{_progressTop=null;},{passive:true});window.addEventListener('scroll',updateReadingProgress,{passive:true});function buildHeroBanner(){try{const wrap=document.getElementById('hero-banner-mobile');if(!wrap||wrap.style.display==='none')return;const _nowH=new Date();const _visH=articles.filter(a=>!a.scheduledAt||new Date(a.scheduledAt)<=_nowH);let pool=(currentFilter==='all'?_visH.filter(a=>a.cat!=='quick'):_visH.filter(a=>a.cat===currentFilter)).map(a=>Object.assign({},a,{img:(a.img&&a.img.length>5)?a.img:CAT_IMAGES[a.cat]||CAT_IMAGES['local']}));const _featIdx=pool.findIndex(a=>a.featured);if(_featIdx>0){pool.unshift(pool.splice(_featIdx,1)[0]);}pool=pool.slice(0,5);if(!pool.length){wrap.innerHTML='';return;}
+window.addEventListener('resize',()=>{_progressTop=null;},{passive:true});window.addEventListener('scroll',updateReadingProgress,{passive:true});function buildHeroBanner(){try{const wrap=document.getElementById('hero-banner-mobile');if(!wrap||wrap.style.display==='none')return;const _nowH=new Date();const _visH=articles.filter(a=>!a.scheduledAt||new Date(a.scheduledAt)<=_nowH);let pool=(currentFilter==='all'?_visH.filter(a=>a.cat!=='quick'):_visH.filter(a=>a.cat===currentFilter)).map(a=>Object.assign({},a,{img:(a.img&&a.img.length>5)?a.img:CAT_IMAGES[a.cat]||CAT_IMAGES['local']}));const _ordered=[1,2,3].map(p=>pool.find(a=>a.heroPosition===p)).filter(Boolean);const _rest=pool.filter(a=>!_ordered.includes(a));pool=[..._ordered,..._rest].slice(0,5);if(!pool.length){wrap.innerHTML='';return;}
 heroBannerArticles=pool;heroBannerIdx=0;const n=pool.length;const extended=[pool[n-1],...pool,pool[0]];const startIdx=1;function _hbReadTime(a){
   if(a.readTime){const m=String(a.readTime).match(/\d+/);if(m)return m[0];}
   const words=(a.body||'').replace(/<[^>]+>/g,' ').trim().split(/\s+/).filter(Boolean).length;
