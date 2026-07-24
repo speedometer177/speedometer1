@@ -615,34 +615,41 @@
   async function loadAdsTable() {
     const table = document.getElementById('admin-ads-table');
     if (!table || !adsClient) return;
-    table.innerHTML = '<tr><td style="padding:20px;text-align:center;color:var(--muted);">טוען...</td></tr>';
+    table.innerHTML = '<div class="adm-empty-state">טוען...</div>';
     try {
       const { data, error } = await adsClient.from('ads').select('*').order('created_at', { ascending: false });
-      if (error) { table.innerHTML = '<tr><td style="padding:20px;text-align:center;color:var(--muted);">שגיאה בטעינת המודעות: ' + escapeAttr(error.message) + '</td></tr>'; console.error('[ads.js] טעינת טבלת המודעות נכשלה:', error); return; }
-      if (!data || !data.length) { table.innerHTML = '<tr><td style="padding:20px;text-align:center;color:var(--muted);">אין מודעות עדיין.</td></tr>'; return; }
-      let html = '<tr><th>תצוגה</th><th>מיקום</th><th>מפרסם</th><th>צפיות</th><th>קליקים</th><th>סטטוס</th><th>פעולות</th></tr>';
+      if (error) { table.innerHTML = '<div class="adm-empty-state">שגיאה בטעינת המודעות: ' + escapeAttr(error.message) + '</div>'; console.error('[ads.js] טעינת טבלת המודעות נכשלה:', error); return; }
+      if (!data || !data.length) { table.innerHTML = '<div class="adm-empty-state">אין מודעות עדיין — הוסף מודעה ראשונה למעלה.</div>'; return; }
+      let html = '';
       data.forEach(function (ad) {
-        const thumb = ad.media_type === 'video'
-          ? '<video src="' + escapeAttr(ad.image_url) + '" style="width:70px;height:40px;object-fit:cover;border-radius:4px;" muted></video>'
-          : '<img src="' + escapeAttr(ad.image_url) + '" style="width:70px;height:40px;object-fit:cover;border-radius:4px;">';
-        html += '<tr>' +
-          '<td>' + thumb + '</td>' +
-          '<td>' + escapeAttr(SLOT_LABELS[ad.slot] || ad.slot) + '</td>' +
-          '<td>' + escapeAttr(ad.advertiser_name || '—') + '</td>' +
-          '<td>' + (ad.impressions || 0) + '</td>' +
-          '<td>' + (ad.clicks || 0) + '</td>' +
-          '<td>' + (ad.active ? '<span style="color:#16a34a;font-weight:700;">פעיל</span>' : '<span style="color:var(--muted);">כבוי</span>') + '</td>' +
-          '<td class="tbl-actions">' +
-            '<button class="tbl-btn" onclick="toggleAdActive(' + ad.id + ',' + (!ad.active) + ',this)">' + (ad.active ? 'כבה' : 'הפעל') + '</button>' +
-            '<button class="tbl-btn" onclick="startEditAd(' + ad.id + ')">ערוך</button>' +
-            '<button class="tbl-btn" onclick="exportAdPdf(' + ad.id + ',this)">PDF</button>' +
-            '<button class="tbl-btn del" onclick="deleteAd(' + ad.id + ',this)">מחק</button>' +
-          '</td></tr>';
+        const thumbInner = ad.media_type === 'video'
+          ? '<video src="' + escapeAttr(ad.image_url) + '" muted></video>'
+          : '<div class="adm-row-thumb" style="background-image:url(\'' + escapeAttr(ad.image_url) + '\')"></div>';
+        const ctr = (ad.impressions > 0) ? ((ad.clicks / ad.impressions) * 100).toFixed(1) : '0.0';
+        html += '<div class="adm-row">' +
+          '<div class="adm-row-top">' +
+            thumbInner +
+            '<div class="adm-row-info">' +
+              '<div class="adm-row-title">' + escapeAttr(SLOT_LABELS[ad.slot] || ad.slot) +
+                '<span class="adm-badge-' + (ad.active ? 'active' : 'inactive') + '">' + (ad.active ? 'פעיל' : 'כבוי') + '</span></div>' +
+              '<div class="adm-row-meta"><span>' + escapeAttr(ad.advertiser_name || 'ללא שם מפרסם') + '</span><span>CTR ' + ctr + '%</span></div>' +
+            '</div>' +
+          '</div>' +
+          '<div class="adm-row-bottom">' +
+            '<div class="adm-row-views"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>' + (ad.impressions || 0) + ' צפיות · ' + (ad.clicks || 0) + ' קליקים</div>' +
+            '<div class="tbl-actions">' +
+              '<button class="tbl-btn" onclick="toggleAdActive(' + ad.id + ',' + (!ad.active) + ',this)">' + (ad.active ? 'כבה' : 'הפעל') + '</button>' +
+              '<button class="tbl-btn" onclick="startEditAd(' + ad.id + ')">ערוך</button>' +
+              '<button class="tbl-btn" onclick="exportAdPdf(' + ad.id + ',this)">PDF</button>' +
+              '<button class="tbl-btn del" onclick="deleteAd(' + ad.id + ',this)">מחק</button>' +
+            '</div>' +
+          '</div>' +
+        '</div>';
       });
       table.innerHTML = html;
     } catch (e) {
       console.error('[ads.js] חריגה בטעינת טבלת המודעות:', e);
-      table.innerHTML = '<tr><td style="padding:20px;text-align:center;color:var(--muted);">שגיאה בטעינת המודעות.</td></tr>';
+      table.innerHTML = '<div class="adm-empty-state">שגיאה בטעינת המודעות.</div>';
     }
   }
 
