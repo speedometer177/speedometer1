@@ -229,11 +229,19 @@
     }
   }
 
+  // סלוטים אלה תמיד נמצאים בתוך המסך הראשוני (ממש מעל ה-header) — אין טעם
+  // "לחכות לגלילה" כמו סלוטים אחרים; ככל שההחלטה יש/אין מודעה מתקבלת מוקדם
+  // יותר, כך קטן הסיכוי שקריסת ה-shimmer (אם אין מודעה) תיספר כ-CLS.
+  const EAGER_SLOTS = ['top_leaderboard', 'article_top'];
+
   function setupLazySlot(container) {
     const slot = container.getAttribute('data-ad-slot');
     if (!slot) return;
     if (isDismissed(slot)) { container.classList.add('ad-dismissed'); return; }
-    if (!('IntersectionObserver' in window)) { loadAndRender(container, slot); return; }
+    if (EAGER_SLOTS.indexOf(slot) !== -1 || !('IntersectionObserver' in window)) {
+      loadAndRender(container, slot);
+      return;
+    }
     const obs = new IntersectionObserver(function (entries) {
       entries.forEach(function (entry) {
         if (entry.isIntersecting) {
@@ -275,21 +283,39 @@
     const right = document.getElementById('ad-sidebar-right');
     if (!left && !right) return;
 
-    const HEADER_CLEARANCE = 90;
-    const FOOTER_CLEARANCE = 24;
+    const HEADER_GAP = 16;  // רווח בין תחתית ה-header לתחילת המודעה
+    const FOOTER_GAP = 24;  // רווח בין סוף המודעה לתחילת ה-footer
     let ticking = false;
 
     function reposition(el) {
       if (!el) return;
+      const header = document.querySelector('header[role="banner"]');
       const footer = document.getElementById('main-footer');
       const adHeight = el.offsetHeight || 600;
-      const viewportH = window.innerHeight;
-      const centeredTop = Math.max(HEADER_CLEARANCE, (viewportH - adHeight) / 2);
-      if (!footer) { el.style.top = centeredTop + 'px'; return; }
-      const footerTopInViewport = footer.getBoundingClientRect().top;
-      const maxAllowedTop = footerTopInViewport - adHeight - FOOTER_CLEARANCE;
-      const finalTop = Math.max(HEADER_CLEARANCE, Math.min(centeredTop, maxAllowedTop));
-      el.style.top = finalTop + 'px';
+
+      // הגבולות האמיתיים כרגע בתוך המסך הנראה: מתחת ל-header, מעל ה-footer.
+      // מחושב מחדש בכל גלילה, כי שני האלמנטים האלה זזים ביחס לחלון הגלישה.
+      const headerBottom = header ? header.getBoundingClientRect().bottom : 0;
+      const footerTop = footer ? footer.getBoundingClientRect().top : window.innerHeight;
+
+      const topBound = Math.max(HEADER_GAP, headerBottom + HEADER_GAP);
+      const bottomBound = footerTop - FOOTER_GAP;
+      const availableSpace = bottomBound - topBound;
+
+      // אם אין כרגע מספיק מקום אמיתי בתוך המסך הנראה (למשל: עדיין לא גללנו
+      // מספיק מתחת ל-header, או שכבר מתקרבים ל-footer) — מסתירים לגמרי,
+      // במקום לדחוק את המודעה ולתת לה לחפוף חלק אחר של האתר.
+      if (availableSpace < adHeight) {
+        el.style.display = 'none';
+        return;
+      }
+      el.style.display = '';
+
+      // כשיש מקום — ממרכזים את המודעה בתוך השטח הפנוי הזה בלבד (לא בתוך כל המסך),
+      // כך שהיא לעולם לא חורגת מעבר לגבול העליון/תחתון שחישבנו.
+      let idealTop = topBound + (availableSpace - adHeight) / 2;
+      idealTop = Math.max(topBound, Math.min(idealTop, bottomBound - adHeight));
+      el.style.top = idealTop + 'px';
     }
 
     function repositionAll() {
