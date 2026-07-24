@@ -805,7 +805,7 @@ body.dark-mode .pc-item{color:#eee}
 .ad-tag svg{width:9px;height:9px;flex-shrink:0}
 
 /* כפתור סגירה — עיגול קטן עם X, פינה עליונה (RTL: שמאל) */
-.ad-close{position:absolute;top:8px;left:8px;z-index:4;width:24px;height:24px;border-radius:50%;
+.ad-close{position:absolute;top:8px;right:8px;z-index:4;width:24px;height:24px;border-radius:50%;
   background:rgba(10,10,10,0.55);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);
   border:none;display:flex;align-items:center;justify-content:center;cursor:pointer;padding:0;
   transition:background 0.18s ease,transform 0.18s ease}
@@ -834,25 +834,25 @@ body.dark-mode .ad-slot-article{background:var(--dm-surface);border-color:var(--
 body.dark-mode .ad-slot-article-head{border-color:var(--dm-border)}
 @media (max-width:680px){.ad-slot-article img,.ad-slot-article video{aspect-ratio:16/9}}
 
-/* ── באנר עליון לפני ה-Hero (top_leaderboard) — פורמט צר ואלגנטי, לא מגושם ── */
-.ad-slot-leaderboard{max-width:var(--max);margin:14px auto 0;min-height:90px;border-radius:3px;
-  background:linear-gradient(90deg,#f0f0ee 25%,#f7f7f5 50%,#f0f0ee 75%);background-size:200% 100%;animation:shimmerBg 1.6s infinite;
-  box-shadow:0 1px 6px rgba(0,0,0,0.06)}
-.ad-slot-leaderboard.has-ad{animation:fadeIn 0.3s ease both}
-.ad-slot-leaderboard img,.ad-slot-leaderboard video{aspect-ratio:9/1}
-.ad-slot-leaderboard .ad-tag{bottom:8px;right:10px}
-body.dark-mode .ad-slot-leaderboard{background:linear-gradient(90deg,#1e1e1e 25%,#262626 50%,#1e1e1e 75%);background-size:200% 100%}
-@media (max-width:680px){.ad-slot-leaderboard{margin:8px auto 0}.ad-slot-leaderboard img,.ad-slot-leaderboard video{aspect-ratio:2.2/1}}
+/* ── באנרים עליונים (top_leaderboard + article_top) — ממש בראש העמוד,
+   לפני הלוגו וה-header. שתי הגרסאות חיות תמיד ב-DOM; רק אחת מוצגת
+   בכל רגע, לפי body.article-open (אותה מחלקה ש-showHome/openArticle
+   כבר מפעילים/מכבים ב-app.js — לא נדרש קוד נוסף לסנכרון). ── */
+.ad-slot-toppage-article{display:none}
+body.article-open .ad-slot-toppage-home{display:none}
+body.article-open .ad-slot-toppage-article{display:block}
 
-/* ── באנר עליון בכתבה (article_top) — אותו פורמט, בתוך רוחב הכתבה ── */
-.ad-slot-article-top{margin:0 0 24px;min-height:80px;border-radius:3px;
+.ad-slot-leaderboard,.ad-slot-article-top{max-width:var(--max);margin:10px auto 0;min-height:90px;border-radius:3px;
   background:linear-gradient(90deg,#f0f0ee 25%,#f7f7f5 50%,#f0f0ee 75%);background-size:200% 100%;animation:shimmerBg 1.6s infinite;
   box-shadow:0 1px 6px rgba(0,0,0,0.06)}
-.ad-slot-article-top.has-ad{animation:fadeIn 0.3s ease both}
-.ad-slot-article-top img,.ad-slot-article-top video{aspect-ratio:6/1}
-.ad-slot-article-top .ad-tag{bottom:8px;right:10px}
-body.dark-mode .ad-slot-article-top{background:linear-gradient(90deg,#1e1e1e 25%,#262626 50%,#1e1e1e 75%);background-size:200% 100%}
-@media (max-width:680px){.ad-slot-article-top img,.ad-slot-article-top video{aspect-ratio:2.2/1}}
+.ad-slot-leaderboard.has-ad,.ad-slot-article-top.has-ad{animation:fadeIn 0.3s ease both}
+.ad-slot-leaderboard img,.ad-slot-leaderboard video,.ad-slot-article-top img,.ad-slot-article-top video{aspect-ratio:9/1}
+.ad-slot-leaderboard .ad-tag,.ad-slot-article-top .ad-tag{bottom:8px;right:10px}
+body.dark-mode .ad-slot-leaderboard,body.dark-mode .ad-slot-article-top{background:linear-gradient(90deg,#1e1e1e 25%,#262626 50%,#1e1e1e 75%);background-size:200% 100%}
+@media (max-width:680px){
+  .ad-slot-leaderboard,.ad-slot-article-top{margin:6px auto 0}
+  .ad-slot-leaderboard img,.ad-slot-leaderboard video,.ad-slot-article-top img,.ad-slot-article-top video{aspect-ratio:2.2/1}
+}
 
 /* ── in-feed native (feed_native) — כרטיס רוחב מלא בין רשימות כתבות ── */
 .ad-slot-native{max-width:var(--max);margin:28px auto 0;border-radius:4px;overflow:hidden;aspect-ratio:5/1.3;
@@ -879,7 +879,7 @@ body.dark-mode .ad-slot-sidebar{border-color:var(--dm-border)}
 body.dark-mode .ad-slot-sidebar-head{background:var(--dm-surface)}
 
 /* ── סקייסקרייפר צדדי (sidebar_left / sidebar_right) — דסקטופ רחב בלבד ── */
-.ad-slot-skyscraper{display:none;position:fixed;top:130px;width:160px;min-height:600px;z-index:150;
+.ad-slot-skyscraper{display:none;position:fixed;top:90px;width:160px;height:600px;min-height:600px;z-index:150;
   border-radius:3px;overflow:hidden;border:1px solid var(--border);background:var(--white);
   background-image:linear-gradient(180deg,#f0f0ee 25%,#f5f5f5 50%,#f0f0ee 75%);background-size:100% 200%;animation:skyShimmer 1.6s infinite}
 @keyframes skyShimmer{0%{background-position:0 200%}100%{background-position:0 -200%}}
@@ -918,6 +918,12 @@ body.dark-mode .ad-slot-skyscraper{background:var(--dm-surface);border-color:var
 <!-- AD SLOTS: skyscrapers (desktop wide only) -->
 <div class="ad-slot ad-slot-skyscraper ad-slot-skyscraper-left" data-ad-slot="sidebar_left" id="ad-sidebar-left" aria-label="מודעה"></div>
 <div class="ad-slot ad-slot-skyscraper ad-slot-skyscraper-right" data-ad-slot="sidebar_right" id="ad-sidebar-right" aria-label="מודעה"></div>
+
+<!-- AD SLOTS: באנר עליון — ממש מעל הכל, לפני הלוגו והתפריט. שתי גרסאות
+     חיות תמיד ב-DOM, ומוצגות לפי אותה מחלקת body.article-open שה-SPA
+     כבר מפעיל/מכבה בין דף הבית לדף כתבה (ר' showHome/openArticle ב-app.js) -->
+<div class="ad-slot ad-slot-leaderboard ad-slot-toppage ad-slot-toppage-home" data-ad-slot="top_leaderboard" id="ad-top-leaderboard" aria-label="מודעה"></div>
+<div class="ad-slot ad-slot-article-top ad-slot-toppage ad-slot-toppage-article" data-ad-slot="article_top" id="ad-article-top" aria-label="מודעה"></div>
 
 <!-- ════════ ACCESSIBILITY BUTTON ════════ -->
 <button class="access-btn" onclick="toggleAccess()" tabindex="0" aria-label="תפריט נגישות" title="תפריט נגישות"><img loading="lazy" src="data:image/webp;base64,UklGRuQmAABXRUJQVlA4WAoAAAAwAAAASwEASwEASUNDUBgCAAAAAAIYAAAAAAQwAABtbnRyUkdCIFhZWiAAAAAAAAAAAAAAAABhY3NwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQAA9tYAAQAAAADTLQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAlkZXNjAAAA8AAAAHRyWFlaAAABZAAAABRnWFlaAAABeAAAABRiWFlaAAABjAAAABRyVFJDAAABoAAAAChnVFJDAAABoAAAAChiVFJDAAABoAAAACh3dHB0AAAByAAAABRjcHJ0AAAB3AAAADxtbHVjAAAAAAAAAAEAAAAMZW5VUwAAAFgAAAAcAHMAUgBHAEIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAFhZWiAAAAAAAABvogAAOPUAAAOQWFlaIAAAAAAAAGKZAAC3hQAAGNpYWVogAAAAAAAAJKAAAA+EAAC2z3BhcmEAAAAAAAQAAAACZmYAAPKnAAANWQAAE9AAAApbAAAAAAAAAABYWVogAAAAAAAA9tYAAQAAAADTLW1sdWMAAAAAAAAAAQAAAAxlblVTAAAAIAAAABwARwBvAG8AZwBsAGUAIABJAG4AYwAuACAAMgAwADEANkFMUEgkBgAAAT9AkG0bOsy2R0QMOABKzrbHbSTSJSBbU5m2FsuAtzXXVna52xeog9iOAJ5fCiVx+P+3x0VE/ylIkhtHkhLkoAAkoD2ZeIMRZs457713zhko2zrvW3MLM3s1nffO0mQ670IIl/MQYeEvwXlvQTLtLmTYh661DL9cuDQ56IfgRrr6X/5TKGJNZ3Uz+su3Mvg1NIrHdJ8vv0Mx+2N4bJVmN+NDUsgWnpud1Zjtz6G4nZtWXzZ+kkv9XHq8s5PiBPg4y9ZIOk20e6hnf+71sOxiV5WmrdUxo12gVWON0qLhnoIAe7Ly7zEEGUfBlXLEXzlH+JV0RF9ZR+6HhNle6PkSxNlHmTtDotJVVj8n9AKe3XRFno20CX0Qao2wAafJC3V7kSSZHIEkqRxxJLkcaSS5HEEk4WcrI3cP4u2biFTibiNt35GQslFOfkrsmkizPEZXRaq2j3IqUlaQjkjXFAk9OlrqPtGK7FDRHYMqexK1gsleyqp/Qs0Xqn9Czxcq1pWVq3l9rpJX6Cp5ja6KV+mqeJ2uglfqKnitrrhX64pvDnpdYa/YFa4Tui6otracv+rGgy2GoNxsUbZqctHJqsmbYl69K1O/6cdrmfIUqw+L3FMAsH1RvdOtewX1Dk73egY0RWKGsNAjDfBUF4ghwmKqrF+ds2PEcEGVAdQ5O+YIM2OQMLsbozkzJgmzYpQwsxukucDuQLFDJCPAWDJONNin+jca/LSJUwOObTKmwgzNmAozNGMqzdDkqThDEytAhaw9DGUfS6wgFkYgFZIqSIXEVxropU6qMBVSXmmmQkIFqpBQgSqsxVxIYCISubDOxCKuMrEKy5U7Fw52VUuo9AQTK0wwIi96MjSriseleotMMiImFploREosdqI1LnYSNu4CnG0WOhEbP9PhMcaNDq8Ls+BGLcyCGxUzf9PhbGez8EbNxQRRTvgQP9NvdDhED/V9TOMdSswkD0/03jsJYWebGN42FokJoJxQIpY8RNGbQCh63ZUPD230TAM+1JHkAYre30tQpqP1gXCBmNYHwgUCE9P6gLhA/HuJca1lbDOIuFDCOEa4aX1AXCD+vcSdEYf/E4FSmf+9hBsIcXGGEWbLCLtlTNsdIzb/XoKyDRM3xPXBGkYYcyfE4W8mMNPdlQ8PrTFmAFxrjTFbQlhjdojrAye2iOuDMeMCgbg+TA814jM9iR6g5JHi8xvefRzxLnqAkheJHqHkTXICKCbRH7/pcLZR2NOhMRGOdHia8C56gJIXPdR0iJ5pwG1sYkaj+GbN5IRPTOJReLNmo+BmcWLWCLeJLQCPOW+kw7wRrnOBiMbEBCPRAuPOhcOIJbtx4dWYRSIZc9kGNl1eUj0uxVvBjayySCTDChGNCagnY2WViMVcLWBVVgtgFUA9meL1AlMl4Y+eCI0xCQWsCuBLPcUpBarK+kuN9EonFYAqadghVZIKbzT4OSLNTkgx4NDIpw0lmpo2FGhq4lCgSuLQASXezJGyj8HsYRkhTJwT0sTpzSjdWSFKnBeyxDnNIN2ZIU6cvkNw7A65IUWcjY4B7Yj8ECLOtxMB9qaEDQB+ugXCG4Aqx3H2Uw3ySOeqM4Eql3EEvkxZO2wxXHXjYY4CugehdyV0T7/elSIDsEsNZvAllgjlq0PJsm5fsqy4Xtrp9aWdWl/eafXlnVJfw+n0NZxKX8dp9mWFT7Xcld0ilPnNO+qUFdYrlVWlDmO9ntlBUW5ralqvB83c1/qCvk/U+oKmT9R1RyUTZ75qi56e2illuZqPtYIb5QSkdOQkpAbhN8qJSPXqdKTeUiZcR+SYGwRfZyITw5FOksORThLEEeo3JjJRHKkkgUfklWhf5OGjSYCMRULg2iD0HOXtsmKPtCv4yLqij6Qr/Ai8Ur8j5UPyT3uujXM3XhVmh8pKtx2vEuvuNXFoTbJJ3CWO52q0p8WdQcOIzXmo0nXeLdDUsPpzhWwzoylLDsV/z7Pqkp8v54KM4XGW1Zjs+su+DE5D075n9f7wn8rgg5//Ukxw4dLkoB+Cixn6f7S7LH43+8WQ8C7+f3P+JEf/P/90fj6bI+G8b+1tjtdt531xfdMk2c55771z0rgGVlA4IHoeAABwjQCdASpMAUwBPm00lkckIyIhJdJLSIANiWVu/GQTpireIvbxXxQXPvHZ0Tu7z+YnO58S91/YV2iRy+tf8v923wR9QH3ge4B9pvWE/aH1AfzH+4fqr70X9r/Zz3I/1T/CfsR8AH9H/z/o6ewR/eP957AH8R/xvpn/tx8Lf7pfuZ7cGq2eWf7D+Lv7AeRP92/r/7TfuP3SPlX2z5Yzy/3v/W/4b29/1n+58C/kLqBfif80/2X5ocDbuH+t/Yb2Au7v/E/snrO/Q+Y/8V/kP917gH6tf8r+2eeN4Pv3D/r+wB/Pf69/1f7j67//p/lfQN+gf5H/2/5r4EP5z/af+5/gvat///uK/aH//+6j+zP//MTUyaj1Rp7u90Ou20tM6zbk7cbB+Z8D/ZHMlXM4atQgyjAyz2PR9T+iOAzNTJvzQqCy4U5C+//E2uQjd7XvvAFfiOpWOM1hei/sluM1POST4iVOfBq5Wjq0ZKqEkyFs1hczc97MVb+VuxtfSok57oNQ4Kwjnen64INcPuTpDcdxoe1iK402uZus60YDTF+aIf2xTuSMsKJEamYRYewIRTPZWXho2jBzD5Vwv5THk0knQvfhp1v3irbZyGGnEJg7H6hhQs5OCyxKEga8qqjgcf9u6vJbNVEh5KPsynKRe77TwKMzUfPJXlGxxWp/t52nsMRD33lEXsdqCEVbWxiM2fbiBokJcrjdCa5NqxjIPtCJ6cZQyZtee92yAdiyivrQIyjf3slXliCXsmXy/xTFhg8qiHhuCo9Bp/ETi02RwHXmpKVUyRdWUaqms8H5E7Yp5T0pND3wSRTcc0NWxv1UtLy+0mHja62flex0q7dqUiFVkPI0jrrN9OB1fkpBtnx1s29WHwugn6rMqMcmNh/n0ex13A2NwkDhlJrszwwzJm0pCPknt+pk3v9QRw1AP9hbzQwj6kGIDYxs5rf8KOmlHWqzlg0VXDCl08F68h1wEqEgDDK+vErUXTpzUmletC4/3xeY+s6JmdNeamTNnDfIg0CIA77pw8LqvXvbqQXAnRREsmw96ZsJbftr4OL58QAjaczruqVHEAMsqKVRAM2xVSLWWGIrDMca3S9P+NI/zYmwob+xgz3x78PYAqEWmD5HZgZgNbmStZUoz1ILaN/BzPWy44oxSQI6xm+4JXebaOA4wQnsPesJ3zLueASgSYnaWkSXT55MkRwabnPMyQuPwOTYgryrqYFyECLASnjX07609DJwwV3iBg93J3f5VjxVnrzNu1a7S9OSTt7weARxwGW6wuJqTve/f0n6QejZk1c7q5ZYNIApITdun3R4puedHqyLlPY6BWjiLDMI2jPLHv1zauuUC1Tw8C+w+gzRh81GugR0ecY7yHYGW/NZ/zBe6l1EO4kbS89eCJLzAwzHzKR1/kbxemsCVTuoBHUjLkAM9Lc68uRDDrKgnKSERMH21lX839n07DKZZ7oSJ7p5orzX4k0/3XEYFRJI3dfpFRQzF+CRNcmgCB/ct61Di9g1oTM1HwAA/vGoF/jjVv11QjLD7EJV/y4b2aYusuSjYM29xmkOhlPoBZsvy13Ho1kKgTqr21FaTAPbKsywPiz69iO5i6eWONbuKCosJd9bmGkpRNCjYoAmFEFwFVYR/8Aobf1tpn8l2TkB4tVSUTtL3V3ZULCdWAwnMvHPnKERkqL1Vj4gtUFLzLH4rAu0YvfqNibf0xdtOoBX5CaBFrPH+f/XjcJkIPTqVThk8hNYHalVy0gXrCJaTVXXphvW/bS7PiDwcgPZXM7fcvNTGCtULr5X7wbtrjIe4LL+9SNMvWQvYxREDKEWJ5AOWP7GxHNs2M9Va6HcfvDMWl5IdBqd3gKEmd4RU7EoOOyJxZdrli42ZfBBkkgsS32LLhk4NeKP5AfTRIfquOHRpIyY5SiF63ncX303kyq/y86pC5wsHNx6gN9b0YLXmEg2d7ZV1N+2Lm8a0U/LTXAChFR+++2i6y5vs/638YHcUHDoqLvfUI1i2Z0LtCe/EWuViyZinD8ks+9cn8bSxwEjJT5zJ1fcPUVplMfjXf28EMTY/CCRhQJHGrsEpyTNwLG3fkOv6lM7u3xVAFhHYPOdNO3xa8Ab3lpIqUkuDXTRy/bnz5AJKIZP9CSjIUbFyU9xg72oeztvs1+OKR7R3x3pw/3UV5BqEtqrublOEoky0ZrLY2DXLvaVbVrv58FWVAz9vjVC3b+K5BhMw7puwokzM/FzGLRbXapmi79LhT1mr3q0ZThmBbjXxNk2jMN0B2/qokugOGv/KCUEig+Lh0ihAz5rZFo6l1h0/hir1wNbbpUiZ5ThzegnF4JiivUQdNqpKH1n9/+IaUVY5XfgmzYPmxVZK1izYyElwV928mjkrEtmHg9E51ThsCuERu8yiM3R+HspySbeKKi0vnH4V6AOHnQomkXk5TzhcxyJdU9LcXlLaf0Lai8/xGkIIMqqlDFrcmxiCqHgk74XYl9kDXX4H0xBnvoz8JzY/3aGwwKPZN0uh9yebne98ljxhy4jEfe1RmwmDNlgJGUeRrDIKxZrJfFHJei2XEV2alNYUTtEN9yt5XFxRYIxudDjoUlbezCxNpGWX8Mdyhh5Phtxxd6VuK+2wjds4LemHYnKhT0PB2WLCRBs0npUtyUvz8M7EFyY30ivXEdOOEVu7rw6L7deMDkX838XgFiJaFC+P30MiZeiez+VnYM+pGFq85wV2ml+j5NlRFm+CtQqa2Lnf3/Fs+JA1yDNdt//6AP3mSw6Da/JxrvXiRW9PaChSwemb2g+lE1EVIaDH5tEHVWpc6PjlHbux47KSUJemCxStFd09lpjc5eM0G3Xhl4zRcfmDOxugV/RJ1Re0I/VZ7yldujhZSuHJdE8cIZas3zspzvWyxrgxYhzgLVz2gdvwGPm9LKzALH7Vh8cKO/rqphSedsi87Eaa+q3evOI4kT/TPuYWpEsEBGvICPhCQgfhhOVB/6lI/XHJtbBHut/MOVEDRlxKjFC6+d6Jubol1h5ERy6BX8cYHovsFw24fzlDfGrxLtAwR+vaoCLirSjsOOuG/tCwXbm6WWmOWr+gp49ykdx2nyACXvtys/q2o0llJgNsprdbx50QH1Tla57gpfymIy3BZ6snkbRGsRkAUR0cy8XEVxo0WexRopXNo5jO2wh+KkiAkaYFqY/KPW80ynsLnHBaRuU9i3ajivChB5yMrXi3LI24jWpKAJgpZOcHBfdf87Hh4vPwcx7Wsdksl9TbYjyp90xblOzlWfzELZE1cZH/GHHkX0KY8gAmEb38z16BHW1/sbT6wTC+r6EoJ84WSvNc2dziiV+j1oueXB89hkwsshc2a2FaMLvf9Ji8QZDd2XL7RYgeXR0KWy3JFX6gFNCQKIAwBhtxvZjyZx0iZFgftqxow+XNLqQ1AjotS2lo/LVAmXIS5Ky7fJlitgOMtnfHnku2ovnrup0eHBdI4ZmKfmS+TUpq3+RoIOaoB5XrTx7zsVC7At+tJpU01+LEeQvNZev7wABTSXGNA3FHd101ZHqRwGhWPzICmBBD3vzjsMOh5q3bKwN4l4ln7+9529VgAeODn5J8I8Xl7Hjmsx9qgovs9SpGXO4xJU5ojd5RoL2+fmaN3X4FzE5j9ADTNdS/ktgoK0SZfa0AfUxxvj2jx7hhzeyk1/XGuBV/DVEtnuWytCS4263E2DaXiTisZ7Shf1gqeHr1IDbhjigqLPTcNvfKx2fFJYTNhW6zqIDph7hHM5Psq1MMdSnC9SEeeIDLek7q5oABxzXX/AIdR+xWAMQPxXcr3vsMT6Ua0+zQWwqNo1AGK9Xmt0JMSSx7Z/Ub9LfcUR4UV1heV+jJ/1Z5kiF9uNoBYqXzKGiEUarEbIoBY1uCV0HqxnZ1MomTQZ91l+j69qkr1KWnZWxYwC9O/FHsiV99XFO9icWxets9eRGTD/TzbGeP4TK0dAdTrvZoyXOK//6wgg85VQvWTRMp+o9RCurCOLcKkAnCh7KEWQSjboDPgsY1ioVYKU2e+2hS4guNQcPiu9Osfj3h7P447ffL5/udhqd+WNSDRnampXD49l1X+/anmVsAFKiCR83NgZFdfZ5rRFIKT3OOU7doqQlkUG6D61rL2Xuh4q3FyGMtuS+10+awG4YsYOgpmFZXWaK3iwEh9GMlpj+XYG/UkOsJAhzdv9IF9VOgZ6Zf+YWkzo4Q+av4nhBbQfq7lGoqsFb6v9PA+0VWaFuO7VagBxFsAX/nVHFEC6Rx2+F70ij7MUca3umCb1MgIBKh6MHc4VGZl6xv2Nc4yVj0hVl272ZK/vYQeh/FHdG5eOo8zAMmGboXV0lteZUzFMA69zdvdy84NPHwFPVJFQ+ljnNG9SpqYUZCqQ4OZdS46LjX8QzvVKKhzuWaJi1MtoANpOjY493VVq8iGvAwzoQRLvRcHw38xfW1QbZH2AmzfDQhVYvy5+vBMYROYwPAzD81uTXT5IQWvkKCrj0xaENr1uoaPpPXALUIz6tdLgqo+MnuXw+vjGHlL6T2eBu5TRzUdRj3DbV57bD2h3KhrsNlWdGNKkzOXCHfrIcBSKy7XCnGV0Y1WkvvySrS5SqNZ+DhwjJxc0Iim3DF9cS0up+sWxOtM1mmjmFWH+F5FpDAczp46PrdXBlb62ZLOCLjk6+mHruoXS4ilATVQhC/absAGhPPm4VhVWBeEHZAG+ozpM8EmgaaQXfI7hVFahs98Sjzclde1toaNbLHYyWfAG/PPMgxPAh9BiFMXl5DSbuAv/c6yl3IYnk6duvlcfEFYM+394OjVCH7W0KK+h8b3M548C0R5xAu+oho0IOLeHC4MpDC/VFjuRzpGV2G4hivIkOHjT8eP/4LV6fMPaaWlEMU8lwsuhHGOYiRJWvZKWly/cQuWluZb/t6ph1ClsZLiUQUnuO6QFvNR+8Mj7ljj159gl19G6ofH2oDp9wIjQOnYT/Fgm7B+To959rtf3aBsLJevtSl+E6CUV/eHOcrl7GbfeYJKLOnwl0CSEMxaqV0Gl+xeMUzD3t4ZWVKVzkOVu3yiHp32XRwEyQmGugKmoCon7KDgZmMh/HQftmfLpmg/qA/OJhXcrDloynPk4Q7r6tavcoV/oSHK2tNlGUDCJjIg6rl3793dAupg6oJtR5WvKBZ15PdCWyJ3dHPXV2nl4jagvf1hPVpH8+yaB9Ybqj6ouXuzQ2/3nfeXlzdo80jJvx0rQzsheA+dDWa7ePTQF+wOV1kUbvYnY0ChT3wbkmqSDsLEAGE5HXVzySFQgUV9wZHS4BYSmuTCN2ipPizUMLgyCs6yMCCYhPy4JWYKQsWrTW/sHIsVqnjfMzx9qIz5Lb80uppXm6m9KLywdnDUA+Oe9Qg+4D8O80Oc3LUtRgTriON8CutAcqsfdNlMWmo5ooSjR6ZEvgxNAaS5JXefZ4tG6p84UEBaQMPN3ZU2gJLEJ4kzWWK+OjFZjQ5GR0ZUAmg5iJZbwFGQx1j5HGY9pGXgd0ZLzdNspIME0CKbYeQdZgvaIget5Xfv5xKhY1PBv4JULCYPElqXvkquOtOlNik04hIiG6OcEIgXV2Kw9fPEQfYinDH/wXnUPDvTpa0CAiefhSLdhtqC2NYtjbLUKu1PtIZP1D96IYNYAv83X+PY4z7rSK+AAyVmhJc7mEgIF0K3+xnUVDvv6q7Yc/UMAAIkVQQ3myKfgVlHYbI887ntU3N0WESmpI2O17WBgehj1HS86roOmKQryfUdCZcGTf889TeWElU0oBTm8GX+b7DQDq4FPY17QwUg3DBsz67Ccy/H9N4I1MHL/typgsgVkWM1xmGWjzvHiHqxUVH9Yj5sSSP2bOo995y+d5worxS3i5Wxu7ulInUqYSC6+9fNtz+rml3iDJMRpDuOmafTHHsQLNk6USxDZ8i1mSEZW5OSA3hN82xmUd/DYPvDItwVpcN80D+ase7bSjkf4yTZ44mFpDp3cwKEYHw8n9pnO0svmz7Pu74kpsWSNUHnIFP/C0M0BwY/QBUAelvnBZj55rrsjB7l8/9FFSQK0SSlLs8MGwvPY3qa5nwjNfRuyGQ9XzHaIiasIbyZS5nsjbjJYerboSS91WmgLb9Xr3AM0GVqj3kRKAKrUR2a58b9WBr6dbpufLweH0uFY/ygXwUdXYBurXDsiRcxdL3mIipqCjDech0NMa4FA6BbSNb/lkG0ZypYoGqEBcrjEXKwPsd0/lCyyG0gPRPcCi7pbM4zdFurBq3Sb9XsDxLCtYC1L8JOW1L6xukQVsMonc9+en3A3sKTo3gi0l/9v30V4UBW4o0h05ICrf3/hBeKFIT18VhZuQL9i5LHxgxQlQ7TNjKFjAMu+Bym4WPsJ+CY5ZQQQrxTM0SFh72ixnxk/UkO8c/Lu7ZMaQ8IPKh38NZ3eKhPXy+e6kH8WbZYJv4mpzAnFK9M8eaYFhsmQEvthajiDlNQPUawMnmiP25fmS3U1nf1eBZqaiHk/6f6U5MoK80O3jZVb34sPFCdoABr6Ds77bzUYVCJugqp0bwEu1px5ItVC0Ni5Z2oy9nJ93W1dZxZ7qrSVVaPw6diQnj55YVjgPlf8kJiUaeTPDT2MI1VZeKerLbfRH37rekxD8QoCPVFPyhLb9orWYV/zYwYJFyflbakQa5R/3QNbvY8P7TrqUn+ILAtpHF5lsRnie3XHuvYqh/msTwOLUchLbqQvOJe+S/GSvKXgqWqHrjuHh1v9+Te/0NgL8RFpLEwEp5eER2LnnHZwp/1JAAN2BfzHSBwbwuZQkSz+RGrBxlTHZ8okshf/RMNZKLf1SfPXyK7cH/wzkwCEToLhLzwO5kBG4qaeP4vxZ930+a6+s0OkcQjGuhd8BRqMQf5i3gJPWiU6nN5NFGsRtmc/z7htGoZk6bl0cZ9e2DEbXdbSU+JHISvqp8h9Tx65tXTh+0y3vqfogmS/Boq0n7VQ6SL8Rx/GiVdbneNSyMN/SYHs8hLv5KrGRZDO4hNGF5A/U2/n3CdPkt34WjBAiDU4G6Ec53t58qYd4AMk760ZgEa502CVZT8d1LaeuHrp7mI545Bj2GomL6dQbgURs8jAV7lhAr34Q5LKOSJz5hWg9rBKyuqrtaWBFymIBvPMyoRd9pFwcz2QmbfNPFr5SxBiVAy2X9peiw5UUyPALigRiQlTD5Dq6nDzQsX7/Y3xuVmh9dTtWWvGp8R75VZKbEaRUL5J78z7wKuqBcBnPeNA7J+qi6MpyeWqhmSBuQBbzmPxi0XKf2YY1TVFRNZr5u4UwpdIQOuFmUP4qZJNoxrHrLQFm9nXf4Nkhu2EIy7dLy0Eld9JORb1xgbtjNhOVhyyV8TZnDYTGHW6XII9qeoJJxqV+nNXIUtd1n6InLOvoLx9/yZ+iLA+X7WPNeJEvecztfoMmgNNAv7kuxbogD+XnxV9EfF/txhZVsV4hzVZP2VsNmFDspLLMVJcQdbK3bISY+Z7LGG0ybqNwl+cXOfcw4dFbiZQxDxwQUwl4243C5uK7Ihy1mgkqfyOXPZfDTh1hPaeS4KB2fg/z/Tv8Wy8lT/k35X7qWy76oY62iLpNU85N+rd5RkHXEuLPQd9r1ALoFdia1tC6nODoVOykBVxpKcVJvZ/Yzr4b+foupn96Y8NNXQ4K4CPltaAsjsJK5zlL+gPEJa7oA1pBny4iByouzF7XaOa0Su8WoOuMLMv+XsAhDudtNEhafjghsDICuKhOKPH+GeuRMgVmdj6P/RwDSsAqLWEBYm5f+Z+FtgiazdMEEWAmCz57PqqLHE3StkcvzPf+K8rkNUbUeRk47cbsEZ1qw6cRzCp1+D8EDoY794fu9CafJZMSF51I1OV5qaxEN22+8KVXw8VFS+QsViYyQj43s6fl3So2nkzSKS7DJVzIGcT9jfMvqj28y+flmgSseumQSXi0DuSP35qddM1Z8RUJyPOFX+nplg239yUj93fDY/UiySLcyHe0iuW8a634MJ5YSmR41DqZOzhSiSJ9SJCYGkwjuJNIYb8i3Ijyx5+5sQ6LR/Oza2i9XVp6Gppe8oY24HYZ09CEaFo3pIWeVKMfX7TEw5tBRPknKMmmR39hu93R4bx44ZRsTP9DL497oUgXuLP5SXS/3P0dSEWvlQUD+2LfegYZhaJB+ZkuqYxZcnCd0CMiI1V6/n90xCv1j5IHrzwh/+sxdy/ue0bYy2f8sIjbUT8m4YPc/JnEmoT4LiDdrQWmtSJbVCud69hh6390xhUbbJVx5HNZQuyxQs3cEYaSBMSDxhc7xi76z8svDsjcqHrkuF8FrAwkNwCG6/urLI26Lti4LcjaXa+J/LexHFtq7Aazypf99XADs4fN+dyi8qLEeqkZz1ghtgPRgR1YKHUwKzyE99w4X83+1zCjkbQCCbIYsbNmuQd8zIaBQVaW1nfMsJtNP1dlBC5oPhzlkf+9U4qKeJNdNjZZHlCA4EFl/MJFT/RVtdhZZzwRwrG2gPudxvqgNelTOk1PjZ08WKNNuujQi2EjLwGr3kEeAQk7ByrDUcKQdfi17OYSedTQbYP0b8LYrkd4+hqNy4zbzsTYDxYu0K0hUWUF+rOuZ+BxLLcuumfjA3tMHtd76xBq3H0PTYQZib/QXexFsz9yDGIjGYRtGBC92NL7UNibjZE/bju5Wa67hwEs3DMQ1AMfRtgqK2XNE4nSs5m/AYj5I38cW05oyO25Y4RWPLozJam62FZG/+bh2veve72hHuTivd1/XogrcJVHha+OpvIk+sTzSyZv3p48lpV+4Hgn+XOFOgthq7OxS76ybvI1m87KY+7+aWiER4fTY/VeuXZ0N08XhZuIRJfPv6G5iI0nU13c4ZEBW1HDjtsjMOXFhQPGdixte8is6eIzPmy/YOSykFyHdwcZarWIdBOhf6dU4Zk9M19PmUMOuIshRxHCFIuHIeGC/3yth4O+DaofnnZZXeA5MfHU2nL+aEx5yBlJmu1GaposhQ/6tmgP/JjEbvPqg9iML/JC71oq4OnUIO2oiypqsWnBzgC4yIEzwuyNn1MrdUDHL/rKCNTO5xXFItzIgCJ5VimobZxVoQ7w+1QipXOnBm2soovtbfcB4sd2SP/hmPQFBrw11vvEmbRc+c7bYYXI/s/+kmLREblvJBo5/JXADNHB1vW5fnYw6UqTeW6FHv1DLk5RdhCa17VN6/zH4UoK7bBIzVHlePwCEvA119jiufADMV2iNKyJ8PotGJlSAZ63/4dEEXoN5RBYW3PFY4z1XI5vqjVdEQrTVNg6k1cBLoGhfWmefYhSZLTPN9W4MSqxVOgH1KLO4EYFwRlJ2b1x4cENt5q1Gl697M1IWuej5ImOktuVjQIRMPgAIvwXfa7jRtPNHMvKR1M5iPuiiRj3ux8h8DyirthvNawPtclbp6SqB9Dwnqudc1HIlE3JizZ8dlSeYxAgjLLxHIY0PMu/Vsso+7Pm5s7Sv2qrhIS64DLs9AqO8Qs5o/Hyk4FW/9GLxd7HT+OiB1qDAxLIg1Hr5ZE3k7MDT6MG7Ejm88mLkVPUA5jvcjRUge/q0RNMaG0er2XRQa0rtXdu+gMxHZ0yoIzp46tsnGOgHYWJvYggrW1553nnepLntoafaJv4mowgaC52Ivbg1217NDJazBICKpR/32tyQXtRi9qWTonn2nSwdRgqf+WN/AtiUgpNTo47NSdaP4Yu0vzN29Z0d37a652shRMuqLyWCsCRLTYTj27f8Z/MSC/L7fNWN8s57MVjmdeMZZstougvFgFK/NhgYTfZS6CfFhqMFUojD6tMW5t2KUji94tsJJ/ZFlNFRziaI3EKv1rZGg7kCZtei04H860R0uAWE+XCUjtykwYb3QNumh6buo8TZRsp4ghlhYhzccXdTlaQC1rwNrpRF2sMJTNkAISWHt72VoYeWPELRr/7VSGzrAQDemm51gMVPRx9nkCS6lMQvt7xWvCHt1JugZcLI1iN3/NKSE4s7nCci30baxe3z0tAVFRiRIjQUTSRG4mBkOat8H9WCZWi5ZgPetevmNs60SnzReG1BfGbF4qZCRBZedVO4BlnQY7CDzqUIhGvSqO7a60epYDQfD908QA7MaXhaS1dN8H2NaiZqfMEJWUtRt++KGzOwO5miWboiJErUNcGcdUvTHtbA8WhV0CwOc3H1RYB4lhhh0Qnl1J/3/XsoBuph+XWrxjh/YbN+PY4ISDEGxZ9FUEZHpdzOTztTx9v1+zjDMEzwgyPgDasoXD/YQFEPs9Sbb5hVBkzuMmMtsGNw0ggxJcm/YoNqzXsmW6jPX50J9fCc6AP48x6SxVmdzNssCmkqJ5UPshbjnFOmZzTgjkLSKWYLXvn/QKEIbv8aCevsx8z5o4+NNpMQZiMocjQ8OsAxHhFHuE4kfvSllB2ZJkFcf0I/n7q4sSdUuJ/wAAAAA==" alt="נגישות" width="52" height="52" style="pointer-events:none;"></button>
@@ -1192,9 +1198,6 @@ body.dark-mode .ad-slot-skyscraper{background:var(--dm-surface);border-color:var
 
   <!-- HERO -->
   <!-- Desktop hero -->
-  <!-- AD SLOT: top_leaderboard (antes do hero) -->
-  <div class="ad-slot ad-slot-leaderboard" data-ad-slot="top_leaderboard" id="ad-top-leaderboard" aria-label="מודעה"></div>
-
   <div class="hero hero-grid-wrap" id="hero-area"></div>
   <!-- Mobile hero banner (auto-rotating) -->
   <div class="hero hero-banner-wrap" id="hero-banner-mobile"><!-- BUILD:HERO_SLIDE:START --><div class="hero-banner"><div class="hero-banner-track" style="direction:ltr;"><div class="hero-banner-slide" style="direction:rtl;"><img src="https://wsrv.nl/?url=https%3A%2F%2Fkaykrrnmykqrfhawgtqt.supabase.co%2Fstorage%2Fv1%2Fobject%2Fpublic%2Farticle-images%2F1784053443986-0z0j8u.jpg&amp;w=800&amp;fit=cover&amp;output=webp&amp;q=75" srcset="https://wsrv.nl/?url=https%3A%2F%2Fkaykrrnmykqrfhawgtqt.supabase.co%2Fstorage%2Fv1%2Fobject%2Fpublic%2Farticle-images%2F1784053443986-0z0j8u.jpg&amp;w=400&amp;fit=cover&amp;output=webp&amp;q=75 400w, https://wsrv.nl/?url=https%3A%2F%2Fkaykrrnmykqrfhawgtqt.supabase.co%2Fstorage%2Fv1%2Fobject%2Fpublic%2Farticle-images%2F1784053443986-0z0j8u.jpg&amp;w=640&amp;fit=cover&amp;output=webp&amp;q=75 640w, https://wsrv.nl/?url=https%3A%2F%2Fkaykrrnmykqrfhawgtqt.supabase.co%2Fstorage%2Fv1%2Fobject%2Fpublic%2Farticle-images%2F1784053443986-0z0j8u.jpg&amp;w=800&amp;fit=cover&amp;output=webp&amp;q=75 800w, https://wsrv.nl/?url=https%3A%2F%2Fkaykrrnmykqrfhawgtqt.supabase.co%2Fstorage%2Fv1%2Fobject%2Fpublic%2Farticle-images%2F1784053443986-0z0j8u.jpg&amp;w=1200&amp;fit=cover&amp;output=webp&amp;q=75 1200w" sizes="100vw" alt="מהפארם לכביש: סופר-פארם מתחילה למכור מכוניות חשמליות אונליין" loading="eager" fetchpriority="high" decoding="sync" width="850" height="500"><div class="hb3-fade" aria-hidden="true"></div><div class="hb3-read">1<span>דק'</span></div><div class="hb3-txt"><span class="hb3-cat">חדשות מקומיות</span><div class="hb3-title">מהפארם לכביש: סופר-פארם מתחילה למכור מכוניות חשמליות אונליין</div><div class="hb3-meta"><span class="hb3-author">שמעון כהן</span><span class="hb3-sep">·</span><span class="hb3-when">14.7.2026</span><span class="hb3-sep">·</span><span class="hb3-when">21:25</span></div></div></div></div></div><!-- BUILD:HERO_SLIDE:END --></div>
@@ -1380,10 +1383,6 @@ body.dark-mode .ad-slot-skyscraper{background:var(--dm-surface);border-color:var
         <div class="article-header">
           <!-- Breadcrumb: filled by JS in openArticle() -->
           <nav class="breadcrumb-nav" id="art-breadcrumb" aria-label="נתיב ניווט"><a href="https://speedometer10.co.il/">בית</a><span class="bc-sep" aria-hidden="true">›</span><a href="https://speedometer10.co.il/?cat=local">חדשות מקומיות</a><span class="bc-sep" aria-hidden="true">›</span><span class="bc-current" aria-current="page">בשורה לנהגים: רישיון B יאפשר נהיגה ברכבים חשמליי…</span></nav>
-
-          <!-- AD SLOT: article_top -->
-          <div class="ad-slot ad-slot-article-top" data-ad-slot="article_top" id="ad-article-top" aria-label="מודעה"></div>
-
           <span class="article-cat-tag" id="art-cat">חדשות מקומיות</span>
           <h1 class="article-title" id="art-title">בשורה לנהגים: רישיון B יאפשר נהיגה ברכבים חשמליים כבדים</h1>
           <p class="article-sub" id="art-sub">משרד התחבורה מפרסם טיוטת תקנות חדשה שתתאים את דרגות רישוי הנהיגה לעידן החשמלי ולצרכי כיתות הכוננות הביטחוניות.</p>
@@ -1926,20 +1925,21 @@ body.dark-mode .ad-slot-skyscraper{background:var(--dm-surface);border-color:var
     <!-- ════ ADS ADMIN PANEL ════ -->
     <div id="admin-ads" style="display:none;">
       <div class="form-block">
-        <h3>הוספת מודעה חדשה</h3>
+        <h3 id="ad-form-title">הוספת מודעה חדשה</h3>
         <div class="form-row">
           <div class="form-group">
             <label for="ad-slot-select">מיקום המודעה *</label>
-            <select id="ad-slot-select">
-              <option value="top_leaderboard">באנר עליון לפני ה-Hero (דף הבית)</option>
+            <select id="ad-slot-select" onchange="onAdSlotChange()">
+              <option value="top_leaderboard">באנר עליון — מעל הכל (דף הבית)</option>
               <option value="home_banner">באנר אחרי ה-Hero (דף הבית)</option>
               <option value="feed_native">בתוך רשימת הכתבות (Native)</option>
               <option value="sidebar">סיידבר (דף הבית)</option>
-              <option value="article_top">באנר עליון בתוך כל כתבה</option>
+              <option value="article_top">באנר עליון — מעל הכל (בתוך כתבה)</option>
               <option value="article_body">בתוך הכתבה (בסוף)</option>
               <option value="sidebar_left">סקייסקרייפר שמאלי (דסקטופ רחב)</option>
               <option value="sidebar_right">סקייסקרייפר ימני (דסקטופ רחב)</option>
             </select>
+            <span class="form-hint" id="ad-dim-hint" style="display:block;margin-top:4px;font-weight:600;color:var(--red);"></span>
           </div>
           <div class="form-group">
             <label for="ad-link-url">קישור יעד (לאן המודעה תוביל) *</label>
@@ -1958,7 +1958,7 @@ body.dark-mode .ad-slot-skyscraper{background:var(--dm-surface);border-color:var
         </div>
         <div class="form-row">
           <div class="form-group">
-            <label for="ad-image-file">קובץ המודעה *</label>
+            <label for="ad-image-file">קובץ המודעה * <span style="font-weight:400;color:var(--muted);">(בעריכה: השאר ריק כדי לשמר את הקובץ הקיים)</span></label>
             <label for="ad-image-file" style="display:flex;align-items:center;gap:8px;padding:10px 14px;border:1.5px dashed var(--border);border-radius:8px;cursor:pointer;font-size:0.82rem;color:var(--mid);background:var(--bg);">
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
               <span id="ad-file-btn-label">בחר תמונה</span>
@@ -1989,8 +1989,9 @@ body.dark-mode .ad-slot-skyscraper{background:var(--dm-surface);border-color:var
           </div>
         </div>
         <div style="display:flex;gap:12px;justify-content:flex-end;margin-top:8px;">
+          <button class="btn-secondary" id="ad-cancel-edit-btn" onclick="clearAdForm()" style="display:none;border-color:var(--red);color:var(--red);">בטל עריכה</button>
           <button class="btn-secondary" onclick="clearAdForm()">נקה טופס</button>
-          <button class="btn-primary" onclick="publishAd()">פרסם מודעה</button>
+          <button class="btn-primary" id="ad-submit-btn" onclick="publishAd()">פרסם מודעה</button>
         </div>
       </div>
 
