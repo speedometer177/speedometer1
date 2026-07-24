@@ -315,7 +315,7 @@
         if (left) left.classList.toggle('sky-footer-near', nearFooter);
         if (right) right.classList.toggle('sky-footer-near', nearFooter);
       });
-    }, { rootMargin: '200px 0px 0px 0px' }); // מתחיל להסתיר כ-200px לפני שה-footer בפועל נכנס למסך
+    }, { rootMargin: '0px 0px 200px 0px' }); // מתחיל להסתיר כ-200px לפני שה-footer בפועל נכנס למסך (השוליים למטה, כי הוא מגיע מלמטה בגלילה)
     obs.observe(footer);
   }
 
