@@ -762,7 +762,15 @@
 
   function boot() {
     whenSupabaseReady(function () {
-      initPublicSlots();
+      // initPublicSlots הוא החלק היחיד שפותח בקשות רשת (fetch ל-Supabase).
+      // דוחים אותו לאחר window.load, כדי שהמודעות לא יתחרו על רוחב פס
+      // עם תמונת ה-Hero ומשאבים קריטיים אחרים בזמן שנמדד ה-LCP.
+      // שאר האתחול (מאזיני אירועים בלבד, אין רשת) ממשיך מיד כרגיל.
+      if (document.readyState === 'complete') {
+        initPublicSlots();
+      } else {
+        window.addEventListener('load', initPublicSlots, { once: true });
+      }
       watchArticleChanges();
       initAdsAdminIfNeeded();
       initSkyscraperBounds();
