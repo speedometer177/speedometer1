@@ -237,6 +237,7 @@
     const ads = await withTimeout(fetchAdsForSlot(slot), FETCH_TIMEOUT_MS);
     if (!ads || !ads.length) {
       container.classList.add('no-ad');
+      container.style.setProperty('display', 'none', 'important'); // ביטחון כפול — לא תלוי רק במחלקת CSS
       return;
     }
     if (CAROUSEL_SLOTS.indexOf(slot) !== -1 && ads.length > 1) {
@@ -251,7 +252,7 @@
   // סלוטים אלה תמיד נמצאים בתוך המסך הראשוני (ממש מעל ה-header) — אין טעם
   // "לחכות לגלילה" כמו סלוטים אחרים; ככל שההחלטה יש/אין מודעה מתקבלת מוקדם
   // יותר, כך קטן הסיכוי שקריסת ה-shimmer (אם אין מודעה) תיספר כ-CLS.
-  const EAGER_SLOTS = ['top_leaderboard', 'article_top'];
+  const EAGER_SLOTS = ['top_leaderboard', 'article_top', 'sidebar_left', 'sidebar_right'];
 
   function setupLazySlot(container) {
     const slot = container.getAttribute('data-ad-slot');
