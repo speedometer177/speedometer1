@@ -7,12 +7,18 @@
  *
  * מה זה עושה:
  *   1. בצד הציבורי — שולף מ-Supabase מודעה לכל אחד מ-8 המיקומים
- *      האפשריים, עם lazy-load אמיתי (IntersectionObserver), כפתור
- *      סגירה (X) שנשמר בזיכרון בלבד — סגירה תקפה עד לרענון/טעינה
- *      הבאה של הדף (ואז המודעה חוזרת שוב, תמיד), תמיכה בתמונה או
- *      וידאו, וסבב אוטומטי (carousel) כשיש כמה מודעות לאותו מיקום.
- *   2. בפאנל האדמין — לשונית "מודעות": טופס להוספה (כולל וידאו),
- *      טבלת ניהול עם הפעלה/כיבוי/מחיקה, ודוח PDF ממותג לכל מודעה.
+ *      האפשריים, עם lazy-load אמיתי (IntersectionObserver), timeout
+ *      בטיחות (5 שניות — אם אין תשובה, השטח נעלם כרגיל ולא נשאר
+ *      נראה כטוען לנצח), כפתור סגירה (X, פינה ימנית-עליונה) שתקף
+ *      עד לרענון הבא בלבד (בזיכרון, לא נשמר), תמיכה בתמונה או וידאו,
+ *      וסבב אוטומטי (carousel) כשיש כמה מודעות לאותו מיקום.
+ *      שני הבאנרים העליונים (לפני ה-Hero / בתוך כתבה) יושבים ממש
+ *      מעל ה-header, ומתחלפים ביניהם לפי body.article-open.
+ *      הסקייסקרייפרים הצדדיים עוקבים אחרי הגלילה בגבולות הדף
+ *      (לא חוצים את ה-header למעלה ולא את ה-footer למטה).
+ *   2. בפאנל האדמין — לשונית "מודעות": טופס להוספה/עריכה (כולל
+ *      וידאו + רמז רזולוציה מדויק לכל מיקום), טבלת ניהול עם
+ *      הפעלה/כיבוי/עריכה/מחיקה, ודוח PDF ממותג לכל מודעה.
  *
  * אבטחה: כל סינון "רק מודעות פעילות ובתוקף תאריכים" נאכף ברמת
  * ה-RLS ב-Supabase — כך שגם אם מישהו ישנה את קוד הלקוח, לא ניתן
@@ -26,6 +32,9 @@
   const SB_KEY = 'sb_publishable_Ms6YFTnADm-qAd9617Ey9A_D3x-Zumi'; // מפתח ציבורי (publishable), בטוח לחשיפה
   let adsClient = null;
   let currentAdFile = null;
+  let editingAdId = null; // אם לא null — הטופס במצב "עריכה" ולא "הוספה"
+
+  const FETCH_TIMEOUT_MS = 5000; // אחרי כמה זמן מוותרים ומסתירים את הסלוט, במקום להשאיר shimmer לנצח
 
   // סלוטים עם כפתור סגירה (X) — אלה שיושבים "מעל" תוכן, לא בתוך זרימת הרשימה
   const DISMISSIBLE_SLOTS = ['top_leaderboard', 'article_top'];
@@ -35,14 +44,26 @@
   const TAG_SLOTS = ['home_banner', 'feed_native', 'top_leaderboard', 'article_top', 'sidebar_left', 'sidebar_right'];
 
   const SLOT_LABELS = {
-    top_leaderboard: 'באנר עליון (לפני Hero)',
+    top_leaderboard: 'באנר עליון — מעל הכל (דף הבית)',
     home_banner: 'באנר אחרי Hero',
     feed_native: 'בתוך הפיד',
     sidebar: 'סיידבר',
-    article_top: 'באנר עליון בכתבה',
+    article_top: 'באנר עליון — מעל הכל (בתוך כתבה)',
     article_body: 'בתוך כתבה (בסוף)',
     sidebar_left: 'סקייסקרייפר שמאלי',
     sidebar_right: 'סקייסקרייפר ימני'
+  };
+
+  // רזולוציה מומלצת מדויקת לכל סלוט — לפי ה-aspect-ratio שהוגדר ב-CSS
+  const SLOT_DIMENSIONS = {
+    top_leaderboard: '1200×133 פיקסל (יחס 9:1) — במובייל יחתך ל-2.2:1',
+    home_banner: '1200×160 פיקסל (יחס 7.5:1) — במובייל יחתך ל-2.6:1',
+    feed_native: '1200×310 פיקסל (יחס 5:1.3) — במובייל יחתך ל-16:9',
+    sidebar: '400×400 פיקסל (ריבוע 1:1)',
+    article_top: '1200×133 פיקסל (יחס 9:1) — במובייל יחתך ל-2.2:1',
+    article_body: '1200×300 פיקסל (יחס 4:1) — במובייל יחתך ל-16:9',
+    sidebar_left: '160×600 פיקסל (סקייסקרייפר סטנדרטי)',
+    sidebar_right: '160×600 פיקסל (סקייסקרייפר סטנדרטי)'
   };
 
   function escapeAttr(s) {
@@ -51,7 +72,7 @@
 
   function initAdsClient() {
     if (window.supabase && !adsClient) {
-      try { adsClient = window.supabase.createClient(SB_URL, SB_KEY); } catch (e) {}
+      try { adsClient = window.supabase.createClient(SB_URL, SB_KEY); } catch (e) { console.error('[ads.js] יצירת חיבור ל-Supabase נכשלה:', e); }
     }
     return adsClient;
   }
@@ -62,7 +83,7 @@
     const iv = setInterval(function () {
       tries++;
       if (window.supabase) { clearInterval(iv); initAdsClient(); cb(); }
-      else if (tries > 100) { clearInterval(iv); } // ~10 שניות ואז מוותר בשקט
+      else if (tries > 100) { clearInterval(iv); console.error('[ads.js] Supabase לא נטען תוך 10 שניות — המודעות לא יוצגו.'); } // ~10 שניות ואז מוותר
     }, 100);
   }
 
@@ -77,33 +98,33 @@
     });
   }
 
+  function withTimeout(promise, ms) {
+    return Promise.race([
+      promise,
+      new Promise(function (resolve) { setTimeout(function () { resolve(null); }, ms); })
+    ]);
+  }
+
   // ═══════════ תצוגה ציבורית ═══════════
 
   async function fetchAdsForSlot(slot) {
     if (!adsClient) return [];
     try {
-      // סינון "פעיל ובתוקף תאריכים" נאכף כבר ב-RLS בצד השרת — כאן רק מסננים לפי סלוט
       const { data, error } = await adsClient
         .from('ads')
         .select('id,image_url,link_url,alt_text,media_type')
         .eq('slot', slot);
-      if (error || !data) return [];
-      return data;
-    } catch (e) { return []; }
+      if (error) { console.error('[ads.js] שגיאה בשליפת מודעות לסלוט "' + slot + '":', error.message); return []; }
+      return data || [];
+    } catch (e) { console.error('[ads.js] חריגה בשליפת מודעות לסלוט "' + slot + '":', e); return []; }
   }
 
   // מעקב "נסגר" בזיכרון בלבד — לא נשמר בשום storage בכוונה.
   // כך מודעה שנסגרה חוזרת אוטומטית בכל רענון/טעינה מחדש של הדף,
   // ונשארת סגורה רק כל עוד אותה טעינת דף עדיין פעילה בדפדפן.
   const dismissedThisPageLoad = new Set();
-
-  function isDismissed(slot) {
-    return dismissedThisPageLoad.has(slot);
-  }
-
-  function markDismissed(slot) {
-    dismissedThisPageLoad.add(slot);
-  }
+  function isDismissed(slot) { return dismissedThisPageLoad.has(slot); }
+  function markDismissed(slot) { dismissedThisPageLoad.add(slot); }
 
   function mediaTagHtml(ad) {
     if (ad.media_type === 'video') {
@@ -124,7 +145,10 @@
     const link = container.querySelector('a[data-ad-id]');
     if (link) {
       link.addEventListener('click', function () {
-        try { adsClient.rpc('increment_ad_click', { ad_id: ad.id }); } catch (e) {}
+        if (!adsClient) return;
+        adsClient.rpc('increment_ad_click', { ad_id: ad.id }).then(function (res) {
+          if (res && res.error) console.error('[ads.js] עדכון מונה קליקים נכשל (מודעה ' + ad.id + '):', res.error.message);
+        });
       });
     }
     const closeBtn = container.querySelector('.ad-close');
@@ -154,20 +178,21 @@
 
     target.innerHTML = linkHtml;
     container.classList.add('has-ad');
+    container.classList.remove('no-ad');
     bindAdInteractions(container, ad, slot);
   }
 
   function trackImpressionOnce(container, adId) {
-    if (!('IntersectionObserver' in window)) {
-      try { adsClient.rpc('increment_ad_impression', { ad_id: adId }); } catch (e) {}
-      return;
+    if (!adsClient) return;
+    function fire() {
+      adsClient.rpc('increment_ad_impression', { ad_id: adId }).then(function (res) {
+        if (res && res.error) console.error('[ads.js] עדכון מונה צפיות נכשל (מודעה ' + adId + '):', res.error.message);
+      });
     }
+    if (!('IntersectionObserver' in window)) { fire(); return; }
     const obs = new IntersectionObserver(function (entries) {
       entries.forEach(function (entry) {
-        if (entry.isIntersecting) {
-          try { adsClient.rpc('increment_ad_impression', { ad_id: adId }); } catch (e) {}
-          obs.disconnect();
-        }
+        if (entry.isIntersecting) { fire(); obs.disconnect(); }
       });
     }, { threshold: 0.5 });
     obs.observe(container);
@@ -179,11 +204,9 @@
     trackImpressionOnce(container, ads[0].id);
     if (ads.length < 2) return;
     const timer = setInterval(function () {
-      // אם המשתמש כבר סגר את הסלוט הזה, עוצרים את הסבב לגמרי
       if (container.classList.contains('ad-dismissed')) { clearInterval(timer); return; }
       idx = (idx + 1) % ads.length;
       container.classList.remove('has-ad');
-      // רגע קצר לפני שהיה כדי לאפשר fade-out/fade-in חלק
       setTimeout(function () {
         renderSingleAd(container, ads[idx], slot);
         trackImpressionOnce(container, ads[idx].id);
@@ -193,8 +216,10 @@
 
   async function loadAndRender(container, slot) {
     if (isDismissed(slot)) { container.classList.add('ad-dismissed'); return; }
-    const ads = await fetchAdsForSlot(slot);
-    if (!ads.length) { container.classList.add('no-ad'); return; }
+    // withTimeout: אם השרת לא עונה תוך 5 שניות (רשת איטית, בעיית RLS, וכו') —
+    // מתייחסים לזה כמו "אין מודעה" ומסתירים את השטח, במקום להשאיר shimmer לנצח.
+    const ads = await withTimeout(fetchAdsForSlot(slot), FETCH_TIMEOUT_MS);
+    if (!ads || !ads.length) { container.classList.add('no-ad'); return; }
     if (CAROUSEL_SLOTS.indexOf(slot) !== -1 && ads.length > 1) {
       startCarousel(container, ads, slot);
     } else {
@@ -216,7 +241,7 @@
           loadAndRender(container, slot);
         }
       });
-    }, { rootMargin: '200px' }); // טוען קצת לפני שהמודעה נכנסת בפועל למסך
+    }, { rootMargin: '200px' });
     obs.observe(container);
   }
 
@@ -224,31 +249,64 @@
     document.querySelectorAll('.ad-slot[data-ad-slot]').forEach(setupLazySlot);
   }
 
-  // סלוטים בתוך הכתבה (article_top / article_body) יושבים ב-DOM קבוע,
-  // אבל תוכן הכתבה מתחלף בלי רענון דף מלא — עוקבים אחרי #art-body
-  // כדי לרענן את המודעות בכל כתבה חדשה שנפתחת.
+  // סלוט "article_top" יושב קבוע מעל ה-header (משותף לכל הדף), ולכן לא
+  // נבנה מחדש בין כתבה לכתבה — אבל article_body יושב בתוך #art-body
+  // שמתחלף בלי רענון מלא, ולכן צריך לעקוב אחריו ולרענן את המודעה.
   function watchArticleChanges() {
     const artBody = document.getElementById('art-body');
     if (!artBody) return;
-    const targets = [
-      { id: 'ad-article-top', innerSelector: null },               // article_top: renderiza direto no container
-      { id: 'ad-article-body', innerSelector: '.ad-slot-article-body' } // article_body: renderiza no sub-div, preserva o cabeçalho
-    ];
     const mo = new MutationObserver(function () {
-      targets.forEach(function (t) {
-        const slotEl = document.getElementById(t.id);
-        if (!slotEl) return;
-        slotEl.classList.remove('has-ad', 'no-ad', 'ad-dismissed');
-        if (t.innerSelector) {
-          const inner = slotEl.querySelector(t.innerSelector);
-          if (inner) inner.innerHTML = '';
-        } else {
-          slotEl.innerHTML = '';
-        }
-        setupLazySlot(slotEl);
-      });
+      const slotEl = document.getElementById('ad-article-body');
+      if (!slotEl) return;
+      slotEl.classList.remove('has-ad', 'no-ad', 'ad-dismissed');
+      const inner = slotEl.querySelector('.ad-slot-article-body');
+      if (inner) inner.innerHTML = '';
+      setupLazySlot(slotEl);
     });
     mo.observe(artBody, { childList: true });
+  }
+
+  // ═══════════ סקייסקרייפרים צדדיים — עוקבים אחרי גלילה, בגבולות הדף ═══════════
+  // position:fixed בלבד לא מספיק (יעלה על ה-footer בעמודים קצרים) — מחשבים
+  // "top" מחדש בכל גלילה, בין קצה ה-header לקצה ה-footer, כדי שהמודעה
+  // תישאר תמיד בתוך גבולות התוכן ולא תכסה שום דבר אחר בדף.
+  function initSkyscraperBounds() {
+    const left = document.getElementById('ad-sidebar-left');
+    const right = document.getElementById('ad-sidebar-right');
+    if (!left && !right) return;
+
+    const HEADER_CLEARANCE = 90;
+    const FOOTER_CLEARANCE = 24;
+    let ticking = false;
+
+    function reposition(el) {
+      if (!el) return;
+      const footer = document.getElementById('main-footer');
+      const adHeight = el.offsetHeight || 600;
+      const viewportH = window.innerHeight;
+      const centeredTop = Math.max(HEADER_CLEARANCE, (viewportH - adHeight) / 2);
+      if (!footer) { el.style.top = centeredTop + 'px'; return; }
+      const footerTopInViewport = footer.getBoundingClientRect().top;
+      const maxAllowedTop = footerTopInViewport - adHeight - FOOTER_CLEARANCE;
+      const finalTop = Math.max(HEADER_CLEARANCE, Math.min(centeredTop, maxAllowedTop));
+      el.style.top = finalTop + 'px';
+    }
+
+    function repositionAll() {
+      if (window.innerWidth < 1600) return; // מתחת לרוחב הזה הסקייסקרייפרים מוסתרים ממילא (CSS)
+      reposition(left);
+      reposition(right);
+    }
+
+    function onScrollOrResize() {
+      if (ticking) return;
+      ticking = true;
+      requestAnimationFrame(function () { repositionAll(); ticking = false; });
+    }
+
+    repositionAll();
+    window.addEventListener('scroll', onScrollOrResize, { passive: true });
+    window.addEventListener('resize', onScrollOrResize);
   }
 
   // ═══════════ פאנל ניהול (אדמין) ═══════════
@@ -270,9 +328,18 @@
     }
   };
 
+  window.onAdSlotChange = function () {
+    const slot = document.getElementById('ad-slot-select').value;
+    const dimHint = document.getElementById('ad-dim-hint');
+    if (dimHint) dimHint.textContent = 'רזולוציה מומלצת: ' + (SLOT_DIMENSIONS[slot] || '—');
+  };
+
   function initAdsAdminIfNeeded() {
     const fileInput = document.getElementById('ad-image-file');
     if (!fileInput) return; // המבנה עוד לא קיים ב-HTML הזה — לא עושים כלום
+
+    window.onAdSlotChange(); // ממלא את רמז הרזולוציה מיד עם טעינת העמוד
+
     fileInput.addEventListener('change', async function () {
       const f = fileInput.files && fileInput.files[0];
       const status = document.getElementById('ad-upload-status');
@@ -283,19 +350,16 @@
       const isVideo = f.type.indexOf('video') === 0;
 
       if (isVideo) {
-        // וידאו לא נדחס — רק בודקים גודל סביר ומציגים תצוגה מקדימה
         currentAdFile = f;
         if (status) { status.textContent = f.name + ' (' + Math.round(f.size / 1024) + 'KB) — ללא דחיסה'; status.style.color = 'var(--muted)'; }
         if (preview) preview.innerHTML = '<video src="' + URL.createObjectURL(f) + '" style="max-width:220px;border-radius:6px;display:block;" muted autoplay loop playsinline></video>';
         return;
       }
 
-      // תמונה — דוחסים מיד עם הבחירה, בדיוק כמו בהעלאת תמונת כתבה
       if (status) { status.textContent = 'מדחס תמונה...'; status.style.color = 'var(--muted)'; }
       if (preview) preview.innerHTML = '';
 
       if (typeof window.compressImageFile !== 'function') {
-        // גיבוי: אם מסיבה כלשהי הפונקציה לא זמינה, ממשיכים עם המקור בלי דחיסה
         currentAdFile = f;
         if (status) { status.textContent = '⚠️ לא ניתן לדחוס — תועלה התמונה המקורית (' + Math.round(f.size / 1024) + 'KB)'; status.style.color = '#f59e0b'; }
         if (preview) preview.innerHTML = '<img src="' + URL.createObjectURL(f) + '" style="max-width:220px;border-radius:6px;display:block;">';
@@ -336,12 +400,64 @@
     const ids = ['ad-link-url', 'ad-alt-text', 'ad-start-date', 'ad-end-date', 'ad-advertiser-name'];
     ids.forEach(function (id) { const el = document.getElementById(id); if (el) el.value = ''; });
     const slotSel = document.getElementById('ad-slot-select'); if (slotSel) slotSel.value = 'top_leaderboard';
+    window.onAdSlotChange();
     const mediaSel = document.getElementById('ad-media-type'); if (mediaSel) { mediaSel.value = 'image'; window.onAdMediaTypeChange(); }
     const fileInput = document.getElementById('ad-image-file'); if (fileInput) fileInput.value = '';
     const status = document.getElementById('ad-upload-status'); if (status) status.textContent = '';
     const preview = document.getElementById('ad-upload-preview'); if (preview) preview.innerHTML = '';
     currentAdFile = null;
+    editingAdId = null;
+    const submitBtn = document.getElementById('ad-submit-btn'); if (submitBtn) submitBtn.textContent = 'פרסם מודעה';
+    const formTitle = document.getElementById('ad-form-title'); if (formTitle) formTitle.textContent = 'הוספת מודעה חדשה';
+    const cancelBtn = document.getElementById('ad-cancel-edit-btn'); if (cancelBtn) cancelBtn.style.display = 'none';
   };
+
+  window.startEditAd = async function (id) {
+    if (!adsClient) return;
+    try {
+      const { data: ad, error } = await adsClient.from('ads').select('*').eq('id', id).single();
+      if (error || !ad) { alert('שגיאה בטעינת המודעה לעריכה.'); return; }
+
+      editingAdId = id;
+      document.getElementById('ad-slot-select').value = ad.slot;
+      window.onAdSlotChange();
+      document.getElementById('ad-media-type').value = ad.media_type || 'image';
+      window.onAdMediaTypeChange();
+      document.getElementById('ad-link-url').value = ad.link_url || '';
+      document.getElementById('ad-alt-text').value = ad.alt_text || '';
+      document.getElementById('ad-advertiser-name').value = ad.advertiser_name || '';
+      document.getElementById('ad-start-date').value = ad.start_date ? isoToLocalInput(ad.start_date) : '';
+      document.getElementById('ad-end-date').value = ad.end_date ? isoToLocalInput(ad.end_date) : '';
+
+      const preview = document.getElementById('ad-upload-preview');
+      const status = document.getElementById('ad-upload-status');
+      if (status) { status.textContent = 'קובץ נוכחי — ניתן להשאיר כמו שהוא, או לבחור קובץ חדש כדי להחליף'; status.style.color = 'var(--muted)'; }
+      if (preview) {
+        preview.innerHTML = ad.media_type === 'video'
+          ? '<video src="' + escapeAttr(ad.image_url) + '" style="max-width:220px;border-radius:6px;display:block;" muted autoplay loop playsinline></video>'
+          : '<img src="' + escapeAttr(ad.image_url) + '" style="max-width:220px;border-radius:6px;display:block;">';
+      }
+      currentAdFile = null; // לא בוחרים קובץ חדש כברירת מחדל — נשתמש בקיים אם לא ייבחר אחר
+
+      const submitBtn = document.getElementById('ad-submit-btn'); if (submitBtn) submitBtn.textContent = 'שמור שינויים';
+      const formTitle = document.getElementById('ad-form-title'); if (formTitle) formTitle.textContent = 'עריכת מודעה #' + id;
+      const cancelBtn = document.getElementById('ad-cancel-edit-btn'); if (cancelBtn) cancelBtn.style.display = '';
+
+      if (typeof window.adminTab === 'function') {
+        const newTabBtn = document.querySelector('.admin-tab[onclick*="\'new\'"]');
+        window.adminTab('new', newTabBtn || document.querySelector('.admin-tab'));
+      }
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    } catch (e) { alert('שגיאה בטעינת המודעה לעריכה.'); }
+  };
+
+  function isoToLocalInput(iso) {
+    try {
+      const d = new Date(iso);
+      const pad = function (n) { return String(n).padStart(2, '0'); };
+      return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()) + 'T' + pad(d.getHours()) + ':' + pad(d.getMinutes());
+    } catch (e) { return ''; }
+  }
 
   window.publishAd = async function () {
     if (!adsClient) { alert('אין חיבור לשרת — נסה לרענן את הדף.'); return; }
@@ -356,10 +472,7 @@
 
     if (!linkUrl) { alert('נא להזין קישור יעד למודעה.'); return; }
     if (!/^https?:\/\//i.test(linkUrl)) { alert('הקישור חייב להתחיל ב-http:// או https://'); return; }
-    if (!currentAdFile) { alert('נא לבחור קובץ למודעה.'); return; }
-
-    // currentAdFile כבר דחוס (לתמונות זה קורה בבחירת הקובץ עצמה — ר' initAdsAdminIfNeeded)
-    const fileToUpload = currentAdFile;
+    if (!editingAdId && !currentAdFile) { alert('נא לבחור קובץ למודעה.'); return; }
 
     try {
       const { data: sessData } = await adsClient.auth.getSession();
@@ -370,37 +483,46 @@
       }
     } catch (e) {}
 
-    const ext = (fileToUpload.name.split('.').pop() || (mediaType === 'video' ? 'mp4' : 'jpg')).toLowerCase();
-    const path = Date.now() + '-' + Math.random().toString(36).slice(2, 8) + '.' + ext;
     let publicUrl = null;
-    try {
-      const { error: upErr } = await adsClient.storage.from('ad-images')
-        .upload(path, fileToUpload, { contentType: fileToUpload.type, upsert: false, cacheControl: '31536000' });
-      if (upErr) { alert('שגיאה בהעלאת הקובץ: ' + upErr.message); return; }
-      const { data: pub } = adsClient.storage.from('ad-images').getPublicUrl(path);
-      publicUrl = pub && pub.publicUrl ? pub.publicUrl : null;
-    } catch (e) { alert('שגיאה בהעלאת הקובץ.'); return; }
-    if (!publicUrl) { alert('שגיאה בהעלאת הקובץ.'); return; }
+    if (currentAdFile) {
+      const fileToUpload = currentAdFile;
+      const ext = (fileToUpload.name.split('.').pop() || (mediaType === 'video' ? 'mp4' : 'jpg')).toLowerCase();
+      const path = Date.now() + '-' + Math.random().toString(36).slice(2, 8) + '.' + ext;
+      try {
+        const { error: upErr } = await adsClient.storage.from('ad-images')
+          .upload(path, fileToUpload, { contentType: fileToUpload.type, upsert: false, cacheControl: '31536000' });
+        if (upErr) { alert('שגיאה בהעלאת הקובץ: ' + upErr.message); return; }
+        const { data: pub } = adsClient.storage.from('ad-images').getPublicUrl(path);
+        publicUrl = pub && pub.publicUrl ? pub.publicUrl : null;
+      } catch (e) { alert('שגיאה בהעלאת הקובץ.'); return; }
+      if (!publicUrl) { alert('שגיאה בהעלאת הקובץ.'); return; }
+    }
 
     const row = {
       slot: slot,
       media_type: mediaType,
-      image_url: publicUrl,
       link_url: linkUrl,
       alt_text: altText,
       advertiser_name: advertiserName,
-      active: true,
       start_date: startDate ? new Date(startDate).toISOString() : null,
       end_date: endDate ? new Date(endDate).toISOString() : null
     };
+    if (publicUrl) row.image_url = publicUrl; // רק אם הועלה קובץ חדש — אחרת משאירים את הקיים
 
     try {
-      const { error } = await adsClient.from('ads').insert(row);
-      if (error) { alert('שגיאה בפרסום המודעה: ' + error.message); return; }
-      alert('המודעה פורסמה בהצלחה!');
+      if (editingAdId) {
+        const { error } = await adsClient.from('ads').update(row).eq('id', editingAdId);
+        if (error) { alert('שגיאה בעדכון המודעה: ' + error.message); return; }
+        alert('המודעה עודכנה בהצלחה!');
+      } else {
+        row.active = true;
+        const { error } = await adsClient.from('ads').insert(row);
+        if (error) { alert('שגיאה בפרסום המודעה: ' + error.message); return; }
+        alert('המודעה פורסמה בהצלחה!');
+      }
       window.clearAdForm();
       loadAdsTable();
-    } catch (e) { alert('שגיאה בפרסום המודעה.'); }
+    } catch (e) { alert('שגיאה בשמירת המודעה.'); }
   };
 
   function fmtDate(iso) {
@@ -417,8 +539,8 @@
     table.innerHTML = '<tr><td style="padding:20px;text-align:center;color:var(--muted);">טוען...</td></tr>';
     try {
       const { data, error } = await adsClient.from('ads').select('*').order('created_at', { ascending: false });
-      if (error || !data) { table.innerHTML = '<tr><td style="padding:20px;text-align:center;color:var(--muted);">שגיאה בטעינת המודעות.</td></tr>'; return; }
-      if (!data.length) { table.innerHTML = '<tr><td style="padding:20px;text-align:center;color:var(--muted);">אין מודעות עדיין.</td></tr>'; return; }
+      if (error) { table.innerHTML = '<tr><td style="padding:20px;text-align:center;color:var(--muted);">שגיאה בטעינת המודעות: ' + escapeAttr(error.message) + '</td></tr>'; console.error('[ads.js] טעינת טבלת המודעות נכשלה:', error); return; }
+      if (!data || !data.length) { table.innerHTML = '<tr><td style="padding:20px;text-align:center;color:var(--muted);">אין מודעות עדיין.</td></tr>'; return; }
       let html = '<tr><th>תצוגה</th><th>מיקום</th><th>מפרסם</th><th>צפיות</th><th>קליקים</th><th>סטטוס</th><th>פעולות</th></tr>';
       data.forEach(function (ad) {
         const thumb = ad.media_type === 'video'
@@ -426,34 +548,45 @@
           : '<img src="' + escapeAttr(ad.image_url) + '" style="width:70px;height:40px;object-fit:cover;border-radius:4px;">';
         html += '<tr>' +
           '<td>' + thumb + '</td>' +
-          '<td>' + (SLOT_LABELS[ad.slot] || ad.slot) + '</td>' +
+          '<td>' + escapeAttr(SLOT_LABELS[ad.slot] || ad.slot) + '</td>' +
           '<td>' + escapeAttr(ad.advertiser_name || '—') + '</td>' +
           '<td>' + (ad.impressions || 0) + '</td>' +
           '<td>' + (ad.clicks || 0) + '</td>' +
           '<td>' + (ad.active ? '<span style="color:#16a34a;font-weight:700;">פעיל</span>' : '<span style="color:var(--muted);">כבוי</span>') + '</td>' +
           '<td class="tbl-actions">' +
-            '<button class="tbl-btn" onclick="toggleAdActive(' + ad.id + ',' + (!ad.active) + ')">' + (ad.active ? 'כבה' : 'הפעל') + '</button>' +
+            '<button class="tbl-btn" onclick="toggleAdActive(' + ad.id + ',' + (!ad.active) + ',this)">' + (ad.active ? 'כבה' : 'הפעל') + '</button>' +
+            '<button class="tbl-btn" onclick="startEditAd(' + ad.id + ')">ערוך</button>' +
             '<button class="tbl-btn" onclick="exportAdPdf(' + ad.id + ',this)">PDF</button>' +
-            '<button class="tbl-btn del" onclick="deleteAd(' + ad.id + ')">מחק</button>' +
+            '<button class="tbl-btn del" onclick="deleteAd(' + ad.id + ',this)">מחק</button>' +
           '</td></tr>';
       });
       table.innerHTML = html;
     } catch (e) {
+      console.error('[ads.js] חריגה בטעינת טבלת המודעות:', e);
       table.innerHTML = '<tr><td style="padding:20px;text-align:center;color:var(--muted);">שגיאה בטעינת המודעות.</td></tr>';
     }
   }
 
-  window.toggleAdActive = async function (id, newActive) {
+  window.toggleAdActive = async function (id, newActive, btn) {
     if (!adsClient) return;
-    try { await adsClient.from('ads').update({ active: newActive }).eq('id', id); loadAdsTable(); }
-    catch (e) { alert('שגיאה בעדכון המודעה.'); }
+    if (btn) btn.disabled = true;
+    try {
+      const { error } = await adsClient.from('ads').update({ active: newActive }).eq('id', id);
+      if (error) { alert('שגיאה בעדכון המודעה: ' + error.message); console.error('[ads.js] toggleAdActive נכשל:', error); if (btn) btn.disabled = false; return; }
+      loadAdsTable();
+    } catch (e) { alert('שגיאה בעדכון המודעה.'); if (btn) btn.disabled = false; }
   };
 
-  window.deleteAd = async function (id) {
+  window.deleteAd = async function (id, btn) {
     if (!adsClient) return;
-    if (!confirm('למחוק את המודעה הזו לצמיתות?')) return;
-    try { await adsClient.from('ads').delete().eq('id', id); loadAdsTable(); }
-    catch (e) { alert('שגיאה במחיקת המודעה.'); }
+    if (!confirm('למחוק את המודעה הזו לצמיתות? לא ניתן לשחזר.')) return;
+    if (btn) btn.disabled = true;
+    try {
+      const { error } = await adsClient.from('ads').delete().eq('id', id);
+      if (error) { alert('שגיאה במחיקת המודעה: ' + error.message); console.error('[ads.js] deleteAd נכשל:', error); if (btn) btn.disabled = false; return; }
+      if (editingAdId === id) window.clearAdForm();
+      loadAdsTable();
+    } catch (e) { alert('שגיאה במחיקת המודעה.'); if (btn) btn.disabled = false; }
   };
 
   // ═══════════ דוח PDF ממותג לכל מודעה ═══════════
@@ -507,7 +640,7 @@
     if (btn) { btn.textContent = '...'; btn.disabled = true; }
     try {
       const { data: ad, error } = await adsClient.from('ads').select('*').eq('id', id).single();
-      if (error || !ad) { alert('שגיאה בטעינת נתוני המודעה.'); return; }
+      if (error || !ad) { alert('שגיאה בטעינת נתוני המודעה.'); console.error('[ads.js] exportAdPdf: שליפת המודעה נכשלה:', error); return; }
 
       await loadScriptOnce('https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js');
       await loadScriptOnce('https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js');
@@ -525,6 +658,7 @@
       pdf.addImage(imgData, 'PNG', 0, 0, w, h);
       pdf.save('דוח-מודעה-' + id + '.pdf');
     } catch (e) {
+      console.error('[ads.js] יצירת PDF נכשלה:', e);
       alert('שגיאה ביצירת ה-PDF.');
     } finally {
       if (btn) { btn.textContent = originalText; btn.disabled = false; }
@@ -538,6 +672,7 @@
       initPublicSlots();
       watchArticleChanges();
       initAdsAdminIfNeeded();
+      initSkyscraperBounds();
     });
   }
 
