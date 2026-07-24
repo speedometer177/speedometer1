@@ -813,27 +813,30 @@ body.dark-mode .pc-item{color:#eee}
 .ad-close:hover{background:rgba(232,0,29,0.85);transform:scale(1.08)}
 .ad-close svg{width:11px;height:11px;stroke:#fff;pointer-events:none}
 
-/* ── באנר עליון (home_banner) — אחרי ה-Hero, לפני "חדשות אחרונות" ── */
-.ad-slot-banner{max-width:var(--max);margin:18px auto 0;aspect-ratio:7.5/1;border-radius:3px;
-  background:linear-gradient(90deg,#f0f0ee 25%,#f7f7f5 50%,#f0f0ee 75%);background-size:200% 100%;animation:shimmerBg 1.6s infinite;
-  box-shadow:0 1px 6px rgba(0,0,0,0.06)}
-.ad-slot-banner.has-ad{animation:fadeIn 0.3s ease both}
+/* ── באנר עליון (home_banner) — אחרי ה-Hero, לפני "חדשות אחרונות" ──
+   שימו לב: אין aspect-ratio/shimmer בברירת המחדל בכוונה — שטח נשמר
+   רק אחרי שמאושר שיש מודעה אמיתית (has-ad). כשאין מודעה, השטח נשאר
+   בגובה אפס תמיד, ולכן אין קפיצת פריסה (CLS) בכלל במקרה הזה. ── */
+.ad-slot-banner{max-width:var(--max);margin:0 auto;border-radius:3px;overflow:hidden}
+.ad-slot-banner.has-ad{margin:18px auto 0;aspect-ratio:7.5/1;animation:fadeIn 0.3s ease both;box-shadow:0 1px 6px rgba(0,0,0,0.06)}
 .ad-slot-banner img,.ad-slot-banner video{aspect-ratio:7.5/1}
 .ad-slot-banner .ad-tag{bottom:10px;right:12px}
-body.dark-mode .ad-slot-banner{background:linear-gradient(90deg,#1e1e1e 25%,#262626 50%,#1e1e1e 75%);background-size:200% 100%}
-@media (max-width:680px){.ad-slot-banner{margin:12px auto 0;aspect-ratio:2.6/1}.ad-slot-banner img,.ad-slot-banner video{aspect-ratio:2.6/1}}
+@media (max-width:680px){.ad-slot-banner.has-ad{margin:12px auto 0;aspect-ratio:2.6/1}.ad-slot-banner img,.ad-slot-banner video{aspect-ratio:2.6/1}}
 
-/* ── בתוך הכתבה, בסוף (article_body) ── */
-.ad-slot-article{margin:36px 0;border-radius:3px;overflow:hidden;border:1px solid var(--border);background:var(--bg)}
-.ad-slot-article-head{display:flex;align-items:center;gap:8px;padding:10px 16px;border-bottom:1px solid var(--border)}
+/* ── בתוך הכתבה, בסוף (article_body) — אותו עיקרון: אפס שטח כברירת מחדל ── */
+.ad-slot-article{margin:0;border-radius:3px;overflow:hidden;background:var(--bg)}
+.ad-slot-article.has-ad{margin:36px 0;border:1px solid var(--border);animation:fadeIn 0.3s ease both}
+.ad-slot-article-head{display:none;align-items:center;gap:8px;padding:10px 16px;border-bottom:1px solid var(--border)}
+.ad-slot-article.has-ad .ad-slot-article-head{display:flex}
 .ad-slot-article-head span{font-size:0.68rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.06em}
 .ad-slot-article-head::before{content:'';display:block;width:3px;height:12px;background:var(--red);border-radius:2px}
-.ad-slot-article-body{position:relative;aspect-ratio:4/1;background:linear-gradient(90deg,#eee 25%,#f4f4f4 50%,#eee 75%);background-size:200% 100%;animation:shimmerBg 1.6s infinite}
-.ad-slot-article.has-ad .ad-slot-article-body{animation:none;background:none}
+.ad-slot-article-body{position:relative}
+.ad-slot-article.has-ad .ad-slot-article-body{aspect-ratio:4/1}
 .ad-slot-article img,.ad-slot-article video{aspect-ratio:4/1}
-body.dark-mode .ad-slot-article{background:var(--dm-surface);border-color:var(--dm-border)}
+body.dark-mode .ad-slot-article{background:var(--dm-surface)}
+body.dark-mode .ad-slot-article.has-ad{border-color:var(--dm-border)}
 body.dark-mode .ad-slot-article-head{border-color:var(--dm-border)}
-@media (max-width:680px){.ad-slot-article-body{aspect-ratio:16/9}.ad-slot-article img,.ad-slot-article video{aspect-ratio:16/9}}
+@media (max-width:680px){.ad-slot-article.has-ad .ad-slot-article-body{aspect-ratio:16/9}.ad-slot-article img,.ad-slot-article video{aspect-ratio:16/9}}
 
 /* ── באנרים עליונים (top_leaderboard + article_top) — ממש בראש העמוד,
    לפני הלוגו וה-header. שתי הגרסאות חיות תמיד ב-DOM; רק אחת מוצגת
@@ -843,40 +846,35 @@ body.dark-mode .ad-slot-article-head{border-color:var(--dm-border)}
 body.article-open .ad-slot-toppage-home{display:none}
 body.article-open .ad-slot-toppage-article{display:block}
 
-.ad-slot-leaderboard,.ad-slot-article-top{max-width:var(--max);margin:10px auto 0;aspect-ratio:9/1;border-radius:3px;
-  background:linear-gradient(90deg,#f0f0ee 25%,#f7f7f5 50%,#f0f0ee 75%);background-size:200% 100%;animation:shimmerBg 1.6s infinite;
-  box-shadow:0 1px 6px rgba(0,0,0,0.06)}
-.ad-slot-leaderboard.has-ad,.ad-slot-article-top.has-ad{animation:fadeIn 0.3s ease both}
+.ad-slot-leaderboard,.ad-slot-article-top{max-width:var(--max);margin:0 auto;border-radius:3px;overflow:hidden}
+.ad-slot-leaderboard.has-ad,.ad-slot-article-top.has-ad{margin:10px auto 0;aspect-ratio:9/1;box-shadow:0 1px 6px rgba(0,0,0,0.06);animation:fadeIn 0.3s ease both}
 .ad-slot-leaderboard img,.ad-slot-leaderboard video,.ad-slot-article-top img,.ad-slot-article-top video{aspect-ratio:9/1}
 .ad-slot-leaderboard .ad-tag,.ad-slot-article-top .ad-tag{bottom:8px;right:10px}
-body.dark-mode .ad-slot-leaderboard,body.dark-mode .ad-slot-article-top{background:linear-gradient(90deg,#1e1e1e 25%,#262626 50%,#1e1e1e 75%);background-size:200% 100%}
 @media (max-width:680px){
-  .ad-slot-leaderboard,.ad-slot-article-top{margin:6px auto 0;aspect-ratio:1125/878}
+  .ad-slot-leaderboard.has-ad,.ad-slot-article-top.has-ad{margin:6px auto 0;aspect-ratio:1125/878}
   .ad-slot-leaderboard img,.ad-slot-leaderboard video,.ad-slot-article-top img,.ad-slot-article-top video{aspect-ratio:1125/878}
 }
 
 /* ── in-feed native (feed_native) — כרטיס רוחב מלא בין רשימות כתבות ── */
-.ad-slot-native{max-width:var(--max);margin:28px auto 0;border-radius:4px;overflow:hidden;aspect-ratio:5/1.3;
-  background:var(--white);border:1px solid var(--border);
-  background-image:linear-gradient(90deg,#f0f0ee 25%,#f5f5f5 50%,#f0f0ee 75%);background-size:200% 100%;animation:shimmerBg 1.6s infinite;
-  transition:box-shadow 0.28s ease}
-.ad-slot-native.has-ad{animation:fadeIn 0.3s ease both;background-image:none}
+.ad-slot-native{max-width:var(--max);margin:0 auto;border-radius:4px;overflow:hidden;transition:box-shadow 0.28s ease}
+.ad-slot-native.has-ad{margin:28px auto 0;aspect-ratio:5/1.3;background:var(--white);border:1px solid var(--border);animation:fadeIn 0.3s ease both}
 .ad-slot-native:hover{box-shadow:0 8px 24px rgba(0,0,0,0.08)}
 .ad-slot-native img,.ad-slot-native video{aspect-ratio:5/1.3}
 .ad-slot-native .ad-tag{top:10px;right:12px;background:rgba(255,255,255,0.85);color:var(--muted);box-shadow:0 1px 4px rgba(0,0,0,0.08)}
-body.dark-mode .ad-slot-native{background:var(--dm-surface);border-color:var(--dm-border);background-image:linear-gradient(90deg,#1e1e1e 25%,#262626 50%,#1e1e1e 75%);background-size:200% 100%}
+body.dark-mode .ad-slot-native.has-ad{background:var(--dm-surface);border-color:var(--dm-border)}
 body.dark-mode .ad-slot-native .ad-tag{background:rgba(0,0,0,0.55);color:#ccc}
-@media (max-width:680px){.ad-slot-native{margin:18px auto 0;aspect-ratio:16/9}.ad-slot-native img,.ad-slot-native video{aspect-ratio:16/9}}
+@media (max-width:680px){.ad-slot-native.has-ad{margin:18px auto 0;aspect-ratio:16/9}.ad-slot-native img,.ad-slot-native video{aspect-ratio:16/9}}
 
 /* ── סיידבר (sidebar) — מלבן סטנדרטי, ברור כמודעה ── */
-.ad-slot-sidebar{width:100%;margin-bottom:20px;border-radius:4px;overflow:hidden;
-  border:1px solid var(--border)}
-.ad-slot-sidebar-head{background:var(--bg);padding:7px 12px;border-bottom:1px solid var(--border)}
+.ad-slot-sidebar{width:100%;margin-bottom:0;border-radius:4px;overflow:hidden}
+.ad-slot-sidebar.has-ad{margin-bottom:20px;border:1px solid var(--border);animation:fadeIn 0.3s ease both}
+.ad-slot-sidebar-head{display:none;background:var(--bg);padding:7px 12px;border-bottom:1px solid var(--border)}
+.ad-slot-sidebar.has-ad .ad-slot-sidebar-head{display:block}
 .ad-slot-sidebar-head span{font-size:0.62rem;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:var(--muted)}
-.ad-slot-sidebar-body{position:relative;aspect-ratio:1/1;background:linear-gradient(90deg,#f0f0ee 25%,#f5f5f5 50%,#f0f0ee 75%);background-size:200% 100%;animation:shimmerBg 1.6s infinite}
-.ad-slot-sidebar.has-ad .ad-slot-sidebar-body{animation:none;background:none}
+.ad-slot-sidebar-body{position:relative}
+.ad-slot-sidebar.has-ad .ad-slot-sidebar-body{aspect-ratio:1/1}
 .ad-slot-sidebar img,.ad-slot-sidebar video{aspect-ratio:1/1}
-body.dark-mode .ad-slot-sidebar{border-color:var(--dm-border)}
+body.dark-mode .ad-slot-sidebar.has-ad{border-color:var(--dm-border)}
 body.dark-mode .ad-slot-sidebar-head{background:var(--dm-surface)}
 
 /* ── סקייסקרייפר צדדי (sidebar_left / sidebar_right) — דסקטופ רחב בלבד ── */
@@ -892,6 +890,7 @@ body.dark-mode .ad-slot-sidebar-head{background:var(--dm-surface)}
 body.dark-mode .ad-slot-skyscraper{background:var(--dm-surface);border-color:var(--dm-border)}
 /* מוצג רק כשיש מספיק רוחב אמיתי לשני הצדדים בלי לגעת בתוכן (1200px תוכן + 2×160 מודעה + מרווחים) */
 @media (min-width:1600px){.ad-slot-skyscraper{display:block}}
+.ad-slot-skyscraper.sky-footer-near{display:none!important}
 
 @media (prefers-reduced-motion:reduce){
   .ad-slot,.ad-slot-leaderboard,.ad-slot-article-top,.ad-slot-native,.ad-slot-sidebar-body,.ad-slot-skyscraper{animation:none!important}
