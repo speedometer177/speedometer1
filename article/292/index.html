@@ -155,6 +155,142 @@ body.dark-mode .flash-read-badge{background:#222;border-color:#333;color:#777;}
 #flash-word-count.over{color:#e74c3c;}
 @media(max-width:680px){#flash-feed{padding:0 0 24px;}.flash-bubble{border-radius:14px 14px 4px 14px;}}
 </style>
+<style id="admin-cockpit-redesign">
+/* ═══════════════════════════════════════════════════════════════════
+   פאנל ניהול — עיצוב "לוח מחוונים" (Cockpit Dashboard)
+   בהשראת מד המהירות שנתן לאתר את שמו: מחוגים, טבעות מד, זכוכית כהה.
+   כל הכללים מוגבלים ל-.admin-page כדי לא להשפיע על שאר האתר.
+   ═══════════════════════════════════════════════════════════════════ */
+.admin-page{
+  --adm-bg:#0a0e14;--adm-surface:#12171f;--adm-surface-2:#1a212c;--adm-border:#242c38;
+  --adm-text:#eef2f6;--adm-muted:#8993a3;--adm-accent:#ff9d2e;--adm-accent-dim:rgba(255,157,46,0.15);
+  --adm-red:#e8001d;--adm-good:#2dd4bf;--adm-good-dim:rgba(45,212,191,0.14);
+  --adm-num:'Rajdhani',var(--font);
+  background:var(--adm-bg);display:none;min-height:100vh;
+}
+.admin-page *{box-sizing:border-box}
+.admin-inner{max-width:1080px;margin:0 auto;padding:36px 20px 60px}
+.admin-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:22px;gap:16px;flex-wrap:wrap}
+.admin-title{font-size:1.5rem;font-weight:900;color:var(--adm-text);letter-spacing:-0.01em}
+.admin-subtitle{font-size:0.85rem;color:var(--adm-muted);margin-top:4px}
+.admin-page .btn-secondary{background:var(--adm-surface);color:var(--adm-muted);border:1px solid var(--adm-border);border-radius:8px;padding:9px 16px;font-size:0.82rem;transition:all 0.18s}
+.admin-page .btn-secondary:hover{border-color:var(--adm-accent);color:var(--adm-accent)}
+
+/* ── באנר האנליטיקה — לוח המחוונים ── */
+.adm-analytics{display:grid;grid-template-columns:200px 1fr;gap:18px;margin-bottom:28px;background:var(--adm-surface);border:1px solid var(--adm-border);border-radius:18px;padding:20px;position:relative;overflow:hidden}
+.adm-analytics::before{content:'';position:absolute;top:-60%;right:-10%;width:340px;height:340px;background:radial-gradient(circle,rgba(255,157,46,0.08) 0%,transparent 72%);pointer-events:none}
+.adm-gauge-card{display:flex;align-items:center;justify-content:center}
+.adm-gauge{position:relative;width:172px;height:172px}
+.adm-gauge-svg{width:100%;height:100%;transform:rotate(-90deg)}
+.adm-gauge-ring-bg{fill:none;stroke:var(--adm-surface-2);stroke-width:10}
+.adm-gauge-ring-fg{fill:none;stroke:var(--adm-accent);stroke-width:10;stroke-linecap:round;stroke-dasharray:552.9;stroke-dashoffset:0;filter:drop-shadow(0 0 6px rgba(255,157,46,0.55))}
+.adm-gauge-ticks line{stroke:var(--adm-border);stroke-width:2}
+.adm-gauge-center{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:2px}
+.adm-gauge-value{font-family:var(--adm-num);font-size:2.3rem;font-weight:700;color:var(--adm-text);line-height:1;font-variant-numeric:tabular-nums}
+.adm-gauge-label{font-size:0.62rem;color:var(--adm-muted);max-width:100px;line-height:1.3;margin-top:4px}
+.adm-stat-grid{display:grid;grid-template-columns:1fr 1fr;grid-template-rows:1fr 1fr;gap:12px}
+.adm-stat-card{background:var(--adm-surface-2);border:1px solid var(--adm-border);border-radius:12px;padding:14px 16px;position:relative}
+.adm-stat-icon{font-size:1rem;position:absolute;top:12px;left:14px;opacity:0.55}
+.adm-stat-label{font-size:0.68rem;color:var(--adm-muted);margin-bottom:6px}
+.adm-stat-value{font-family:var(--adm-num);font-size:1.7rem;font-weight:700;color:var(--adm-good);font-variant-numeric:tabular-nums}
+.adm-stat-card-wide{grid-column:1/3}
+.adm-stat-top-title{font-size:0.86rem;font-weight:700;color:var(--adm-text);line-height:1.35;margin-bottom:4px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.adm-stat-top-views{font-family:var(--adm-num);font-size:0.8rem;font-weight:700;color:var(--adm-accent)}
+@media (max-width:680px){.adm-analytics{grid-template-columns:1fr}.adm-gauge{width:140px;height:140px}.adm-gauge-value{font-size:1.9rem}}
+
+/* ── טאבים ── */
+.admin-tabs{display:flex;gap:4px;margin-bottom:22px;background:var(--adm-surface);border:1px solid var(--adm-border);border-radius:12px;padding:5px}
+.admin-tab{flex:1;padding:10px 16px;font-size:0.82rem;font-weight:700;color:var(--adm-muted);background:none;border:none;border-radius:9px;cursor:pointer;font-family:var(--font);transition:all 0.18s}
+.admin-tab.active{color:#0a0e14;background:var(--adm-accent)}
+.admin-tab:not(.active):hover{color:var(--adm-text);background:var(--adm-surface-2)}
+
+/* ── כרטיסי טופס ── */
+.admin-page .form-block{background:var(--adm-surface);border:1px solid var(--adm-border);border-radius:16px;padding:24px;margin-bottom:20px}
+.admin-page .form-block h3{color:var(--adm-text);font-size:0.98rem;font-weight:800;margin-bottom:18px;padding-bottom:12px;border-bottom:1px solid var(--adm-border);display:flex;align-items:center;gap:8px}
+.admin-page .form-block h3::before{content:'';display:block;width:3px;height:14px;background:var(--adm-accent);border-radius:2px}
+.admin-page label{color:var(--adm-muted);font-size:0.76rem;font-weight:700}
+.admin-page input[type="text"],.admin-page input[type="url"],.admin-page input[type="datetime-local"],.admin-page input[type="file"],.admin-page select,.admin-page textarea{
+  background:var(--adm-surface-2);border:1.5px solid var(--adm-border);color:var(--adm-text);border-radius:9px;padding:10px 13px;font-size:0.86rem;
+}
+.admin-page input:focus,.admin-page select:focus,.admin-page textarea:focus{border-color:var(--adm-accent);box-shadow:0 0 0 3px var(--adm-accent-dim)}
+.admin-page .form-hint{color:var(--adm-muted)}
+.admin-page .btn-primary{background:var(--adm-accent);color:#0a0e14;border-radius:9px;font-weight:800;box-shadow:0 4px 14px rgba(255,157,46,0.25)}
+.admin-page .btn-primary:hover{background:#ffaf52}
+
+/* ── כפתור סידור Hero ── */
+.adm-hero-btn{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;margin-bottom:14px;padding:13px 20px;
+  background:linear-gradient(135deg,var(--adm-surface-2),var(--adm-surface));border:1.5px solid var(--adm-accent);border-radius:12px;
+  color:var(--adm-accent);font-family:var(--font);font-weight:800;font-size:0.92rem;cursor:pointer;transition:all 0.2s}
+.adm-hero-btn:hover{background:var(--adm-accent-dim);box-shadow:0 0 0 3px var(--adm-accent-dim)}
+
+/* ── רשימת כתבות/מודעות: כרטיס דו-שורתי, בלי טבלה ── */
+.adm-rows-list{display:flex;flex-direction:column;gap:10px}
+.adm-row{background:var(--adm-surface);border:1px solid var(--adm-border);border-radius:14px;padding:14px 16px;transition:border-color 0.18s}
+.adm-row:hover{border-color:var(--adm-accent)}
+.adm-row-top{display:flex;align-items:center;gap:12px;margin-bottom:12px;padding-bottom:12px;border-bottom:1px solid var(--adm-border)}
+.adm-row-thumb,.adm-row-top video{width:56px;height:56px;border-radius:10px;object-fit:cover;background-size:cover;background-position:center;flex-shrink:0;background-color:var(--adm-surface-2)}
+.adm-row-info{flex:1;min-width:0}
+.adm-row-title{font-size:0.92rem;font-weight:700;color:var(--adm-text);line-height:1.4;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.adm-row-meta{display:flex;gap:10px;flex-wrap:wrap;font-size:0.74rem;color:var(--adm-muted);margin-top:5px}
+.adm-cat-pill{background:var(--adm-surface-2);border:1px solid var(--adm-border);color:var(--adm-accent);padding:1px 9px;border-radius:20px;font-weight:700;font-size:0.7rem}
+.adm-badge-scheduled{background:#f59e0b;color:#000;font-size:0.62rem;font-weight:800;padding:1px 8px;border-radius:10px}
+.adm-badge-hero{background:var(--adm-accent-dim);color:var(--adm-accent);font-size:0.62rem;font-weight:800;padding:1px 8px;border-radius:10px}
+.adm-badge-active{background:var(--adm-good-dim);color:var(--adm-good);font-size:0.62rem;font-weight:800;padding:2px 9px;border-radius:10px}
+.adm-badge-inactive{background:var(--adm-surface-2);color:var(--adm-muted);font-size:0.62rem;font-weight:800;padding:2px 9px;border-radius:10px}
+.adm-row-bottom{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
+.adm-row-views{display:flex;align-items:center;gap:6px;font-family:var(--adm-num);font-size:0.86rem;font-weight:700;color:var(--adm-good);font-variant-numeric:tabular-nums}
+.admin-page .tbl-actions{display:flex;gap:6px;white-space:nowrap}
+.admin-page .tbl-btn{background:var(--adm-surface-2);border:1px solid var(--adm-border);color:var(--adm-muted);border-radius:7px;padding:6px 13px;font-size:0.76rem;font-weight:700;font-family:var(--font);transition:all 0.15s}
+.admin-page .tbl-btn:hover{border-color:var(--adm-accent);color:var(--adm-accent)}
+.admin-page .tbl-btn.del:hover{border-color:var(--adm-red);color:var(--adm-red)}
+.adm-empty-state{text-align:center;padding:40px 20px;color:var(--adm-muted);font-size:0.88rem;background:var(--adm-surface);border:1px dashed var(--adm-border);border-radius:14px}
+
+/* ── בורר מיקומי Hero — מודאל תצוגה מקדימה ── */
+.hero-picker-overlay{display:none;position:fixed;inset:0;background:rgba(5,7,10,0.78);z-index:99999;align-items:center;justify-content:center;padding:16px}
+.hero-picker-modal{background:#0a0e14;border:1px solid #242c38;border-radius:20px;width:min(720px,96vw);max-height:92vh;overflow-y:auto;padding:26px;font-family:var(--font);direction:rtl;color:#eef2f6}
+.hp-head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin-bottom:18px}
+.hp-head h2{font-size:1.15rem;font-weight:900;margin-bottom:6px}
+.hp-head p{font-size:0.78rem;color:#8993a3;line-height:1.6;max-width:500px}
+.hp-close{background:#1a212c;border:1px solid #242c38;color:#eef2f6;width:34px;height:34px;border-radius:9px;font-size:1.1rem;cursor:pointer;flex-shrink:0}
+.hp-tabs{display:flex;gap:4px;background:#12171f;border:1px solid #242c38;border-radius:11px;padding:4px;margin-bottom:20px}
+.hp-tab{flex:1;padding:9px 14px;font-size:0.82rem;font-weight:700;color:#8993a3;background:none;border:none;border-radius:8px;cursor:pointer;font-family:var(--font)}
+.hp-tab.active{background:#ff9d2e;color:#0a0e14}
+.hp-preview-desktop{display:grid;grid-template-columns:1.6fr 1fr;gap:10px}
+.hp-preview-sides{display:flex;flex-direction:column;gap:10px}
+.hp-preview-mobile{display:flex;flex-direction:column;gap:14px;align-items:center}
+.hp-phone-frame{width:220px;border:5px solid #1a212c;border-radius:22px;padding:6px;background:#12171f;position:relative}
+.hp-phone-notch{width:60px;height:14px;background:#1a212c;border-radius:0 0 10px 10px;margin:0 auto 4px}
+.hp-mobile-stack{display:flex;gap:10px;width:100%}
+.hp-mobile-stack .hp-slot{flex:1}
+.hp-slot{border-radius:12px;overflow:hidden;position:relative;min-height:120px;cursor:pointer;border:1.5px dashed #242c38;background:#12171f;display:flex;flex-direction:column}
+.hp-slot-filled{border-style:solid;border-color:#ff9d2e;cursor:default}
+.hp-slot-label{font-size:0.62rem;font-weight:800;color:#8993a3;text-transform:uppercase;letter-spacing:0.04em;padding:8px 10px 0}
+.hp-slot-thumb{width:100%;flex:1;min-height:70px;background-size:cover;background-position:center;background-color:#1a212c;margin-top:6px}
+.hp-slot-title{font-size:0.78rem;font-weight:700;padding:8px 10px 2px;line-height:1.3;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.hp-slot-actions{display:flex;gap:6px;padding:8px 10px 10px}
+.hp-slot-empty{align-items:center;justify-content:center;padding:20px;transition:border-color 0.18s}
+.hp-slot-empty:hover{border-color:#ff9d2e}
+.hp-slot-plus{font-size:1.8rem;color:#ff9d2e;line-height:1}
+.hp-slot-empty-txt{font-size:0.76rem;color:#8993a3;margin-top:6px}
+.hp-btn{flex:1;background:#1a212c;border:1px solid #242c38;color:#eef2f6;border-radius:7px;padding:6px 8px;font-size:0.72rem;font-weight:700;cursor:pointer;font-family:var(--font)}
+.hp-btn-swap:hover{border-color:#ff9d2e;color:#ff9d2e}
+.hp-btn-clear:hover{border-color:#e8001d;color:#e8001d}
+.hp-search-panel{display:flex;flex-direction:column;gap:12px}
+.hp-search-head{display:flex;gap:8px}
+.hp-search-head input{flex:1;background:#12171f;border:1.5px solid #242c38;color:#eef2f6;border-radius:9px;padding:10px 13px;font-size:0.86rem;font-family:var(--font)}
+.hp-search-list{display:flex;flex-direction:column;gap:8px;max-height:400px;overflow-y:auto}
+.hp-search-item{display:flex;align-items:center;gap:12px;padding:9px 12px;border-radius:10px;border:1px solid #242c38;background:#12171f;cursor:pointer;transition:border-color 0.15s}
+.hp-search-item:hover{border-color:#ff9d2e}
+.hp-search-item-active{border-color:#2dd4bf;background:rgba(45,212,191,0.08)}
+.hp-search-thumb{width:56px;height:38px;border-radius:6px;background-size:cover;background-position:center;background-color:#1a212c;flex-shrink:0}
+.hp-search-info{flex:1;min-width:0}
+.hp-search-title{font-size:0.84rem;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.hp-search-meta{font-size:0.7rem;color:#8993a3;margin-top:2px}
+.hp-search-check{color:#2dd4bf;font-weight:900;flex-shrink:0}
+.hp-search-empty{text-align:center;padding:24px;color:#8993a3;font-size:0.85rem}
+@media (max-width:680px){.hp-preview-desktop{grid-template-columns:1fr}}
+</style>
+
 <style id="sp-enhancements">
 /* ════════════════════════════════════════════════════════════
    SP ENHANCEMENTS — שדרוג 9 נקודות (CSS)
@@ -1200,7 +1336,7 @@ body.dark-mode .ad-slot-skyscraper{background:var(--dm-surface);border-color:var
   <!-- Desktop hero -->
   <div class="hero hero-grid-wrap" id="hero-area"></div>
   <!-- Mobile hero banner (auto-rotating) -->
-  <div class="hero hero-banner-wrap" id="hero-banner-mobile"><!-- BUILD:HERO_SLIDE:START --><div class="hero-banner"><div class="hero-banner-track" style="direction:ltr;"><div class="hero-banner-slide" style="direction:rtl;"><img src="https://wsrv.nl/?url=https%3A%2F%2Fkaykrrnmykqrfhawgtqt.supabase.co%2Fstorage%2Fv1%2Fobject%2Fpublic%2Farticle-images%2F1784889253947-e7bmqr.jpg&amp;w=800&amp;fit=cover&amp;output=webp&amp;q=75" srcset="https://wsrv.nl/?url=https%3A%2F%2Fkaykrrnmykqrfhawgtqt.supabase.co%2Fstorage%2Fv1%2Fobject%2Fpublic%2Farticle-images%2F1784889253947-e7bmqr.jpg&amp;w=400&amp;fit=cover&amp;output=webp&amp;q=75 400w, https://wsrv.nl/?url=https%3A%2F%2Fkaykrrnmykqrfhawgtqt.supabase.co%2Fstorage%2Fv1%2Fobject%2Fpublic%2Farticle-images%2F1784889253947-e7bmqr.jpg&amp;w=640&amp;fit=cover&amp;output=webp&amp;q=75 640w, https://wsrv.nl/?url=https%3A%2F%2Fkaykrrnmykqrfhawgtqt.supabase.co%2Fstorage%2Fv1%2Fobject%2Fpublic%2Farticle-images%2F1784889253947-e7bmqr.jpg&amp;w=800&amp;fit=cover&amp;output=webp&amp;q=75 800w, https://wsrv.nl/?url=https%3A%2F%2Fkaykrrnmykqrfhawgtqt.supabase.co%2Fstorage%2Fv1%2Fobject%2Fpublic%2Farticle-images%2F1784889253947-e7bmqr.jpg&amp;w=1200&amp;fit=cover&amp;output=webp&amp;q=75 1200w" sizes="100vw" alt="מרצדס-מייבאך GLS 680 החדש: פאר קיצוני ועוצמה ללא פשרות" loading="eager" fetchpriority="high" decoding="sync" width="850" height="500"><div class="hb3-fade" aria-hidden="true"></div><div class="hb3-read">1<span>דק'</span></div><div class="hb3-txt"><span class="hb3-cat">רכב יוקרה</span><div class="hb3-title">מרצדס-מייבאך GLS 680 החדש: פאר קיצוני ועוצמה ללא פשרות</div><div class="hb3-meta"><span class="hb3-author">שמעון כהן</span><span class="hb3-sep">·</span><span class="hb3-when">24.7.2026</span><span class="hb3-sep">·</span><span class="hb3-when">13:37</span></div></div></div></div></div><!-- BUILD:HERO_SLIDE:END --></div>
+  <div class="hero hero-banner-wrap" id="hero-banner-mobile"><!-- BUILD:HERO_SLIDE:START --><div class="hero-banner"><div class="hero-banner-track" style="direction:ltr;"><div class="hero-banner-slide" style="direction:rtl;"><img src="https://wsrv.nl/?url=https%3A%2F%2Fkaykrrnmykqrfhawgtqt.supabase.co%2Fstorage%2Fv1%2Fobject%2Fpublic%2Farticle-images%2F1784053443986-0z0j8u.jpg&amp;w=800&amp;fit=cover&amp;output=webp&amp;q=75" srcset="https://wsrv.nl/?url=https%3A%2F%2Fkaykrrnmykqrfhawgtqt.supabase.co%2Fstorage%2Fv1%2Fobject%2Fpublic%2Farticle-images%2F1784053443986-0z0j8u.jpg&amp;w=400&amp;fit=cover&amp;output=webp&amp;q=75 400w, https://wsrv.nl/?url=https%3A%2F%2Fkaykrrnmykqrfhawgtqt.supabase.co%2Fstorage%2Fv1%2Fobject%2Fpublic%2Farticle-images%2F1784053443986-0z0j8u.jpg&amp;w=640&amp;fit=cover&amp;output=webp&amp;q=75 640w, https://wsrv.nl/?url=https%3A%2F%2Fkaykrrnmykqrfhawgtqt.supabase.co%2Fstorage%2Fv1%2Fobject%2Fpublic%2Farticle-images%2F1784053443986-0z0j8u.jpg&amp;w=800&amp;fit=cover&amp;output=webp&amp;q=75 800w, https://wsrv.nl/?url=https%3A%2F%2Fkaykrrnmykqrfhawgtqt.supabase.co%2Fstorage%2Fv1%2Fobject%2Fpublic%2Farticle-images%2F1784053443986-0z0j8u.jpg&amp;w=1200&amp;fit=cover&amp;output=webp&amp;q=75 1200w" sizes="100vw" alt="מהפארם לכביש: סופר-פארם מתחילה למכור מכוניות חשמליות אונליין" loading="eager" fetchpriority="high" decoding="sync" width="850" height="500"><div class="hb3-fade" aria-hidden="true"></div><div class="hb3-read">1<span>דק'</span></div><div class="hb3-txt"><span class="hb3-cat">חדשות מקומיות</span><div class="hb3-title">מהפארם לכביש: סופר-פארם מתחילה למכור מכוניות חשמליות אונליין</div><div class="hb3-meta"><span class="hb3-author">שמעון כהן</span><span class="hb3-sep">·</span><span class="hb3-when">14.7.2026</span><span class="hb3-sep">·</span><span class="hb3-when">21:25</span></div></div></div></div></div><!-- BUILD:HERO_SLIDE:END --></div>
 
   <!-- AD SLOT: home_banner -->
   <div class="ad-slot ad-slot-banner" data-ad-slot="home_banner" id="ad-home-banner" role="region" aria-label="מודעה"></div>
@@ -1543,6 +1679,45 @@ body.dark-mode .ad-slot-skyscraper{background:var(--dm-surface);border-color:var
       </div>
       <div style="display:flex;gap:8px;flex-wrap:wrap;"><button class="btn-secondary" onclick="showHome()">← חזרה לאתר</button><button class="btn-secondary" onclick="adminLogout()" style="border-color:var(--red);color:var(--red);">התנתק</button></div>
     </div>
+    <div class="adm-analytics" id="adm-analytics">
+      <div class="adm-gauge-card">
+        <div class="adm-gauge">
+          <svg viewBox="0 0 200 200" class="adm-gauge-svg">
+            <circle cx="100" cy="100" r="88" class="adm-gauge-ring-bg"/>
+            <circle cx="100" cy="100" r="88" class="adm-gauge-ring-fg"/>
+            <g class="adm-gauge-ticks">
+              <line x1="100" y1="14" x2="100" y2="26"/><line x1="153" y1="28" x2="146" y2="38"/>
+              <line x1="186" y1="72" x2="174" y2="78"/><line x1="186" y1="128" x2="174" y2="122"/>
+              <line x1="153" y1="172" x2="146" y2="162"/><line x1="100" y1="186" x2="100" y2="174"/>
+              <line x1="47" y1="172" x2="54" y2="162"/><line x1="14" y1="128" x2="26" y2="122"/>
+              <line x1="14" y1="72" x2="26" y2="78"/><line x1="47" y1="28" x2="54" y2="38"/>
+            </g>
+          </svg>
+          <div class="adm-gauge-center">
+            <div class="adm-gauge-value" id="adm-gauge-value">0</div>
+            <div class="adm-gauge-label">סה"כ צפיות בכל הכתבות</div>
+          </div>
+        </div>
+      </div>
+      <div class="adm-stat-grid">
+        <div class="adm-stat-card">
+          <div class="adm-stat-icon">📰</div>
+          <div class="adm-stat-label">כתבות שפורסמו</div>
+          <div class="adm-stat-value" id="adm-stat-articles">—</div>
+        </div>
+        <div class="adm-stat-card">
+          <div class="adm-stat-icon">📊</div>
+          <div class="adm-stat-label">ממוצע צפיות לכתבה</div>
+          <div class="adm-stat-value" id="adm-stat-avg">—</div>
+        </div>
+        <div class="adm-stat-card adm-stat-card-wide" id="adm-stat-top">
+          <div class="adm-stat-icon">🏆</div>
+          <div class="adm-stat-label">הכתבה הנצפית ביותר</div>
+          <div class="adm-stat-top-title" id="adm-stat-top-title">—</div>
+          <div class="adm-stat-top-views" id="adm-stat-top-views"></div>
+        </div>
+      </div>
+    </div>
     <div class="admin-tabs">
       <button class="admin-tab active" onclick="adminTab('new',this)">+ כתבה חדשה</button>
       <button class="admin-tab" onclick="adminTab('list',this)">ניהול כתבות</button>
@@ -1602,7 +1777,7 @@ body.dark-mode .ad-slot-skyscraper{background:var(--dm-surface);border-color:var
             <span class="form-hint">תגיות עוזרות לחיפוש ול-SEO</span>
           </div>
         </div>
-        <div class="form-row">
+        <div class="form-row full">
           <div class="form-group">
             <label for="a-img">תמונה ראשית — קישור URL</label>
             <div style="display:flex;flex-direction:column;gap:8px;">
@@ -1614,11 +1789,11 @@ body.dark-mode .ad-slot-skyscraper{background:var(--dm-surface);border-color:var
               <input type="url" id="a-img" placeholder="או הכנס קישור תמונה..." autocomplete="off" autocorrect="off" autocapitalize="off">
               <span id="upload-status" class="form-hint"></span>
               <div id="upload-preview" style="margin-top:8px;"></div>
+              <div style="display:flex;align-items:center;gap:8px;margin-top:4px;padding-top:10px;border-top:1px solid var(--border);">
+                <label for="a-img-cap" style="white-space:nowrap;flex-shrink:0;">כיתוב התמונה הזו</label>
+                <input type="text" id="a-img-cap" placeholder="צילום: שם הצלם / מקור התמונה" style="flex:1;">
+              </div>
             </div>
-          </div>
-          <div class="form-group">
-            <label for="a-img-cap">כיתוב תמונה</label>
-            <input type="text" id="a-img-cap" placeholder="צילום: שם הצלם / מקור התמונה">
           </div>
         </div>
         <!-- GALLERY IMAGES -->
@@ -1923,7 +2098,7 @@ body.dark-mode .ad-slot-skyscraper{background:var(--dm-surface);border-color:var
     </div>
     <div id="admin-list" style="display:none;">
       <div class="form-block" style="padding:0;overflow-x:auto;overflow-y:hidden;-webkit-overflow-scrolling:touch;">
-        <table class="articles-table" id="admin-table"></table>
+        <div class="adm-rows-list" id="admin-table"></div>
       </div>
     </div>
 
@@ -2013,7 +2188,7 @@ body.dark-mode .ad-slot-skyscraper{background:var(--dm-surface);border-color:var
       </div>
 
       <div class="form-block" style="padding:0;overflow-x:auto;overflow-y:hidden;-webkit-overflow-scrolling:touch;">
-        <table class="articles-table" id="admin-ads-table"></table>
+        <div class="adm-rows-list" id="admin-ads-table"></div>
       </div>
     </div>
   </div>
