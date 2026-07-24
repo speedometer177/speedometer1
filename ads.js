@@ -141,6 +141,10 @@
       '</button>';
   }
 
+  // סלוטים ששינוי מצב שלהם (הופעה/היעלמות/סגירה) מזיז את ה-header על המסך —
+  // בכל אחד מהם צריך לחשב מחדש את מיקום הסקייסקרייפרים, לא רק בגלילה.
+  const SLOTS_AFFECTING_HEADER = ['top_leaderboard', 'article_top'];
+
   function bindAdInteractions(container, ad, slot) {
     const link = container.querySelector('a[data-ad-id]');
     if (link) {
@@ -158,6 +162,7 @@
         e.stopPropagation();
         markDismissed(slot);
         container.classList.add('ad-dismissed');
+        if (SLOTS_AFFECTING_HEADER.indexOf(slot) !== -1) repositionSkyscrapers();
       });
     }
   }
@@ -180,6 +185,7 @@
     container.classList.add('has-ad');
     container.classList.remove('no-ad');
     bindAdInteractions(container, ad, slot);
+    if (SLOTS_AFFECTING_HEADER.indexOf(slot) !== -1) repositionSkyscrapers();
   }
 
   function trackImpressionOnce(container, adId) {
@@ -215,11 +221,19 @@
   }
 
   async function loadAndRender(container, slot) {
-    if (isDismissed(slot)) { container.classList.add('ad-dismissed'); return; }
+    if (isDismissed(slot)) {
+      container.classList.add('ad-dismissed');
+      if (SLOTS_AFFECTING_HEADER.indexOf(slot) !== -1) repositionSkyscrapers();
+      return;
+    }
     // withTimeout: אם השרת לא עונה תוך 5 שניות (רשת איטית, בעיית RLS, וכו') —
     // מתייחסים לזה כמו "אין מודעה" ומסתירים את השטח, במקום להשאיר shimmer לנצח.
     const ads = await withTimeout(fetchAdsForSlot(slot), FETCH_TIMEOUT_MS);
-    if (!ads || !ads.length) { container.classList.add('no-ad'); return; }
+    if (!ads || !ads.length) {
+      container.classList.add('no-ad');
+      if (SLOTS_AFFECTING_HEADER.indexOf(slot) !== -1) repositionSkyscrapers();
+      return;
+    }
     if (CAROUSEL_SLOTS.indexOf(slot) !== -1 && ads.length > 1) {
       startCarousel(container, ads, slot);
     } else {
@@ -275,64 +289,69 @@
   }
 
   // ═══════════ סקייסקרייפרים צדדיים — עוקבים אחרי גלילה, בגבולות הדף ═══════════
-  // position:fixed בלבד לא מספיק (יעלה על ה-footer בעמודים קצרים) — מחשבים
-  // "top" מחדש בכל גלילה, בין קצה ה-header לקצה ה-footer, כדי שהמודעה
-  // תישאר תמיד בתוך גבולות התוכן ולא תכסה שום דבר אחר בדף.
+  // position:fixed בלבד לא מספיק (יעלה על ה-footer בעמודים קצרים, או על
+  // ה-header כשמודעה עליונה קיימת/נעלמת) — מחשבים "top" מחדש הן בגלילה/שינוי
+  // גודל חלון, והן ברגע ממש שמודעת top_leaderboard/article_top מופיעה,
+  // נעלמת, או נסגרת — כי אלה בדיוק הרגעים שבהם ה-header עצמו זז על המסך.
+  let skyLeftEl = null, skyRightEl = null, skyTicking = false;
+  const HEADER_GAP = 16;  // רווח בין תחתית ה-header לתחילת המודעה
+  const FOOTER_GAP = 24;  // רווח בין סוף המודעה לתחילת ה-footer
+
+  function repositionSkyscraper(el) {
+    if (!el) return;
+    const header = document.querySelector('header[role="banner"]');
+    const footer = document.getElementById('main-footer');
+    const adHeight = el.offsetHeight || 600;
+
+    // הגבולות האמיתיים כרגע בתוך המסך הנראה: מתחת ל-header, מעל ה-footer.
+    const headerBottom = header ? header.getBoundingClientRect().bottom : 0;
+    const footerTop = footer ? footer.getBoundingClientRect().top : window.innerHeight;
+
+    const topBound = Math.max(HEADER_GAP, headerBottom + HEADER_GAP);
+    const bottomBound = footerTop - FOOTER_GAP;
+    const availableSpace = bottomBound - topBound;
+
+    // אם אין כרגע מספיק מקום אמיתי בתוך המסך הנראה (למשל: מודעה עליונה
+    // עדיין תופסת מקום, או שכבר מתקרבים ל-footer) — מסתירים לגמרי,
+    // במקום לדחוק את המודעה ולתת לה לחפוף חלק אחר של האתר.
+    if (availableSpace < adHeight) {
+      el.style.display = 'none';
+      return;
+    }
+    el.style.display = '';
+
+    // כשיש מקום — ממרכזים את המודעה בתוך השטח הפנוי הזה בלבד (לא בתוך כל המסך),
+    // כך שהיא לעולם לא חורגת מעבר לגבול העליון/תחתון שחישבנו.
+    let idealTop = topBound + (availableSpace - adHeight) / 2;
+    idealTop = Math.max(topBound, Math.min(idealTop, bottomBound - adHeight));
+    el.style.top = idealTop + 'px';
+  }
+
+  function repositionSkyscrapersNow() {
+    if (window.innerWidth < 1600) return; // מתחת לרוחב הזה הסקייסקרייפרים מוסתרים ממילא (CSS)
+    repositionSkyscraper(skyLeftEl);
+    repositionSkyscraper(skyRightEl);
+  }
+
+  // עוטפים ב-requestAnimationFrame כפול: פעם אחת כדי לחכות שהדפדפן יסיים
+  // reflow אחרי שינוי ב-DOM (למשל דעיכת מודעה עליונה), ופעם נוספת כדי לוודא
+  // שהמדידה (getBoundingClientRect) קוראת מצב יציב ולא ביניים.
+  function repositionSkyscrapers() {
+    if (skyTicking) return;
+    skyTicking = true;
+    requestAnimationFrame(function () {
+      requestAnimationFrame(function () { repositionSkyscrapersNow(); skyTicking = false; });
+    });
+  }
+
   function initSkyscraperBounds() {
-    const left = document.getElementById('ad-sidebar-left');
-    const right = document.getElementById('ad-sidebar-right');
-    if (!left && !right) return;
+    skyLeftEl = document.getElementById('ad-sidebar-left');
+    skyRightEl = document.getElementById('ad-sidebar-right');
+    if (!skyLeftEl && !skyRightEl) return;
 
-    const HEADER_GAP = 16;  // רווח בין תחתית ה-header לתחילת המודעה
-    const FOOTER_GAP = 24;  // רווח בין סוף המודעה לתחילת ה-footer
-    let ticking = false;
-
-    function reposition(el) {
-      if (!el) return;
-      const header = document.querySelector('header[role="banner"]');
-      const footer = document.getElementById('main-footer');
-      const adHeight = el.offsetHeight || 600;
-
-      // הגבולות האמיתיים כרגע בתוך המסך הנראה: מתחת ל-header, מעל ה-footer.
-      // מחושב מחדש בכל גלילה, כי שני האלמנטים האלה זזים ביחס לחלון הגלישה.
-      const headerBottom = header ? header.getBoundingClientRect().bottom : 0;
-      const footerTop = footer ? footer.getBoundingClientRect().top : window.innerHeight;
-
-      const topBound = Math.max(HEADER_GAP, headerBottom + HEADER_GAP);
-      const bottomBound = footerTop - FOOTER_GAP;
-      const availableSpace = bottomBound - topBound;
-
-      // אם אין כרגע מספיק מקום אמיתי בתוך המסך הנראה (למשל: עדיין לא גללנו
-      // מספיק מתחת ל-header, או שכבר מתקרבים ל-footer) — מסתירים לגמרי,
-      // במקום לדחוק את המודעה ולתת לה לחפוף חלק אחר של האתר.
-      if (availableSpace < adHeight) {
-        el.style.display = 'none';
-        return;
-      }
-      el.style.display = '';
-
-      // כשיש מקום — ממרכזים את המודעה בתוך השטח הפנוי הזה בלבד (לא בתוך כל המסך),
-      // כך שהיא לעולם לא חורגת מעבר לגבול העליון/תחתון שחישבנו.
-      let idealTop = topBound + (availableSpace - adHeight) / 2;
-      idealTop = Math.max(topBound, Math.min(idealTop, bottomBound - adHeight));
-      el.style.top = idealTop + 'px';
-    }
-
-    function repositionAll() {
-      if (window.innerWidth < 1600) return; // מתחת לרוחב הזה הסקייסקרייפרים מוסתרים ממילא (CSS)
-      reposition(left);
-      reposition(right);
-    }
-
-    function onScrollOrResize() {
-      if (ticking) return;
-      ticking = true;
-      requestAnimationFrame(function () { repositionAll(); ticking = false; });
-    }
-
-    repositionAll();
-    window.addEventListener('scroll', onScrollOrResize, { passive: true });
-    window.addEventListener('resize', onScrollOrResize);
+    repositionSkyscrapersNow();
+    window.addEventListener('scroll', repositionSkyscrapers, { passive: true });
+    window.addEventListener('resize', repositionSkyscrapers);
   }
 
   // ═══════════ פאנל ניהול (אדמין) ═══════════
