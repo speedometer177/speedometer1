@@ -87,13 +87,36 @@
         headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
         body: JSON.stringify(region ? { region: region } : {}),
       });
-      const json = await res.json();
+      const rawText = await res.text();
+      let json = null;
+      try { json = JSON.parse(rawText); } catch (e) { /* התשובה לא הייתה JSON תקני — נטפל בזה למטה */ }
       if (!res.ok) {
-        alert('שגיאה ברענון החדשות: ' + (json.error || 'שגיאה לא ידועה'));
-        console.error('[news.js] fetch-car-news נכשל:', json);
+        const detail = (json && json.error) ? json.error : ('קוד ' + res.status + ': ' + rawText.slice(0, 300));
+        alert('שגיאה ברענון החדשות:\n' + detail);
+        console.error('[news.js] fetch-car-news נכשל:', res.status, rawText);
         return;
       }
-      loadHeadlines();
+      if (!json) {
+        alert('שגיאה: התקבלה תשובה לא תקינה מהשרת (לא JSON):\n' + rawText.slice(0, 300));
+        console.error('[news.js] fetch-car-news החזיר תשובה שאינה JSON:', rawText);
+        return;
+      }
+      // מציגים בדיוק מה הצליח ומה נכשל בכל מקור — כדי לא להישאר בניחוש
+      if (json.results && Array.isArray(json.results)) {
+        const summary = json.results.map(function (r) {
+          return (r.ok ? '✅ ' : '❌ ') + r.source + (r.ok ? ' (' + r.count + ')' : ' — ' + (r.error || 'שגיאה'));
+        }).join('\n');
+        console.log('[news.js] תוצאות רענון לפי מקור:\n' + summary);
+        alert('רענון הסתיים:\n\n' + summary);
+      }
+      // מסנכרנים את תצוגת הרשימה לאזור שרעננו בפועל — אחרת נשארים על "הכל"
+      // ורואים כותרות ישנות מאזור אחר, כאילו הרענון "הביא" משהו לא קשור.
+      if (region === 'il' || region === 'world') {
+        const matchingTab = document.querySelector('.news-region-tab[onclick*="\'' + region + '\'"]');
+        window.setHeadlinesFilter(region, matchingTab);
+      } else {
+        loadHeadlines();
+      }
     } catch (e) {
       alert('שגיאה ברענון החדשות. ודא שה-Edge Function פרוסה כראוי.');
       console.error('[news.js] fetch-car-news חריגה:', e);
@@ -102,15 +125,26 @@
     }
   };
 
+  let _headlinesFilter = 'all';
+
+  window.setHeadlinesFilter = function (region, el) {
+    _headlinesFilter = region;
+    document.querySelectorAll('.news-region-tab').forEach(function (b) { b.classList.remove('active'); });
+    if (el) el.classList.add('active');
+    loadHeadlines();
+  };
+
   async function loadHeadlines() {
     const client = initNewsClient();
     const list = document.getElementById('news-headlines-list');
     if (!list || !client) return;
     list.innerHTML = '<div class="adm-empty-state">טוען...</div>';
     try {
-      const { data, error } = await client.from('news_headlines').select('*').order('fetched_at', { ascending: false }).limit(150);
+      let query = client.from('news_headlines').select('*').order('fetched_at', { ascending: false }).limit(150);
+      if (_headlinesFilter === 'il' || _headlinesFilter === 'world') query = query.eq('region', _headlinesFilter);
+      const { data, error } = await query;
       if (error) { list.innerHTML = '<div class="adm-empty-state">שגיאה בטעינת הכותרות: ' + escapeAttr(error.message) + '</div>'; console.error('[news.js] טעינת כותרות נכשלה:', error); return; }
-      if (!data || !data.length) { list.innerHTML = '<div class="adm-empty-state">אין כותרות עדיין — לחץ "רענן חדשות" למעלה.</div>'; return; }
+      if (!data || !data.length) { list.innerHTML = '<div class="adm-empty-state">אין כותרות עדיין ' + (_headlinesFilter !== 'all' ? 'באזור הזה ' : '') + '— לחץ על אחד מכפתורי הרענון למעלה.</div>'; return; }
       list.innerHTML = data.map(function (h) {
         const regionPill = '<span class="adm-cat-pill">' + (REGION_LABELS[h.region] || h.region) + '</span>';
         let statusBadge = '';
@@ -153,16 +187,24 @@
         headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
         body: JSON.stringify({ headline_id: headlineId }),
       });
-      const json = await res.json();
+      const rawText = await res.text();
+      let json = null;
+      try { json = JSON.parse(rawText); } catch (e) { /* התשובה לא הייתה JSON תקני — נטפל בזה למטה */ }
       if (!res.ok) {
-        alert('שגיאה בכתיבת הכתבה: ' + (json.error || 'שגיאה לא ידועה'));
-        console.error('[news.js] draft-news-article נכשל:', json);
+        const detail = (json && json.error) ? json.error : ('קוד ' + res.status + ': ' + rawText.slice(0, 300));
+        alert('שגיאה בכתיבת הכתבה:\n' + detail);
+        console.error('[news.js] draft-news-article נכשל:', res.status, rawText);
+        return;
+      }
+      if (!json) {
+        alert('שגיאה: התקבלה תשובה לא תקינה מהשרת (לא JSON):\n' + rawText.slice(0, 300));
+        console.error('[news.js] draft-news-article החזיר תשובה שאינה JSON:', rawText);
         return;
       }
       alert('הטיוטה נכתבה בהצלחה! עבור ללשונית "כתבות מוכנות" כדי לבדוק ולפרסם.');
       loadHeadlines();
     } catch (e) {
-      alert('שגיאה בכתיבת הכתבה. ודא שה-Edge Function פרוסה, ושמפתח GEMINI_API_KEY מוגדר.');
+      alert('שגיאה בכתיבת הכתבה (שגיאת רשת/JS):\n' + (e && e.message ? e.message : String(e)));
       console.error('[news.js] writeNewsDraft חריגה:', e);
     } finally {
       if (btn) { btn.disabled = false; btn.textContent = originalText; }
