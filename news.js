@@ -74,7 +74,7 @@
 
   // ═══════════ כותרות (RSS) ═══════════
 
-  window.refreshCarNews = async function (btn) {
+  window.refreshCarNews = async function (btn, region) {
     const client = initNewsClient();
     if (!client) { alert('אין חיבור לשרת — נסה לרענן את הדף.'); return; }
     const token = await getAuthToken();
@@ -85,6 +85,7 @@
       const res = await fetch(EDGE_BASE + '/fetch-car-news', {
         method: 'POST',
         headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
+        body: JSON.stringify(region ? { region: region } : {}),
       });
       const json = await res.json();
       if (!res.ok) {
@@ -237,23 +238,23 @@
       const subEl = document.getElementById('a-sub');
       const catEl = document.getElementById('a-cat');
       const bodyEl = document.getElementById('a-body');
+      const flashTitleEl = document.getElementById('a-flash-title');
+      const flashTextEl = document.getElementById('a-flash-text');
 
       if (titleEl) titleEl.value = draft.headline || '';
       if (subEl) subEl.value = draft.subheadline || '';
       if (catEl && draft.suggested_category) catEl.value = draft.suggested_category;
-
-      // מרכיבים את גוף הכתבה: התוכן המלא + הגרסה המקוצרת (פלאש) כהערה בתחתית לעריכה שלך
-      let fullBody = draft.body || '';
-      if (draft.flash_headline || draft.flash_body) {
-        fullBody += '\n\n---\nגרסת פלאש (לשימושך, להעתקה לשדות הפלאש בטופס אם רלוונטי):\n' +
-          (draft.flash_headline ? 'כותרת: ' + draft.flash_headline + '\n' : '') +
-          (draft.flash_body ? draft.flash_body : '');
+      if (bodyEl) bodyEl.value = draft.body || '';
+      // גרסת הפלאש הולכת בדיוק לאזור "חדשות בקליק" הקיים, לא לגוף הכתבה הראשית
+      if (flashTitleEl) flashTitleEl.value = draft.flash_headline || '';
+      if (flashTextEl) {
+        flashTextEl.value = draft.flash_body || '';
+        try { window.spFlashWordCount && window.spFlashWordCount(); } catch (e) {}
       }
-      if (bodyEl) bodyEl.value = fullBody;
 
       if (typeof window.toggleSpecsSection === 'function' && catEl) window.toggleSpecsSection(catEl.value);
       window.scrollTo({ top: 0, behavior: 'smooth' });
-      alert('הטיוטה נטענה לטופס. בדוק את התוכן, הוסף תמונה, ולחץ "פרסם כתבה" כרגיל. שים לב: הצעת ה-SEO (meta description) הייתה: "' + (draft.meta_description || '') + '"');
+      alert('הטיוטה נטענה לטופס — גם הכתבה המלאה וגם המבזק המהיר (בשדות "חדשות בקליק"). בדוק את התוכן, הוסף תמונה, ולחץ "פרסם כתבה" כרגיל. הצעת ה-SEO (meta description) הייתה: "' + (draft.meta_description || '') + '"');
     } catch (e) {
       alert('שגיאה בטעינת הטיוטה לטופס.');
       console.error('[news.js] loadDraftIntoForm חריגה:', e);
