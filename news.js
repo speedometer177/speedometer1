@@ -163,6 +163,27 @@
     return d.toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' });
   }
 
+  // תאריך ושעה מלאים של הכתבה המקורית (לא רק "היום/אתמול" היחסי) —
+  // לדוגמה: "03.08.2026, 14:32". מוצג ליד כל כותרת כדי לדעת בדיוק מתי
+  // המקור פרסם, לא רק את הקיבוץ היחסי.
+  function formatFullDateTime(dateStr) {
+    const d = new Date(dateStr);
+    if (isNaN(d.getTime())) return '';
+    const datePart = d.toLocaleDateString('he-IL', { day: '2-digit', month: '2-digit', year: 'numeric' });
+    const timePart = d.toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' });
+    return datePart + ', ' + timePart;
+  }
+
+  // תג אזור זוהר — "מקומי" בכחול כהה זוהר לכתבות ישראליות, "עולמי" בלבן
+  // זוהר לכתבות מהעולם. עיצוב שונה במכוון מ-adm-cat-pill הרגיל כדי שהעין
+  // תתפוס מיד לאיזה שוק הכתבה שייכת, עוד לפני קריאת הכותרת עצמה.
+  function regionGlowPill(region) {
+    if (region === 'il') {
+      return '<span style="display:inline-flex;align-items:center;gap:4px;background:#0a1a4d;color:#7ab8ff;font-size:0.68rem;font-weight:800;padding:3px 10px;border-radius:12px;border:1px solid #2a5fd4;box-shadow:0 0 8px rgba(42,95,212,0.6),inset 0 0 6px rgba(122,184,255,0.15);letter-spacing:0.03em;">🇮🇱 מקומי</span>';
+    }
+    return '<span style="display:inline-flex;align-items:center;gap:4px;background:#fdfdfd;color:#333;font-size:0.68rem;font-weight:800;padding:3px 10px;border-radius:12px;border:1px solid #fff;box-shadow:0 0 10px rgba(255,255,255,0.85),0 0 3px rgba(255,255,255,0.9);letter-spacing:0.03em;">🌍 עולמי</span>';
+  }
+
   // תג חשיבות — מבוסס על ניתוח Gemini האמיתי שנשמר ב-importance_score/reason
   // (ראו fetch-car-news). אם אין ציון (למשל נאסף לפני שהתכונה נוספה, או
   // שהניתוח נכשל), לא מוצג תג בכלל — עדיף היעדר מידע על מספר מזויף.
@@ -207,7 +228,29 @@
       if (error) { list.innerHTML = '<div class="adm-empty-state">שגיאה בטעינת הכותרות: ' + escapeAttr(error.message) + '</div>'; console.error('[news.js] טעינת כותרות נכשלה:', error); return; }
       if (!data || !data.length) { list.innerHTML = '<div class="adm-empty-state">אין כותרות עדיין ' + (_headlinesFilter !== 'all' ? 'באזור הזה ' : '') + '— לחץ על אחד מכפתורי הרענון למעלה.</div>'; return; }
 
+      // "לוח מומלצים" — 5 הכותרות הכי חמות+טריות שעדיין לא טופלו (לא נכתבה
+      // עליהן טיוטה ולא נדחו), תמיד למעלה בלי קשר למיון/סינון הנבחר. המטרה:
+      // לדעת במבט אחד על מה לכתוב היום, בלי לגלול ולסנן ידנית.
+      const openItems = data.filter(function (h) { return h.status !== 'drafted' && h.status !== 'dismissed'; });
+      const topPicks = openItems.slice().sort(function (a, b) {
+        const scoreA = a.importance_score || 0, scoreB = b.importance_score || 0;
+        if (scoreB !== scoreA) return scoreB - scoreA;
+        const dateA = new Date(a.published_at || a.fetched_at || 0).getTime();
+        const dateB = new Date(b.published_at || b.fetched_at || 0).getTime();
+        return dateB - dateA;
+      }).slice(0, 5);
+
       let html = '';
+      if (topPicks.length) {
+        html += '<div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">' +
+          '<span style="font-weight:800;font-size:0.95rem;">🎯 מומלץ לכתיבה היום</span>' +
+          '<span style="font-size:0.72rem;color:var(--adm-muted);">הכי חם + הכי טרי, לא תלוי במיון למטה</span></div>';
+        topPicks.forEach(function (h) {
+          html += renderHeadlineRow(h, true);
+        });
+        html += '<div style="border-bottom:2px solid var(--adm-accent,#ff9d2e);margin:16px 0 6px;"></div>';
+      }
+
       let lastGroupLabel = null;
       data.forEach(function (h) {
         if (_headlinesSort === 'new') {
@@ -218,35 +261,42 @@
             lastGroupLabel = groupLabel;
           }
         }
-        const regionPill = '<span class="adm-cat-pill">' + (REGION_LABELS[h.region] || h.region) + '</span>';
-        const badge = importanceBadge(h.importance_score, h.importance_reason);
-        const timeLabel = h.published_at ? '<span>' + formatTime(h.published_at) + '</span>' : '';
-        let statusBadge = '';
-        if (h.status === 'drafted') statusBadge = '<span class="adm-badge-active">נכתבה טיוטה</span>';
-        else if (h.status === 'dismissed') statusBadge = '<span class="adm-badge-inactive">נדחה</span>';
-        const writeBtn = h.status === 'drafted'
-          ? ''
-          : '<button class="tbl-btn" onclick="writeNewsDraft(' + h.id + ',this)">✍️ כתוב כתבה</button>';
-        html += '<div class="adm-row">' +
-          '<div class="adm-row-top">' +
-            '<div class="adm-row-info">' +
-              '<div class="adm-row-title">' + escapeAttr(h.title) + ' ' + statusBadge + '</div>' +
-              '<div class="adm-row-meta">' + regionPill + badge + '<span>' + escapeAttr(h.source_name) + '</span>' + timeLabel + '</div>' +
-            '</div>' +
-          '</div>' +
-          '<div class="adm-row-bottom">' +
-            '<a href="' + escapeAttr(h.source_url) + '" target="_blank" rel="noopener" class="tbl-btn">מקור ↗</a>' +
-            '<div class="tbl-actions">' + writeBtn +
-              '<button class="tbl-btn del" onclick="dismissHeadline(' + h.id + ')">✕ דחה</button>' +
-            '</div>' +
-          '</div>' +
-        '</div>';
+        html += renderHeadlineRow(h, false);
       });
       list.innerHTML = html;
     } catch (e) {
       list.innerHTML = '<div class="adm-empty-state">שגיאה בטעינת הכותרות.</div>';
       console.error('[news.js] loadHeadlines חריגה:', e);
     }
+  }
+
+  // בונה שורת HTML לכותרת אחת. highlighted=true מוסיף מסגרת בולטת — משמש
+  // ללוח ה"מומלצים" כדי להבדיל אותו ויזואלית מהרשימה הרגילה למטה.
+  function renderHeadlineRow(h, highlighted) {
+    const regionPill = regionGlowPill(h.region);
+    const badge = importanceBadge(h.importance_score, h.importance_reason);
+    const timeLabel = h.published_at ? '<span>🕐 ' + formatFullDateTime(h.published_at) + '</span>' : '<span style="color:var(--adm-muted);">תאריך לא ידוע</span>';
+    let statusBadge = '';
+    if (h.status === 'drafted') statusBadge = '<span class="adm-badge-active">נכתבה טיוטה</span>';
+    else if (h.status === 'dismissed') statusBadge = '<span class="adm-badge-inactive">נדחה</span>';
+    const writeBtn = h.status === 'drafted'
+      ? ''
+      : '<button class="tbl-btn" onclick="writeNewsDraft(' + h.id + ',this)">✍️ כתוב כתבה</button>';
+    const rowStyle = highlighted ? ' style="border:1.5px solid var(--adm-accent,#ff9d2e);border-radius:8px;margin-bottom:8px;"' : '';
+    return '<div class="adm-row"' + rowStyle + '>' +
+      '<div class="adm-row-top">' +
+        '<div class="adm-row-info">' +
+          '<div class="adm-row-title">' + escapeAttr(h.title) + ' ' + statusBadge + '</div>' +
+          '<div class="adm-row-meta">' + regionPill + badge + '<span>' + escapeAttr(h.source_name) + '</span>' + timeLabel + '</div>' +
+        '</div>' +
+      '</div>' +
+      '<div class="adm-row-bottom">' +
+        '<a href="' + escapeAttr(h.source_url) + '" target="_blank" rel="noopener" class="tbl-btn">מקור ↗</a>' +
+        '<div class="tbl-actions">' + writeBtn +
+          '<button class="tbl-btn del" onclick="dismissHeadline(' + h.id + ')">✕ דחה</button>' +
+        '</div>' +
+      '</div>' +
+    '</div>';
   }
 
   window.writeNewsDraft = async function (headlineId, btn) {
@@ -318,6 +368,10 @@
           '<div class="adm-row-bottom">' +
             '<div style="font-size:0.78rem;color:var(--adm-muted);flex:1;min-width:150px;">' + escapeAttr((d.subheadline || '').slice(0, 90)) + '</div>' +
             '<div class="tbl-actions">' +
+              '<button class="tbl-btn" style="background:#25D366;color:#fff;border-color:#25D366;display:flex;align-items:center;gap:5px;" onclick="copyFlashToClipboard(' + d.id + ',this)" title="העתק כותרת + חדשות בקצרה ללוח">' +
+                '<svg viewBox="0 0 24 24" fill="currentColor" width="13" height="13" aria-hidden="true"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>' +
+                'העתק לוואטסאפ' +
+              '</button>' +
               '<button class="tbl-btn" onclick="loadDraftIntoForm(' + d.id + ')">📝 טען לעריכה ופרסום</button>' +
               '<button class="tbl-btn del" onclick="discardDraft(' + d.id + ')">✕ מחק טיוטה</button>' +
             '</div>' +
@@ -338,6 +392,27 @@
       await client.from('news_drafts').update({ status: 'discarded' }).eq('id', draftId);
       loadDrafts();
     } catch (e) { alert('שגיאה במחיקת הטיוטה.'); console.error('[news.js] discardDraft נכשל:', e); }
+  };
+
+  // מעתיק ללוח את "חדשות בקצרה" (כותרת + טקסט) בפורמט מוכן להדבקה ישירה
+  // בקבוצת הוואטסאפ הרשמית — לא שולח כלום אוטומטית, רק מכין ללוח (Ctrl+V).
+  window.copyFlashToClipboard = async function (draftId, btn) {
+    const client = initNewsClient();
+    if (!client) return;
+    const originalHTML = btn ? btn.innerHTML : null;
+    try {
+      const { data: draft, error } = await client.from('news_drafts').select('flash_headline,flash_body').eq('id', draftId).single();
+      if (error || !draft) { alert('שגיאה בטעינת הטקסט להעתקה.'); return; }
+      const text = (draft.flash_headline || '').trim() + '\n\n' + (draft.flash_body || '').trim();
+      await navigator.clipboard.writeText(text);
+      if (btn) {
+        btn.innerHTML = '✓ הועתק!';
+        setTimeout(function () { if (btn) btn.innerHTML = originalHTML; }, 1800);
+      }
+    } catch (e) {
+      alert('שגיאה בהעתקה ללוח — ייתכן שהדפדפן חוסם גישה ללוח ללא HTTPS.');
+      console.error('[news.js] copyFlashToClipboard חריגה:', e);
+    }
   };
 
   window.loadDraftIntoForm = async function (draftId) {
