@@ -126,10 +126,18 @@
   };
 
   let _headlinesFilter = 'all';
+  let _headlinesSort = 'hot'; // 'hot' = הכי חם (importance_score) קודם, 'new' = הכי חדש (published_at) קודם
 
   window.setHeadlinesFilter = function (region, el) {
     _headlinesFilter = region;
     document.querySelectorAll('.news-region-tab').forEach(function (b) { b.classList.remove('active'); });
+    if (el) el.classList.add('active');
+    loadHeadlines();
+  };
+
+  window.setHeadlinesSort = function (mode, el) {
+    _headlinesSort = mode;
+    document.querySelectorAll('.news-sort-tab').forEach(function (b) { b.classList.remove('active'); });
     if (el) el.classList.add('active');
     loadHeadlines();
   };
@@ -180,10 +188,20 @@
     try {
       // מיון לפי תאריך הפרסום המקורי (הכי חדש קודם); כתבות בלי published_at
       // (עדיין לא נתמך מהמקור) יורדות לסוף הרשימה במקום לבלבל את הסדר.
-      let query = client.from('news_headlines').select('*')
-        .order('published_at', { ascending: false, nullsFirst: false })
-        .order('fetched_at', { ascending: false })
-        .limit(150);
+      // מיון לפי המצב הנבחר: "הכי חם" (importance_score קודם, ואז תאריך
+      // כשובר שוויון) או "הכי חדש" (תאריך פרסום קודם). כתבות בלי ציון/תאריך
+      // (nulls) יורדות לסוף הרשימה במקום לבלבל את הסדר.
+      let query = client.from('news_headlines').select('*');
+      if (_headlinesSort === 'hot') {
+        query = query
+          .order('importance_score', { ascending: false, nullsFirst: false })
+          .order('published_at', { ascending: false, nullsFirst: false });
+      } else {
+        query = query
+          .order('published_at', { ascending: false, nullsFirst: false })
+          .order('fetched_at', { ascending: false });
+      }
+      query = query.limit(150);
       if (_headlinesFilter === 'il' || _headlinesFilter === 'world') query = query.eq('region', _headlinesFilter);
       const { data, error } = await query;
       if (error) { list.innerHTML = '<div class="adm-empty-state">שגיאה בטעינת הכותרות: ' + escapeAttr(error.message) + '</div>'; console.error('[news.js] טעינת כותרות נכשלה:', error); return; }
@@ -192,11 +210,13 @@
       let html = '';
       let lastGroupLabel = null;
       data.forEach(function (h) {
-        const sortDate = h.published_at || h.fetched_at;
-        const groupLabel = dayLabel(sortDate);
-        if (groupLabel !== lastGroupLabel) {
-          html += '<div class="adm-empty-state" style="text-align:right;padding:10px 4px 6px;font-weight:800;color:var(--adm-accent,#ff9d2e);border-bottom:1px solid var(--adm-border,var(--border));margin-top:14px;">' + groupLabel + '</div>';
-          lastGroupLabel = groupLabel;
+        if (_headlinesSort === 'new') {
+          const sortDate = h.published_at || h.fetched_at;
+          const groupLabel = dayLabel(sortDate);
+          if (groupLabel !== lastGroupLabel) {
+            html += '<div class="adm-empty-state" style="text-align:right;padding:10px 4px 6px;font-weight:800;color:var(--adm-accent,#ff9d2e);border-bottom:1px solid var(--adm-border,var(--border));margin-top:14px;">' + groupLabel + '</div>';
+            lastGroupLabel = groupLabel;
+          }
         }
         const regionPill = '<span class="adm-cat-pill">' + (REGION_LABELS[h.region] || h.region) + '</span>';
         const badge = importanceBadge(h.importance_score, h.importance_reason);
