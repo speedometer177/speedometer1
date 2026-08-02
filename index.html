@@ -2193,6 +2193,10 @@ body.dark-mode .ad-slot-skyscraper{background:var(--dm-surface);border-color:var
         <button class="hp-tab news-subtab" onclick="newsSubTab('drafts',this)">✅ כתבות מוכנות</button>
       </div>
       <div id="news-headlines-panel">
+        <div style="display:flex;gap:8px;margin-bottom:12px;">
+          <button class="tbl-btn news-sort-tab active" style="flex:1;padding:9px;" onclick="setHeadlinesSort('hot',this)">🔥 הכי חם</button>
+          <button class="tbl-btn news-sort-tab" style="flex:1;padding:9px;" onclick="setHeadlinesSort('new',this)">🕐 הכי חדש</button>
+        </div>
         <div class="adm-rows-list" id="news-headlines-list"></div>
       </div>
       <div id="news-drafts-panel" style="display:none;">
