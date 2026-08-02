@@ -134,30 +134,84 @@
     loadHeadlines();
   };
 
+  // תווית יום יחסית בעברית — "היום" / "אתמול" / תאריך מלא, בהשראת קיבוץ
+  // ההודעות בטלגרם. עובד על published_at אם קיים, אחרת נופל חזרה ל-fetched_at.
+  function dayLabel(dateStr) {
+    if (!dateStr) return 'תאריך לא ידוע';
+    const d = new Date(dateStr);
+    if (isNaN(d.getTime())) return 'תאריך לא ידוע';
+    const now = new Date();
+    const startOfDay = function (x) { return new Date(x.getFullYear(), x.getMonth(), x.getDate()).getTime(); };
+    const diffDays = Math.round((startOfDay(now) - startOfDay(d)) / 86400000);
+    if (diffDays === 0) return 'היום';
+    if (diffDays === 1) return 'אתמול';
+    if (diffDays > 1 && diffDays <= 6) return d.toLocaleDateString('he-IL', { weekday: 'long' });
+    return d.toLocaleDateString('he-IL', { day: 'numeric', month: 'short', year: 'numeric' });
+  }
+
+  function formatTime(dateStr) {
+    const d = new Date(dateStr);
+    if (isNaN(d.getTime())) return '';
+    return d.toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' });
+  }
+
+  // תג חשיבות — מבוסס על ניתוח Gemini האמיתי שנשמר ב-importance_score/reason
+  // (ראו fetch-car-news). אם אין ציון (למשל נאסף לפני שהתכונה נוספה, או
+  // שהניתוח נכשל), לא מוצג תג בכלל — עדיף היעדר מידע על מספר מזויף.
+  function importanceBadge(score, reason) {
+    if (!score) return '';
+    const styles = {
+      5: { bg: '#e8001d', label: '🔥 בוער' },
+      4: { bg: '#ff6a00', label: '⚡ חשוב' },
+      3: { bg: '#ffb020', label: '● משמעותי' },
+      2: { bg: '#8993a3', label: '○ שולי' },
+      1: { bg: '#5a6472', label: '· בסיסי' },
+    };
+    const s = styles[score] || styles[3];
+    const title = reason ? escapeAttr(reason) : '';
+    return '<span class="adm-cat-pill" style="background:' + s.bg + ';color:#fff;" title="' + title + '">' + s.label + '</span>';
+  }
+
   async function loadHeadlines() {
     const client = initNewsClient();
     const list = document.getElementById('news-headlines-list');
     if (!list || !client) return;
     list.innerHTML = '<div class="adm-empty-state">טוען...</div>';
     try {
-      let query = client.from('news_headlines').select('*').order('fetched_at', { ascending: false }).limit(150);
+      // מיון לפי תאריך הפרסום המקורי (הכי חדש קודם); כתבות בלי published_at
+      // (עדיין לא נתמך מהמקור) יורדות לסוף הרשימה במקום לבלבל את הסדר.
+      let query = client.from('news_headlines').select('*')
+        .order('published_at', { ascending: false, nullsFirst: false })
+        .order('fetched_at', { ascending: false })
+        .limit(150);
       if (_headlinesFilter === 'il' || _headlinesFilter === 'world') query = query.eq('region', _headlinesFilter);
       const { data, error } = await query;
       if (error) { list.innerHTML = '<div class="adm-empty-state">שגיאה בטעינת הכותרות: ' + escapeAttr(error.message) + '</div>'; console.error('[news.js] טעינת כותרות נכשלה:', error); return; }
       if (!data || !data.length) { list.innerHTML = '<div class="adm-empty-state">אין כותרות עדיין ' + (_headlinesFilter !== 'all' ? 'באזור הזה ' : '') + '— לחץ על אחד מכפתורי הרענון למעלה.</div>'; return; }
-      list.innerHTML = data.map(function (h) {
+
+      let html = '';
+      let lastGroupLabel = null;
+      data.forEach(function (h) {
+        const sortDate = h.published_at || h.fetched_at;
+        const groupLabel = dayLabel(sortDate);
+        if (groupLabel !== lastGroupLabel) {
+          html += '<div class="adm-empty-state" style="text-align:right;padding:10px 4px 6px;font-weight:800;color:var(--adm-accent,#ff9d2e);border-bottom:1px solid var(--adm-border,var(--border));margin-top:14px;">' + groupLabel + '</div>';
+          lastGroupLabel = groupLabel;
+        }
         const regionPill = '<span class="adm-cat-pill">' + (REGION_LABELS[h.region] || h.region) + '</span>';
+        const badge = importanceBadge(h.importance_score, h.importance_reason);
+        const timeLabel = h.published_at ? '<span>' + formatTime(h.published_at) + '</span>' : '';
         let statusBadge = '';
         if (h.status === 'drafted') statusBadge = '<span class="adm-badge-active">נכתבה טיוטה</span>';
         else if (h.status === 'dismissed') statusBadge = '<span class="adm-badge-inactive">נדחה</span>';
         const writeBtn = h.status === 'drafted'
           ? ''
           : '<button class="tbl-btn" onclick="writeNewsDraft(' + h.id + ',this)">✍️ כתוב כתבה</button>';
-        return '<div class="adm-row">' +
+        html += '<div class="adm-row">' +
           '<div class="adm-row-top">' +
             '<div class="adm-row-info">' +
               '<div class="adm-row-title">' + escapeAttr(h.title) + ' ' + statusBadge + '</div>' +
-              '<div class="adm-row-meta">' + regionPill + '<span>' + escapeAttr(h.source_name) + '</span></div>' +
+              '<div class="adm-row-meta">' + regionPill + badge + '<span>' + escapeAttr(h.source_name) + '</span>' + timeLabel + '</div>' +
             '</div>' +
           '</div>' +
           '<div class="adm-row-bottom">' +
@@ -167,7 +221,8 @@
             '</div>' +
           '</div>' +
         '</div>';
-      }).join('');
+      });
+      list.innerHTML = html;
     } catch (e) {
       list.innerHTML = '<div class="adm-empty-state">שגיאה בטעינת הכותרות.</div>';
       console.error('[news.js] loadHeadlines חריגה:', e);
