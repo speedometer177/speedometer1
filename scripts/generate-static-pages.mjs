@@ -234,7 +234,14 @@ function hydrateTemplateForArticle(template, a) {
   const canonicalUrl = `${SITE}/article/${a.id}/`;
   const catLabel = CAT_LABELS[a.cat] || a.cat;
   const isoDate = toISODateTime(a.date, a.time);
-  const bodyHTML = parseBodyToHTML(a.body, a.body_images, a.title);
+  const liveUpdates = Array.isArray(a.live_updates) ? a.live_updates : [];
+  const liveUpdatesHTML = liveUpdates.length
+    ? liveUpdates.slice().reverse().map(u =>
+        `<div style="background:var(--red-light);border-right:3px solid var(--red);border-radius:0 6px 6px 0;padding:10px 16px;margin-bottom:16px;font-size:0.92rem;line-height:1.6;"><strong style="color:var(--red);">🔴 עדכון ${esc(u.time || '')}:</strong> ${esc(u.text || '')}</div>`
+      ).join('')
+    : '';
+  const bodyHTML = liveUpdatesHTML + parseBodyToHTML(a.body, a.body_images, a.title);
+  const latestUpdateTs = liveUpdates.length ? liveUpdates[liveUpdates.length - 1].ts : null;
   const readMins = Math.max(1, Math.ceil((a.body || '').split(/\s+/).filter(Boolean).length / 200));
   const shareImg = ogImage(img); // תמונת שיתוף 1200x630 JPG
 
@@ -254,7 +261,7 @@ function hydrateTemplateForArticle(template, a) {
     },
     mainEntityOfPage: { '@type': 'WebPage', '@id': canonicalUrl }
   };
-  if (isoDate) { schema.datePublished = isoDate; schema.dateModified = isoDate; }
+  if (isoDate) { schema.datePublished = isoDate; schema.dateModified = latestUpdateTs || isoDate; }
   if (a.cat === 'review' && a.score) {
     schema.reviewRating = { '@type': 'Rating', ratingValue: parseFloat(a.score), bestRating: 10, worstRating: 1 };
     schema.itemReviewed = {
@@ -515,7 +522,7 @@ function injectBetween(html, name, content) {
 async function fetchArticles(supabase) {
   const { data, error } = await supabase
     .from('articles')
-    .select('id,title,sub,cat,author,date,time,img,body,body_images,score,specs,deleted')
+    .select('id,title,sub,cat,author,date,time,img,body,body_images,score,specs,deleted,live_updates')
     .order('id', { ascending: false });
   if (error) throw new Error(`Supabase fetch failed: ${error.message}`);
   return (data || []).filter(a => !a.deleted && a.cat !== 'quick');
