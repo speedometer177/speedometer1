@@ -126,7 +126,7 @@
   };
 
   let _headlinesFilter = 'all';
-  let _headlinesSort = 'hot'; // 'hot' = הכי חם (importance_score) קודם, 'new' = הכי חדש (published_at) קודם
+  let _headlinesSort = 'new'; // ברירת מחדל: הכי חדש קודם (לא "הכי חם") — כדי שרענון תמיד יראה מיד את הכי טרי
 
   window.setHeadlinesFilter = function (region, el) {
     _headlinesFilter = region;
@@ -231,7 +231,19 @@
       // "לוח מומלצים" — 5 הכותרות הכי חמות+טריות שעדיין לא טופלו (לא נכתבה
       // עליהן טיוטה ולא נדחו), תמיד למעלה בלי קשר למיון/סינון הנבחר. המטרה:
       // לדעת במבט אחד על מה לכתוב היום, בלי לגלול ולסנן ידנית.
-      const openItems = data.filter(function (h) { return h.status !== 'drafted' && h.status !== 'dismissed'; });
+      //
+      // חשוב: מוגבל ל-24 השעות האחרונות בלבד (לא רק "לא טופל") — אחרת כתבה
+      // ישנה עם ציון חשיבות גבוה (למשל ריקול בטיחות מלפני יומיים) הייתה
+      // "נתקעת" בלוח לצמיתות עד שמישהו מטפל בה ידנית, גם כשהמיון הראשי
+      // כבר עבר הלאה לכתבות חדשות יותר.
+      const TOP_PICKS_MAX_AGE_HOURS = 24;
+      const openItems = data.filter(function (h) {
+        if (h.status === 'drafted' || h.status === 'dismissed') return false;
+        const sortDate = h.published_at || h.fetched_at;
+        if (!sortDate) return true; // בלי תאריך בכלל — לא פוסלים, פשוט לא נדע לתעדף לפי טריות
+        const ageHours = (Date.now() - new Date(sortDate).getTime()) / 3600000;
+        return ageHours <= TOP_PICKS_MAX_AGE_HOURS;
+      });
       const topPicks = openItems.slice().sort(function (a, b) {
         const scoreA = a.importance_score || 0, scoreB = b.importance_score || 0;
         if (scoreB !== scoreA) return scoreB - scoreA;
