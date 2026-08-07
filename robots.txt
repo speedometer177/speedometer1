@@ -2,3 +2,4 @@ User-agent: *
 Allow: /
 
 Sitemap: https://speedometer10.co.il/sitemap.xml
+Sitemap: https://speedometer10.co.il/sitemap-news.xml
