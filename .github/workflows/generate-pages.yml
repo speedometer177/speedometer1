@@ -52,7 +52,7 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add article/* sitemap.xml index.html 404.html
+          git add article/* sitemap.xml sitemap-news.xml index.html 404.html
           if git diff --cached --quiet; then
             echo "No changes to commit."
             exit 0
@@ -73,7 +73,7 @@ jobs:
             git fetch origin ${{ github.ref_name }}
             git reset --hard origin/${{ github.ref_name }}
             npm run generate
-            git add article/* sitemap.xml index.html 404.html
+            git add article/* sitemap.xml sitemap-news.xml index.html 404.html
             if git diff --cached --quiet; then
               echo "✅ Origin already up to date after regeneration — nothing to push."
               exit 0
@@ -83,3 +83,16 @@ jobs:
           done
           echo "❌ Push failed after 5 attempts."
           exit 1
+
+      - name: Notify IndexNow (push instant Google/Bing indexing)
+        run: |
+          # שולף את כל ה-URLs מה-sitemap שכן עודכן, ושולח פינג אחד ל-IndexNow —
+          # זה מודיע לבינג (מיידית) ולגוגל (בהדרגה, שותפים בפרוטוקול) שהתוכן
+          # השתנה, במקום לחכות שיגלו לבד בסריקה הבאה. לא דורש חשבון/הרשמה —
+          # המפתח מאומת דרך קובץ ה-txt הציבורי שכבר יושב בשורש האתר.
+          URLS=$(grep -oP '(?<=<loc>)[^<]+' sitemap.xml | python3 -c "import sys, json; print(json.dumps([l.strip() for l in sys.stdin if l.strip()]))")
+          curl -s -X POST "https://api.indexnow.org/indexnow" \
+            -H "Content-Type: application/json; charset=utf-8" \
+            -d "{\"host\":\"speedometer10.co.il\",\"key\":\"ebb52cb45b3d9cad4278400cfb17e026\",\"keyLocation\":\"https://speedometer10.co.il/ebb52cb45b3d9cad4278400cfb17e026.txt\",\"urlList\":${URLS}}" \
+            -o /tmp/indexnow_response.txt -w "IndexNow response code: %{http_code}\n"
+          cat /tmp/indexnow_response.txt || true
