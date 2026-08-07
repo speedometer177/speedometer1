@@ -51,6 +51,7 @@ const SITE_DIR = path.resolve(process.cwd());                  // שורש הר�
 const TEMPLATE_PATH = path.join(SITE_DIR, 'index.html');
 const OUT_DIR = path.resolve(process.cwd(), 'article');         // פלט: article/{id}/index.html
 const SITEMAP_PATH = path.resolve(process.cwd(), 'sitemap.xml');
+const NEWS_SITEMAP_PATH = path.resolve(process.cwd(), 'sitemap-news.xml');
 
 const CAT_LABELS = {
   local: 'חדשות מקומיות', world: 'חדשות עולמיות', review: 'מבחן רכב',
@@ -375,6 +376,36 @@ function buildSitemap(articles) {
   return `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n  ${urls}\n</urlset>\n`;
 }
 
+// News Sitemap בפורמט הרשמי של גוגל ניוז — נפרד לגמרי מה-sitemap הרגיל.
+// דרישה קריטית של גוגל: לכלול *רק* כתבות שפורסמו ב-48 השעות האחרונות —
+// כתבות ישנות יותר לא רק שלא עוזרות, אלא עלולות לפגוע באמינות הפיד בעיני
+// גוגל ("News Sitemap צריך לשקף רק תוכן טרי, לא ארכיון"). הפרסום ל-
+// Google News/Discover דורש גם הגשה חד-פעמית ב-Publisher Center (לא קוד).
+function buildNewsSitemap(articles) {
+  const twoDaysAgoMs = Date.now() - 48 * 60 * 60 * 1000;
+  const recent = articles.filter(a => {
+    const iso = toISODateTime(a.date, a.time);
+    if (!iso) return false;
+    const t = new Date(iso).getTime();
+    return !isNaN(t) && t >= twoDaysAgoMs;
+  });
+  const urls = recent.map(a => {
+    const pubDate = toISODateTime(a.date, a.time) || new Date().toISOString();
+    return `  <url>
+    <loc>${SITE}/article/${a.id}/</loc>
+    <news:news>
+      <news:publication>
+        <news:name>ספידומטר</news:name>
+        <news:language>he</news:language>
+      </news:publication>
+      <news:publication_date>${pubDate}</news:publication_date>
+      <news:title>${esc(a.title)}</news:title>
+    </news:news>
+  </url>`;
+  }).join('\n');
+  return `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:news="http://www.google.com/schemas/sitemap-news/0.9">\n${urls}\n</urlset>\n`;
+}
+
 /* ═══ אופטימיזציית LCP: פונקציות זהות 1:1 לצד הלקוח (index.html) ═══
    קריטי: אם הנוסחה כאן שונה מהלקוח, ה-preload יוריד URL אחר ממה שהדף מרנדר
    והדפדפן יוריד את התמונה פעמיים. כל שינוי כאן מחייב שינוי זהה ב-index.html. */
@@ -599,6 +630,9 @@ async function main() {
 
   await writeFile(SITEMAP_PATH, buildSitemap(liveArticles), 'utf-8');
   console.log(`🗺️  sitemap.xml נכתב עם ${liveArticles.length + 1} כתובות.`);
+
+  await writeFile(NEWS_SITEMAP_PATH, buildNewsSitemap(liveArticles), 'utf-8');
+  console.log(`📰 sitemap-news.xml נכתב (רק כתבות מ-48 השעות האחרונות).`);
 
   console.log('🎉 הסתיים בהצלחה.');
 }
