@@ -44,15 +44,4 @@
       <news:title>מתחם טעינה חדש לרכבים חשמליים בעין גב</news:title>
     </news:news>
   </url>
-  <url>
-    <loc>https://speedometer10.co.il/article/464/</loc>
-    <news:news>
-      <news:publication>
-        <news:name>ספידומטר</news:name>
-        <news:language>he</news:language>
-      </news:publication>
-      <news:publication_date>2026-08-09T08:54:00.000Z</news:publication_date>
-      <news:title>דאצ&#39;יה מציגה: דאסטר וביגסטר היברידיים עם הנעה כפולה</news:title>
-    </news:news>
-  </url>
 </urlset>
