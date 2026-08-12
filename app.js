@@ -496,20 +496,41 @@ function adminTab(tab,el){document.querySelectorAll('.admin-tab').forEach(b=>b.c
 /* חיפוש כתבות בטבלת הניהול — עובד על כל articles שכבר בזיכרון (syncFromSupabase
    טוען את כולן בלי הגבלת limit, כולל ישנות), אז אין צורך בשליפה נוספת מהשרת. */
 let _adminSearchTerm='';
-window.filterAdminTable=function(term){_adminSearchTerm=(term||'').trim().toLowerCase();renderAdminTable();};
+window.filterAdminTable=function(term){
+  _adminSearchTerm=(term||'').trim().toLowerCase();
+  const clearBtn=document.getElementById('admin-search-clear');
+  const countEl=document.getElementById('admin-search-count');
+  if(clearBtn)clearBtn.style.display=_adminSearchTerm?'block':'none';
+  renderAdminTable();
+  if(countEl){
+    if(_adminSearchTerm){
+      const n=articles.filter(a=>(a.title||'').toLowerCase().includes(_adminSearchTerm)||(a.author||'').toLowerCase().includes(_adminSearchTerm)).length;
+      countEl.textContent=n+' תוצאות נמצאו';countEl.style.display='block';
+    }else{countEl.style.display='none';}
+  }
+};
 
-/* פאנל 10 הכתבות הנצפות ביותר — לא מושפע מהחיפוש, תמיד מציג את הטופ הכללי */
+/* פאנל 10 הכתבות הנצפות ביותר — לא מושפע מהחיפוש, תמיד מציג את הטופ הכללי.
+   דירוג #1-3 מודגש בזהב/כסף/ארד, שאר השורות בסגנון אחיד תואם לערכת הנושא. */
 function renderTopViewed(){const box=document.getElementById('admin-top-viewed-list');if(!box)return;
   const top=articles.slice().sort((a,b)=>(b.views||0)-(a.views||0)).slice(0,10);
   if(!top.length){box.innerHTML='<div class="adm-empty-state">אין עדיין כתבות עם צפיות.</div>';return;}
-  box.innerHTML=top.map((a,i)=>
-    '<div style="display:flex;align-items:center;gap:10px;padding:8px 4px;border-bottom:1px solid var(--border);">'
-      +'<span style="font-weight:800;color:var(--adm-accent,#ff9d2e);min-width:22px;">#'+(i+1)+'</span>'
-      +'<span style="flex:1;font-size:0.88rem;cursor:pointer;" onclick="viewArticle('+a.id+')">'+a.title+'</span>'
-      +'<span style="font-size:0.82rem;color:var(--adm-muted);white-space:nowrap;">'+(a.views||0)+' צפיות</span>'
-      +'<button class="tbl-btn" onclick="editArticle('+a.id+')" style="padding:4px 10px;font-size:0.78rem;">ערוך</button>'
-    +'</div>'
-  ).join('');
+  const rankColors=['#ffd700','#c0c0c0','#cd7f32'];
+  const maxViews=Math.max(1,top[0].views||0);
+  box.innerHTML=top.map((a,i)=>{
+    const rankColor=rankColors[i]||'var(--adm-surface-2)';
+    const rankTextColor=i<3?'#0a0e14':'var(--adm-muted)';
+    const pct=Math.max(6,Math.round(((a.views||0)/maxViews)*100));
+    return '<div style="display:flex;align-items:center;gap:12px;padding:10px 6px;border-bottom:1px solid var(--adm-border);transition:background 0.15s;" onmouseover="this.style.background=\'var(--adm-surface-2)\'" onmouseout="this.style.background=\'transparent\'">'
+      +'<span style="font-family:var(--adm-num);font-weight:800;font-size:0.85rem;min-width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:'+rankColor+';color:'+rankTextColor+';flex-shrink:0;">'+(i+1)+'</span>'
+      +'<div style="flex:1;min-width:0;cursor:pointer;" onclick="viewArticle('+a.id+')">'
+        +'<div style="font-size:0.88rem;font-weight:600;color:var(--adm-text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">'+a.title+'</div>'
+        +'<div style="height:4px;border-radius:2px;background:var(--adm-surface-2);margin-top:5px;overflow:hidden;"><div style="height:100%;width:'+pct+'%;background:var(--adm-accent);border-radius:2px;"></div></div>'
+      +'</div>'
+      +'<span style="font-family:var(--adm-num);font-size:0.85rem;font-weight:700;color:var(--adm-accent);white-space:nowrap;flex-shrink:0;">'+(a.views||0).toLocaleString('he-IL')+'</span>'
+      +'<button class="tbl-btn" onclick="editArticle('+a.id+')" style="padding:5px 12px;font-size:0.76rem;flex-shrink:0;">ערוך</button>'
+    +'</div>';
+  }).join('');
 }
 
 /* הכפתור מוזרק ב-adminTab כשנפתח הטאב */ function renderAdminTable(){const tbl=document.getElementById('admin-table');if(!tbl)return;
