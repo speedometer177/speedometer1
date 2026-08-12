@@ -1,6 +1,17 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:news="http://www.google.com/schemas/sitemap-news/0.9">
   <url>
+    <loc>https://speedometer10.co.il/article/484/</loc>
+    <news:news>
+      <news:publication>
+        <news:name>ספידומטר</news:name>
+        <news:language>he</news:language>
+      </news:publication>
+      <news:publication_date>2026-08-12T17:16:00.000Z</news:publication_date>
+      <news:title>קדילאק מציעה לאסקלייד IQ התאמה אישית בסגנון רולס-רויס</news:title>
+    </news:news>
+  </url>
+  <url>
     <loc>https://speedometer10.co.il/article/482/</loc>
     <news:news>
       <news:publication>
@@ -64,17 +75,6 @@
       </news:publication>
       <news:publication_date>2026-08-11T08:28:00.000Z</news:publication_date>
       <news:title>לא רק קורולה: אלו הרכבים שנמצאים בסיכון הגבוה ביותר לגניבה</news:title>
-    </news:news>
-  </url>
-  <url>
-    <loc>https://speedometer10.co.il/article/470/</loc>
-    <news:news>
-      <news:publication>
-        <news:name>ספידומטר</news:name>
-        <news:language>he</news:language>
-      </news:publication>
-      <news:publication_date>2026-08-10T17:13:00.000Z</news:publication_date>
-      <news:title>סטייל של קופה: פולקסווגן משיקה את האטלס קרוס ספורט 2026</news:title>
     </news:news>
   </url>
 </urlset>
