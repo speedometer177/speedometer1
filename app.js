@@ -493,9 +493,31 @@ async function clearHeroPosition(position){
 }
 
 function adminTab(tab,el){document.querySelectorAll('.admin-tab').forEach(b=>b.classList.remove('active'));el.classList.add('active');document.getElementById('admin-new').style.display=tab==='new'?'block':'none';document.getElementById('admin-list').style.display=tab==='list'?'block':'none';if(tab==='list'){renderAdminTable();if(!document.getElementById('admin-carousel-btn')){var ab=document.createElement('button');ab.id='admin-carousel-btn';ab.innerHTML='🎠 סדר Hero וקרוסולה';ab.className='adm-hero-btn';ab.onclick=openHeroPositionPicker;var adminList=document.getElementById('admin-list');if(adminList)adminList.insertBefore(ab,adminList.firstChild);}}}
+/* חיפוש כתבות בטבלת הניהול — עובד על כל articles שכבר בזיכרון (syncFromSupabase
+   טוען את כולן בלי הגבלת limit, כולל ישנות), אז אין צורך בשליפה נוספת מהשרת. */
+let _adminSearchTerm='';
+window.filterAdminTable=function(term){_adminSearchTerm=(term||'').trim().toLowerCase();renderAdminTable();};
+
+/* פאנל 10 הכתבות הנצפות ביותר — לא מושפע מהחיפוש, תמיד מציג את הטופ הכללי */
+function renderTopViewed(){const box=document.getElementById('admin-top-viewed-list');if(!box)return;
+  const top=articles.slice().sort((a,b)=>(b.views||0)-(a.views||0)).slice(0,10);
+  if(!top.length){box.innerHTML='<div class="adm-empty-state">אין עדיין כתבות עם צפיות.</div>';return;}
+  box.innerHTML=top.map((a,i)=>
+    '<div style="display:flex;align-items:center;gap:10px;padding:8px 4px;border-bottom:1px solid var(--border);">'
+      +'<span style="font-weight:800;color:var(--adm-accent,#ff9d2e);min-width:22px;">#'+(i+1)+'</span>'
+      +'<span style="flex:1;font-size:0.88rem;cursor:pointer;" onclick="viewArticle('+a.id+')">'+a.title+'</span>'
+      +'<span style="font-size:0.82rem;color:var(--adm-muted);white-space:nowrap;">'+(a.views||0)+' צפיות</span>'
+      +'<button class="tbl-btn" onclick="editArticle('+a.id+')" style="padding:4px 10px;font-size:0.78rem;">ערוך</button>'
+    +'</div>'
+  ).join('');
+}
+
 /* הכפתור מוזרק ב-adminTab כשנפתח הטאב */ function renderAdminTable(){const tbl=document.getElementById('admin-table');if(!tbl)return;
+  renderTopViewed();
+  const term=_adminSearchTerm;
+  const filtered=term?articles.filter(a=>(a.title||'').toLowerCase().includes(term)||(a.author||'').toLowerCase().includes(term)):articles;
   function thumbOf(a){return a.img&&a.img.length>5?('https://wsrv.nl/?url='+encodeURIComponent(a.img)+'&w=140&fit=cover&output=webp&q=65'):(CAT_IMAGES[a.cat]||'');}
-  tbl.innerHTML=articles.length?articles.map(a=>
+  tbl.innerHTML=filtered.length?filtered.map(a=>
     '<div class="adm-row">'
       +'<div class="adm-row-top">'
         +'<div class="adm-row-thumb" style="background-image:url(\''+thumbOf(a)+'\')"></div>'
@@ -509,7 +531,7 @@ function adminTab(tab,el){document.querySelectorAll('.admin-tab').forEach(b=>b.c
         +'<div class="tbl-actions"><button class="tbl-btn"onclick="viewArticle('+a.id+')">צפה</button><button class="tbl-btn"onclick="editArticle('+a.id+')">ערוך</button><button class="tbl-btn"onclick="addLiveUpdate('+a.id+')" title="הוסף פסקת עדכון מתוארכת בראש הכתבה, לסיפורים מתפתחים">🔴 עדכון</button><button class="tbl-btn del"onclick="deleteArticle('+a.id+')">מחק</button></div>'
       +'</div>'
     +'</div>'
-  ).join(''):'<div class="adm-empty-state">אין עדיין כתבות שפורסמו.</div>';
+  ).join(''):(term?'<div class="adm-empty-state">לא נמצאו כתבות התואמות לחיפוש "'+_adminSearchTerm+'".</div>':'<div class="adm-empty-state">אין עדיין כתבות שפורסמו.</div>');
 }
 let galleryImages=[];async function handleGalleryUpload(input){const files=Array.from(input.files).slice(0,10-galleryImages.length);for(const file of files){const compressedFile=await compressImageFile(file,300);const src=await uploadImageOrBase64(compressedFile||null);if(src)galleryImages.push({src,caption:''});}
 renderGalleryPreview();input.value='';}
