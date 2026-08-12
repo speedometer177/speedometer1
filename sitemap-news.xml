@@ -66,15 +66,4 @@
       <news:title>סטייל של קופה: פולקסווגן משיקה את האטלס קרוס ספורט 2026</news:title>
     </news:news>
   </url>
-  <url>
-    <loc>https://speedometer10.co.il/article/468/</loc>
-    <news:news>
-      <news:publication>
-        <news:name>ספידומטר</news:name>
-        <news:language>he</news:language>
-      </news:publication>
-      <news:publication_date>2026-08-10T07:39:00.000Z</news:publication_date>
-      <news:title>מהפכה בכבישים: אגף התנועה מקשיח את ספי אכיפת המהירות</news:title>
-    </news:news>
-  </url>
 </urlset>
