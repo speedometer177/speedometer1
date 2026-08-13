@@ -44,37 +44,4 @@
       <news:title>טסלה קוראת לתיקון: כ-20,000 רכבי מודל 3 ו-Y עם פנסים מסנוורים</news:title>
     </news:news>
   </url>
-  <url>
-    <loc>https://speedometer10.co.il/article/478/</loc>
-    <news:news>
-      <news:publication>
-        <news:name>ספידומטר</news:name>
-        <news:language>he</news:language>
-      </news:publication>
-      <news:publication_date>2026-08-11T14:57:00.000Z</news:publication_date>
-      <news:title>איתמר בן גביר נגד מצלמות המהירות: &quot;הדוחות האלה לא אפקטיביים&quot;</news:title>
-    </news:news>
-  </url>
-  <url>
-    <loc>https://speedometer10.co.il/article/476/</loc>
-    <news:news>
-      <news:publication>
-        <news:name>ספידומטר</news:name>
-        <news:language>he</news:language>
-      </news:publication>
-      <news:publication_date>2026-08-11T14:50:00.000Z</news:publication_date>
-      <news:title>למבורגיני דיאבלו חוזרת: 19 יחידות בגרסה מודרנית ויוקרתית</news:title>
-    </news:news>
-  </url>
-  <url>
-    <loc>https://speedometer10.co.il/article/474/</loc>
-    <news:news>
-      <news:publication>
-        <news:name>ספידומטר</news:name>
-        <news:language>he</news:language>
-      </news:publication>
-      <news:publication_date>2026-08-11T13:31:00.000Z</news:publication_date>
-      <news:title>אירופה מחמירה את הנהיגה לצעירים: הגבלת כוח מנוע בדרך לישראל?</news:title>
-    </news:news>
-  </url>
 </urlset>
