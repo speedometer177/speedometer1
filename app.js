@@ -346,7 +346,15 @@ else{const paraCount=rawParts.filter(x=>x.type==='p').length;const interval=Math
 imgQueue.forEach(img=>result.push(figHTML(img)));html=result.join('');}
 if(window.DOMPurify){html=DOMPurify.sanitize(html,{ALLOWED_TAGS:['h2','h3','p','strong','em','blockquote','figure','figcaption','img','br','a','ul','ol','li'],ALLOWED_ATTR:['src','alt','loading','decoding','width','height','class','style','data-lightbox','href','target','rel']});}
 return html;}
-function shareArticle(type){const a=articles.find(x=>x.id===currentArticleId);if(!a)return;if(type==='whatsapp')window.open('https://wa.me/?text='+encodeURIComponent(a.title+' — ספידומטר '+window.location.href));if(type==='copy'){navigator.clipboard.writeText(window.location.href).then(()=>alert('קישור הועתק!'));}}
+function shareArticle(type){const a=articles.find(x=>x.id===currentArticleId);if(!a)return;
+  if(type==='whatsapp'){
+    const parts=['*'+a.title+'*'];
+    if(a.sub&&a.sub.trim())parts.push(a.sub.trim());
+    parts.push(window.location.href);
+    window.open('https://wa.me/?text='+encodeURIComponent(parts.join('\n\n')));
+  }
+  if(type==='copy'){navigator.clipboard.writeText(window.location.href).then(()=>alert('קישור הועתק!'));}
+}
 async function subscribeNewsletter(){const emailEl=document.getElementById('newsletter-email');const email=emailEl?emailEl.value.trim():'';if(!email||!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email)){alert('אנא הזינו כתובת אימייל תקינה');return;}
 try{const r=await fetchT(SB_URL+'/rest/v1/newsletter_subscribers',{method:'POST',headers:{'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY,'Content-Type':'application/json','Prefer':'return=minimal'},body:JSON.stringify({email:email.toLowerCase()})});
 if(r.ok||r.status===409){alert('תודה! נרשמתם בהצלחה לניוזלטר של ספידומטר 🏁');if(emailEl)emailEl.value='';}
