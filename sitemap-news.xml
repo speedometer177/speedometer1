@@ -1,6 +1,28 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:news="http://www.google.com/schemas/sitemap-news/0.9">
   <url>
+    <loc>https://speedometer10.co.il/article/491/</loc>
+    <news:news>
+      <news:publication>
+        <news:name>ספידומטר</news:name>
+        <news:language>he</news:language>
+      </news:publication>
+      <news:publication_date>2026-08-14T11:56:00.000Z</news:publication_date>
+      <news:title>סקודה אוקטביה RS החדשה: זאב בעור של כבש I מבחן רכב מקיף</news:title>
+    </news:news>
+  </url>
+  <url>
+    <loc>https://speedometer10.co.il/article/490/</loc>
+    <news:news>
+      <news:publication>
+        <news:name>ספידומטר</news:name>
+        <news:language>he</news:language>
+      </news:publication>
+      <news:publication_date>2026-08-14T09:33:00.000Z</news:publication_date>
+      <news:title>פולקסווגן חושפת: קרוואן חשמלי מלא מבוסס על ה-ID. Buzz</news:title>
+    </news:news>
+  </url>
+  <url>
     <loc>https://speedometer10.co.il/article/488/</loc>
     <news:news>
       <news:publication>
@@ -31,17 +53,6 @@
       </news:publication>
       <news:publication_date>2026-08-12T17:16:00.000Z</news:publication_date>
       <news:title>קדילאק מציעה לאסקלייד IQ התאמה אישית בסגנון רולס-רויס</news:title>
-    </news:news>
-  </url>
-  <url>
-    <loc>https://speedometer10.co.il/article/482/</loc>
-    <news:news>
-      <news:publication>
-        <news:name>ספידומטר</news:name>
-        <news:language>he</news:language>
-      </news:publication>
-      <news:publication_date>2026-08-12T09:51:00.000Z</news:publication_date>
-      <news:title>אאודי Q7 החדש 2026 נחת בישראל: מחיר מ-689,900 ש&quot;ח</news:title>
     </news:news>
   </url>
   <url>
