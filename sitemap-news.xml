@@ -55,15 +55,4 @@
       <news:title>קדילאק מציעה לאסקלייד IQ התאמה אישית בסגנון רולס-רויס</news:title>
     </news:news>
   </url>
-  <url>
-    <loc>https://speedometer10.co.il/article/480/</loc>
-    <news:news>
-      <news:publication>
-        <news:name>ספידומטר</news:name>
-        <news:language>he</news:language>
-      </news:publication>
-      <news:publication_date>2026-08-12T15:26:00.000Z</news:publication_date>
-      <news:title>טסלה קוראת לתיקון: כ-20,000 רכבי מודל 3 ו-Y עם פנסים מסנוורים</news:title>
-    </news:news>
-  </url>
 </urlset>
