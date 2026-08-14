@@ -44,15 +44,4 @@
       <news:title>מהפכת הבינה המלאכותית בכבישי ישראל: חברת נתיבי ישראל חושפת נתונים</news:title>
     </news:news>
   </url>
-  <url>
-    <loc>https://speedometer10.co.il/article/484/</loc>
-    <news:news>
-      <news:publication>
-        <news:name>ספידומטר</news:name>
-        <news:language>he</news:language>
-      </news:publication>
-      <news:publication_date>2026-08-12T17:16:00.000Z</news:publication_date>
-      <news:title>קדילאק מציעה לאסקלייד IQ התאמה אישית בסגנון רולס-רויס</news:title>
-    </news:news>
-  </url>
 </urlset>
