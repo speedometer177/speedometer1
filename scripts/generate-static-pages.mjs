@@ -312,6 +312,50 @@ function hydrateTemplateForArticle(template, a) {
   const articleSchemaTag = `<script type="application/ld+json" id="article-schema-prerendered">${JSON.stringify(schema)}</script>`;
   html = html.replace('</head>', `${articleSchemaTag}\n</head>`);
 
+  // VideoObject schema — אחד לכל סרטון יוטיוב משובץ בכתבה (yt_urls). מבוסס
+  // רק על מה שקיים בפועל (כותרת/תיאור הכתבה, thumbnail אמיתי מיוטיוב) —
+  // uploadDate הוא תאריך פרסום הכתבה כקירוב סביר, לא התאריך המדויק של
+  // הסרטון עצמו (לא זמין לנו), אבל זה עדיף על השמטת השדה לגמרי.
+  const ytIdRe = /(?:youtube\.com\/(?:watch\?v=|embed\/|shorts\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/;
+  const ytUrls = Array.isArray(a.yt_urls) ? a.yt_urls : [];
+  const videoTags = ytUrls.map((url) => {
+    const m = String(url || '').match(ytIdRe);
+    if (!m) return '';
+    const vid = m[1];
+    const videoSchema = {
+      '@context': 'https://schema.org',
+      '@type': 'VideoObject',
+      name: title,
+      description: desc,
+      thumbnailUrl: [`https://img.youtube.com/vi/${vid}/hqdefault.jpg`],
+      embedUrl: `https://www.youtube.com/embed/${vid}`,
+      uploadDate: isoDate || undefined,
+      publisher: {
+        '@type': 'Organization', name: 'ספידומטר',
+        logo: { '@type': 'ImageObject', url: `${SITE}/logo.png` }
+      }
+    };
+    return `<script type="application/ld+json">${JSON.stringify(videoSchema)}</script>`;
+  }).filter(Boolean).join('\n');
+  if (videoTags) html = html.replace('</head>', `${videoTags}\n</head>`);
+
+  // FAQPage schema — רק כשיש בפועל שאלות/תשובות שמורות בשדה faq (jsonb,
+  // מוזן ידנית בפאנל בעת עריכת מדריך קנייה) — לא ממציאים שאלות שלא הוזנו.
+  const faqItems = Array.isArray(a.faq) ? a.faq.filter((f) => f && f.q && f.a) : [];
+  if (faqItems.length) {
+    const faqSchema = {
+      '@context': 'https://schema.org',
+      '@type': 'FAQPage',
+      mainEntity: faqItems.map((f) => ({
+        '@type': 'Question',
+        name: f.q,
+        acceptedAnswer: { '@type': 'Answer', text: f.a }
+      }))
+    };
+    const faqTag = `<script type="application/ld+json">${JSON.stringify(faqSchema)}</script>`;
+    html = html.replace('</head>', `${faqTag}\n</head>`);
+  }
+
   const overrideCSS = `<style id="prerender-override">
     #home-page{display:none!important;}
     #article-page{display:block!important;}
@@ -553,7 +597,7 @@ function injectBetween(html, name, content) {
 async function fetchArticles(supabase) {
   const { data, error } = await supabase
     .from('articles')
-    .select('id,title,sub,cat,author,date,time,img,body,body_images,score,specs,deleted,live_updates')
+    .select('id,title,sub,cat,author,date,time,img,body,body_images,score,specs,deleted,live_updates,yt_urls,faq')
     .order('id', { ascending: false });
   if (error) throw new Error(`Supabase fetch failed: ${error.message}`);
   return (data || []).filter(a => !a.deleted && a.cat !== 'quick');
