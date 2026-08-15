@@ -577,7 +577,24 @@ function openLightbox(src){let lb=document.getElementById('lightbox-overlay');if
 lb.textContent='';const _im=document.createElement('img');const _s=safeUrl(src);if(!_s){lb.remove();return;}_im.src=_s;_im.alt='תמונה מוגדלת';_im.style.cssText='max-width:95vw;max-height:95vh;object-fit:contain;border-radius:4px;';lb.appendChild(_im);lb.style.display='flex';}
 document.addEventListener('click',function(e){const t=e.target&&e.target.closest?e.target.closest('[data-lightbox]'):null;if(t){e.preventDefault();openLightbox(t.getAttribute('data-lightbox'));}});
 
-async function notifyGoogleIndexing(articleId){ /* האינדוקס מתבצע בצד-שרת דרך Supabase Edge Function + טריגר. אין יותר מפתח פרטי בצד-לקוח. */ return true; }
+async function notifyGoogleIndexing(articleId){
+  // מפעיל מיידית את בניית הדף הסטטי + IndexNow (במקום לחכות לתזמון של
+  // 4 שעות) — קורא ל-Edge Function notify-publish שמפעילה repository_dispatch
+  // ב-GitHub. פועל ברקע (fire-and-forget); לא חוסם את חוויית הפרסום, וגם
+  // לא מכשיל את הפרסום אם זה נכשל (הכתבה עדיין תיבנה בריצה המתוזמנת הבאה).
+  try{
+    if(!sbClient) return true;
+    const {data:sess}=await sbClient.auth.getSession();
+    const tok=sess&&sess.session?sess.session.access_token:null;
+    if(!tok) return true;
+    fetch(SB_URL+'/functions/v1/notify-publish',{
+      method:'POST',
+      headers:{'Authorization':'Bearer '+tok,'Content-Type':'application/json'},
+      body:JSON.stringify({articleId:articleId}),
+    }).catch(()=>{});
+  }catch(e){}
+  return true;
+}
 
 async function publishArticle(){const title=(document.getElementById('a-title').value||'').trim();const body=(document.getElementById('a-body').value||'').trim();if(!title){alert('חובה להזין כותרת!');return;}
 if(!body){alert('חובה להזין תוכן!');return;}
