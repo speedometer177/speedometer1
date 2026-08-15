@@ -67,9 +67,57 @@
       const newsPanel = document.getElementById('admin-news');
       if (!newsPanel) return;
       newsPanel.style.display = tab === 'news' ? '' : 'none';
-      if (tab === 'news') loadHeadlines();
+      if (tab === 'news') { loadHeadlines(); renderMorningBrief(); }
     };
     window.__newsAdminTabWrapped = true;
+  }
+
+  // ═══════════ תדריך בוקר ═══════════
+  // מסכם ב-4 כרטיסים קטנים: כמה כותרות עלו מאתמול ב-18:00, כמה מהן בוערות,
+  // כמה טיוטות ממתינות לפרסום, וכמה כתבות פורסמו אתמול (מתוך articles,
+  // שכבר טעון גלובלית ע"י app.js). מחושב בזמן אמת בכל כניסה ללשונית —
+  // בלי צורך בהתראות/דחיפה, בלי תלות בשירות חיצוני.
+  async function renderMorningBrief() {
+    const client = initNewsClient();
+    const box = document.getElementById('morning-brief-box');
+    if (!box || !client) return;
+    try {
+      const sinceCutoff = new Date();
+      sinceCutoff.setDate(sinceCutoff.getDate() - (sinceCutoff.getHours() < 18 ? 1 : 0));
+      sinceCutoff.setHours(18, 0, 0, 0);
+      const sinceIso = sinceCutoff.toISOString();
+
+      const [{ data: freshHeadlines }, { data: pendingDrafts }] = await Promise.all([
+        client.from('news_headlines').select('id,importance_score').gte('fetched_at', sinceIso),
+        client.from('news_drafts').select('id').eq('status', 'pending'),
+      ]);
+      const totalFresh = freshHeadlines ? freshHeadlines.length : 0;
+      const hotCount = (freshHeadlines || []).filter(function (h) { return (h.importance_score || 0) >= 4; }).length;
+      const draftCount = pendingDrafts ? pendingDrafts.length : 0;
+
+      const yesterday = new Date();
+      yesterday.setDate(yesterday.getDate() - 1);
+      const yesterdayStr = yesterday.toLocaleDateString('he-IL');
+      const publishedYesterday = (typeof articles !== 'undefined' && Array.isArray(articles))
+        ? articles.filter(function (a) { return a.date === yesterdayStr; }).length
+        : 0;
+
+      const cards = [
+        { label: 'כותרות חדשות מאתמול בערב', value: totalFresh, color: 'var(--adm-text)' },
+        { label: 'מהן בוערות (ציון 4-5)', value: hotCount, color: hotCount ? '#e8001d' : 'var(--adm-muted)' },
+        { label: 'טיוטות מוכנות ממתינות', value: draftCount, color: draftCount ? 'var(--adm-accent)' : 'var(--adm-muted)' },
+        { label: 'כתבות שפרסמת אתמול', value: publishedYesterday, color: 'var(--adm-good)' },
+      ];
+      box.innerHTML = cards.map(function (c) {
+        return '<div style="background:var(--adm-surface-2);border:1px solid var(--adm-border);border-radius:12px;padding:14px 12px;text-align:center;">' +
+          '<div style="font-family:var(--adm-num);font-size:1.6rem;font-weight:700;color:' + c.color + ';">' + c.value + '</div>' +
+          '<div style="font-size:0.68rem;color:var(--adm-muted);margin-top:4px;line-height:1.3;">' + c.label + '</div>' +
+        '</div>';
+      }).join('');
+    } catch (e) {
+      box.innerHTML = '<div class="adm-empty-state" style="grid-column:1/-1;">שגיאה בטעינת תדריך הבוקר.</div>';
+      console.error('[news.js] renderMorningBrief חריגה:', e);
+    }
   }
 
   // ═══════════ כותרות (RSS) ═══════════
