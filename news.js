@@ -154,8 +154,20 @@
         const summary = json.results.map(function (r) {
           return (r.ok ? '✅ ' : '❌ ') + r.source + (r.ok ? ' (' + r.count + ')' : ' — ' + (r.error || 'שגיאה'));
         }).join('\n');
+        // שורת סיכום אמיתית: כמה נקראו מול כמה באמת נשמרו ב-DB. בלי זה
+        // אפשר לראות רשימה מלאה של ✅ ירוקים בזמן ששום שורה לא נשמרה.
+        var head = '';
+        if (typeof json.totalProcessed === 'number') {
+          head = '📥 נשמרו בפועל: ' + json.totalProcessed;
+          if (typeof json.totalFetched === 'number') head += ' מתוך ' + json.totalFetched + ' שנקראו';
+          if (json.duplicatesDropped) head += ' (' + json.duplicatesDropped + ' כפילויות סוננו)';
+          head += '\n\n';
+        }
+        if (json.saveErrors && json.saveErrors.length) {
+          head = '⚠️ השמירה ל-DB נכשלה:\n' + json.saveErrors.join('\n') + '\n\n' + head;
+        }
         console.log('[news.js] תוצאות רענון לפי מקור:\n' + summary);
-        alert('רענון הסתיים:\n\n' + summary);
+        alert('רענון הסתיים:\n\n' + head + summary);
       }
       // מסנכרנים את תצוגת הרשימה לאזור שרעננו בפועל — אחרת נשארים על "הכל"
       // ורואים כותרות ישנות מאזור אחר, כאילו הרענון "הביא" משהו לא קשור.
@@ -495,7 +507,7 @@
 
       if (titleEl) titleEl.value = draft.headline || '';
       if (subEl) subEl.value = draft.subheadline || '';
-      if (catEl && draft.suggested_category) catEl.value = draft.suggested_category;
+      if (catEl && draft.suggested_category) { catEl.value = draft.suggested_category; try { window.updateCatBreadcrumbPreview && window.updateCatBreadcrumbPreview(catEl.value); } catch (e) {} }
       if (bodyEl) bodyEl.value = draft.body || '';
       // גרסת הפלאש הולכת בדיוק לאזור "חדשות בקליק" הקיים, לא לגוף הכתבה הראשית
       if (flashTitleEl) flashTitleEl.value = draft.flash_headline || '';
