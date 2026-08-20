@@ -66,26 +66,4 @@
       <news:title>שיא עולמי חדש: מכונית מונעת מימן הגיעה למהירות 650 קמ״ש</news:title>
     </news:news>
   </url>
-  <url>
-    <loc>https://speedometer10.co.il/article/512/</loc>
-    <news:news>
-      <news:publication>
-        <news:name>ספידומטר</news:name>
-        <news:language>he</news:language>
-      </news:publication>
-      <news:publication_date>2026-08-18T16:20:00.000Z</news:publication_date>
-      <news:title>סוף למחדל: מאות אלפי תווי נכה יבוטלו בישראל</news:title>
-    </news:news>
-  </url>
-  <url>
-    <loc>https://speedometer10.co.il/article/511/</loc>
-    <news:news>
-      <news:publication>
-        <news:name>ספידומטר</news:name>
-        <news:language>he</news:language>
-      </news:publication>
-      <news:publication_date>2026-08-18T12:40:00.000Z</news:publication_date>
-      <news:title>איך תחסכו כסף בטעינת הרכב החשמלי בבית?</news:title>
-    </news:news>
-  </url>
 </urlset>
