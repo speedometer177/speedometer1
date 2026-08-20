@@ -66,15 +66,4 @@
       <news:title>איך תחסכו כסף בטעינת הרכב החשמלי בבית?</news:title>
     </news:news>
   </url>
-  <url>
-    <loc>https://speedometer10.co.il/article/509/</loc>
-    <news:news>
-      <news:publication>
-        <news:name>ספידומטר</news:name>
-        <news:language>he</news:language>
-      </news:publication>
-      <news:publication_date>2026-08-18T07:30:00.000Z</news:publication_date>
-      <news:title>נתיבי ישראל חושפת: רמזורים חכמים יקצרו פקקים</news:title>
-    </news:news>
-  </url>
 </urlset>
