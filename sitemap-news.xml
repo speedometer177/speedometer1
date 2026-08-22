@@ -22,26 +22,4 @@
       <news:title>טויוטה ראב 4 2026: רב המכר שהשתכלל I מבחן רכב מקיף</news:title>
     </news:news>
   </url>
-  <url>
-    <loc>https://speedometer10.co.il/article/526/</loc>
-    <news:news>
-      <news:publication>
-        <news:name>ספידומטר</news:name>
-        <news:language>he</news:language>
-      </news:publication>
-      <news:publication_date>2026-08-20T11:20:00.000Z</news:publication_date>
-      <news:title>מרכב וירטואלי למציאות: מעריץ שילם מיליון דולר על רכב ממשחק מחשב</news:title>
-    </news:news>
-  </url>
-  <url>
-    <loc>https://speedometer10.co.il/article/524/</loc>
-    <news:news>
-      <news:publication>
-        <news:name>ספידומטר</news:name>
-        <news:language>he</news:language>
-      </news:publication>
-      <news:publication_date>2026-08-20T11:13:00.000Z</news:publication_date>
-      <news:title>חטיבת ההתאמה האישית: לנד רובר חושפת את דגם האחד-מתוך-אחד</news:title>
-    </news:news>
-  </url>
 </urlset>
