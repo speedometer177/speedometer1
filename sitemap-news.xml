@@ -44,26 +44,4 @@
       <news:title>חטיבת ההתאמה האישית: לנד רובר חושפת את דגם האחד-מתוך-אחד</news:title>
     </news:news>
   </url>
-  <url>
-    <loc>https://speedometer10.co.il/article/522/</loc>
-    <news:news>
-      <news:publication>
-        <news:name>ספידומטר</news:name>
-        <news:language>he</news:language>
-      </news:publication>
-      <news:publication_date>2026-08-20T07:19:00.000Z</news:publication_date>
-      <news:title>ג&#39;נסיס GV90 שנת 2027: רכב הדגל החשמלי נחשף</news:title>
-    </news:news>
-  </url>
-  <url>
-    <loc>https://speedometer10.co.il/article/520/</loc>
-    <news:news>
-      <news:publication>
-        <news:name>ספידומטר</news:name>
-        <news:language>he</news:language>
-      </news:publication>
-      <news:publication_date>2026-08-20T06:39:00.000Z</news:publication_date>
-      <news:title>דוחות היבואניות: כמה יבואני הרכב מרווחים?</news:title>
-    </news:news>
-  </url>
 </urlset>
