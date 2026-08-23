@@ -22,15 +22,4 @@
       <news:title>טסלה בראש: ריקול ענק ל-4.3 מיליון מכוניות חשמליות</news:title>
     </news:news>
   </url>
-  <url>
-    <loc>https://speedometer10.co.il/article/529/</loc>
-    <news:news>
-      <news:publication>
-        <news:name>ספידומטר</news:name>
-        <news:language>he</news:language>
-      </news:publication>
-      <news:publication_date>2026-08-21T09:10:00.000Z</news:publication_date>
-      <news:title>אכיפה בכביש 443: קרוב ל-50 כלי רכב הורדו מהכביש</news:title>
-    </news:news>
-  </url>
 </urlset>
