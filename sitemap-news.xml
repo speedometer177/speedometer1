@@ -44,15 +44,4 @@
       <news:title>מהפכה בלונדון: הרובוט שיחנה לכם את הרכב</news:title>
     </news:news>
   </url>
-  <url>
-    <loc>https://speedometer10.co.il/article/531/</loc>
-    <news:news>
-      <news:publication>
-        <news:name>ספידומטר</news:name>
-        <news:language>he</news:language>
-      </news:publication>
-      <news:publication_date>2026-08-22T19:35:00.000Z</news:publication_date>
-      <news:title>טסלה בראש: ריקול ענק ל-4.3 מיליון מכוניות חשמליות</news:title>
-    </news:news>
-  </url>
 </urlset>
