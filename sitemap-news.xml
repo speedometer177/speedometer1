@@ -44,15 +44,4 @@
       <news:title>טויוטה פרואייס ורסו בישראל: גרסת נוסעים מ-285 אלף שקלים</news:title>
     </news:news>
   </url>
-  <url>
-    <loc>https://speedometer10.co.il/article/539/</loc>
-    <news:news>
-      <news:publication>
-        <news:name>ספידומטר</news:name>
-        <news:language>he</news:language>
-      </news:publication>
-      <news:publication_date>2026-08-24T10:16:00.000Z</news:publication_date>
-      <news:title>טויוטה MR2 חוזרת: מכונית הספורט המרכזית בדרך ל-2028</news:title>
-    </news:news>
-  </url>
 </urlset>
