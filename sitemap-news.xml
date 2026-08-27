@@ -1,6 +1,17 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:news="http://www.google.com/schemas/sitemap-news/0.9">
   <url>
+    <loc>https://speedometer10.co.il/article/553/</loc>
+    <news:news>
+      <news:publication>
+        <news:name>ספידומטר</news:name>
+        <news:language>he</news:language>
+      </news:publication>
+      <news:publication_date>2026-08-27T11:49:00.000Z</news:publication_date>
+      <news:title>משבר ידיות הדלתות בסין: מיליוני כלי רכב בקריאת תיקון</news:title>
+    </news:news>
+  </url>
+  <url>
     <loc>https://speedometer10.co.il/article/551/</loc>
     <news:news>
       <news:publication>
@@ -53,17 +64,6 @@
       </news:publication>
       <news:publication_date>2026-08-25T13:10:00.000Z</news:publication_date>
       <news:title>חוויית לקוח עגומה: שירות הרובוטקסי של טסלה מספק תקלות</news:title>
-    </news:news>
-  </url>
-  <url>
-    <loc>https://speedometer10.co.il/article/541/</loc>
-    <news:news>
-      <news:publication>
-        <news:name>ספידומטר</news:name>
-        <news:language>he</news:language>
-      </news:publication>
-      <news:publication_date>2026-08-25T09:11:00.000Z</news:publication_date>
-      <news:title>טויוטה פרואייס ורסו בישראל: גרסת נוסעים מ-285 אלף שקלים</news:title>
     </news:news>
   </url>
 </urlset>
