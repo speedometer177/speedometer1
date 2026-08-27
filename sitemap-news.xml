@@ -1,6 +1,17 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:news="http://www.google.com/schemas/sitemap-news/0.9">
   <url>
+    <loc>https://speedometer10.co.il/article/555/</loc>
+    <news:news>
+      <news:publication>
+        <news:name>ספידומטר</news:name>
+        <news:language>he</news:language>
+      </news:publication>
+      <news:publication_date>2026-08-27T15:22:00.000Z</news:publication_date>
+      <news:title>עדכון תוכנה חדש: טסלה משחררת את עדכון הקיץ גם לרכבים ותיקים</news:title>
+    </news:news>
+  </url>
+  <url>
     <loc>https://speedometer10.co.il/article/553/</loc>
     <news:news>
       <news:publication>
@@ -53,17 +64,6 @@
       </news:publication>
       <news:publication_date>2026-08-25T17:38:00.000Z</news:publication_date>
       <news:title>יצירת אמנות מוטורית: מרצדס ג&#39;י-קלאס ייחודית מוצעת ב-3.5 מיליון דולר</news:title>
-    </news:news>
-  </url>
-  <url>
-    <loc>https://speedometer10.co.il/article/543/</loc>
-    <news:news>
-      <news:publication>
-        <news:name>ספידומטר</news:name>
-        <news:language>he</news:language>
-      </news:publication>
-      <news:publication_date>2026-08-25T13:10:00.000Z</news:publication_date>
-      <news:title>חוויית לקוח עגומה: שירות הרובוטקסי של טסלה מספק תקלות</news:title>
     </news:news>
   </url>
 </urlset>
