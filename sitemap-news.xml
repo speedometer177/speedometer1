@@ -1,6 +1,17 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:news="http://www.google.com/schemas/sitemap-news/0.9">
   <url>
+    <loc>https://speedometer10.co.il/article/557/</loc>
+    <news:news>
+      <news:publication>
+        <news:name>ספידומטר</news:name>
+        <news:language>he</news:language>
+      </news:publication>
+      <news:publication_date>2026-08-28T10:43:00.000Z</news:publication_date>
+      <news:title>מבחן הקיצון של BYD: סוללת יאנגוואנג U7 שרדה 350 טעינות מהירות בשבוע</news:title>
+    </news:news>
+  </url>
+  <url>
     <loc>https://speedometer10.co.il/article/555/</loc>
     <news:news>
       <news:publication>
@@ -42,17 +53,6 @@
       </news:publication>
       <news:publication_date>2026-08-26T15:25:00.000Z</news:publication_date>
       <news:title>תשובה לסינים: יונדאי מנחיתה טוסון היברידי-נטען בישראל - כל הפרטים</news:title>
-    </news:news>
-  </url>
-  <url>
-    <loc>https://speedometer10.co.il/article/547/</loc>
-    <news:news>
-      <news:publication>
-        <news:name>ספידומטר</news:name>
-        <news:language>he</news:language>
-      </news:publication>
-      <news:publication_date>2026-08-26T06:55:00.000Z</news:publication_date>
-      <news:title>שדרוג ליוקרה: שברולט חושפת עיצוב מעודכן לטראוורס היי קאנטרי</news:title>
     </news:news>
   </url>
 </urlset>
