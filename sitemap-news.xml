@@ -11,26 +11,4 @@
       <news:title>מבחן הקיצון של BYD: סוללת יאנגוואנג U7 שרדה 350 טעינות מהירות בשבוע</news:title>
     </news:news>
   </url>
-  <url>
-    <loc>https://speedometer10.co.il/article/555/</loc>
-    <news:news>
-      <news:publication>
-        <news:name>ספידומטר</news:name>
-        <news:language>he</news:language>
-      </news:publication>
-      <news:publication_date>2026-08-27T15:22:00.000Z</news:publication_date>
-      <news:title>עדכון תוכנה חדש: טסלה משחררת את עדכון הקיץ גם לרכבים ותיקים</news:title>
-    </news:news>
-  </url>
-  <url>
-    <loc>https://speedometer10.co.il/article/553/</loc>
-    <news:news>
-      <news:publication>
-        <news:name>ספידומטר</news:name>
-        <news:language>he</news:language>
-      </news:publication>
-      <news:publication_date>2026-08-27T11:49:00.000Z</news:publication_date>
-      <news:title>משבר ידיות הדלתות בסין: מיליוני כלי רכב בקריאת תיקון</news:title>
-    </news:news>
-  </url>
 </urlset>
