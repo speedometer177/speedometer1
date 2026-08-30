@@ -1,6 +1,17 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:news="http://www.google.com/schemas/sitemap-news/0.9">
   <url>
+    <loc>https://speedometer10.co.il/article/563/</loc>
+    <news:news>
+      <news:publication>
+        <news:name>ספידומטר</news:name>
+        <news:language>he</news:language>
+      </news:publication>
+      <news:publication_date>2026-08-30T15:49:00.000Z</news:publication_date>
+      <news:title>שיא של 14 שנה: מחיר הדלק מזנק ל-8.25 שקלים, באוצר שוקלים הפחתת מס הבלו</news:title>
+    </news:news>
+  </url>
+  <url>
     <loc>https://speedometer10.co.il/article/561/</loc>
     <news:news>
       <news:publication>
@@ -20,17 +31,6 @@
       </news:publication>
       <news:publication_date>2026-08-29T17:22:00.000Z</news:publication_date>
       <news:title>שיתוף מידע בזמן אמת: וולוו תזהיר נהגים מתאונות בכביש</news:title>
-    </news:news>
-  </url>
-  <url>
-    <loc>https://speedometer10.co.il/article/557/</loc>
-    <news:news>
-      <news:publication>
-        <news:name>ספידומטר</news:name>
-        <news:language>he</news:language>
-      </news:publication>
-      <news:publication_date>2026-08-28T10:46:00.000Z</news:publication_date>
-      <news:title>מבחן הקיצון של BYD: סוללת יאנגוואנג U7 שרדה 350 טעינות מהירות בשבוע</news:title>
     </news:news>
   </url>
   <url>
