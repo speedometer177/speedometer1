@@ -1,6 +1,17 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:news="http://www.google.com/schemas/sitemap-news/0.9">
   <url>
+    <loc>https://speedometer10.co.il/article/575/</loc>
+    <news:news>
+      <news:publication>
+        <news:name>ספידומטר</news:name>
+        <news:language>he</news:language>
+      </news:publication>
+      <news:publication_date>2026-08-31T18:54:00.000Z</news:publication_date>
+      <news:title>טעינה חשמלית ב-5 דקות: ג&#39;ילי משנה את כללי המשחק</news:title>
+    </news:news>
+  </url>
+  <url>
     <loc>https://speedometer10.co.il/article/572/</loc>
     <news:news>
       <news:publication>
@@ -53,17 +64,6 @@
       </news:publication>
       <news:publication_date>2026-08-30T07:23:00.000Z</news:publication_date>
       <news:title>בדרך לישראל? חשמלית זעירה וזולה במיוחד של BYD צפויה להכנס לאירופה</news:title>
-    </news:news>
-  </url>
-  <url>
-    <loc>https://speedometer10.co.il/article/528/</loc>
-    <news:news>
-      <news:publication>
-        <news:name>ספידומטר</news:name>
-        <news:language>he</news:language>
-      </news:publication>
-      <news:publication_date>2026-08-29T20:13:00.000Z</news:publication_date>
-      <news:title>טויוטה ראב 4 2026: רב המכר שהשתכלל I מבחן רכב מקיף</news:title>
     </news:news>
   </url>
 </urlset>
