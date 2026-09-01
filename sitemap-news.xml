@@ -44,26 +44,4 @@
       <news:title>מחקר חושף: מסכי הנוסע לצד הנהג ברכב פופולריים הרבה פחות משחשבנו</news:title>
     </news:news>
   </url>
-  <url>
-    <loc>https://speedometer10.co.il/article/567/</loc>
-    <news:news>
-      <news:publication>
-        <news:name>ספידומטר</news:name>
-        <news:language>he</news:language>
-      </news:publication>
-      <news:publication_date>2026-08-30T21:27:00.000Z</news:publication_date>
-      <news:title>אחרי הניילונים: כמה באמת איבד הרכב שלכם מהערך שלו אחרי שנה על הכביש?</news:title>
-    </news:news>
-  </url>
-  <url>
-    <loc>https://speedometer10.co.il/article/565/</loc>
-    <news:news>
-      <news:publication>
-        <news:name>ספידומטר</news:name>
-        <news:language>he</news:language>
-      </news:publication>
-      <news:publication_date>2026-08-30T20:53:00.000Z</news:publication_date>
-      <news:title>המהפכה של טויוטה: האם הקורולה הבאה תהפוך לחשמלית?</news:title>
-    </news:news>
-  </url>
 </urlset>
