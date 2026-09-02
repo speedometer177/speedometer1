@@ -1,6 +1,17 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:news="http://www.google.com/schemas/sitemap-news/0.9">
   <url>
+    <loc>https://speedometer10.co.il/article/590/</loc>
+    <news:news>
+      <news:publication>
+        <news:name>ספידומטר</news:name>
+        <news:language>he</news:language>
+      </news:publication>
+      <news:publication_date>2026-09-02T17:31:00.000Z</news:publication_date>
+      <news:title>BYD אטו 2 במבחן: נכנס לנעליים גדולות I מבחן דרכים מקיף</news:title>
+    </news:news>
+  </url>
+  <url>
     <loc>https://speedometer10.co.il/article/588/</loc>
     <news:news>
       <news:publication>
@@ -64,17 +75,6 @@
       </news:publication>
       <news:publication_date>2026-09-01T07:40:00.000Z</news:publication_date>
       <news:title>350 יחידות: לקסוס IS זוכה למהדורה מוגבלת לשנת 2027</news:title>
-    </news:news>
-  </url>
-  <url>
-    <loc>https://speedometer10.co.il/article/575/</loc>
-    <news:news>
-      <news:publication>
-        <news:name>ספידומטר</news:name>
-        <news:language>he</news:language>
-      </news:publication>
-      <news:publication_date>2026-08-31T18:54:00.000Z</news:publication_date>
-      <news:title>טעינה חשמלית ב-5 דקות: ג&#39;ילי משנה את כללי המשחק</news:title>
     </news:news>
   </url>
 </urlset>
