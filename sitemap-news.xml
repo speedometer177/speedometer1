@@ -1,6 +1,17 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:news="http://www.google.com/schemas/sitemap-news/0.9">
   <url>
+    <loc>https://speedometer10.co.il/article/591/</loc>
+    <news:news>
+      <news:publication>
+        <news:name>ספידומטר</news:name>
+        <news:language>he</news:language>
+      </news:publication>
+      <news:publication_date>2026-09-03T07:22:00.000Z</news:publication_date>
+      <news:title>ריינג&#39; רובר EV נחשף: חשמלי שלא מפחד ממים עמוקים</news:title>
+    </news:news>
+  </url>
+  <url>
     <loc>https://speedometer10.co.il/article/590/</loc>
     <news:news>
       <news:publication>
@@ -64,17 +75,6 @@
       </news:publication>
       <news:publication_date>2026-09-02T15:23:00.000Z</news:publication_date>
       <news:title>&quot;סזוקי משיקה רכב חדש ב-60,000 שקל&quot; לאן נעלמה סזוקי אלטו הפופולארית?</news:title>
-    </news:news>
-  </url>
-  <url>
-    <loc>https://speedometer10.co.il/article/578/</loc>
-    <news:news>
-      <news:publication>
-        <news:name>ספידומטר</news:name>
-        <news:language>he</news:language>
-      </news:publication>
-      <news:publication_date>2026-09-01T07:40:00.000Z</news:publication_date>
-      <news:title>350 יחידות: לקסוס IS זוכה למהדורה מוגבלת לשנת 2027</news:title>
     </news:news>
   </url>
 </urlset>
