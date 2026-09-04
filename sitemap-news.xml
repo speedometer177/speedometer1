@@ -33,26 +33,4 @@
       <news:title>BYD אטו 2 במבחן: נכנס לנעליים גדולות I מבחן דרכים מקיף</news:title>
     </news:news>
   </url>
-  <url>
-    <loc>https://speedometer10.co.il/article/588/</loc>
-    <news:news>
-      <news:publication>
-        <news:name>ספידומטר</news:name>
-        <news:language>he</news:language>
-      </news:publication>
-      <news:publication_date>2026-09-02T14:27:00.000Z</news:publication_date>
-      <news:title>האגדה חוזרת: מיצובישי חשפה את הפאג&#39;רו החדש</news:title>
-    </news:news>
-  </url>
-  <url>
-    <loc>https://speedometer10.co.il/article/581/</loc>
-    <news:news>
-      <news:publication>
-        <news:name>ספידומטר</news:name>
-        <news:language>he</news:language>
-      </news:publication>
-      <news:publication_date>2026-09-02T15:23:00.000Z</news:publication_date>
-      <news:title>&quot;סזוקי משיקה רכב חדש ב-60,000 שקל&quot; לאן נעלמה סזוקי אלטו הפופולארית?</news:title>
-    </news:news>
-  </url>
 </urlset>
