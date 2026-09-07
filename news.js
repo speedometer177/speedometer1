@@ -11,6 +11,10 @@
  *      שכותבת טיוטה מלאה (Gemini) בסגנון הקבוע של האתר.
  *   3. "כתבות מוכנות" — טוען טיוטה לתוך טופס "כתבה חדשה" הרגיל,
  *      כדי שתעבור בדיקה ידנית ותפורסם דרך אותו נתיב פרסום קיים ובדוק.
+ *   4. "🔍 בדוק תקינות" — קורא ל-Edge Function verify-draft-article:
+ *      בדיקת ניסוח/מבנה מיידית + בדיקת עובדות מול כתבת המקור בפועל
+ *      דרך Gemini. כתבה שלא עברה בהצלחה חוסמת (עם אישור מפורש לעקוף)
+ *      את הכפתור "טען לעריכה ופרסום".
  * ---------------------------------------------------------------
  */
 (function () {
@@ -22,6 +26,11 @@
   let newsClient = null;
 
   const REGION_LABELS = { il: 'ישראל', world: 'עולם' };
+
+  // תוצאות בדיקת התקינות האחרונה לכל טיוטה, בזיכרון בלבד (לא נשמר ב-DB) —
+  // מתאפס בכל טעינה מחדש של הדף, כדי לוודא שהבדיקה שרלוונטית היא תמיד
+  // הבדיקה האחרונה שרצה בפועל על התוכן הנוכחי.
+  const draftVerifications = {};
 
   function escapeAttr(s) {
     return String(s || '').replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
@@ -444,9 +453,11 @@
                 '<svg viewBox="0 0 24 24" fill="currentColor" width="13" height="13" aria-hidden="true"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>' +
                 'העתק לוואטסאפ' +
               '</button>' +
+              '<button class="tbl-btn" id="verify-btn-' + d.id + '" onclick="verifyDraft(' + d.id + ',this)" title="בדיקת אמינות אוטומטית מול המקור לפני פרסום">🔍 בדוק תקינות</button>' +
               '<button class="tbl-btn" onclick="loadDraftIntoForm(' + d.id + ')">📝 טען לעריכה ופרסום</button>' +
               '<button class="tbl-btn del" onclick="discardDraft(' + d.id + ')">✕ מחק טיוטה</button>' +
             '</div>' +
+            '<div id="draft-verify-' + d.id + '" style="width:100%;"></div>' +
           '</div>' +
         '</div>';
       }).join('');
@@ -487,9 +498,125 @@
     }
   };
 
+  // ═══════════ בדיקת תקינות/אמינות לפני פרסום ═══════════
+  // קוראת ל-Edge Function verify-draft-article: בדיקות ניסוח/מבנה מיידיות
+  // + בדיקת עובדות מול כתבת המקור בפועל דרך Gemini. התוצאה נשמרת בזיכרון
+  // (draftVerifications) ונבדקת שוב ב-loadDraftIntoForm לפני שממשיכים
+  // לטופס הפרסום — כתבה שלא עברה בדיקה בהצלחה חוסמת את ההמשך עד אישור
+  // מפורש (confirm) של המשתמש.
+  window.verifyDraft = async function (draftId, btn) {
+    const token = await getAuthToken();
+    if (!token) { alert('יש להתחבר לניהול קודם.'); return; }
+    const resultEl = document.getElementById('draft-verify-' + draftId);
+    const originalText = btn ? btn.textContent : null;
+    if (btn) { btn.disabled = true; btn.textContent = '🔄 בודק...'; }
+    if (resultEl) resultEl.innerHTML = '<div style="font-size:0.78rem;color:var(--adm-muted);margin-top:6px;">בודק ניסוח, מבנה, ומאמת עובדות מול כתבת המקור — עד כ-15 שניות...</div>';
+    try {
+      const res = await fetch(EDGE_BASE + '/verify-draft-article', {
+        method: 'POST',
+        headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ draftId: draftId }),
+      });
+      const rawText = await res.text();
+      let json = null;
+      try { json = JSON.parse(rawText); } catch (e) { /* לא JSON תקני — נטפל למטה */ }
+      if (!res.ok || !json || json.error) {
+        const detail = (json && json.error) ? json.error : ('קוד ' + res.status + ': ' + rawText.slice(0, 200));
+        draftVerifications[draftId] = { ok: false, blockingIssues: [{ category: 'שגיאה בבדיקה', text: detail }], warnings: [] };
+      } else {
+        draftVerifications[draftId] = json;
+      }
+      renderVerifyResult(draftId);
+    } catch (e) {
+      draftVerifications[draftId] = { ok: false, blockingIssues: [{ category: 'שגיאה בבדיקה', text: String(e && e.message ? e.message : e) }], warnings: [] };
+      renderVerifyResult(draftId);
+    } finally {
+      if (btn) { btn.disabled = false; btn.textContent = originalText; }
+    }
+  };
+
+  function renderVerifyResult(draftId) {
+    const resultEl = document.getElementById('draft-verify-' + draftId);
+    const result = draftVerifications[draftId];
+    if (!resultEl || !result) return;
+    if (result.ok) {
+      let html = '<div style="font-size:0.78rem;color:#2ecc71;margin-top:6px;font-weight:600;">✓ עברה בדיקה — לא נמצאו בעיות אמינות מול המקור</div>';
+      if (result.warnings && result.warnings.length) {
+        html += '<div style="font-size:0.74rem;color:var(--adm-muted);margin-top:3px;">אזהרות סגנון (לא חוסמות פרסום): ' +
+          result.warnings.map(function (w) { return escapeAttr(w.text); }).join(' · ') + '</div>';
+      }
+      resultEl.innerHTML = html;
+    } else {
+      const issues = (result.blockingIssues || []).map(function (i) {
+        return '<li>' + escapeAttr(i.category) + ': ' + escapeAttr(i.text) + '</li>';
+      }).join('');
+      let html = '<div style="font-size:0.78rem;color:#e74c3c;margin-top:6px;font-weight:600;">✕ נמצאו בעיות — פרסום חסום עד אישור מפורש</div>' +
+        '<ul style="font-size:0.74rem;color:var(--adm-muted);margin:4px 0 0;padding-inline-start:16px;">' + issues + '</ul>';
+
+      const suggestions = result.fieldSuggestions || {};
+      const fieldsWithSuggestion = Object.keys(suggestions);
+      if (fieldsWithSuggestion.length) {
+        const fieldLabels = { headline: 'כותרת', subheadline: 'כותרת משנה', body: 'גוף הכתבה', flash_headline: 'כותרת מבזק', flash_body: 'גוף מבזק' };
+        html += '<div style="font-size:0.74rem;color:var(--adm-muted);margin-top:8px;font-weight:600;">💡 הצעות תיקון (לא מוחלות אוטומטית — אתה מאשר):</div>';
+        html += fieldsWithSuggestion.map(function (field) {
+          const label = fieldLabels[field] || field;
+          const full = suggestions[field] || '';
+          const preview = escapeAttr(full.length > 200 ? full.slice(0, 200) + '…' : full);
+          return '<div style="border:1px solid #444;border-radius:6px;padding:6px 8px;margin-top:4px;">' +
+            '<div style="font-size:0.73rem;font-weight:600;margin-bottom:2px;">' + escapeAttr(label) + '</div>' +
+            '<div style="font-size:0.72rem;color:var(--adm-muted);white-space:pre-wrap;">' + preview + '</div>' +
+            '<button class="tbl-btn" style="margin-top:4px;font-size:0.72rem;" onclick="applyDraftFix(' + draftId + ',\'' + field + '\',this)">✓ אמץ תיקון לשדה זה</button>' +
+          '</div>';
+        }).join('');
+      }
+      resultEl.innerHTML = html;
+    }
+  }
+
+  // מחליף שדה בודד בטיוטה בטקסט המוצע שהתקבל מהבדיקה. לא רץ אוטומטית —
+  // רק כשהמשתמש לוחץ במפורש "אמץ תיקון". אחרי האימוץ, תוצאת הבדיקה
+  // הקודמת נמחקת (כי התוכן השתנה) ומבקשים להריץ בדיקה מחדש כדי לוודא
+  // שהבעיה אכן נפתרה — לא סומכים עיוורת על התיקון המוצע.
+  window.applyDraftFix = async function (draftId, field, btn) {
+    const client = initNewsClient();
+    if (!client) return;
+    const result = draftVerifications[draftId];
+    const suggestion = result && result.fieldSuggestions && result.fieldSuggestions[field];
+    if (!suggestion) { alert('אין הצעת תיקון זמינה לשדה הזה.'); return; }
+    if (!confirm('להחליף את השדה בטקסט המוצע?\n\nמומלץ להריץ שוב "🔍 בדוק תקינות" אחרי האימוץ כדי לוודא שהבעיה נפתרה בפועל.')) return;
+    const originalText = btn ? btn.textContent : null;
+    if (btn) { btn.disabled = true; btn.textContent = 'שומר...'; }
+    try {
+      const update = {};
+      update[field] = suggestion;
+      const { error } = await client.from('news_drafts').update(update).eq('id', draftId);
+      if (error) { alert('שגיאה בשמירת התיקון: ' + error.message); return; }
+      delete draftVerifications[draftId];
+      const resultEl = document.getElementById('draft-verify-' + draftId);
+      if (resultEl) resultEl.innerHTML = '<div style="font-size:0.76rem;color:var(--adm-muted);margin-top:6px;">✓ התיקון נשמר בטיוטה. לחץ שוב "🔍 בדוק תקינות" כדי לוודא שהבעיה נפתרה.</div>';
+    } catch (e) {
+      alert('שגיאה בשמירת התיקון: ' + (e && e.message ? e.message : e));
+    } finally {
+      if (btn) { btn.disabled = false; btn.textContent = originalText; }
+    }
+  };
+
   window.loadDraftIntoForm = async function (draftId) {
     const client = initNewsClient();
     if (!client) return;
+
+    const verification = draftVerifications[draftId];
+    if (!verification || !verification.ok) {
+      const issuesText = (verification && verification.blockingIssues && verification.blockingIssues.length)
+        ? verification.blockingIssues.map(function (i) { return '• ' + i.category + ': ' + i.text; }).join('\n')
+        : 'הטיוטה הזו עוד לא עברה בדיקת תקינות. מומלץ ללחוץ קודם "🔍 בדוק תקינות".';
+      const proceed = confirm(
+        '⚠️ אזהרה — הכתבה לא אושרה בבדיקת התקינות:\n\n' + issuesText +
+        '\n\nלהמשיך בכל זאת לטעינה ופרסום? (לא מומלץ בלי לבדוק ידנית את מה שסומן)'
+      );
+      if (!proceed) return;
+    }
+
     try {
       const { data: draft, error } = await client.from('news_drafts').select('*').eq('id', draftId).single();
       if (error || !draft) { alert('שגיאה בטעינת הטיוטה.'); return; }
