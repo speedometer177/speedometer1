@@ -1,6 +1,17 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:news="http://www.google.com/schemas/sitemap-news/0.9">
   <url>
+    <loc>https://speedometer10.co.il/article/611/</loc>
+    <news:news>
+      <news:publication>
+        <news:name>ספידומטר</news:name>
+        <news:language>he</news:language>
+      </news:publication>
+      <news:publication_date>2026-09-09T12:56:00.000Z</news:publication_date>
+      <news:title>הסופרה האחרונה: טויוטה GR סופרה &quot;פיינל אדישן&quot; יוצאת למכירה פומבית</news:title>
+    </news:news>
+  </url>
+  <url>
     <loc>https://speedometer10.co.il/article/609/</loc>
     <news:news>
       <news:publication>
@@ -31,17 +42,6 @@
       </news:publication>
       <news:publication_date>2026-09-08T11:16:00.000Z</news:publication_date>
       <news:title>קאמבק חשמלי: אודי מחזירה לחיים את ה-A2 האייקונית</news:title>
-    </news:news>
-  </url>
-  <url>
-    <loc>https://speedometer10.co.il/article/603/</loc>
-    <news:news>
-      <news:publication>
-        <news:name>ספידומטר</news:name>
-        <news:language>he</news:language>
-      </news:publication>
-      <news:publication_date>2026-09-07T12:17:00.000Z</news:publication_date>
-      <news:title>צ&#39;רי מתרחבת בישראל: מותג iCAUR מגיע באמצעות יבואנית סמלת</news:title>
     </news:news>
   </url>
 </urlset>
