@@ -1,6 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url><loc>https://speedometer10.co.il/</loc><lastmod>2026-09-10</lastmod><changefreq>hourly</changefreq><priority>1.0</priority></url>
+  <url><loc>https://speedometer10.co.il/article/615/</loc><lastmod>2026-09-10</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://speedometer10.co.il/article/613/</loc><lastmod>2026-09-10</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>
   <url><loc>https://speedometer10.co.il/article/611/</loc><lastmod>2026-09-09</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>
   <url><loc>https://speedometer10.co.il/article/609/</loc><lastmod>2026-09-09</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>
   <url><loc>https://speedometer10.co.il/article/607/</loc><lastmod>2026-09-08</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>
