@@ -1,0 +1,570 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>מחשבון שווי שימוש ברכב 2026 | ספידומטר</title>
+<meta name="description" content="מחשבון שווי שימוש ברכב צמוד לשנת 2026 — חישוב מדויק לפי הנוסחה הרשמית של רשות המסים (2.48% ממחיר המחירון), כולל הפחתות לרכב חשמלי, היברידי והיברידי נטען.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Assistant:wght@400;600;700;800&family=Rubik:wght@400;500;700;900&family=Orbitron:wght@500;700;900&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --red:#e8001d; --red-dark:#c0001a; --red-glow:#ff2f47;
+    --bg:#08080a; --surface:#101013; --surface-2:#16161a;
+    --border:#232328; --border-soft:#1c1c20;
+    --text:#f2f1ee; --muted:#8d8d95; --muted-2:#5c5c63;
+    --green:#28d67c;
+    --font:'Rubik','Assistant',sans-serif;
+    --font-num:'Orbitron','Rubik',sans-serif;
+    --radius:14px; --radius-sm:8px;
+    --max:1180px;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  html{scroll-behavior:smooth;}
+  body{
+    background:
+      radial-gradient(1100px 600px at 85% -10%, rgba(232,0,29,0.16), transparent 60%),
+      radial-gradient(900px 500px at -10% 20%, rgba(232,0,29,0.08), transparent 55%),
+      var(--bg);
+    color:var(--text);
+    font-family:var(--font);
+    line-height:1.6;
+    min-height:100vh;
+    padding-bottom:60px;
+  }
+  a{color:inherit;}
+  .wrap{max-width:var(--max);margin:0 auto;padding:0 20px;}
+
+  /* ===== Header ===== */
+  header.top{
+    padding:22px 20px 18px;
+    display:flex;align-items:center;justify-content:space-between;
+    border-bottom:1px solid var(--border-soft);
+    max-width:var(--max);margin:0 auto;
+  }
+  .brand{display:flex;align-items:center;gap:10px;font-weight:900;font-size:1.15rem;letter-spacing:0.2px;}
+  .brand .dot{width:9px;height:9px;border-radius:50%;background:var(--red);box-shadow:0 0 14px 3px rgba(232,0,29,0.7);}
+  .brand span.sub{color:var(--muted);font-weight:600;font-size:0.72rem;}
+  .top a.back{font-size:0.82rem;color:var(--muted);text-decoration:none;border:1px solid var(--border);padding:7px 14px;border-radius:100px;transition:.2s;}
+  .top a.back:hover{color:var(--text);border-color:var(--red);}
+
+  /* ===== Hero ===== */
+  .hero{
+    max-width:var(--max);margin:0 auto;padding:54px 20px 10px;
+    text-align:center;
+  }
+  .eyebrow{
+    display:inline-flex;align-items:center;gap:8px;
+    font-size:0.74rem;font-weight:700;letter-spacing:0.06em;
+    color:var(--red-glow);
+    background:rgba(232,0,29,0.09);
+    border:1px solid rgba(232,0,29,0.35);
+    padding:6px 14px;border-radius:100px;margin-bottom:22px;
+    animation:fadeUp .7s ease both;
+  }
+  .eyebrow::before{content:'';width:6px;height:6px;border-radius:50%;background:var(--green);box-shadow:0 0 8px 2px rgba(40,214,124,.7);}
+  h1{
+    font-size:clamp(2.1rem,5vw,3.4rem);
+    font-weight:900;
+    letter-spacing:-0.02em;
+    line-height:1.12;
+    margin-bottom:18px;
+    animation:fadeUp .7s ease .05s both;
+  }
+  h1 .accent{color:var(--red);position:relative;}
+  .hero p.lead{
+    max-width:640px;margin:0 auto;color:var(--muted);
+    font-size:1.05rem;font-weight:500;
+    animation:fadeUp .7s ease .1s both;
+  }
+  @keyframes fadeUp{from{opacity:0;transform:translateY(14px);}to{opacity:1;transform:translateY(0);}}
+
+  /* ===== Calculator Panel ===== */
+  .panel{
+    max-width:var(--max);margin:46px auto 0;padding:0 20px;
+  }
+  .calc-grid{
+    display:grid;grid-template-columns:minmax(0,1.05fr) minmax(0,1fr);gap:0;
+    background:linear-gradient(180deg,var(--surface),var(--surface-2));
+    border:1px solid var(--border);
+    border-radius:var(--radius);
+    overflow:hidden;
+    box-shadow:0 30px 80px -30px rgba(0,0,0,0.7);
+    position:relative;
+    animation:fadeUp .8s ease .15s both;
+  }
+  .calc-grid::before{
+    content:'';position:absolute;inset:0;pointer-events:none;
+    background:radial-gradient(500px 300px at 100% 0%, rgba(232,0,29,0.10), transparent 60%);
+  }
+  @media (max-width:860px){ .calc-grid{grid-template-columns:minmax(0,1fr);} }
+
+  /* --- Inputs side --- */
+  .inputs{
+    padding:38px 36px;
+    border-left:1px solid var(--border);
+    min-width:0;
+  }
+  @media (max-width:860px){ .inputs{border-left:none;border-bottom:1px solid var(--border);} }
+
+  .field{margin-bottom:30px;}
+  .field label{
+    display:flex;align-items:center;gap:8px;
+    font-size:0.86rem;font-weight:700;color:var(--text);margin-bottom:10px;
+  }
+  .field label .req{color:var(--red-glow);}
+  .help{font-size:0.78rem;color:var(--muted);margin-top:9px;line-height:1.55;}
+  .help b{color:var(--muted-2);font-weight:700;}
+
+  .price-input-wrap{
+    display:flex;align-items:center;gap:10px;
+    background:var(--bg);
+    border:1px solid var(--border);
+    border-radius:var(--radius-sm);
+    padding:14px 16px;
+    transition:border-color .2s, box-shadow .2s;
+  }
+  .price-input-wrap:focus-within{
+    border-color:var(--red);
+    box-shadow:0 0 0 3px rgba(232,0,29,0.15);
+  }
+  .price-input-wrap .cur{color:var(--red-glow);font-weight:800;font-family:var(--font-num);font-size:1.1rem;}
+  .price-input-wrap input{
+    flex:1;background:none;border:none;outline:none;
+    color:var(--text);font-family:var(--font-num);font-weight:700;
+    font-size:1.35rem;letter-spacing:0.02em;
+    text-align:right;direction:ltr;
+  }
+  .price-input-wrap input::placeholder{color:var(--muted-2);}
+
+  input[type=range]{
+    -webkit-appearance:none;appearance:none;
+    width:100%;height:4px;border-radius:4px;
+    background:linear-gradient(90deg,var(--red) 0%,var(--red) var(--fill,30%),var(--border) var(--fill,30%),var(--border) 100%);
+    margin-top:16px;cursor:pointer;
+  }
+  input[type=range]::-webkit-slider-thumb{
+    -webkit-appearance:none;appearance:none;
+    width:18px;height:18px;border-radius:50%;
+    background:var(--text);
+    border:3px solid var(--red);
+    box-shadow:0 0 0 4px rgba(232,0,29,0.18), 0 2px 8px rgba(0,0,0,.5);
+    cursor:pointer;transition:transform .15s;
+  }
+  input[type=range]::-webkit-slider-thumb:hover{transform:scale(1.15);}
+  input[type=range]::-moz-range-thumb{
+    width:18px;height:18px;border-radius:50%;background:var(--text);
+    border:3px solid var(--red);cursor:pointer;
+  }
+  .range-scale{display:flex;justify-content:space-between;font-size:0.7rem;color:var(--muted-2);margin-top:8px;font-family:var(--font-num);}
+
+  .drive-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+  .drive-opt{
+    position:relative;
+    border:1px solid var(--border);
+    background:var(--bg);
+    border-radius:var(--radius-sm);
+    padding:13px 14px;
+    cursor:pointer;
+    transition:.18s;
+  }
+  .drive-opt input{position:absolute;opacity:0;inset:0;cursor:pointer;margin:0;}
+  .drive-opt .name{font-size:0.86rem;font-weight:700;display:flex;align-items:center;gap:7px;}
+  .drive-opt .ded{font-size:0.72rem;color:var(--green);font-weight:700;margin-top:4px;font-family:var(--font-num);}
+  .drive-opt .ded.zero{color:var(--muted-2);}
+  .drive-opt:hover{border-color:#3a3a40;}
+  .drive-opt.active{
+    border-color:var(--red);
+    background:linear-gradient(180deg, rgba(232,0,29,0.10), rgba(232,0,29,0.03));
+    box-shadow:0 0 0 1px var(--red) inset;
+  }
+  .drive-opt .dot-ico{width:8px;height:8px;border-radius:50%;background:var(--muted-2);flex:none;}
+  .drive-opt.active .dot-ico{background:var(--red);box-shadow:0 0 8px 2px rgba(232,0,29,.6);}
+
+  /* --- Result side --- */
+  .result-side{
+    padding:38px 36px;
+    display:flex;flex-direction:column;
+    align-items:center;
+    position:relative;
+    min-width:0;
+  }
+
+  .gauge-wrap{width:100%;max-width:300px;margin:0 auto;position:relative;}
+  .gauge-readout{
+    position:absolute;left:0;right:0;top:58%;
+    text-align:center;
+  }
+  .gauge-readout .num{
+    font-family:var(--font-num);
+    font-weight:900;
+    font-size:clamp(1.9rem,6vw,2.5rem);
+    color:var(--text);
+    text-shadow:0 0 24px rgba(232,0,29,0.55);
+    letter-spacing:0.01em;
+    direction:ltr;
+  }
+  .gauge-readout .cur-lbl{font-family:var(--font-num);font-size:0.95rem;color:var(--red-glow);font-weight:700;}
+  .gauge-readout .unit{font-size:0.72rem;color:var(--muted);margin-top:4px;font-weight:700;letter-spacing:0.04em;}
+
+  .ceiling-badge{
+    margin-top:6px;
+    display:none;
+    align-items:center;gap:6px;
+    font-size:0.72rem;font-weight:700;color:#ffb84d;
+    background:rgba(255,184,77,0.1);border:1px solid rgba(255,184,77,0.35);
+    padding:5px 12px;border-radius:100px;
+  }
+  .ceiling-badge.show{display:inline-flex;}
+
+  .breakdown{
+    width:100%;margin-top:22px;
+    border-top:1px solid var(--border-soft);
+    padding-top:18px;
+  }
+  .b-row{
+    display:flex;justify-content:space-between;align-items:baseline;
+    font-size:0.86rem;padding:8px 0;color:var(--muted);
+  }
+  .b-row .v{font-family:var(--font-num);font-weight:700;color:var(--text);unicode-bidi:isolate;}
+  .b-row.deduct .v{color:var(--green);}
+  .b-row.final{
+    border-top:1px solid var(--border-soft);
+    margin-top:6px;padding-top:14px;
+    font-size:0.98rem;font-weight:800;color:var(--text);
+  }
+  .b-row.final .v{font-size:1.3rem;color:var(--red-glow);}
+  .b-row.annual .v{color:var(--muted);}
+
+  /* ===== Explainer ===== */
+  .explain{max-width:var(--max);margin:64px auto 0;padding:0 20px;}
+  .explain h2{
+    font-size:1.5rem;font-weight:900;margin-bottom:22px;
+    display:flex;align-items:center;gap:10px;
+  }
+  .explain h2::before{content:'';width:4px;height:22px;background:var(--red);border-radius:3px;}
+  .cards3{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;}
+  @media (max-width:800px){.cards3{grid-template-columns:1fr;}}
+  .info-card{
+    background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);
+    padding:22px 20px;
+  }
+  .info-card .ic-num{font-family:var(--font-num);color:var(--red-glow);font-weight:800;font-size:0.78rem;letter-spacing:0.08em;margin-bottom:10px;}
+  .info-card h3{font-size:1rem;font-weight:800;margin-bottom:8px;}
+  .info-card p{font-size:0.85rem;color:var(--muted);line-height:1.65;}
+
+  .accordion{margin-top:16px;border:1px solid var(--border);border-radius:var(--radius-sm);overflow:hidden;background:var(--surface);}
+  .acc-item + .acc-item{border-top:1px solid var(--border-soft);}
+  .acc-item summary{
+    cursor:pointer;padding:17px 20px;font-weight:700;font-size:0.92rem;
+    display:flex;justify-content:space-between;align-items:center;
+    list-style:none;
+  }
+  .acc-item summary::-webkit-details-marker{display:none;}
+  .acc-item summary::after{content:'+';font-size:1.3rem;color:var(--muted);font-weight:400;transition:.2s;}
+  .acc-item[open] summary::after{content:'−';color:var(--red);}
+  .acc-item .acc-body{padding:0 20px 20px;color:var(--muted);font-size:0.87rem;line-height:1.75;}
+  .acc-item .acc-body b{color:var(--text);}
+
+  /* ===== Disclaimer / Sources ===== */
+  .disclaimer{
+    max-width:var(--max);margin:44px auto 0;padding:20px 22px;
+    background:rgba(232,0,29,0.05);
+    border:1px solid rgba(232,0,29,0.25);
+    border-radius:var(--radius-sm);
+    font-size:0.8rem;color:var(--muted);line-height:1.7;
+  }
+  .disclaimer b{color:var(--text);}
+  .sources{max-width:var(--max);margin:20px auto 0;padding:0 22px;font-size:0.74rem;color:var(--muted-2);}
+  .sources a{color:var(--muted);text-decoration:underline;text-underline-offset:2px;}
+  .sources a:hover{color:var(--red-glow);}
+
+  footer.bottom{
+    max-width:var(--max);margin:50px auto 0;padding:22px 20px 0;
+    border-top:1px solid var(--border-soft);
+    font-size:0.76rem;color:var(--muted-2);
+    display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px;
+  }
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="brand">ספידומטר<span class="dot"></span><span class="sub">כלים</span></div>
+  <a class="back" href="/">בית ›</a>
+</header>
+
+<section class="hero">
+  <div class="eyebrow">מעודכן לשנת המס 2026</div>
+  <h1>מחשבון <span class="accent">שווי שימוש</span><br>ברכב צמוד</h1>
+  <p class="lead">כמה מס באמת עולה לכם רכב הליסינג או הרכב הצמוד מהעבודה? הזינו את מחיר המחירון וסוג ההנעה, וקבלו את השווי החודשי המדויק לפי הנוסחה הרשמית של רשות המסים.</p>
+</section>
+
+<div class="panel">
+  <div class="calc-grid">
+    <div class="inputs">
+      <div class="field">
+        <label>מחיר מחירון הרכב (כשהיה חדש) <span class="req">*</span></label>
+        <div class="price-input-wrap">
+          <span class="cur">₪</span>
+          <input type="text" inputmode="numeric" id="priceText" value="180,000" autocomplete="off">
+        </div>
+        <input type="range" id="priceRange" min="20000" max="700000" step="1000" value="180000">
+        <div class="range-scale"><span>20,000</span><span>700,000</span></div>
+        <p class="help">זהו מחיר הרכב <b>בהיותו חדש</b> לפי המחירון הרשמי (יבואן / לוי יצחק), כולל מע״מ — <b>גם עבור רכב יד שנייה</b> יש להזין את מחיר המחירון המקורי שלו כרכב חדש, לא את מחיר הקנייה בפועל.</p>
+      </div>
+
+      <div class="field">
+        <label>סוג הנעה</label>
+        <div class="drive-grid" id="driveGrid">
+          <label class="drive-opt active" data-ded="0">
+            <input type="radio" name="drive" value="0" checked>
+            <div class="name"><span class="dot-ico"></span>רגיל (בנזין / דיזל)</div>
+            <div class="ded zero">ללא הפחתה</div>
+          </label>
+          <label class="drive-opt" data-ded="580">
+            <input type="radio" name="drive" value="580">
+            <div class="name"><span class="dot-ico"></span>היברידי</div>
+            <div class="ded">‎-580 ₪ לחודש</div>
+          </label>
+          <label class="drive-opt" data-ded="1150">
+            <input type="radio" name="drive" value="1150">
+            <div class="name"><span class="dot-ico"></span>היברידי נטען</div>
+            <div class="ded">‎-1,150 ₪ לחודש</div>
+          </label>
+          <label class="drive-opt" data-ded="1380">
+            <input type="radio" name="drive" value="1380">
+            <div class="name"><span class="dot-ico"></span>חשמלי</div>
+            <div class="ded">‎-1,380 ₪ לחודש</div>
+          </label>
+        </div>
+        <p class="help">הפחתת ה"רכב הירוק" היא סכום קבוע בשקלים המנוכה מהשווי, במסגרת הוראת השעה שהוארכה עד סוף 2028.</p>
+      </div>
+
+      <p class="help" style="border-top:1px solid var(--border-soft);padding-top:16px;">החישוב תקף ל<b>רכבים שתחילת השימוש בהם היא משנת 2010 ואילך</b> (שיטת החישוב הליניארית). לרכבים ותיקים יותר חלה שיטת קבוצות הרישוי הישנה, שאינה נכללת בכלי זה.</p>
+    </div>
+
+    <div class="result-side">
+      <div class="gauge-wrap">
+        <svg viewBox="0 0 220 140" width="100%">
+          <defs>
+            <linearGradient id="arcGrad" x1="0" y1="0" x2="1" y2="0">
+              <stop offset="0%" stop-color="#2a2a30"/>
+              <stop offset="55%" stop-color="#8a1a24"/>
+              <stop offset="100%" stop-color="var(--red-glow)"/>
+            </linearGradient>
+            <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="3.2" result="blur"/>
+              <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+            </filter>
+          </defs>
+          <path d="M 14 128 A 96 96 0 0 1 206 128" fill="none" stroke="#1c1c22" stroke-width="14" stroke-linecap="round"/>
+          <path id="arcFill" d="M 14 128 A 96 96 0 0 1 206 128" fill="none" stroke="url(#arcGrad)" stroke-width="14" stroke-linecap="round"
+                stroke-dasharray="302" stroke-dashoffset="302" filter="url(#glow)"/>
+          <g id="ticks"></g>
+          <g id="needle" style="transform-origin:110px 128px; transform:rotate(-90deg); transition:transform .55s cubic-bezier(.34,1.56,.64,1);">
+            <line x1="110" y1="128" x2="110" y2="46" stroke="#f2f1ee" stroke-width="2.5" stroke-linecap="round"/>
+            <circle cx="110" cy="128" r="6.5" fill="#f2f1ee"/>
+            <circle cx="110" cy="128" r="3" fill="var(--red)"/>
+          </g>
+        </svg>
+        <div class="gauge-readout">
+          <div class="num"><span class="cur-lbl">₪</span><span id="finalNum">0</span></div>
+          <div class="unit">שווי שימוש חודשי</div>
+          <div class="ceiling-badge" id="ceilingBadge">מחיר מעל התקרה — חושב לפי תקרת המקסימום</div>
+        </div>
+      </div>
+
+      <div class="breakdown">
+        <div class="b-row"><span>בסיס לחישוב (עד תקרה)</span><span class="v" id="bBase">₪0</span></div>
+        <div class="b-row"><span>שיעור שווי שימוש</span><span class="v">2.48%</span></div>
+        <div class="b-row"><span>שווי לפני הפחתה</span><span class="v" id="bGross">₪0</span></div>
+        <div class="b-row deduct"><span>הפחתת רכב ירוק</span><span class="v" id="bDed">‎-₪0</span></div>
+        <div class="b-row final"><span>שווי שימוש חודשי</span><span class="v" id="bFinal">₪0</span></div>
+        <div class="b-row annual"><span>שווי שנתי (×12)</span><span class="v" id="bAnnual">₪0</span></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<section class="explain">
+  <h2>איך זה עובד</h2>
+  <div class="cards3">
+    <div class="info-card">
+      <div class="ic-num">01</div>
+      <h3>מה זה שווי שימוש</h3>
+      <p>כשמעסיק נותן לעובד רכב צמוד לשימוש פרטי, רשות המסים מתייחסת לכך כאל תוספת שכר "רעיונית" — ולכן ממסה אותה כהכנסה חודשית נוספת, גם אם לא עבר כסף בפועל.</p>
+    </div>
+    <div class="info-card">
+      <div class="ic-num">02</div>
+      <h3>הנוסחה הליניארית</h3>
+      <p>מאז 2011, השווי מחושב כ-2.48% ממחיר מחירון הרכב כחדש, עד תקרה של 596,860 ₪ לשנת 2026. מחיר מעל התקרה אינו מגדיל את השווי.</p>
+    </div>
+    <div class="info-card">
+      <div class="ic-num">03</div>
+      <h3>הטבה לרכב ירוק</h3>
+      <p>לרכב חשמלי, היברידי או היברידי נטען מנוכה סכום קבוע בשקלים מהשווי החודשי, כחלק מהוראת שעה שהוארכה עד סוף 2028.</p>
+    </div>
+  </div>
+
+  <div class="accordion">
+    <details class="acc-item" open>
+      <summary>איזה "מחיר מחירון" מזינים בדיוק?</summary>
+      <div class="acc-body">המחיר הרלוונטי הוא <b>מחיר הרכב כחדש</b> כפי שמופיע במחירון הרשמי (מחירון היבואן או מחירון לוי יצחק), כולל מע״מ, ללא מבצעים או הנחות. חשוב: גם אם קניתם את הרכב <b>יד שנייה</b>, עדיין מזינים את מחיר המחירון המקורי שלו כרכב חדש — לא את מה ששילמתם בפועל.</div>
+    </details>
+    <details class="acc-item">
+      <summary>למה יש תקרת מחיר?</summary>
+      <div class="acc-body">רשות המסים קבעה תקרה למחיר המחירון שנכנס לנוסחה — כרגע 596,860 ₪ לשנת 2026 (עולה בהדרגה משנה לשנה בהתאם למדד). גם אם מחיר הרכב גבוה יותר, השווי מחושב לפי התקרה בלבד ולא לפי המחיר המלא.</div>
+    </details>
+    <details class="acc-item">
+      <summary>מה ההבדל בין רכבים לפני ואחרי 2010?</summary>
+      <div class="acc-body">עד 2009 השווי חושב לפי טבלת "קבוצות רישוי" עם סכומים קבועים לכל קבוצה. החל משנת הרישום 2010 עברה רשות המסים לשיטה הליניארית (אחוז ממחיר המחירון) המשמשת גם היום. מחשבון זה מתייחס אך ורק לשיטה הליניארית.</div>
+    </details>
+    <details class="acc-item">
+      <summary>האם זה מספר סופי ומחייב?</summary>
+      <div class="acc-body">זהו כלי הערכה המבוסס על הנוסחה הפומבית והנתונים העדכניים שפורסמו לשנת 2026. מקרים חריגים (רכב מעל 3.5 טון, הסדרי שימוש חלקיים, שינויי חקיקה) לא נכללים. לחישוב מחייב יש להיעזר ברואה חשבון או במחשבון הרשמי של רשות המסים.</div>
+    </details>
+  </div>
+</section>
+
+<div class="disclaimer">
+  <b>הבהרה:</b> המחשבון מבוסס על הנוסחה הפומבית של רשות המסים ועל נתוני שנת המס 2026 (שיעור 2.48%, תקרת מחיר מחירון 596,860 ₪, הפחתות רכב ירוק בתוקף להוראת השעה עד 31.12.2028). הכלי מיועד להערכה בלבד ואינו ייעוץ מס או תחליף לחוות דעת רואה חשבון.
+</div>
+<div class="sources">
+  מקורות: רשות המסים בישראל (מחשבון רכב רשמי) · <a href="https://protocol.co.il/vehicle-usage-value/" target="_blank" rel="noopener">Protocol</a> · <a href="https://www.malam-payroll.com" target="_blank" rel="noopener">מלם שכר</a> · <a href="https://www.autocom.co.il" target="_blank" rel="noopener">אוטוקום</a>
+</div>
+
+<footer class="bottom">
+  <span>© ספידומטר — כלים לרכב</span>
+  <span>עודכן: ספטמבר 2026</span>
+</footer>
+
+<script>
+(function(){
+  const CEILING = 596860;
+  const RATE = 0.0248;
+
+  const priceText = document.getElementById('priceText');
+  const priceRange = document.getElementById('priceRange');
+  const driveOpts = document.querySelectorAll('.drive-opt');
+  const finalNum = document.getElementById('finalNum');
+  const ceilingBadge = document.getElementById('ceilingBadge');
+  const bBase = document.getElementById('bBase');
+  const bGross = document.getElementById('bGross');
+  const bDed = document.getElementById('bDed');
+  const bFinal = document.getElementById('bFinal');
+  const bAnnual = document.getElementById('bAnnual');
+  const needle = document.getElementById('needle');
+  const arcFill = document.getElementById('arcFill');
+
+  const fmt = (n) => Math.round(n).toLocaleString('en-US');
+  const fmt2 = (n) => n.toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2});
+
+  function parsePrice(){
+    const raw = priceText.value.replace(/[^\d]/g,'');
+    return raw ? parseInt(raw,10) : 0;
+  }
+
+  function currentDeduction(){
+    const checked = document.querySelector('input[name="drive"]:checked');
+    return checked ? parseInt(checked.value,10) : 0;
+  }
+
+  let lastFinal = 0;
+  function animateNumber(el, from, to, suffix){
+    const dur = 450, start = performance.now();
+    function step(t){
+      const p = Math.min(1, (t-start)/dur);
+      const eased = 1 - Math.pow(1-p, 3);
+      const val = from + (to-from)*eased;
+      el.textContent = fmt(val);
+      if(p<1) requestAnimationFrame(step);
+      else el.textContent = fmt(to);
+    }
+    requestAnimationFrame(step);
+  }
+
+  function buildTicks(){
+    const g = document.getElementById('ticks');
+    const cx=110, cy=128, r1=96, r2=88;
+    for(let i=0;i<=8;i++){
+      const ang = Math.PI + (i/8)*Math.PI; // -180 -> 0 deg range mapped
+      const x1 = cx + r1*Math.cos(ang), y1 = cy + r1*Math.sin(ang);
+      const x2 = cx + r2*Math.cos(ang), y2 = cy + r2*Math.sin(ang);
+      const line = document.createElementNS('http://www.w3.org/2000/svg','line');
+      line.setAttribute('x1',x1);line.setAttribute('y1',y1);
+      line.setAttribute('x2',x2);line.setAttribute('y2',y2);
+      line.setAttribute('stroke', i%2===0 ? '#4a4a52' : '#2a2a30');
+      line.setAttribute('stroke-width', i%2===0 ? '2' : '1.2');
+      g.appendChild(line);
+    }
+  }
+  buildTicks();
+
+  const GAUGE_MAX = 15000; // full-scale reference (~ ceiling-based max value)
+  const ARC_LEN = 302;
+
+  function update(){
+    let price = parsePrice();
+    if(price < 0) price = 0;
+    const capped = Math.min(price, CEILING);
+    const isCapped = price > CEILING;
+
+    const gross = capped * RATE;
+    const ded = currentDeduction();
+    const final = Math.max(0, gross - ded);
+    const annual = final * 12;
+
+    ceilingBadge.classList.toggle('show', isCapped);
+
+    bBase.textContent = '₪' + fmt(capped);
+    bGross.textContent = '₪' + fmt2(gross);
+    bDed.textContent = ded ? ('‎-₪' + fmt(ded)) : '₪0';
+    bFinal.textContent = '₪' + fmt2(final);
+    bAnnual.textContent = '₪' + fmt(annual);
+
+    animateNumber(finalNum, lastFinal, final);
+    lastFinal = final;
+
+    // gauge needle: -90deg (empty) .. +90deg (full)
+    const ratio = Math.min(1, final / GAUGE_MAX);
+    const angle = -90 + ratio*180;
+    needle.style.transform = `rotate(${angle}deg)`;
+    const offset = ARC_LEN - (ARC_LEN*ratio);
+    arcFill.style.strokeDashoffset = offset;
+
+    // sync range + text
+    if (document.activeElement !== priceText) priceText.value = fmt(price);
+    priceRange.value = Math.min(700000, Math.max(20000, price));
+    const pct = (priceRange.value - priceRange.min) / (priceRange.max - priceRange.min) * 100;
+    priceRange.style.setProperty('--fill', pct + '%');
+  }
+
+  priceText.addEventListener('input', ()=>{
+    const digits = priceText.value.replace(/[^\d]/g,'').slice(0,9);
+    priceText.value = digits ? Number(digits).toLocaleString('en-US') : '';
+    update();
+  });
+  priceText.addEventListener('blur', update);
+
+  priceRange.addEventListener('input', ()=>{
+    priceText.value = Number(priceRange.value).toLocaleString('en-US');
+    update();
+  });
+
+  driveOpts.forEach(opt=>{
+    opt.addEventListener('click', ()=>{
+      driveOpts.forEach(o=>o.classList.remove('active'));
+      opt.classList.add('active');
+      opt.querySelector('input').checked = true;
+      update();
+    });
+  });
+
+  update();
+})();
+</script>
+
+</body>
+</html>
