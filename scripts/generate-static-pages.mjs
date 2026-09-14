@@ -225,6 +225,27 @@ function plainTextExcerpt(text, maxLen = 160) {
 }
 
 /**
+ * קופסת CTA שמפנה למחשבון שווי שימוש - מוצגת רק בכתבות רלוונטיות
+ * (קטגוריית "קניית רכב", או תוכן שמזכיר ליסינג/רכב חברה/שווי שימוש).
+ * חוזרת כמחרוזת ריקה בכל שאר הכתבות - אפס השפעה על תוכן קיים.
+ * הפונקציה המקבילה בצד הלקוח (buildCalcCTA באותו שם) נמצאת ב-app.js -
+ * יש לעדכן את שתיהן יחד אם משנים את התנאי/העיצוב.
+ */
+function buildCalcCTA(a) {
+  const haystack = `${a.title || ''} ${a.body || ''}`.toLowerCase();
+  const keywords = ['ליסינג', 'רכב חברה', 'רכב צמוד', 'שווי שימוש', 'תלוש שכר'];
+  const isRelevant = a.cat === 'buying' || keywords.some(k => haystack.includes(k));
+  if (!isRelevant) return '';
+  return `<div style="margin:28px 0;padding:18px 20px;background:linear-gradient(120deg,#15181f,#1d222c);border-radius:14px;border-right:3px solid var(--red);display:flex;align-items:center;gap:14px;flex-wrap:wrap;">
+  <div style="width:44px;height:44px;border-radius:50%;background:linear-gradient(150deg,var(--red),var(--red-dark));display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><rect x="3" y="2" width="18" height="20" rx="2"/><line x1="8" y1="6" x2="16" y2="6"/><line x1="7" y1="11" x2="7" y2="11"/><line x1="12" y1="11" x2="12" y2="11"/><line x1="17" y1="11" x2="17" y2="11"/><line x1="7" y1="15" x2="7" y2="15"/><line x1="12" y1="15" x2="12" y2="15"/><line x1="17" y1="15" x2="17" y2="19"/><line x1="7" y1="19" x2="12" y2="19"/></svg>
+  </div>
+  <div style="flex:1;min-width:200px;color:#f3f4f6;font-size:0.93rem;font-weight:600;line-height:1.5;">רכב חברה או ליסינג? בדקו כמה עולה לכם <b style="color:#ff4d5e;">שווי השימוש</b> בחודש</div>
+  <a href="/usage-value-calculator.html" style="background:var(--red);color:#fff;font-weight:800;font-size:0.85rem;padding:10px 18px;border-radius:100px;text-decoration:none;white-space:nowrap;">למחשבון ←</a>
+</div>`;
+}
+
+/**
  * לוקח את ה-template המלא (index.html) ומחזיר גרסה "אפויה" לכתבה ספציפית:
  * meta tags ייחודיים + JSON-LD + תוכן הכתבה ממולא ב-DOM, עם article-page גלוי כברירת מחדל.
  */
@@ -241,7 +262,7 @@ function hydrateTemplateForArticle(template, a) {
         `<div style="background:var(--red-light);border-right:3px solid var(--red);border-radius:0 6px 6px 0;padding:10px 16px;margin-bottom:16px;font-size:0.92rem;line-height:1.6;"><strong style="color:var(--red);">🔴 עדכון ${esc(u.time || '')}:</strong> ${esc(u.text || '')}</div>`
       ).join('')
     : '';
-  const bodyHTML = liveUpdatesHTML + parseBodyToHTML(a.body, a.body_images, a.title);
+  const bodyHTML = liveUpdatesHTML + parseBodyToHTML(a.body, a.body_images, a.title) + buildCalcCTA(a);
   const latestUpdateTs = liveUpdates.length ? liveUpdates[liveUpdates.length - 1].ts : null;
   const readMins = Math.max(1, Math.ceil((a.body || '').split(/\s+/).filter(Boolean).length / 200));
   const shareImg = ogImage(img); // תמונת שיתוף 1200x630 JPG
@@ -406,10 +427,22 @@ function hydrateTemplateForArticle(template, a) {
   return html;
 }
 
+// עמודים סטטיים קבועים שאינם כתבות (כלים/מדריכים) — לא מגיעים מ-Supabase,
+// ולכן חייבים רשימה ידנית כאן כדי שלא ייעלמו בכל ריצה מחדש של הסקריפט
+// (ה-sitemap כולו נכתב מאפס בכל הרצה, אז בלי זה כל תוספת ידנית ל-sitemap.xml
+// הייתה נמחקת אוטומטית תוך 4 שעות ע"י ה-GitHub Action).
+const STATIC_PAGES = [
+  { path: '/cars-list.html', changefreq: 'weekly', priority: '0.7' },
+  { path: '/usage-value-calculator.html', changefreq: 'monthly', priority: '0.7' },
+];
+
 function buildSitemap(articles) {
   const today = new Date().toISOString().split('T')[0];
   const urls = [
     `<url><loc>${SITE}/</loc><lastmod>${today}</lastmod><changefreq>hourly</changefreq><priority>1.0</priority></url>`,
+    ...STATIC_PAGES.map(p =>
+      `<url><loc>${SITE}${p.path}</loc><lastmod>${today}</lastmod><changefreq>${p.changefreq}</changefreq><priority>${p.priority}</priority></url>`
+    ),
     ...articles
       .filter(a => a.cat !== 'quick')
       .map(a => {
