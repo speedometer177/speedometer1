@@ -22,15 +22,4 @@
       <news:title>לקסוס ES החדשה בישראל: מ-355 אלף שקל</news:title>
     </news:news>
   </url>
-  <url>
-    <loc>https://speedometer10.co.il/article/618/</loc>
-    <news:news>
-      <news:publication>
-        <news:name>ספידומטר</news:name>
-        <news:language>he</news:language>
-      </news:publication>
-      <news:publication_date>2026-09-14T22:29:00.000Z</news:publication_date>
-      <news:title>חזרה למקורות: פולקסווגן חושפת חשמלית יעילה במיוחד בהשראת ה-XL1</news:title>
-    </news:news>
-  </url>
 </urlset>
