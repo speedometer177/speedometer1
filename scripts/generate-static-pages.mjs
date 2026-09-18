@@ -639,6 +639,16 @@ async function fetchArticles(supabase) {
   return (data || []).filter(a => !a.deleted && a.cat !== 'quick');
 }
 
+/* שליפת קטלוג הרכבים החי מטבלת public.cars (Phase 2 - במקום cars.json הסטטי) */
+async function fetchCars(supabase) {
+  const { data, error } = await supabase
+    .from('cars')
+    .select('*')
+    .order('sales_rank', { ascending: true, nullsFirst: false });
+  if (error) throw new Error(`Supabase cars fetch failed: ${error.message}`);
+  return (data || []).filter(c => c && c.slug && !c.deleted);
+}
+
 /* ═══════════════════════════════════════════════════════════════
  * רינדור סטטי לעמודי רכב בודד — /car/{slug}/index.html
  * ---------------------------------------------------------------
@@ -649,14 +659,14 @@ async function fetchArticles(supabase) {
  * לכל רכב (/car/{slug}/, במקביל מדויק ל-/article/{id}/ של הכתבות)
  * עם title/meta/canonical/OG/JSON-LD ותוכן אמיתי אפויים מראש בתוך
  * ה-HTML הגולמי, כדי שגוגל יראה תוכן ייחודי ומלא ב-byte הראשון.
- * הנתונים מגיעים מ-cars.json (קובץ סטטי בריפו, לא מסופרבייס עדיין -
- * ראו את מסמך תוכנית השיפוץ למעבר עתידי לנתונים חיים).
+ * הנתונים מגיעים מטבלת public.cars בסופרבייס (Phase 2, החל מ-18.9.2026) -
+ * בדיוק כמו articles, כולל אותו דפוס deleted/soft-delete. cars.json הסטטי
+ * הישן כבר לא נקרא כאן; הוא עדיין קיים בריפו רק כגיבוי היסטורי.
  * חשוב: renderCarBodyHTML כאן היא עותק נאמן (עם esc() להגנה) של
  * renderPage() בצד הלקוח שב-car.html - כל שינוי בתוכן/עיצוב חייב
  * להתעדכן בשני המקומות יחד.
  * ═══════════════════════════════════════════════════════════════ */
 
-const CARS_JSON_PATH = path.join(SITE_DIR, 'cars.json');
 const CAR_TEMPLATE_PATH = path.join(SITE_DIR, 'car.html');
 const CAR_OUT_DIR = path.resolve(process.cwd(), 'car');
 
@@ -1099,10 +1109,9 @@ async function main() {
   // ═══ עמודי רכב סטטיים (/car/{slug}/) - לא רצים כשמריצים ריצה ממוקדת לכתבה בודדת ═══
   let liveCars = [];
   if (!targetArticleId) {
-    console.log('🚗 קורא את cars.json ובונה עמודי רכב סטטיים...');
+    console.log('🚗 שולף רכבים מ-Supabase (public.cars) ובונה עמודי רכב סטטיים...');
     try {
-      const carsRaw = await readFile(CARS_JSON_PATH, 'utf-8');
-      liveCars = JSON.parse(carsRaw).filter(c => c && c.slug);
+      liveCars = await fetchCars(supabase);
       const carTemplate = await readFile(CAR_TEMPLATE_PATH, 'utf-8');
 
       await rm(CAR_OUT_DIR, { recursive: true, force: true });
