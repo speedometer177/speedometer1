@@ -4,8 +4,21 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="robots" content="index, follow">
-<!-- SEO tags filled dynamically by JS -->
+<!-- SEO tags filled dynamically by JS (ובעמודים סטטיים - נאפים מראש ב-generate-static-pages.mjs) -->
 <title>טוען...</title>
+<meta name="description" content="">
+<link rel="canonical" href="">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="ספידומטר">
+<meta property="og:locale" content="he_IL">
+<meta property="og:title" content="">
+<meta property="og:description" content="">
+<meta property="og:url" content="">
+<meta property="og:image" content="">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="">
+<meta name="twitter:description" content="">
+<meta name="twitter:image" content="">
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -228,7 +241,7 @@ footer a{color:var(--red)}
     <nav class="header-breadcrumb" id="breadcrumb" aria-label="נתיב ניווט">
       <a href="/">בית</a>
       <span class="sep">›</span>
-      <a href="cars-list.html">מאגר רכבים</a>
+      <a href="/cars-list.html">מאגר רכבים</a>
       <span class="sep">›</span>
       <span id="breadcrumb-name">טוען...</span>
     </nav>
@@ -275,14 +288,21 @@ let lightboxIndex = 0;
 
 // ── Load car data ──
 async function loadCar() {
-  const params = new URLSearchParams(window.location.search);
-  const slug = params.get('id');
+  // הנתיב הקנוני הוא /car/{slug}/ (בדיוק כמו /article/{id}/ לכתבות - נדרש כדי
+  // שכל רכב יקבל עמוד סטטי ייחודי במקום ?id= שלא ניתן "לאפות" מראש).
+  // ?id=... נשמר כתאימות לאחור בלבד ומפנה מיידית לנתיב החדש.
+  const pathMatch = window.location.pathname.match(/\/car\/([^/]+)\/?$/);
+  let slug = pathMatch ? decodeURIComponent(pathMatch[1]) : null;
+  if (!slug) {
+    const legacyId = new URLSearchParams(window.location.search).get('id');
+    if (legacyId) { location.replace('/car/' + encodeURIComponent(legacyId) + '/'); return; }
+  }
   if (!slug) { showError('לא סופק מזהה רכב'); return; }
 
   try {
     let cars;
     try {
-      const res = await fetch('cars.json');
+      const res = await fetch('/cars.json');
       if (!res.ok) throw new Error('404');
       cars = await res.json();
     } catch(e) {
@@ -302,7 +322,7 @@ function showError(msg) {
     <div class="error-state">
       <h2>שגיאה</h2>
       <p>${msg}</p>
-      <a href="cars-list.html" style="color:var(--red);font-weight:700;display:inline-block;margin-top:16px;">← חזרה למאגר הרכבים</a>
+      <a href="/cars-list.html" style="color:var(--red);font-weight:700;display:inline-block;margin-top:16px;">← חזרה למאגר הרכבים</a>
     </div>`;
 }
 
@@ -315,15 +335,22 @@ function renderPage() {
   const c = carData;
   galleryImages = c.gallery_images || [];
   const isEV = !c.fuel_consumption;
+  const evRange = c.range_ev ?? c.range;
 
   // ── SEO ──
-  document.title = c.meta_title || `${c.brand} ${c.model} ${c.year} | ספידומטר`;
-  document.querySelector('meta[name=description]')?.setAttribute('content', c.meta_description || c.description);
-
-  // Update canonical
-  let canon = document.querySelector('link[rel=canonical]');
-  if (!canon) { canon = document.createElement('link'); canon.rel='canonical'; document.head.appendChild(canon); }
-  canon.href = location.origin + location.pathname + '?id=' + c.slug;
+  const pageTitle = c.meta_title || `${c.brand} ${c.model} ${c.year} | ספידומטר`;
+  const pageDesc = c.meta_description || c.description || '';
+  const canonicalUrl = location.origin + '/car/' + c.slug + '/';
+  document.title = pageTitle;
+  document.querySelector('meta[name=description]')?.setAttribute('content', pageDesc);
+  document.querySelector('link[rel=canonical]')?.setAttribute('href', canonicalUrl);
+  document.querySelector('meta[property="og:title"]')?.setAttribute('content', pageTitle);
+  document.querySelector('meta[property="og:description"]')?.setAttribute('content', pageDesc);
+  document.querySelector('meta[property="og:url"]')?.setAttribute('content', canonicalUrl);
+  document.querySelector('meta[property="og:image"]')?.setAttribute('content', c.image_main || '');
+  document.querySelector('meta[name="twitter:title"]')?.setAttribute('content', pageTitle);
+  document.querySelector('meta[name="twitter:description"]')?.setAttribute('content', pageDesc);
+  document.querySelector('meta[name="twitter:image"]')?.setAttribute('content', c.image_main || '');
 
   // JSON-LD
   const ld = {
@@ -332,6 +359,7 @@ function renderPage() {
     "brand": {"@type":"Brand","name":c.brand},
     "modelDate": String(c.year),
     "description": c.description,
+    "image": c.image_main,
     "offers": {"@type":"Offer","price":c.price,"priceCurrency":"ILS"}
   };
   let ldScript = document.getElementById('json-ld');
@@ -421,7 +449,7 @@ function renderPage() {
       <div class="specs-group-title">צריכה ו${isEV ? 'טווח' : 'יעילות'}</div>
       <table class="specs-table">
         ${isEV
-          ? `<tr><td>טווח</td><td>${c.range} ק"מ</td></tr>`
+          ? `<tr><td>טווח</td><td>${evRange} ק"מ</td></tr>`
           : `<tr><td>צריכת דלק ממוצעת</td><td>${c.fuel_consumption} ל/100ק"מ</td></tr>`
         }
         ${c.country ? `<tr><td>ארץ ייצור</td><td>${c.country}</td></tr>` : ''}
@@ -479,7 +507,7 @@ function renderPage() {
   async function getRelated() {
     let cars;
     try {
-      const res = await fetch('cars.json');
+      const res = await fetch('/cars.json');
       cars = await res.json();
     } catch(e) { cars = FALLBACK_CARS; }
     return cars.filter(x => x.category === c.category && x.slug !== c.slug).slice(0,3);
@@ -513,7 +541,7 @@ function renderPage() {
               <span class="car-hero-stat-val">${formatPrice(c.price)}</span>
               <span class="car-hero-stat-label">מחיר</span>
             </div>
-            ${isEV && c.range ? `<div class="car-hero-stat"><span class="car-hero-stat-val">${c.range}</span><span class="car-hero-stat-label">ק"מ טווח</span></div>` : ''}
+            ${isEV && evRange ? `<div class="car-hero-stat"><span class="car-hero-stat-val">${evRange}</span><span class="car-hero-stat-label">ק"מ טווח</span></div>` : ''}
           </div>
         </div>
       </div>
@@ -535,10 +563,10 @@ function renderPage() {
           <div class="spec-strip-val">${c.acceleration_0_100}s</div>
           <div class="spec-strip-label">0-100 קמ"ש</div>
         </div>
-        ${isEV && c.range ? `
+        ${isEV && evRange ? `
         <div class="spec-strip-item" role="listitem">
           <div class="spec-strip-icon">🔋</div>
-          <div class="spec-strip-val">${c.range}</div>
+          <div class="spec-strip-val">${evRange}</div>
           <div class="spec-strip-label">טווח (ק"מ)</div>
         </div>` : ''}
         ${!isEV ? `
@@ -651,7 +679,7 @@ function renderPage() {
           <div class="sidebar-price">${formatPrice(c.price)}</div>
           <div class="sidebar-price-note">מחיר לפני אפשרויות. צור קשר לקבלת הצעה</div>
           <a href="https://wa.me/972559365579" target="_blank" rel="noopener noreferrer" class="btn-primary" aria-label="ייעוץ בוואטסאפ">💬 ייעוץ בוואטסאפ</a>
-          <a href="cars-list.html" class="btn-secondary">← השווה רכבים</a>
+          <a href="/cars-list.html" class="btn-secondary">← השווה רכבים</a>
           <div class="share-btn-row">
             <button class="share-btn" onclick="shareCar()" aria-label="שתף">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
@@ -701,7 +729,7 @@ function renderPage() {
       return;
     }
     document.getElementById('related-grid').innerHTML = related.map(r => `
-      <a class="related-card" href="car.html?id=${r.slug}" aria-label="${r.brand} ${r.model} ${r.year}">
+      <a class="related-card" href="/car/${r.slug}/" aria-label="${r.brand} ${r.model} ${r.year}">
         <div class="related-card-img">
           <img src="${r.image_main}" alt="${r.brand} ${r.model}" loading="lazy" width="260" height="146">
         </div>
