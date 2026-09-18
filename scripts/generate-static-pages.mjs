@@ -436,7 +436,7 @@ const STATIC_PAGES = [
   { path: '/usage-value-calculator.html', changefreq: 'monthly', priority: '0.7' },
 ];
 
-function buildSitemap(articles) {
+function buildSitemap(articles, cars = []) {
   const today = new Date().toISOString().split('T')[0];
   const urls = [
     `<url><loc>${SITE}/</loc><lastmod>${today}</lastmod><changefreq>hourly</changefreq><priority>1.0</priority></url>`,
@@ -448,7 +448,10 @@ function buildSitemap(articles) {
       .map(a => {
         const lastmod = toISODate(a.date)?.split('T')[0] || today;
         return `<url><loc>${SITE}/article/${a.id}/</loc><lastmod>${lastmod}</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>`;
-      })
+      }),
+    ...cars.map(c =>
+      `<url><loc>${SITE}/car/${c.slug}/</loc><lastmod>${today}</lastmod><changefreq>monthly</changefreq><priority>0.6</priority></url>`
+    )
   ].join('\n  ');
   return `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n  ${urls}\n</urlset>\n`;
 }
@@ -636,6 +639,394 @@ async function fetchArticles(supabase) {
   return (data || []).filter(a => !a.deleted && a.cat !== 'quick');
 }
 
+/* ═══════════════════════════════════════════════════════════════
+ * רינדור סטטי לעמודי רכב בודד — /car/{slug}/index.html
+ * ---------------------------------------------------------------
+ * פותר בדיוק את אותה בעיה שנפתרה לכתבות (ראו הסבר בראש הקובץ):
+ * car.html הוא קובץ יחיד שמזהה רכב לפי querystring (?id=...), ולכן
+ * מנוע חיפוש שמגיע אליו רואה בכל פעם את אותו <title>טוען...</title>
+ * ריק - זהה לכל אחד מ-25 הרכבים במאגר. כאן בונים עמוד נתיב ייעודי
+ * לכל רכב (/car/{slug}/, במקביל מדויק ל-/article/{id}/ של הכתבות)
+ * עם title/meta/canonical/OG/JSON-LD ותוכן אמיתי אפויים מראש בתוך
+ * ה-HTML הגולמי, כדי שגוגל יראה תוכן ייחודי ומלא ב-byte הראשון.
+ * הנתונים מגיעים מ-cars.json (קובץ סטטי בריפו, לא מסופרבייס עדיין -
+ * ראו את מסמך תוכנית השיפוץ למעבר עתידי לנתונים חיים).
+ * חשוב: renderCarBodyHTML כאן היא עותק נאמן (עם esc() להגנה) של
+ * renderPage() בצד הלקוח שב-car.html - כל שינוי בתוכן/עיצוב חייב
+ * להתעדכן בשני המקומות יחד.
+ * ═══════════════════════════════════════════════════════════════ */
+
+const CARS_JSON_PATH = path.join(SITE_DIR, 'cars.json');
+const CAR_TEMPLATE_PATH = path.join(SITE_DIR, 'car.html');
+const CAR_OUT_DIR = path.resolve(process.cwd(), 'car');
+
+function formatPriceILS(p) {
+  return '₪' + Number(p).toLocaleString('he-IL');
+}
+
+const CAR_FEATURE_ICONS = { 'מסך': '📱', 'Apple': '📱', 'Android': '📱', 'גג': '🌟', 'מושב': '💺', 'קרוז': '🎯', 'כניסה': '🔑', 'מזג': '❄️', 'Bose': '🔊', 'Harman': '🔊', 'Canton': '🔊', 'Meridian': '🔊', 'רמקול': '🔊', 'מצלמ': '📷', 'חניה': '🅿️', 'HUD': '🖥️', 'LED': '💡', 'ניווט': '🧭', 'Wi-Fi': '📶', 'כריות': '🛡️' };
+function carFeatureIcon(f) {
+  for (const [k, v] of Object.entries(CAR_FEATURE_ICONS)) {
+    if (f.includes(k)) return v;
+  }
+  return '✦';
+}
+
+function renderCarBodyHTML(c, allCars) {
+  const isEV = !c.fuel_consumption;
+  const evRange = c.range_ev ?? c.range;
+  const desc = c.description || '';
+
+  const specsHtml = `
+    <div class="specs-group">
+      <div class="specs-group-title">מנוע ובצועים</div>
+      <table class="specs-table">
+        <tr><td>מנוע</td><td>${esc(c.engine || '')}</td></tr>
+        <tr><td>כוחות סוס</td><td>${c.horsepower} כ"ס</td></tr>
+        ${c.torque ? `<tr><td>מומנט</td><td>${c.torque} Nm</td></tr>` : ''}
+        <tr><td>תאוצה 0-100</td><td>${c.acceleration_0_100} שניות</td></tr>
+        ${c.top_speed ? `<tr><td>מהירות מקסימלית</td><td>${c.top_speed} קמ"ש</td></tr>` : ''}
+        <tr><td>תיבת הילוכים</td><td>${esc(c.transmission || '')}</td></tr>
+        <tr><td>הנעה</td><td>${esc(c.drive_type || '')}</td></tr>
+      </table>
+    </div>
+    <div class="specs-group">
+      <div class="specs-group-title">צריכה ו${isEV ? 'טווח' : 'יעילות'}</div>
+      <table class="specs-table">
+        ${isEV
+          ? `<tr><td>טווח</td><td>${evRange} ק"מ</td></tr>`
+          : `<tr><td>צריכת דלק ממוצעת</td><td>${esc(c.fuel_consumption || '')} ל/100ק"מ</td></tr>`
+        }
+        ${c.country ? `<tr><td>ארץ ייצור</td><td>${esc(c.country)}</td></tr>` : ''}
+      </table>
+    </div>
+    ${c.trunk_volume || c.weight || c.length ? `
+    <div class="specs-group">
+      <div class="specs-group-title">ממדים ומשקל</div>
+      <table class="specs-table">
+        ${c.trunk_volume ? `<tr><td>תא מטען</td><td>${c.trunk_volume} ליטר</td></tr>` : ''}
+        ${c.weight ? `<tr><td>משקל</td><td>${Number(c.weight).toLocaleString()} ק"ג</td></tr>` : ''}
+        ${c.length ? `<tr><td>אורך</td><td>${c.length} מ"מ</td></tr>` : ''}
+        ${c.width ? `<tr><td>רוחב</td><td>${c.width} מ"מ</td></tr>` : ''}
+        ${c.height ? `<tr><td>גובה</td><td>${c.height} מ"מ</td></tr>` : ''}
+      </table>
+    </div>` : ''}
+    ${c.trims ? `
+    <div class="specs-group">
+      <div class="specs-group-title">גרסאות זמינות</div>
+      <table class="specs-table">
+        ${c.trims.map((t, i) => `<tr><td>גרסה ${i + 1}</td><td>${esc(t)}</td></tr>`).join('')}
+      </table>
+    </div>` : ''}`;
+
+  const featuresHtml = c.features ? `
+    <div class="features-grid">
+      ${c.features.map(f => `
+        <div class="feature-card">
+          <span class="feature-icon">${carFeatureIcon(f)}</span>
+          <span>${esc(f)}</span>
+        </div>
+      `).join('')}
+    </div>` : '<p style="color:var(--muted)">אין מידע</p>';
+
+  const safetyHtml = c.safety_features ? `
+    <div class="features-grid">
+      ${c.safety_features.map(f => `
+        <div class="feature-card safety-feature-card">
+          <span class="feature-icon">🛡️</span>
+          <span>${esc(f)}</span>
+        </div>
+      `).join('')}
+    </div>` : '<p style="color:var(--muted)">אין מידע</p>';
+
+  const galleryImages = c.gallery_images || [];
+  const galleryHtml = galleryImages.length > 0 ? `
+    <div class="gallery-grid">
+      ${galleryImages.map((img, i) => `
+        <div class="gallery-item" onclick="openLightbox(${i})" role="button" tabindex="0"
+          aria-label="תמונה ${i + 1}" onkeydown="if(event.key==='Enter')openLightbox(${i})">
+          <img src="${esc(img)}" alt="${esc(c.brand)} ${esc(c.model)} - תמונה ${i + 1}" loading="lazy" width="300" height="169">
+          <div class="gallery-item-overlay">
+            <div class="gallery-zoom-icon">🔍</div>
+          </div>
+        </div>
+      `).join('')}
+    </div>` : '<p style="color:var(--muted);font-size:0.85rem">אין תמונות נוספות</p>';
+
+  let videoHtml = '<p style="color:var(--muted);font-size:0.85rem">סרטון לא זמין לדגם זה</p>';
+  let vidId = null;
+  if (c.youtube_video_url) {
+    const m = c.youtube_video_url.match(/(?:v=|youtu\.be\/)([^&?]+)/);
+    vidId = m ? m[1] : null;
+  }
+  if (vidId) {
+    videoHtml = `
+      <div class="video-embed-wrap" onclick="loadYoutube(this,'${vidId}')" id="video-wrap">
+        <img class="video-thumbnail" src="https://img.youtube.com/vi/${vidId}/hqdefault.jpg"
+          alt="סרטון ${esc(c.brand)} ${esc(c.model)}" loading="lazy">
+        <div class="video-play-btn">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="#fff"><polygon points="5,3 19,12 5,21"/></svg>
+        </div>
+      </div>`;
+  }
+
+  const related = allCars.filter(x => x.category === c.category && x.slug !== c.slug).slice(0, 3);
+  const relatedHtml = related.map(r => `
+      <a class="related-card" href="/car/${esc(r.slug)}/" aria-label="${esc(r.brand)} ${esc(r.model)} ${r.year}">
+        <div class="related-card-img">
+          <img src="${esc(r.image_main)}" alt="${esc(r.brand)} ${esc(r.model)}" loading="lazy" width="260" height="146">
+        </div>
+        <div class="related-card-body">
+          <div class="related-card-brand">${esc(r.brand)}</div>
+          <div class="related-card-name">${esc(r.model)} ${r.year}</div>
+          <div class="related-card-price">${formatPriceILS(r.price)}</div>
+        </div>
+      </a>
+    `).join('');
+
+  const prosConsHtml = (c.pros && c.cons) ? `
+          <div class="pros-cons">
+            <div class="pros-col">
+              <div class="pros-cons-title">✅ יתרונות</div>
+              <ul class="pros-cons-list">
+                ${c.pros.map(p => `<li>${esc(p)}</li>`).join('')}
+              </ul>
+            </div>
+            <div class="cons-col">
+              <div class="pros-cons-title">❌ חסרונות</div>
+              <ul class="pros-cons-list">
+                ${c.cons.map(p => `<li>${esc(p)}</li>`).join('')}
+              </ul>
+            </div>
+          </div>` : '';
+
+  return `
+    <!-- HERO -->
+    <div class="car-hero">
+      <img class="car-hero-img loaded" id="hero-img" src="${esc(c.image_main)}"
+        alt="${esc(c.brand)} ${esc(c.model)} ${c.year}"
+        fetchpriority="high" width="1100" height="520">
+      <div class="car-hero-overlay"></div>
+      <div class="car-hero-content">
+        <div class="car-hero-inner">
+          <span class="car-hero-cat">${esc(c.category || '')}</span>
+          <h1 class="car-hero-title">${esc(c.brand)} ${esc(c.model)} ${c.year}</h1>
+          <p class="car-hero-sub">${esc(desc.slice(0, 120))}...</p>
+          <div class="car-hero-stats">
+            <div class="car-hero-stat">
+              <span class="car-hero-stat-val">${c.horsepower}</span>
+              <span class="car-hero-stat-label">כוחות סוס</span>
+            </div>
+            <div class="car-hero-stat">
+              <span class="car-hero-stat-val">${c.acceleration_0_100}s</span>
+              <span class="car-hero-stat-label">0-100</span>
+            </div>
+            <div class="car-hero-stat">
+              <span class="car-hero-stat-val">${formatPriceILS(c.price)}</span>
+              <span class="car-hero-stat-label">מחיר</span>
+            </div>
+            ${isEV && evRange ? `<div class="car-hero-stat"><span class="car-hero-stat-val">${evRange}</span><span class="car-hero-stat-label">ק"מ טווח</span></div>` : ''}
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- QUICK SPECS STRIP -->
+    <div class="spec-strip-wrap">
+      <div class="spec-strip" role="list" aria-label="מפרט מהיר">
+        <div class="spec-strip-item" role="listitem">
+          <div class="spec-strip-icon">⚡</div>
+          <div class="spec-strip-val">${c.horsepower}</div>
+          <div class="spec-strip-label">כוחות סוס</div>
+        </div>
+        <div class="spec-strip-item" role="listitem">
+          <div class="spec-strip-icon">🏎️</div>
+          <div class="spec-strip-val">${c.acceleration_0_100}s</div>
+          <div class="spec-strip-label">0-100 קמ"ש</div>
+        </div>
+        ${isEV && evRange ? `
+        <div class="spec-strip-item" role="listitem">
+          <div class="spec-strip-icon">🔋</div>
+          <div class="spec-strip-val">${evRange}</div>
+          <div class="spec-strip-label">טווח (ק"מ)</div>
+        </div>` : ''}
+        ${!isEV ? `
+        <div class="spec-strip-item" role="listitem">
+          <div class="spec-strip-icon">⛽</div>
+          <div class="spec-strip-val">${esc(c.fuel_consumption || '')}</div>
+          <div class="spec-strip-label">ל/100ק"מ</div>
+        </div>` : ''}
+        <div class="spec-strip-item" role="listitem">
+          <div class="spec-strip-icon">🔧</div>
+          <div class="spec-strip-val" style="font-size:0.82rem;font-weight:700">${esc(c.engine || '')}</div>
+          <div class="spec-strip-label">מנוע</div>
+        </div>
+        <div class="spec-strip-item" role="listitem">
+          <div class="spec-strip-icon">🚗</div>
+          <div class="spec-strip-val" style="font-size:0.8rem;font-weight:700">${esc(c.drive_type || '')}</div>
+          <div class="spec-strip-label">הנעה</div>
+        </div>
+        <div class="spec-strip-item" role="listitem">
+          <div class="spec-strip-icon">⚙️</div>
+          <div class="spec-strip-val" style="font-size:0.78rem;font-weight:700">${esc((c.transmission || '').split(' ').slice(0, 2).join(' '))}</div>
+          <div class="spec-strip-label">תיבת הילוכים</div>
+        </div>
+        <div class="spec-strip-item" role="listitem">
+          <div class="spec-strip-icon">💰</div>
+          <div class="spec-strip-val" style="font-size:0.88rem">${formatPriceILS(c.price)}</div>
+          <div class="spec-strip-label">מחיר</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- CONTENT -->
+    <div class="car-content">
+      <div class="car-main">
+
+        <!-- TABS -->
+        <nav class="tabs-nav" role="tablist" aria-label="מידע על הרכב">
+          <button class="tab-btn active" role="tab" aria-selected="true" onclick="switchTab('overview', this)">סקירה כללית</button>
+          <button class="tab-btn" role="tab" aria-selected="false" onclick="switchTab('specs', this)">מפרט טכני</button>
+          <button class="tab-btn" role="tab" aria-selected="false" onclick="switchTab('features', this)">תכונות</button>
+          <button class="tab-btn" role="tab" aria-selected="false" onclick="switchTab('safety', this)">בטיחות</button>
+          <button class="tab-btn" role="tab" aria-selected="false" onclick="switchTab('gallery', this)">גלריה</button>
+          ${vidId ? `<button class="tab-btn" role="tab" aria-selected="false" onclick="switchTab('video', this)">סרטון</button>` : ''}
+        </nav>
+
+        <div class="tab-pane active" id="tab-overview" role="tabpanel">
+          <p class="overview-text">${esc(desc)}</p>
+          ${prosConsHtml}
+        </div>
+
+        <div class="tab-pane" id="tab-specs" role="tabpanel">
+          ${specsHtml}
+        </div>
+
+        <div class="tab-pane" id="tab-features" role="tabpanel">
+          <div class="section-heading">אמצעי נוחות וטכנולוגיה</div>
+          ${featuresHtml}
+        </div>
+
+        <div class="tab-pane" id="tab-safety" role="tabpanel">
+          <div class="section-heading">מערכות בטיחות</div>
+          ${safetyHtml}
+        </div>
+
+        <div class="tab-pane" id="tab-gallery" role="tabpanel">
+          <div class="section-heading">גלריית תמונות</div>
+          ${galleryHtml}
+        </div>
+
+        <div class="tab-pane" id="tab-video" role="tabpanel">
+          <div class="section-heading">סרטון</div>
+          ${videoHtml}
+        </div>
+
+        <div style="margin-top:36px" id="related-section"${related.length ? '' : ' style="display:none"'}>
+          <div class="section-heading">רכבים דומים</div>
+          <div id="related-grid" class="related-grid">${relatedHtml}</div>
+        </div>
+
+      </div>
+
+      <!-- SIDEBAR -->
+      <aside class="car-sidebar">
+        <div class="sidebar-box" id="price-section">
+          <div class="sidebar-box-title">מחיר מחירון</div>
+          <div class="sidebar-price">${formatPriceILS(c.price)}</div>
+          <div class="sidebar-price-note">מחיר לפני אפשרויות. צור קשר לקבלת הצעה</div>
+          <a href="https://wa.me/972559365579" target="_blank" rel="noopener noreferrer" class="btn-primary" aria-label="ייעוץ בוואטסאפ">💬 ייעוץ בוואטסאפ</a>
+          <a href="/cars-list.html" class="btn-secondary">← השווה רכבים</a>
+          <div class="share-btn-row">
+            <button class="share-btn" onclick="shareCar()" aria-label="שתף">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+              שתף
+            </button>
+            <button class="share-btn" onclick="copyLink()" aria-label="העתק קישור">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+              קישור
+            </button>
+          </div>
+        </div>
+
+        <div class="sidebar-box">
+          <div class="sidebar-box-title">נתוני מפתח</div>
+          <div class="key-specs-list">
+            <div class="key-spec-row">
+              <span class="key-spec-label"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg> ארץ ייצור</span>
+              <span class="key-spec-val">${esc(c.country || '—')}</span>
+            </div>
+            <div class="key-spec-row">
+              <span class="key-spec-label">📅 שנה</span>
+              <span class="key-spec-val">${c.year}</span>
+            </div>
+            ${c.trunk_volume ? `<div class="key-spec-row"><span class="key-spec-label">🧳 תא מטען</span><span class="key-spec-val">${c.trunk_volume} ל'</span></div>` : ''}
+            ${c.top_speed ? `<div class="key-spec-row"><span class="key-spec-label">⚡ מהירות מקס'</span><span class="key-spec-val">${c.top_speed} קמ"ש</span></div>` : ''}
+            ${c.torque ? `<div class="key-spec-row"><span class="key-spec-label">🔩 מומנט</span><span class="key-spec-val">${c.torque} Nm</span></div>` : ''}
+          </div>
+        </div>
+
+        ${c.colors ? `
+        <div class="sidebar-box">
+          <div class="sidebar-box-title">צבעים זמינים</div>
+          <div class="colors-list">
+            ${c.colors.map(col => `<span class="color-chip" title="${esc(col)}">${esc(col)}</span>`).join('')}
+          </div>
+        </div>` : ''}
+      </aside>
+    </div>`;
+}
+
+function hydrateTemplateForCar(template, c, allCars) {
+  let html = template;
+  const pageTitle = c.meta_title || `${c.brand} ${c.model} ${c.year} | ספידומטר`;
+  const pageDesc = c.meta_description || plainTextExcerpt(c.description || '') || pageTitle;
+  const canonicalUrl = `${SITE}/car/${c.slug}/`;
+  const shareImg = ogImage(c.image_main);
+
+  html = html.replace('<title>טוען...</title>', `<title>${esc(pageTitle)}</title>`);
+  html = html.replace('<meta name="description" content="">', `<meta name="description" content="${esc(pageDesc)}">`);
+  html = html.replace('<link rel="canonical" href="">', `<link rel="canonical" href="${canonicalUrl}">`);
+  html = html.replace('<meta property="og:title" content="">', `<meta property="og:title" content="${esc(pageTitle)}">`);
+  html = html.replace('<meta property="og:description" content="">', `<meta property="og:description" content="${esc(pageDesc)}">`);
+  html = html.replace('<meta property="og:url" content="">', `<meta property="og:url" content="${canonicalUrl}">`);
+  html = html.replace('<meta property="og:image" content="">', `<meta property="og:image" content="${esc(shareImg)}">`);
+  html = html.replace('<meta name="twitter:title" content="">', `<meta name="twitter:title" content="${esc(pageTitle)}">`);
+  html = html.replace('<meta name="twitter:description" content="">', `<meta name="twitter:description" content="${esc(pageDesc)}">`);
+  html = html.replace('<meta name="twitter:image" content="">', `<meta name="twitter:image" content="${esc(shareImg)}">`);
+
+  const ld = {
+    '@context': 'https://schema.org', '@type': 'Car',
+    name: `${c.brand} ${c.model} ${c.year}`,
+    brand: { '@type': 'Brand', name: c.brand },
+    modelDate: String(c.year),
+    description: c.description,
+    image: c.image_main,
+    offers: { '@type': 'Offer', price: c.price, priceCurrency: 'ILS' }
+  };
+  html = html.replace(
+    '</head>',
+    `<script type="application/ld+json">${JSON.stringify(ld).replace(/</g, '\\u003c')}</script>\n</head>`
+  );
+
+  html = html.replace(
+    '<span id="breadcrumb-name">טוען...</span>',
+    `<span id="breadcrumb-name">${esc(`${c.brand} ${c.model} ${c.year}`)}</span>`
+  );
+
+  html = html.replace(
+    `<div id="car-page-root">
+  <div class="car-page-loading">
+    <div class="loading-spinner"></div>
+    <span>טוען מידע על הרכב...</span>
+  </div>
+</div>`,
+    `<div id="car-page-root">${renderCarBodyHTML(c, allCars)}</div>`
+  );
+
+  return html;
+}
+
 async function main() {
   const targetArticleId = process.env.TARGET_ARTICLE_ID
     ? parseInt(process.env.TARGET_ARTICLE_ID)
@@ -705,8 +1096,34 @@ async function main() {
     }
   }
 
-  await writeFile(SITEMAP_PATH, buildSitemap(liveArticles), 'utf-8');
-  console.log(`🗺️  sitemap.xml נכתב עם ${liveArticles.length + 1} כתובות.`);
+  // ═══ עמודי רכב סטטיים (/car/{slug}/) - לא רצים כשמריצים ריצה ממוקדת לכתבה בודדת ═══
+  let liveCars = [];
+  if (!targetArticleId) {
+    console.log('🚗 קורא את cars.json ובונה עמודי רכב סטטיים...');
+    try {
+      const carsRaw = await readFile(CARS_JSON_PATH, 'utf-8');
+      liveCars = JSON.parse(carsRaw).filter(c => c && c.slug);
+      const carTemplate = await readFile(CAR_TEMPLATE_PATH, 'utf-8');
+
+      await rm(CAR_OUT_DIR, { recursive: true, force: true });
+      await mkdir(CAR_OUT_DIR, { recursive: true });
+
+      let carsWritten = 0;
+      for (const c of liveCars) {
+        const dir = path.join(CAR_OUT_DIR, c.slug);
+        await mkdir(dir, { recursive: true });
+        const hydrated = hydrateTemplateForCar(carTemplate, c, liveCars);
+        await writeFile(path.join(dir, 'index.html'), hydrated, 'utf-8');
+        carsWritten++;
+      }
+      console.log(`🚗 נכתבו ${carsWritten} עמודי רכב תחת /car/{slug}/.`);
+    } catch (err) {
+      console.error('⚠️ שגיאה בבניית עמודי רכב סטטיים - ממשיכים בלי לעצור את שאר הריצה:', err.message || err);
+    }
+  }
+
+  await writeFile(SITEMAP_PATH, buildSitemap(liveArticles, liveCars), 'utf-8');
+  console.log(`🗺️  sitemap.xml נכתב עם ${liveArticles.length + liveCars.length + 1} כתובות.`);
 
   await writeFile(NEWS_SITEMAP_PATH, buildNewsSitemap(liveArticles), 'utf-8');
   console.log(`📰 sitemap-news.xml נכתב (רק כתבות מ-48 השעות האחרונות).`);
