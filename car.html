@@ -286,6 +286,65 @@ let carData = null;
 let galleryImages = [];
 let lightboxIndex = 0;
 
+// ── חיבור לסופרבייס (Phase 2, 18.9.2026) — אותו דפוס בדיוק כמו ב-app.js:
+//    ה-SDK נטען עם defer אחרי הסקריפט הזה, אז sbClient בהכרח null בטעינה
+//    הראשונה - fetchCarBySlug/getRelated נופלים אז לפניה ישירה ל-REST API
+//    עם מפתח ה-anon הציבורי, בדיוק כמו שכבר קורה לכתבות. ──
+const SB_URL = 'https://kaykrrnmykqrfhawgtqt.supabase.co';
+const SB_KEY = 'sb_publishable_Ms6YFTnADm-qAd9617Ey9A_D3x-Zumi';
+let sbClient = null;
+function __initSb() {
+  if (window.supabase && !sbClient) {
+    try { sbClient = supabase.createClient(SB_URL, SB_KEY); window.sbClient = sbClient; } catch(e) {}
+  }
+}
+window.__initSb = __initSb;
+
+// ── שליפת רכב בודד: Supabase (public.cars) → cars.json הסטטי הישן → FALLBACK_CARS מוטמע ──
+async function fetchCarBySlug(slug) {
+  try {
+    let row = null;
+    if (sbClient) {
+      const { data, error } = await sbClient.from('cars').select('*').eq('slug', slug).eq('deleted', false).maybeSingle();
+      if (error) throw error;
+      row = data;
+    } else {
+      const r = await fetch(SB_URL + '/rest/v1/cars?select=*&slug=eq.' + encodeURIComponent(slug) + '&deleted=eq.false', {
+        headers: { apikey: SB_KEY, Authorization: 'Bearer ' + SB_KEY }
+      });
+      if (!r.ok) throw new Error('supabase rest fetch failed: ' + r.status);
+      const arr = await r.json();
+      row = arr && arr[0];
+    }
+    if (row) return row;
+  } catch(e) { console.warn('Supabase car fetch failed, falling back:', e); }
+
+  try {
+    const res = await fetch('/cars.json');
+    if (res.ok) {
+      const cars = await res.json();
+      const found = cars.find(c => c.slug === slug || c.id === slug);
+      if (found) return found;
+    }
+  } catch(e) {}
+
+  return FALLBACK_CARS.find(c => c.slug === slug || c.id === slug) || null;
+}
+
+// ── מונה צפיות — בדיוק כמו increment_article_views: פעם אחת לסשן דרך sessionStorage ──
+function trackCarView(carId) {
+  if (!carId || typeof carId !== 'number') return; // מגן על נפילה ל-cars.json/FALLBACK_CARS הישנים (id מחרוזתי, לא bigint)
+  try {
+    const seen = JSON.parse(sessionStorage.getItem('sp_viewed_cars') || '[]');
+    if (seen.includes(carId)) return;
+    seen.push(carId);
+    sessionStorage.setItem('sp_viewed_cars', JSON.stringify(seen));
+  } catch(e) {}
+  const bump = () => { if (sbClient) Promise.resolve(sbClient.rpc('increment_car_views', { car_id: carId })).catch(()=>{}); };
+  if (sbClient) bump();
+  else setTimeout(bump, 800); // נותנים ל-SDK הנדחה (defer) רגע להיטען לפני שמוותרים
+}
+
 // ── Load car data ──
 async function loadCar() {
   // הנתיב הקנוני הוא /car/{slug}/ (בדיוק כמו /article/{id}/ לכתבות - נדרש כדי
@@ -300,17 +359,10 @@ async function loadCar() {
   if (!slug) { showError('לא סופק מזהה רכב'); return; }
 
   try {
-    let cars;
-    try {
-      const res = await fetch('/cars.json');
-      if (!res.ok) throw new Error('404');
-      cars = await res.json();
-    } catch(e) {
-      cars = FALLBACK_CARS;
-    }
-    carData = cars.find(c => c.slug === slug || c.id === slug);
+    carData = await fetchCarBySlug(slug);
     if (!carData) { showError('הרכב לא נמצא: ' + slug); return; }
     renderPage();
+    trackCarView(carData.id);
   } catch(e) {
     showError('שגיאה בטעינת הנתונים');
     console.error(e);
@@ -505,6 +557,22 @@ function renderPage() {
 
   // ── Related cars (same category, different id) ──
   async function getRelated() {
+    try {
+      let rows = null;
+      if (sbClient) {
+        const { data, error } = await sbClient.from('cars').select('*').eq('category', c.category).eq('deleted', false).neq('slug', c.slug).limit(3);
+        if (error) throw error;
+        rows = data;
+      } else {
+        const r = await fetch(SB_URL + '/rest/v1/cars?select=*&category=eq.' + encodeURIComponent(c.category) + '&deleted=eq.false&slug=neq.' + encodeURIComponent(c.slug) + '&limit=3', {
+          headers: { apikey: SB_KEY, Authorization: 'Bearer ' + SB_KEY }
+        });
+        if (!r.ok) throw new Error('supabase rest fetch failed: ' + r.status);
+        rows = await r.json();
+      }
+      if (rows && rows.length) return rows;
+    } catch(e) { console.warn('Supabase related-cars fetch failed, falling back:', e); }
+
     let cars;
     try {
       const res = await fetch('/cars.json');
@@ -821,5 +889,8 @@ function scoreBarColor(s) {
 // Init
 loadCar();
 </script>
+<!-- נטען אחרי הסקריפט הראשי (defer) בכוונה - fetchCarBySlug/getRelated כבר יודעים
+     לפעול גם בלי sbClient (עדיין null בטעינה הראשונה) דרך פניית REST ישירה -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer onload="window.__initSb&&window.__initSb()"></script>
 </body>
 </html>
