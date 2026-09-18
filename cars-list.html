@@ -294,16 +294,46 @@ let allCars = [];
 let filteredCars = [];
 let currentView = 'grid';
 
-// Load cars JSON
+// ── חיבור לסופרבייס (Phase 2, 18.9.2026) — אותו דפוס בדיוק כמו ב-app.js/car.html:
+//    ה-SDK נטען עם defer אחרי הסקריפט הזה, אז sbClient בהכרח null בטעינה
+//    הראשונה - loadCars נופל אז לפניה ישירה ל-REST API עם מפתח ה-anon הציבורי. ──
+const SB_URL = 'https://kaykrrnmykqrfhawgtqt.supabase.co';
+const SB_KEY = 'sb_publishable_Ms6YFTnADm-qAd9617Ey9A_D3x-Zumi';
+let sbClient = null;
+function __initSb() {
+  if (window.supabase && !sbClient) {
+    try { sbClient = supabase.createClient(SB_URL, SB_KEY); window.sbClient = sbClient; } catch(e) {}
+  }
+}
+window.__initSb = __initSb;
+
+// Load cars: Supabase (public.cars) → cars.json הסטטי הישן → FALLBACK_CARS מוטמע
 async function loadCars() {
   try {
-    const res = await fetch('cars.json');
-    if (!res.ok) throw new Error('Failed to load');
-    allCars = await res.json();
+    let rows = null;
+    if (sbClient) {
+      const { data, error } = await sbClient.from('cars').select('*').eq('deleted', false).order('sales_rank', { ascending: true, nullsFirst: false });
+      if (error) throw error;
+      rows = data;
+    } else {
+      const r = await fetch(SB_URL + '/rest/v1/cars?select=*&deleted=eq.false&order=sales_rank.asc.nullslast', {
+        headers: { apikey: SB_KEY, Authorization: 'Bearer ' + SB_KEY }
+      });
+      if (!r.ok) throw new Error('supabase rest fetch failed: ' + r.status);
+      rows = await r.json();
+    }
+    if (!rows || !rows.length) throw new Error('empty result');
+    allCars = rows;
   } catch(e) {
-    // Fallback: use inline sample data if fetch fails (local file / CORS)
-    console.warn('Could not fetch cars.json, using fallback');
-    allCars = FALLBACK_CARS;
+    console.warn('Supabase cars fetch failed, falling back:', e);
+    try {
+      const res = await fetch('cars.json');
+      if (!res.ok) throw new Error('Failed to load');
+      allCars = await res.json();
+    } catch(e2) {
+      console.warn('Could not fetch cars.json either, using embedded fallback');
+      allCars = FALLBACK_CARS;
+    }
   }
   filteredCars = [...allCars];
   buildFilters();
@@ -532,5 +562,8 @@ loadCars().then(() => {
   setTimeout(applyURLParams, 100);
 });
 </script>
+<!-- נטען אחרי הסקריפט הראשי (defer) בכוונה - loadCars כבר יודע לפעול גם בלי
+     sbClient (עדיין null בטעינה הראשונה) דרך פניית REST ישירה -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer onload="window.__initSb&&window.__initSb()"></script>
 </body>
 </html>
