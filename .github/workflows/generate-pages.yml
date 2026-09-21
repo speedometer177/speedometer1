@@ -53,6 +53,10 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add article/* sitemap.xml sitemap-news.xml index.html 404.html
+          # car/{slug}/ נוסף ב-18.9.2026 (רינדור סטטי לעמודי רכב) - הבדיקה ל-[ -d car ]
+          # מונעת "pathspec did not match any files" במקרה הנדיר שבו יצירת הרכבים
+          # נכשלה כולה (למשל הפרעה זמנית בחיבור לסופרבייס) ותיקיית car/ לא נוצרה כלל.
+          if [ -d car ]; then git add car/*; fi
           if git diff --cached --quiet; then
             echo "No changes to commit."
             exit 0
@@ -74,6 +78,7 @@ jobs:
             git reset --hard origin/${{ github.ref_name }}
             npm run generate
             git add article/* sitemap.xml sitemap-news.xml index.html 404.html
+            if [ -d car ]; then git add car/*; fi
             if git diff --cached --quiet; then
               echo "✅ Origin already up to date after regeneration — nothing to push."
               exit 0
