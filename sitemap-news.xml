@@ -1,13 +1,24 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:news="http://www.google.com/schemas/sitemap-news/0.9">
   <url>
+    <loc>https://speedometer10.co.il/article/631/</loc>
+    <news:news>
+      <news:publication>
+        <news:name>ספידומטר</news:name>
+        <news:language>he</news:language>
+      </news:publication>
+      <news:publication_date>2026-09-22T11:23:00.000Z</news:publication_date>
+      <news:title>ניסאן אקס טרייל 2027 הבא נחשף בגרסה אמריקאית מעודכנת</news:title>
+    </news:news>
+  </url>
+  <url>
     <loc>https://speedometer10.co.il/article/629/</loc>
     <news:news>
       <news:publication>
         <news:name>ספידומטר</news:name>
         <news:language>he</news:language>
       </news:publication>
-      <news:publication_date>2026-09-22T08:19:00.000Z</news:publication_date>
+      <news:publication_date>2026-09-22T11:08:00.000Z</news:publication_date>
       <news:title>גרמניה בוחרת: הוכרזו הפיינליסטיות של תחרות מכונית השנה 2027</news:title>
     </news:news>
   </url>
