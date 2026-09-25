@@ -141,6 +141,22 @@ header{background:var(--white);border-bottom:1px solid var(--border);position:st
 .specs-table td:first-child{color:var(--muted);font-weight:600;width:50%}
 .specs-table td:last-child{font-weight:700;color:var(--ink)}
 
+/* ════ TRIM COMPARISON + SWITCHER ════ */
+.trim-switcher-wrap{margin-bottom:22px}
+.trim-compare-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;margin-bottom:14px;border:1px solid var(--border);border-radius:10px;background:var(--white)}
+.trim-compare-scroll::-webkit-scrollbar{display:none}
+.trim-compare-table{width:100%;border-collapse:collapse;min-width:440px}
+.trim-compare-table th,.trim-compare-table td{padding:11px 14px;font-size:0.82rem;text-align:center;border-bottom:1px solid var(--border);white-space:nowrap;max-width:190px;overflow:hidden;text-overflow:ellipsis}
+.trim-compare-table th{background:#fafaf9;font-weight:800;color:var(--ink);font-size:0.76rem;text-transform:uppercase;letter-spacing:0.04em}
+.trim-compare-table td:first-child,.trim-compare-table th:first-child{text-align:right;color:var(--muted);font-weight:600;position:sticky;right:0;background:var(--white);text-transform:none;letter-spacing:0}
+.trim-compare-table tr:nth-child(even) td{background:#fafaf9}
+.trim-compare-table tr:last-child td{border-bottom:none}
+.trim-compare-table td:not(:first-child){font-weight:700;color:var(--ink)}
+.trim-pills{display:flex;gap:8px;flex-wrap:wrap}
+.trim-pill{padding:9px 18px;border:1.5px solid var(--border);border-radius:24px;font-size:0.82rem;font-weight:700;color:var(--dark);background:var(--white);transition:all 0.2s}
+.trim-pill:hover{border-color:var(--ink)}
+.trim-pill.active{background:var(--red);border-color:var(--red);color:#fff}
+
 /* ════ FEATURES GRID ════ */
 .features-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px}
 .feature-card{display:flex;align-items:center;gap:10px;padding:11px 14px;background:var(--white);border:1px solid var(--border);border-radius:8px;font-size:0.82rem;color:var(--dark);font-weight:500}
@@ -375,39 +391,10 @@ footer a{color:var(--red)}
 
         <div class="tab-pane" id="tab-specs" role="tabpanel">
           
+          <div id="specs-dynamic-groups"><div class="specs-group"><div class="specs-group-title">🪪 תעודת זהות</div><table class="specs-table"><tr><td>שנה</td><td>2025</td></tr><tr><td>קטגוריה</td><td>קרוסאובר</td></tr><tr><td>יבואן רשמי</td><td>טלקאר</td></tr><tr><td>ארץ ייצור</td><td>דרום קוריאה</td></tr><tr><td>דירוג/מדד בטיחות</td><td>5 כוכבי Euro NCAP</td></tr><tr><td>מכירות בישראל</td><td>7,800 יחידות (2025)</td></tr></table></div><div class="specs-group"><div class="specs-group-title">🔧 מנוע וביצועים</div><table class="specs-table"><tr><td>מנוע</td><td>1.6L היברידי</td></tr><tr><td>הספק</td><td>230 כ&quot;ס</td></tr><tr><td>מומנט</td><td>350 Nm</td></tr><tr><td>תאוצה 0-100</td><td>8 שניות</td></tr><tr><td>מהירות מקסימלית</td><td>193 קמ&quot;ש</td></tr><tr><td>תיבת הילוכים</td><td>DCT 6 הילוכים</td></tr><tr><td>הנעה</td><td>הנעה כפולה AWD</td></tr></table></div><div class="specs-group"><div class="specs-group-title">⛽ צריכת דלק</div><table class="specs-table"><tr><td>צריכת דלק ממוצעת</td><td>6.1 ל/100 ק&quot;מ</td></tr></table></div><div class="specs-group"><div class="specs-group-title">📐 מידות ומשקל</div><table class="specs-table"><tr><td>תא מטען</td><td>543 ליטר</td></tr><tr><td>משקל</td><td>1,710 ק&quot;ג</td></tr><tr><td>אורך</td><td>4515 מ&quot;מ</td></tr><tr><td>רוחב</td><td>1865 מ&quot;מ</td></tr><tr><td>גובה</td><td>1645 מ&quot;מ</td></tr></table></div></div>
+          
     <div class="specs-group">
-      <div class="specs-group-title">מנוע ובצועים</div>
-      <table class="specs-table">
-        <tr><td>מנוע</td><td>1.6L היברידי</td></tr>
-        <tr><td>כוחות סוס</td><td>230 כ"ס</td></tr>
-        <tr><td>מומנט</td><td>350 Nm</td></tr>
-        <tr><td>תאוצה 0-100</td><td>8 שניות</td></tr>
-        <tr><td>מהירות מקסימלית</td><td>193 קמ"ש</td></tr>
-        <tr><td>תיבת הילוכים</td><td>DCT 6 הילוכים</td></tr>
-        <tr><td>הנעה</td><td>הנעה כפולה AWD</td></tr>
-      </table>
-    </div>
-    <div class="specs-group">
-      <div class="specs-group-title">צריכה ויעילות</div>
-      <table class="specs-table">
-        <tr><td>צריכת דלק ממוצעת</td><td>6.1 ל/100ק"מ</td></tr>
-        
-      </table>
-    </div>
-    
-    <div class="specs-group">
-      <div class="specs-group-title">ממדים ומשקל</div>
-      <table class="specs-table">
-        <tr><td>תא מטען</td><td>543 ליטר</td></tr>
-        <tr><td>משקל</td><td>1,710 ק"ג</td></tr>
-        <tr><td>אורך</td><td>4515 מ"מ</td></tr>
-        <tr><td>רוחב</td><td>1865 מ"מ</td></tr>
-        <tr><td>גובה</td><td>1645 מ"מ</td></tr>
-      </table>
-    </div>
-    
-    <div class="specs-group">
-      <div class="specs-group-title">גרסאות זמינות</div>
+      <div class="specs-group-title">🏷️ גרסאות זמינות</div>
       <table class="specs-table">
         
       </table>
@@ -567,9 +554,9 @@ footer a{color:var(--red)}
       <!-- SIDEBAR -->
       <aside class="car-sidebar">
         <div class="sidebar-box" id="price-section">
-          <div class="sidebar-box-title">מחיר מחירון</div>
+          <div class="sidebar-box-title">מחיר מחירון - החל מ</div>
           <div class="sidebar-price">₪174,990</div>
-          <div class="sidebar-price-note">מחיר לפני אפשרויות. צור קשר לקבלת הצעה</div>
+          <div class="sidebar-price-note">עד ₪229,990 ברמת הגימור הגבוהה · מחיר לפני אפשרויות</div>
           <a href="https://wa.me/972559365579" target="_blank" rel="noopener noreferrer" class="btn-primary" aria-label="ייעוץ בוואטסאפ">💬 ייעוץ בוואטסאפ</a>
           <a href="/cars-list.html" class="btn-secondary">← השווה רכבים</a>
           <div class="share-btn-row">
@@ -589,7 +576,7 @@ footer a{color:var(--red)}
           <div class="key-specs-list">
             <div class="key-spec-row">
               <span class="key-spec-label"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg> ארץ ייצור</span>
-              <span class="key-spec-val">—</span>
+              <span class="key-spec-val">דרום קוריאה</span>
             </div>
             <div class="key-spec-row">
               <span class="key-spec-label">📅 שנה</span>
@@ -640,6 +627,125 @@ footer a{color:var(--red)}
 let carData = null;
 let galleryImages = [];
 let lightboxIndex = 0;
+let __carBase = null;   // הרכב הבסיסי (ללא מיזוג רמת גימור) - למתג רמות הגימור
+let __carTrims = null;  // מערך רמות הגימור העשירות (אובייקטים), אם קיים
+
+// ── רמות גימור: מיזוג נתוני רמת גימור נבחרת מעל נתוני הרכב הבסיסיים ──
+// שדות הרמה הבסיסית (ברמת c) תמיד משקפים את הגרסה/רמת הגימור הראשונה;
+// trims הוא מערך שמכיל את כל הרמות (כולל הבסיסית) עם ערכים שונים לכל אחת.
+// "עשיר" = מערך של אובייקטים (הפורמט החדש); מערך של מחרוזות = פורמט ישן
+// (רשימת שמות רמות גימור בלבד, ללא נתונים) - נשמר לתאימות לאחור.
+function isRichTrims(trims) {
+  return Array.isArray(trims) && trims.length > 0 && trims[0] && typeof trims[0] === 'object';
+}
+function mergeTrim(c, trim) {
+  if (!trim) return c;
+  const merged = Object.assign({}, c);
+  const overridable = ['drive_type', 'horsepower', 'torque', 'acceleration_0_100', 'top_speed', 'range_ev', 'battery_capacity_kwh', 'weight', 'safety_rating', 'price'];
+  overridable.forEach(k => { if (trim[k] !== undefined && trim[k] !== null && trim[k] !== '') merged[k] = trim[k]; });
+  merged._trimName = trim.name || '';
+  merged._trimNotable = (trim.notable_features && trim.notable_features.length) ? trim.notable_features : null;
+  return merged;
+}
+
+// ── בניית קבוצות המפרט הטכני — פונקציה טהורה כדי שאפשר יהיה להריץ אותה
+//    מחדש בכל החלפת רמת גימור בלי לשכפל לוגיקה. כל שורה מוגנת בבדיקת
+//    truthy כדי שלעולם לא יוצג "null"/"undefined" כשמפרט המקור לא נתן
+//    ערך (למשל הספק/מומנט ברכב PHEV שנותן רק ערכי רכיבים נפרדים). ──
+function buildSpecsGroupsHtml(c) {
+  function row(label, val) { return val ? `<tr><td>${label}</td><td>${val}</td></tr>` : ''; }
+  function group(title, rowsHtml) {
+    return rowsHtml ? `<div class="specs-group"><div class="specs-group-title">${title}</div><table class="specs-table">${rowsHtml}</table></div>` : '';
+  }
+
+  const origin = c.country_of_origin || c.country;
+  let idCardRows = row('שנה', c.year);
+  idCardRows += row('קטגוריה', c.category);
+  idCardRows += row('יבואן רשמי', c.importer);
+  idCardRows += row('ארץ ייצור', origin);
+  idCardRows += (c.pollution_index != null && c.pollution_index !== '') ? row('מדד זיהום אוויר', c.pollution_index + ' מתוך 15') : '';
+  idCardRows += row('דירוג/מדד בטיחות', c.safety_rating);
+  idCardRows += c.sales_units ? row('מכירות בישראל', Number(c.sales_units).toLocaleString() + ' יחידות' + (c.sales_year ? ' (' + c.sales_year + ')' : '')) : '';
+
+  let engineRows = row('מנוע', c.engine);
+  engineRows += row('הספק', c.horsepower ? c.horsepower + ' כ"ס' : '');
+  engineRows += row('מומנט', c.torque ? c.torque + ' Nm' : '');
+  engineRows += row('תאוצה 0-100', c.acceleration_0_100 ? c.acceleration_0_100 + ' שניות' : '');
+  engineRows += row('מהירות מקסימלית', c.top_speed ? c.top_speed + ' קמ"ש' : '');
+  engineRows += row('תיבת הילוכים', c.transmission);
+  engineRows += row('הנעה', c.drive_type);
+
+  let electricRows = row('טווח נסיעה חשמלי', c.range_ev ? c.range_ev + ' ק"מ' : '');
+  electricRows += row('קיבולת סוללה', c.battery_capacity_kwh ? c.battery_capacity_kwh + ' kWh' : '');
+
+  const fuelRows = row('צריכת דלק ממוצעת', c.fuel_consumption ? c.fuel_consumption + ' ל/100 ק"מ' : '');
+
+  let dimRows = row('תא מטען', c.trunk_volume ? c.trunk_volume + ' ליטר' : '');
+  dimRows += row('משקל', c.weight ? Number(c.weight).toLocaleString() + ' ק"ג' : '');
+  dimRows += row('אורך', c.length ? c.length + ' מ"מ' : '');
+  dimRows += row('רוחב', c.width ? c.width + ' מ"מ' : '');
+  dimRows += row('גובה', c.height ? c.height + ' מ"מ' : '');
+  dimRows += row('מידת צמיגים', c.tires);
+
+  let html = '';
+  html += group('🪪 תעודת זהות', idCardRows);
+  html += group('🔧 מנוע וביצועים', engineRows);
+  html += group('🔋 חשמל וטעינה', electricRows);
+  html += group('⛽ צריכת דלק', fuelRows);
+  html += group('📐 מידות ומשקל', dimRows);
+
+  if (c._trimNotable) {
+    html += `<div class="specs-group">
+      <div class="specs-group-title">⭐ מאפיינים ייחודיים${c._trimName ? ' — ' + c._trimName : ''}</div>
+      <div class="features-grid">
+        ${c._trimNotable.map(f => `<div class="feature-card"><span class="feature-icon">✦</span><span>${f}</span></div>`).join('')}
+      </div>
+    </div>`;
+  }
+  return html;
+}
+
+// ── טבלת השוואה בין רמות הגימור (מוצגת רק כשיש 2+ רמות עשירות) ──
+function buildTrimCompareHtml(trims) {
+  if (!trims || trims.length < 2) return '';
+  const fields = [
+    { k: 'price', label: 'מחיר', fmt: v => formatPrice(v) },
+    { k: 'horsepower', label: 'הספק', fmt: v => v + ' כ"ס' },
+    { k: 'torque', label: 'מומנט', fmt: v => v + ' Nm' },
+    { k: 'acceleration_0_100', label: 'תאוצה 0-100', fmt: v => v + ' שנ׳' },
+    { k: 'top_speed', label: "מהירות מקס'", fmt: v => v + ' קמ"ש' },
+    { k: 'range_ev', label: 'טווח חשמלי', fmt: v => v + ' ק"מ' },
+    { k: 'battery_capacity_kwh', label: 'קיבולת סוללה', fmt: v => v + ' kWh' },
+    { k: 'weight', label: 'משקל', fmt: v => Number(v).toLocaleString() + ' ק"ג' },
+    { k: 'drive_type', label: 'הנעה', fmt: v => v },
+    { k: 'safety_rating', label: 'דירוג בטיחות', fmt: v => v },
+  ];
+  const activeFields = fields.filter(f => trims.some(t => t[f.k] !== null && t[f.k] !== undefined && t[f.k] !== ''));
+  if (!activeFields.length) return '';
+  return `
+    <div class="trim-compare-scroll">
+      <table class="trim-compare-table">
+        <tr><th>מפרט</th>${trims.map(t => `<th>${t.name || ''}</th>`).join('')}</tr>
+        ${activeFields.map(f => `<tr><td>${f.label}</td>${trims.map(t => {
+          const v = t[f.k];
+          return `<td>${(v !== null && v !== undefined && v !== '') ? f.fmt(v) : '—'}</td>`;
+        }).join('')}</tr>`).join('')}
+      </table>
+    </div>`;
+}
+function buildTrimPillsHtml(trims, activeIdx) {
+  return `<div class="trim-pills">${trims.map((t, i) => `<button type="button" class="trim-pill${i === activeIdx ? ' active' : ''}" onclick="selectTrim(${i},this)">${t.name || ('רמה ' + (i + 1))}</button>`).join('')}</div>`;
+}
+// ── החלפת רמת גימור מוצגת: בונים מחדש רק את קבוצות המפרט התלויות ברמה ──
+function selectTrim(idx, btnEl) {
+  document.querySelectorAll('.trim-pill').forEach(b => b.classList.remove('active'));
+  if (btnEl) btnEl.classList.add('active');
+  if (!__carBase || !__carTrims || !__carTrims[idx]) return;
+  const merged = mergeTrim(__carBase, __carTrims[idx]);
+  const target = document.getElementById('specs-dynamic-groups');
+  if (target) target.innerHTML = buildSpecsGroupsHtml(merged);
+}
+window.selectTrim = selectTrim;
 
 // ── חיבור לסופרבייס (Phase 2, 18.9.2026) — אותו דפוס בדיוק כמו ב-app.js:
 //    ה-SDK נטען עם defer אחרי הסקריפט הזה, אז sbClient בהכרח null בטעינה
@@ -741,7 +847,6 @@ function formatPrice(p) {
 function renderPage() {
   const c = carData;
   galleryImages = c.gallery_images || [];
-  const isEV = !c.fuel_consumption;
   const evRange = c.range_ev ?? c.range;
 
   // ── SEO ──
@@ -838,48 +943,25 @@ function renderPage() {
       </div>`;
   })() : '<p style="color:var(--muted);font-size:0.85rem">סרטון לא זמין לדגם זה</p>';
 
-  // ── Specs groups ──
-  const specsHtml = `
+  // ── Specs: רמות גימור (אם קיימות בפורמט העשיר) + קבוצות מפרט מלאות ──
+  __carBase = c;
+  const richTrims = isRichTrims(c.trims) ? c.trims : null;
+  __carTrims = richTrims;
+  const trimsBlockHtml = richTrims ? `
+    <div class="trim-switcher-wrap">
+      ${buildTrimCompareHtml(richTrims)}
+      ${richTrims.length >= 2 ? buildTrimPillsHtml(richTrims, 0) : ''}
+    </div>` : '';
+  const initialSpecsMerged = richTrims ? mergeTrim(c, richTrims[0]) : c;
+  const specsGroupsHtml = buildSpecsGroupsHtml(initialSpecsMerged);
+  // תאימות לאחור: trims כמערך מחרוזות ישן (בלי נתונים מפורטים לכל רמה)
+  const legacyTrimsHtml = (c.trims && !richTrims) ? `
     <div class="specs-group">
-      <div class="specs-group-title">מנוע ובצועים</div>
-      <table class="specs-table">
-        <tr><td>מנוע</td><td>${c.engine}</td></tr>
-        <tr><td>כוחות סוס</td><td>${c.horsepower} כ"ס</td></tr>
-        ${c.torque ? `<tr><td>מומנט</td><td>${c.torque} Nm</td></tr>` : ''}
-        <tr><td>תאוצה 0-100</td><td>${c.acceleration_0_100} שניות</td></tr>
-        ${c.top_speed ? `<tr><td>מהירות מקסימלית</td><td>${c.top_speed} קמ"ש</td></tr>` : ''}
-        <tr><td>תיבת הילוכים</td><td>${c.transmission}</td></tr>
-        <tr><td>הנעה</td><td>${c.drive_type}</td></tr>
-      </table>
-    </div>
-    <div class="specs-group">
-      <div class="specs-group-title">צריכה ו${isEV ? 'טווח' : 'יעילות'}</div>
-      <table class="specs-table">
-        ${isEV
-          ? `<tr><td>טווח</td><td>${evRange} ק"מ</td></tr>`
-          : `<tr><td>צריכת דלק ממוצעת</td><td>${c.fuel_consumption} ל/100ק"מ</td></tr>`
-        }
-        ${c.country ? `<tr><td>ארץ ייצור</td><td>${c.country}</td></tr>` : ''}
-      </table>
-    </div>
-    ${c.trunk_volume || c.weight || c.length ? `
-    <div class="specs-group">
-      <div class="specs-group-title">ממדים ומשקל</div>
-      <table class="specs-table">
-        ${c.trunk_volume ? `<tr><td>תא מטען</td><td>${c.trunk_volume} ליטר</td></tr>` : ''}
-        ${c.weight ? `<tr><td>משקל</td><td>${c.weight.toLocaleString()} ק"ג</td></tr>` : ''}
-        ${c.length ? `<tr><td>אורך</td><td>${c.length} מ"מ</td></tr>` : ''}
-        ${c.width ? `<tr><td>רוחב</td><td>${c.width} מ"מ</td></tr>` : ''}
-        ${c.height ? `<tr><td>גובה</td><td>${c.height} מ"מ</td></tr>` : ''}
-      </table>
-    </div>` : ''}
-    ${c.trims ? `
-    <div class="specs-group">
-      <div class="specs-group-title">גרסאות זמינות</div>
+      <div class="specs-group-title">🏷️ גרסאות זמינות</div>
       <table class="specs-table">
         ${c.trims.map((t,i) => `<tr><td>גרסה ${i+1}</td><td>${t}</td></tr>`).join('')}
       </table>
-    </div>` : ''}`;
+    </div>` : '';
 
   // ── Features ──
   const featureIcons = {'מסך':'📱','Apple':'📱','Android':'📱','גג':'🌟','מושב':'💺','קרוז':'🎯','כניסה':'🔑','מזג':'❄️','Bose':'🔊','Harman':'🔊','Canton':'🔊','Meridian':'🔊','רמקול':'🔊','מצלמ':'📷','חניה':'🅿️','HUD':'🖥️','LED':'💡','ניווט':'🧭','Wi-Fi':'📶','כריות':'🛡️'};
@@ -952,10 +1034,10 @@ function renderPage() {
           <h1 class="car-hero-title">${c.brand} ${c.model} ${c.year}</h1>
           <p class="car-hero-sub">${(c.description||'').slice(0,120)}...</p>
           <div class="car-hero-stats">
-            <div class="car-hero-stat">
+            ${c.horsepower ? `<div class="car-hero-stat">
               <span class="car-hero-stat-val">${c.horsepower}</span>
               <span class="car-hero-stat-label">כוחות סוס</span>
-            </div>
+            </div>` : ''}
             <div class="car-hero-stat">
               <span class="car-hero-stat-val">${c.acceleration_0_100}s</span>
               <span class="car-hero-stat-label">0-100</span>
@@ -964,7 +1046,7 @@ function renderPage() {
               <span class="car-hero-stat-val">${formatPrice(c.price)}</span>
               <span class="car-hero-stat-label">מחיר</span>
             </div>
-            ${isEV && evRange ? `<div class="car-hero-stat"><span class="car-hero-stat-val">${evRange}</span><span class="car-hero-stat-label">ק"מ טווח</span></div>` : ''}
+            ${evRange ? `<div class="car-hero-stat"><span class="car-hero-stat-val">${evRange}</span><span class="car-hero-stat-label">ק"מ טווח</span></div>` : ''}
           </div>
         </div>
       </div>
@@ -976,23 +1058,23 @@ function renderPage() {
     <!-- QUICK SPECS STRIP -->
     <div class="spec-strip-wrap">
       <div class="spec-strip" role="list" aria-label="מפרט מהיר">
-        <div class="spec-strip-item" role="listitem">
+        ${c.horsepower ? `<div class="spec-strip-item" role="listitem">
           <div class="spec-strip-icon">⚡</div>
           <div class="spec-strip-val">${c.horsepower}</div>
           <div class="spec-strip-label">כוחות סוס</div>
-        </div>
+        </div>` : ''}
         <div class="spec-strip-item" role="listitem">
           <div class="spec-strip-icon">🏎️</div>
           <div class="spec-strip-val">${c.acceleration_0_100}s</div>
           <div class="spec-strip-label">0-100 קמ"ש</div>
         </div>
-        ${isEV && evRange ? `
+        ${evRange ? `
         <div class="spec-strip-item" role="listitem">
           <div class="spec-strip-icon">🔋</div>
           <div class="spec-strip-val">${evRange}</div>
           <div class="spec-strip-label">טווח (ק"מ)</div>
         </div>` : ''}
-        ${!isEV ? `
+        ${c.fuel_consumption ? `
         <div class="spec-strip-item" role="listitem">
           <div class="spec-strip-icon">⛽</div>
           <div class="spec-strip-val">${c.fuel_consumption}</div>
@@ -1058,7 +1140,9 @@ function renderPage() {
 
         <!-- Tab: Specs -->
         <div class="tab-pane" id="tab-specs" role="tabpanel">
-          ${specsHtml}
+          ${trimsBlockHtml}
+          <div id="specs-dynamic-groups">${specsGroupsHtml}</div>
+          ${legacyTrimsHtml}
         </div>
 
         <!-- Tab: Features -->
@@ -1098,9 +1182,9 @@ function renderPage() {
       <!-- SIDEBAR -->
       <aside class="car-sidebar">
         <div class="sidebar-box" id="price-section">
-          <div class="sidebar-box-title">מחיר מחירון</div>
+          <div class="sidebar-box-title">${(c.price_top && c.price_top > c.price) ? 'מחיר מחירון - החל מ' : 'מחיר מחירון'}</div>
           <div class="sidebar-price">${formatPrice(c.price)}</div>
-          <div class="sidebar-price-note">מחיר לפני אפשרויות. צור קשר לקבלת הצעה</div>
+          <div class="sidebar-price-note">${(c.price_top && c.price_top > c.price) ? ('עד ' + formatPrice(c.price_top) + ' ברמת הגימור הגבוהה · מחיר לפני אפשרויות') : 'מחיר לפני אפשרויות. צור קשר לקבלת הצעה'}</div>
           <a href="https://wa.me/972559365579" target="_blank" rel="noopener noreferrer" class="btn-primary" aria-label="ייעוץ בוואטסאפ">💬 ייעוץ בוואטסאפ</a>
           <a href="/cars-list.html" class="btn-secondary">← השווה רכבים</a>
           <div class="share-btn-row">
@@ -1120,7 +1204,7 @@ function renderPage() {
           <div class="key-specs-list">
             <div class="key-spec-row">
               <span class="key-spec-label"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg> ארץ ייצור</span>
-              <span class="key-spec-val">${c.country || '—'}</span>
+              <span class="key-spec-val">${c.country_of_origin || c.country || '—'}</span>
             </div>
             <div class="key-spec-row">
               <span class="key-spec-label">📅 שנה</span>
