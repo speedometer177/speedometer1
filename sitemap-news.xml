@@ -1,6 +1,17 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:news="http://www.google.com/schemas/sitemap-news/0.9">
   <url>
+    <loc>https://speedometer10.co.il/article/651/</loc>
+    <news:news>
+      <news:publication>
+        <news:name>ספידומטר</news:name>
+        <news:language>he</news:language>
+      </news:publication>
+      <news:publication_date>2026-10-01T08:47:00.000Z</news:publication_date>
+      <news:title>דור שמיני לבנזין: ב.מ.וו חשפה את סדרה 3 החדשה</news:title>
+    </news:news>
+  </url>
+  <url>
     <loc>https://speedometer10.co.il/article/647/</loc>
     <news:news>
       <news:publication>
@@ -9,17 +20,6 @@
       </news:publication>
       <news:publication_date>2026-09-30T11:52:00.000Z</news:publication_date>
       <news:title>אמינות בחשמל: רכבים חשמליים בעלי קילומטראז&#39; גבוה אמינים יותר מבנזין</news:title>
-    </news:news>
-  </url>
-  <url>
-    <loc>https://speedometer10.co.il/article/645/</loc>
-    <news:news>
-      <news:publication>
-        <news:name>ספידומטר</news:name>
-        <news:language>he</news:language>
-      </news:publication>
-      <news:publication_date>2026-09-29T08:47:00.000Z</news:publication_date>
-      <news:title>שיא כל הזמנים: מחיר הדלק יזנק בחצות ל-8.27 שקלים לליטר</news:title>
     </news:news>
   </url>
 </urlset>
