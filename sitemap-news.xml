@@ -1,6 +1,17 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:news="http://www.google.com/schemas/sitemap-news/0.9">
   <url>
+    <loc>https://speedometer10.co.il/article/662/</loc>
+    <news:news>
+      <news:publication>
+        <news:name>ספידומטר</news:name>
+        <news:language>he</news:language>
+      </news:publication>
+      <news:publication_date>2026-10-08T17:08:00.000Z</news:publication_date>
+      <news:title>אימת האוטובאן: ב.מ.וו מציגה ניידת משטרה מבוססת M5 טורינג</news:title>
+    </news:news>
+  </url>
+  <url>
     <loc>https://speedometer10.co.il/article/659/</loc>
     <news:news>
       <news:publication>
@@ -9,6 +20,17 @@
       </news:publication>
       <news:publication_date>2026-10-07T06:57:00.000Z</news:publication_date>
       <news:title>טעינה תוך כדי תנועה: הונדה תבחן כביש אלחוטי מהיר</news:title>
+    </news:news>
+  </url>
+  <url>
+    <loc>https://speedometer10.co.il/article/93/</loc>
+    <news:news>
+      <news:publication>
+        <news:name>ספידומטר</news:name>
+        <news:language>he</news:language>
+      </news:publication>
+      <news:publication_date>2026-10-08T17:01:00.000Z</news:publication_date>
+      <news:title>אימת האוטובאן: ב.מ.וו מציגה ניידת משטרה מבוססת M5 טורינג</news:title>
     </news:news>
   </url>
 </urlset>
