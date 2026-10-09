@@ -625,6 +625,16 @@
       const newTabBtn = document.querySelector('.admin-tab[onclick*="adminTab(\'new\'"]');
       if (typeof window.adminTab === 'function' && newTabBtn) window.adminTab('new', newTabBtn);
 
+      // טיוטה = תמיד כתבה חדשה. מנקים את הטופס לפני המילוי, כדי ששאריות ממצב עריכה קודם
+      // (editId של כתבה קיימת, ציון, תגיות, קטגוריות נוספות, גלריה) לא יגרמו לפרסום לדרוס כתבה ישנה.
+      // באג 8.10.2026: כתבת ה-BMW נשמרה על #93 (מבחן אומודה 7) כי editId נשאר מעריכה קודמת.
+      if (typeof window.clearForm === 'function') {
+        window.clearForm();
+      } else {
+        const t = document.getElementById('a-title');
+        if (t) { delete t.dataset.editId; delete t.dataset.srcUid; }
+      }
+
       const titleEl = document.getElementById('a-title');
       const subEl = document.getElementById('a-sub');
       const catEl = document.getElementById('a-cat');
