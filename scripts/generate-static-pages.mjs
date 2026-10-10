@@ -42,6 +42,22 @@
 import { createClient } from '@supabase/supabase-js';
 import { readFile, writeFile, mkdir, rm, readdir } from 'fs/promises';
 import path from 'path';
+import vm from 'vm';
+import { readFileSync } from 'fs';
+
+// מבחן השוואתי: אותה פונקציית רינדור בדיוק כמו בדפדפן (comparison.js בשורש הריפו).
+// נטען דרך vm ולא require, כי package.json מוגדר "type":"module" ו-comparison.js הוא סקריפט דפדפן רגיל.
+// אם הקובץ חסר או שבור, הדפים נבנים כרגיל בלי הטבלה (לא מפילים את כל הריצה).
+let spCompare = null;
+try {
+  const sandbox = { module: { exports: {} } };
+  vm.runInNewContext(readFileSync(new URL('../comparison.js', import.meta.url), 'utf-8'), sandbox, { filename: 'comparison.js' });
+  const api = sandbox.module.exports;
+  if (api && typeof api.render === 'function' && typeof api.isComparison === 'function') spCompare = api;
+  else console.warn('⚠️ comparison.js נטען אבל בלי render — מבחנים השוואתיים ייבנו בלי טבלה סטטית');
+} catch (e) {
+  console.warn('⚠️ comparison.js לא נטען — מבחנים השוואתיים ייבנו בלי טבלה סטטית:', e.message);
+}
 
 const SB_URL = 'https://kaykrrnmykqrfhawgtqt.supabase.co';
 const SB_KEY = process.env.SUPABASE_ANON_KEY || 'sb_publishable_Ms6YFTnADm-qAd9617Ey9A_D3x-Zumi'; // מפתח ציבורי (publishable) - בטוח לחשיפה, אינו ה-service role key
@@ -292,6 +308,8 @@ function hydrateTemplateForArticle(template, a) {
       ...(a.specs && a.specs.price ? { offers: { '@type': 'Offer', price: a.specs.price, priceCurrency: 'ILS' } } : {})
     };
   }
+  const isComparison = !!(spCompare && a.cat === 'review' && spCompare.isComparison(a.specs));
+  if (isComparison) spCompare.patchSchema(schema, a.specs);
 
   let html = template;
 
@@ -414,6 +432,12 @@ function hydrateTemplateForArticle(template, a) {
     `<img class="article-hero-img" id="art-img" src="${esc(displayImg)}" alt="${esc(a.title)}" fetchpriority="high"`
   );
   html = injectBetween(html, 'HERO_PRELOAD', `<link rel="preload" as="image" href="${esc(displayImg)}" fetchpriority="high">`);
+  if (isComparison) {
+    html = html.replace(
+      '<div id="art-spec" style="display:none;margin-bottom:0;"></div>',
+      () => `<div id="art-spec" style="display:block;margin-bottom:0;">${spCompare.render(a.specs)}</div>` // פונקציה: מונע פירוש של $ בטקסט
+    );
+  }
   html = html.replace(
     '<div class="article-body" id="art-body"></div>',
     `<div class="article-body" id="art-body">${bodyHTML}</div>`
