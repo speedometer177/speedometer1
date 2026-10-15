@@ -1,6 +1,17 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:news="http://www.google.com/schemas/sitemap-news/0.9">
   <url>
+    <loc>https://speedometer10.co.il/article/672/</loc>
+    <news:news>
+      <news:publication>
+        <news:name>ספידומטר</news:name>
+        <news:language>he</news:language>
+      </news:publication>
+      <news:publication_date>2026-10-15T15:21:00.000Z</news:publication_date>
+      <news:title>טסלה מודל Y L 2026: מעטפת טכנולוגית מתקדמת - במבחן המשפחתי I מבחן רכב מקיף</news:title>
+    </news:news>
+  </url>
+  <url>
     <loc>https://speedometer10.co.il/article/670/</loc>
     <news:news>
       <news:publication>
@@ -9,17 +20,6 @@
       </news:publication>
       <news:publication_date>2026-10-14T08:01:00.000Z</news:publication_date>
       <news:title>קיה K4 היברידית: המשפחתית החדשה בדרך לישראל</news:title>
-    </news:news>
-  </url>
-  <url>
-    <loc>https://speedometer10.co.il/article/668/</loc>
-    <news:news>
-      <news:publication>
-        <news:name>ספידומטר</news:name>
-        <news:language>he</news:language>
-      </news:publication>
-      <news:publication_date>2026-10-13T14:14:00.000Z</news:publication_date>
-      <news:title>800 ק&quot;מ בלי טעינה: הישג היסטורי לרכב הסולארי הישראלי</news:title>
     </news:news>
   </url>
 </urlset>
