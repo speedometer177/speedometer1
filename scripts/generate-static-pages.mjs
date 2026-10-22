@@ -448,6 +448,10 @@ function hydrateTemplateForArticle(template, a) {
     `<nav class="breadcrumb-nav" id="art-breadcrumb" aria-label="נתיב ניווט">${bcHTML}</nav>`
   );
 
+  // חדשות בקליק: עמוד קיים (לא 404) אבל לא לאינדוקס
+  if (a.cat === 'quick') {
+    html = html.replace('<meta name="robots" content="index, follow">', '<meta name="robots" content="noindex, follow">');
+  }
   return html;
 }
 
@@ -647,6 +651,13 @@ function buildHeroPreloadTag(lightRows) {
   return `<link rel="preload" as="image" href="${esc(href)}"${srcsetAttrs} fetchpriority="high">`;
 }
 
+/* בלוק קישורים סטטי לכל עמודי הרכב — נכנס לפוטר של כל עמוד באתר (דף הבית, כל הכתבות) */
+function buildCarsFooterLinks(cars) {
+  return cars.map(c =>
+    `<a href="/car/${esc(c.slug)}/" style="color:rgba(255,255,255,0.75);">${esc(c.brand)} ${esc(c.model)} ${esc(c.year)}</a>`
+  ).join('');
+}
+
 /* מזריק תוכן בין סמני BUILD — אידמפוטנטי (מחליף את מה שהיה שם בריצה הקודמת) */
 function injectBetween(html, name, content) {
   const re = new RegExp(`<!-- BUILD:${name}:START -->[\\s\\S]*?<!-- BUILD:${name}:END -->`);
@@ -660,7 +671,7 @@ async function fetchArticles(supabase) {
     .select('id,title,sub,cat,author,date,time,img,body,body_images,score,specs,deleted,live_updates,yt_urls,faq')
     .order('id', { ascending: false });
   if (error) throw new Error(`Supabase fetch failed: ${error.message}`);
-  return (data || []).filter(a => !a.deleted && a.cat !== 'quick');
+  return (data || []).filter(a => !a.deleted); // כולל 'quick' - הם מקבלים עמוד סטטי עם noindex (במקום 404)
 }
 
 /* שליפת קטלוג הרכבים החי מטבלת public.cars (Phase 2 - במקום cars.json הסטטי) */
@@ -1145,8 +1156,10 @@ async function main() {
 
   console.log('🔄 מתחבר ל-Supabase...');
   const supabase = createClient(SB_URL, SB_KEY);
-  const liveArticles = await fetchArticles(supabase);
-  console.log(`✅ נשלפו ${liveArticles.length} כתבות פעילות.`);
+  const allArticles = await fetchArticles(supabase);
+  const liveArticles = allArticles.filter(a => a.cat !== 'quick');       // נכנסות ל-sitemap ולדף הבית
+  const quickArticles = allArticles.filter(a => a.cat === 'quick');      // עמוד סטטי עם noindex, לא ב-sitemap
+  console.log(`✅ נשלפו ${liveArticles.length} כתבות פעילות + ${quickArticles.length} חדשות בקליק (noindex).`);
 
   console.log('📄 קורא את תבנית האתר (index.html)...');
   let template = await readFile(TEMPLATE_PATH, 'utf-8');
@@ -1154,11 +1167,20 @@ async function main() {
   // ═══ אופטימיזציית LCP לדף הבית ═══
   console.log('⚡ בונה snapshot נתונים + hero preload...');
   const lightRows = await fetchLightRows(supabase);
+
+  // רכבים נשלפים מוקדם כדי להזריק קישורים סטטיים ל-/car/{slug}/ לפוטר של כל העמודים
+  let liveCars = [];
+  try {
+    liveCars = await fetchCars(supabase);
+  } catch (err) {
+    console.error('⚠️ שליפת רכבים נכשלה - הפוטר ייבנה בלי קישורי רכבים:', err.message || err);
+  }
   const snapshotTag = buildSnapshotTag(lightRows);
   const heroPreloadTag = buildHeroPreloadTag(lightRows);
 
   // ה-snapshot נכנס לתבנית עצמה → גם דפי הכתבות מקבלים רינדור מיידי של המקטעים
   template = injectBetween(template, 'DATA_SNAPSHOT', snapshotTag);
+  template = injectBetween(template, 'CARS_FOOTER', buildCarsFooterLinks(liveCars));
 
   // דף הבית (+404 הזהה) מקבל בנוסף preload לתמונת ה-hero + שקופית ראשונה סטטית לקרוסולת המובייל
   let rootHtml = injectBetween(template, 'HERO_PRELOAD', heroPreloadTag);
@@ -1171,8 +1193,8 @@ async function main() {
   }
 
   const articlesToRender = targetArticleId
-    ? liveArticles.filter(a => a.id === targetArticleId)
-    : liveArticles;
+    ? allArticles.filter(a => a.id === targetArticleId)
+    : allArticles;
 
   if (targetArticleId && articlesToRender.length === 0) {
     console.warn(`⚠️ כתבה ${targetArticleId} לא נמצאה (אולי נמחקה) - מדלגים על רינדור ממוקד, מרעננים sitemap בלבד.`);
@@ -1197,7 +1219,7 @@ async function main() {
   console.log(`📄 נכתבו ${written} עמודי כתבה.`);
 
   if (!targetArticleId) {
-    const existingIds = new Set(liveArticles.map(a => String(a.id)));
+    const existingIds = new Set(allArticles.map(a => String(a.id)));
     const dirs = await readdir(OUT_DIR).catch(() => []);
     for (const d of dirs) {
       if (!existingIds.has(d)) {
@@ -1208,11 +1230,9 @@ async function main() {
   }
 
   // ═══ עמודי רכב סטטיים (/car/{slug}/) - לא רצים כשמריצים ריצה ממוקדת לכתבה בודדת ═══
-  let liveCars = [];
   if (!targetArticleId) {
     console.log('🚗 שולף רכבים מ-Supabase (public.cars) ובונה עמודי רכב סטטיים...');
     try {
-      liveCars = await fetchCars(supabase);
       const carTemplate = await readFile(CAR_TEMPLATE_PATH, 'utf-8');
 
       await rm(CAR_OUT_DIR, { recursive: true, force: true });
