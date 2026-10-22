@@ -33,8 +33,12 @@
   var ROWS = [
     { k: 'price', label: 'מחיר', unit: '₪', better: 'low', money: true },
     { k: 'engine', label: 'מערכת הנעה' },
+    { k: 'segment', label: 'קטגוריה' },
+    { k: 'year', label: 'שנת דגם' },
+    { k: 'country', label: 'ארץ ייצור' },
+    { k: 'trims', label: 'רמות גימור' },
     { k: 'power', label: 'הספק', unit: 'כ"ס', better: 'high' },
-    { k: 'torque', label: 'מומנט', unit: 'נ"מ', better: 'high' },
+    { k: 'torque', label: 'מומנט', unit: 'קג"מ', better: 'high' },
     { k: 'zeroToHundred', label: '0-100 קמ"ש', unit: 'שנ׳', better: 'low' },
     { k: 'topspeed', label: 'מהירות מרבית', unit: 'קמ"ש', better: 'high' },
     { k: 'gearbox', label: 'תיבת הילוכים' },
@@ -45,6 +49,7 @@
     { k: 'trunk', label: 'תא מטען', unit: 'ליטר', better: 'high' },
     { k: 'length', label: 'אורך', unit: 'מ"מ' },
     { k: 'weight', label: 'משקל', unit: 'ק"ג' },
+    { k: 'emission', label: 'דרגת זיהום אוויר', better: 'low' },
     { k: 'safety', label: 'בטיחות' },
     { k: 'warranty', label: 'אחריות' }
   ];
@@ -56,8 +61,13 @@
     { k: 'img', label: 'תמונה (קישור)', ph: 'https://...' },
     { k: 'price', label: 'מחיר (₪)', ph: '189,990' },
     { k: 'engine', label: 'מערכת הנעה', ph: '1.5 טורבו + חשמל (PHEV)' },
+    { k: 'segment', label: 'קטגוריה', ph: 'רכב פנאי גדול (D-SUV)' },
+    { k: 'year', label: 'שנת דגם', ph: '2026' },
+    { k: 'country', label: 'ארץ ייצור', ph: 'סין' },
+    { k: 'trims', label: 'רמות גימור', ph: 'Comfort, Luxury' },
+    { k: 'emission', label: 'דרגת זיהום אוויר', ph: '2' },
     { k: 'power', label: 'הספק (כ"ס)', ph: '197' },
-    { k: 'torque', label: 'מומנט (נ"מ)', ph: '290' },
+    { k: 'torque', label: 'מומנט (קג"מ)', ph: '40' },
     { k: 'zeroToHundred', label: '0-100 (שניות)', ph: '7.8' },
     { k: 'topspeed', label: 'מהירות מרבית (קמ"ש)', ph: '200' },
     { k: 'gearbox', label: 'תיבת הילוכים', ph: 'DCT 7' },
@@ -360,7 +370,7 @@
     t.name = [c.brand, c.model].filter(Boolean).join(' ');
     setIf('img', c.image_main);
     setIf('price', c.price != null ? fmtNum(c.price) : '');
-    setIf('engine', c.engine); setIf('power', c.horsepower); setIf('torque', c.torque);
+    setIf('engine', c.engine); setIf('power', c.horsepower); setIf('torque', c.torque != null && !isNaN(parseFloat(c.torque)) ? String(Math.round(parseFloat(c.torque) / 9.80665 * 10) / 10) : '');
     setIf('zeroToHundred', c.acceleration_0_100); setIf('topspeed', c.top_speed);
     setIf('gearbox', c.transmission); setIf('drive', c.drive_type);
     setIf('range', c.range_ev); setIf('battery', c.battery_capacity_kwh);
