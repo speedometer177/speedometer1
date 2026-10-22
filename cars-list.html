@@ -470,7 +470,7 @@ function renderCars() {
 
     return `
       <article class="car-card" role="listitem">
-        <a href="/car/${car.slug}/" aria-label="${car.brand} ${car.model} ${car.year}">
+        <a href="/car/${car.slug || car.id}/" aria-label="${car.brand} ${car.model} ${car.year}">
           <div class="card-img">
             <img src="${car.image_main}" alt="${car.brand} ${car.model} ${car.year}" loading="lazy" width="400" height="225">
             <span class="card-cat-badge">${car.category}</span>
@@ -548,13 +548,7 @@ function applyURLParams() {
 // ════ FALLBACK DATA (used if cars.json can't be fetched locally) ════
 const FALLBACK_CARS = [
   {id:"toyota-corolla-cross-2025",brand:"Toyota",model:"Corolla Cross",year:2025,category:"קרוסאובר",price:148000,engine:"1.8L היברידי",horsepower:140,acceleration_0_100:8.1,range:null,fuel_consumption:"4.5",transmission:"CVT אוטומטית",drive_type:"קידמי",image_main:"https://images.unsplash.com/photo-1549317661-bd32c8ce0db2?w=800&q=75&fm=webp",slug:"toyota-corolla-cross-2025",score:8.4},
-  {id:"hyundai-ioniq6-2025",brand:"Hyundai",model:"Ioniq 6",year:2025,category:"סדאן חשמלי",price:228000,engine:"חשמלי",horsepower:228,acceleration_0_100:5.1,range:614,fuel_consumption:null,transmission:"אוטומטית חשמלית",drive_type:"אחורי",image_main:"https://images.unsplash.com/photo-1593941707882-a5bba14938c7?w=800&q=75&fm=webp",slug:"hyundai-ioniq6-2025",score:9.1},
-  {id:"bmw-3-series-2025",brand:"BMW",model:"סדרה 3",year:2025,category:"סדאן",price:295000,engine:"2.0L טורבו",horsepower:258,acceleration_0_100:5.8,range:null,fuel_consumption:"6.8",transmission:"אוטומטית 8 הילוכים",drive_type:"אחורי",image_main:"https://images.unsplash.com/photo-1555215695-3004980ad54e?w=800&q=75&fm=webp",slug:"bmw-3-series-2025",score:9.0},
   {id:"mazda-cx5-2025",brand:"Mazda",model:"CX-5",year:2025,category:"קרוסאובר",price:172000,engine:"2.5L טורבו",horsepower:227,acceleration_0_100:7.0,range:null,fuel_consumption:"8.2",transmission:"אוטומטית 6 הילוכים",drive_type:"הנעה כפולה AWD",image_main:"https://images.unsplash.com/photo-1546614042-7df3c24c9e5d?w=800&q=75&fm=webp",slug:"mazda-cx5-2025",score:8.7},
-  {id:"kia-ev6-gt-2025",brand:"Kia",model:"EV6 GT",year:2025,category:"קרוסאובר חשמלי",price:320000,engine:"חשמלי כפול",horsepower:585,acceleration_0_100:3.5,range:400,fuel_consumption:null,transmission:"אוטומטית חשמלית",drive_type:"הנעה כפולה AWD",image_main:"https://images.unsplash.com/photo-1621007947382-bb3c3994e3fb?w=800&q=75&fm=webp",slug:"kia-ev6-gt-2025",score:9.3},
-  {id:"tesla-model-y-2025",brand:"Tesla",model:"Model Y",year:2025,category:"קרוסאובר חשמלי",price:195000,engine:"חשמלי",horsepower:283,acceleration_0_100:5.0,range:533,fuel_consumption:null,transmission:"אוטומטית חשמלית",drive_type:"הנעה כפולה AWD",image_main:"https://images.unsplash.com/photo-1561580125-028ee3bd62eb?w=800&q=75&fm=webp",slug:"tesla-model-y-2025",score:8.9},
-  {id:"porsche-macan-electric-2025",brand:"Porsche",model:"Macan Electric",year:2025,category:"קרוסאובר יוקרה",price:480000,engine:"חשמלי",horsepower:408,acceleration_0_100:5.2,range:516,fuel_consumption:null,transmission:"אוטומטית חשמלית",drive_type:"הנעה כפולה AWD",image_main:"https://images.unsplash.com/photo-1563720360172-67b8f3dce741?w=800&q=75&fm=webp",slug:"porsche-macan-electric-2025",score:9.2},
-  {id:"skoda-kodiaq-2025",brand:"Skoda",model:"Kodiaq",year:2025,category:"SUV",price:175000,engine:"2.0L TSI טורבו",horsepower:204,acceleration_0_100:7.4,range:null,fuel_consumption:"7.9",transmission:"DSG אוטומטית 7 הילוכים",drive_type:"הנעה כפולה 4x4",image_main:"https://images.unsplash.com/photo-1585011664466-b7bbe92f34ef?w=800&q=75&fm=webp",slug:"skoda-kodiaq-2025",score:8.3}
 ];
 
 // Init
