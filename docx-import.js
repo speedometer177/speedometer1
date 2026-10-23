@@ -541,6 +541,7 @@
     // "החסרונות במבחן: ..." = חסרון. הטקסט נכנס כמו שהוא (פריט אחד לכל פסקה) והפסקאות נשארות גם בגוף הכתבה.
     var carNames = cars.map(function (lines) { var l = splitLabel(lines[0]); return l ? norm(l.value) : ''; });
     var pcByCar = {};
+    var placeByCar = {};
     if (cars.length >= 2) {
       var curCar = -1;
       body2.forEach(function (b) {
@@ -550,6 +551,10 @@
           var nm = norm(mm[1]);
           curCar = -1;
           carNames.forEach(function (cn, ci) { if (cn && (cn.indexOf(nm) !== -1 || nm.indexOf(cn) !== -1)) curCar = ci; });
+          if (curCar >= 0) {
+            var pm = t.match(/^מקום\s*(\d+)/);
+            placeByCar[curCar] = pm ? parseInt(pm[1], 10) : 1;     // "המנצח" = מקום 1
+          }
           return;
         }
         if (curCar < 0) return;
@@ -559,6 +564,20 @@
         if (cm) pcByCar[curCar].cons.push(cm[1]);
         else if (!pcByCar[curCar].pros.length) pcByCar[curCar].pros.push(t);
       });
+    }
+
+    // סדר הדגמים בכתבה לפי המקום במבחן (מנצח ראשון), אם כל דגם קיבל מקום
+    var order = cars.map(function (_, k) { return k; });
+    var placed = order.every(function (k) { return placeByCar[k] != null; });
+    var distinct = placed && order.map(function (k) { return placeByCar[k]; }).filter(function (v, i, a) { return a.indexOf(v) === i; }).length === order.length;
+    var reordered = false;
+    if (cars.length >= 2 && distinct) {
+      order.sort(function (a, b) { return placeByCar[a] - placeByCar[b]; });
+      reordered = order.some(function (k, i) { return k !== i; });
+      cars = order.map(function (k) { return cars[k]; });
+      var pc2 = {};
+      order.forEach(function (k, i) { if (pcByCar[k]) pc2[i] = pcByCar[k]; });
+      pcByCar = pc2;
     }
 
     P('[פרטי הכתבה]');
@@ -577,6 +596,7 @@
     } else if (cars.length === 1) {
       P('[מפרט]'); cars[0].forEach(P);
     }
+    if (reordered) out.reorderedNames = cars.map(function (lines) { var l = splitLabel(lines[0]); return l ? l.value : ''; });
     P('[גוף הכתבה]');
     body2.forEach(function (b) {
       if (b.allBold) out.push({ k: 'h2', text: clean(b.text) });
@@ -587,9 +607,11 @@
 
   function parse(blocks, opts) {
     var ff = !hasMarkers(blocks);
-    var res = parseBlocks(ff ? freeformToBlocks(blocks) : blocks, opts);
+    var conv = ff ? freeformToBlocks(blocks) : blocks;
+    var res = parseBlocks(conv, opts);
     res.freeform = ff;
     if (ff) {
+      if (conv.reorderedNames) res.notes.push('סדר הדגמים נקבע לפי המקום במבחן: ' + conv.reorderedNames.join(' ← ') + '.');
       res.notes.push('הקובץ נקרא במבנה חופשי (בלי תבנית): כותרת = הפסקה המודגשת הראשונה, כותרות פנימיות = פסקאות מודגשות לגמרי, מפרט = אחרי "מפרטים:".');
       if (res.comparison && res.cars.length) {
         var withPC = res.cars.filter(function (c) { return c.pros.length || c.cons.length; }).length;
