@@ -359,7 +359,7 @@ function buildSpecsGroupsHtml(c) {
 
   let engineRows = row('מנוע', c.engine);
   engineRows += row('הספק', c.horsepower ? c.horsepower + ' כ"ס' : '');
-  engineRows += row('מומנט', c.torque ? c.torque + ' Nm' : '');
+  engineRows += row('מומנט', c.torque ? nmToKgm(c.torque) : '');
   engineRows += row('תאוצה 0-100', c.acceleration_0_100 ? c.acceleration_0_100 + ' שניות' : '');
   engineRows += row('מהירות מקסימלית', c.top_speed ? c.top_speed + ' קמ"ש' : '');
   engineRows += row('תיבת הילוכים', c.transmission);
@@ -401,7 +401,7 @@ function buildTrimCompareHtml(trims) {
   const fields = [
     { k: 'price', label: 'מחיר', fmt: v => formatPrice(v) },
     { k: 'horsepower', label: 'הספק', fmt: v => v + ' כ"ס' },
-    { k: 'torque', label: 'מומנט', fmt: v => v + ' Nm' },
+    { k: 'torque', label: 'מומנט', fmt: v => nmToKgm(v) },
     { k: 'acceleration_0_100', label: 'תאוצה 0-100', fmt: v => v + ' שנ׳' },
     { k: 'top_speed', label: "מהירות מקס'", fmt: v => v + ' קמ"ש' },
     { k: 'range_ev', label: 'טווח חשמלי', fmt: v => v + ' ק"מ' },
@@ -527,6 +527,12 @@ function showError(msg) {
       <p>${msg}</p>
       <a href="/cars-list.html" style="color:var(--red);font-weight:700;display:inline-block;margin-top:16px;">← חזרה למאגר הרכבים</a>
     </div>`;
+}
+
+/* מומנט: במאגר הרכבים נשמר ב-Nm; מוצג בקג"מ (÷9.80665, ספרה אחת אחרי הנקודה) */
+function nmToKgm(v) {
+  const n = parseFloat(String(v).replace(/,/g, ''));
+  return isFinite(n) ? (Math.round(n / 9.80665 * 10) / 10) + ' קג"מ' : String(v);
 }
 
 function formatPrice(p) {
@@ -902,7 +908,7 @@ function renderPage() {
             </div>
             ${c.trunk_volume ? `<div class="key-spec-row"><span class="key-spec-label">🧳 תא מטען</span><span class="key-spec-val">${c.trunk_volume} ל'</span></div>` : ''}
             ${c.top_speed ? `<div class="key-spec-row"><span class="key-spec-label">⚡ מהירות מקס'</span><span class="key-spec-val">${c.top_speed} קמ"ש</span></div>` : ''}
-            ${c.torque ? `<div class="key-spec-row"><span class="key-spec-label">🔩 מומנט</span><span class="key-spec-val">${c.torque} Nm</span></div>` : ''}
+            ${c.torque ? `<div class="key-spec-row"><span class="key-spec-label">🔩 מומנט</span><span class="key-spec-val">${nmToKgm(c.torque)}</span></div>` : ''}
           </div>
         </div>
 
