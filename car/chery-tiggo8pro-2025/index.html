@@ -391,7 +391,7 @@ footer a{color:var(--red)}
 
         <div class="tab-pane" id="tab-specs" role="tabpanel">
           
-          <div id="specs-dynamic-groups"><div class="specs-group"><div class="specs-group-title">🪪 תעודת זהות</div><table class="specs-table"><tr><td>שנה</td><td>2025</td></tr><tr><td>קטגוריה</td><td>SUV משפחתי 7 מקומות</td></tr><tr><td>יבואן רשמי</td><td>כלמוביל</td></tr><tr><td>ארץ ייצור</td><td>סין</td></tr><tr><td>מכירות בישראל</td><td>8,900 יחידות (2025)</td></tr></table></div><div class="specs-group"><div class="specs-group-title">🔧 מנוע וביצועים</div><table class="specs-table"><tr><td>מנוע</td><td>1.6L טורבו</td></tr><tr><td>הספק</td><td>197 כ&quot;ס</td></tr><tr><td>מומנט</td><td>290 Nm</td></tr><tr><td>תאוצה 0-100</td><td>8.5 שניות</td></tr><tr><td>מהירות מקסימלית</td><td>205 קמ&quot;ש</td></tr><tr><td>תיבת הילוכים</td><td>DCT 7 הילוכים</td></tr><tr><td>הנעה</td><td>קידמי</td></tr></table></div><div class="specs-group"><div class="specs-group-title">⛽ צריכת דלק</div><table class="specs-table"><tr><td>צריכת דלק ממוצעת</td><td>8.5 ל/100 ק&quot;מ</td></tr></table></div><div class="specs-group"><div class="specs-group-title">📐 מידות ומשקל</div><table class="specs-table"><tr><td>תא מטען</td><td>295 ליטר</td></tr><tr><td>משקל</td><td>1,810 ק&quot;ג</td></tr><tr><td>אורך</td><td>4722 מ&quot;מ</td></tr><tr><td>רוחב</td><td>1860 מ&quot;מ</td></tr><tr><td>גובה</td><td>1745 מ&quot;מ</td></tr></table></div></div>
+          <div id="specs-dynamic-groups"><div class="specs-group"><div class="specs-group-title">🪪 תעודת זהות</div><table class="specs-table"><tr><td>שנה</td><td>2025</td></tr><tr><td>קטגוריה</td><td>SUV משפחתי 7 מקומות</td></tr><tr><td>יבואן רשמי</td><td>כלמוביל</td></tr><tr><td>ארץ ייצור</td><td>סין</td></tr><tr><td>מכירות בישראל</td><td>8,900 יחידות (2025)</td></tr></table></div><div class="specs-group"><div class="specs-group-title">🔧 מנוע וביצועים</div><table class="specs-table"><tr><td>מנוע</td><td>1.6L טורבו</td></tr><tr><td>הספק</td><td>197 כ&quot;ס</td></tr><tr><td>מומנט</td><td>29.6 קג&quot;מ</td></tr><tr><td>תאוצה 0-100</td><td>8.5 שניות</td></tr><tr><td>מהירות מקסימלית</td><td>205 קמ&quot;ש</td></tr><tr><td>תיבת הילוכים</td><td>DCT 7 הילוכים</td></tr><tr><td>הנעה</td><td>קידמי</td></tr></table></div><div class="specs-group"><div class="specs-group-title">⛽ צריכת דלק</div><table class="specs-table"><tr><td>צריכת דלק ממוצעת</td><td>8.5 ל/100 ק&quot;מ</td></tr></table></div><div class="specs-group"><div class="specs-group-title">📐 מידות ומשקל</div><table class="specs-table"><tr><td>תא מטען</td><td>295 ליטר</td></tr><tr><td>משקל</td><td>1,810 ק&quot;ג</td></tr><tr><td>אורך</td><td>4722 מ&quot;מ</td></tr><tr><td>רוחב</td><td>1860 מ&quot;מ</td></tr><tr><td>גובה</td><td>1745 מ&quot;מ</td></tr></table></div></div>
           
     <div class="specs-group">
       <div class="specs-group-title">🏷️ גרסאות זמינות</div>
@@ -560,7 +560,7 @@ footer a{color:var(--red)}
             </div>
             <div class="key-spec-row"><span class="key-spec-label">🧳 תא מטען</span><span class="key-spec-val">295 ל'</span></div>
             <div class="key-spec-row"><span class="key-spec-label">⚡ מהירות מקס'</span><span class="key-spec-val">205 קמ"ש</span></div>
-            <div class="key-spec-row"><span class="key-spec-label">🔩 מומנט</span><span class="key-spec-val">290 Nm</span></div>
+            <div class="key-spec-row"><span class="key-spec-label">🔩 מומנט</span><span class="key-spec-val">29.6 קג"מ</span></div>
           </div>
         </div>
 
@@ -645,7 +645,7 @@ function buildSpecsGroupsHtml(c) {
 
   let engineRows = row('מנוע', c.engine);
   engineRows += row('הספק', c.horsepower ? c.horsepower + ' כ"ס' : '');
-  engineRows += row('מומנט', c.torque ? c.torque + ' Nm' : '');
+  engineRows += row('מומנט', c.torque ? nmToKgm(c.torque) : '');
   engineRows += row('תאוצה 0-100', c.acceleration_0_100 ? c.acceleration_0_100 + ' שניות' : '');
   engineRows += row('מהירות מקסימלית', c.top_speed ? c.top_speed + ' קמ"ש' : '');
   engineRows += row('תיבת הילוכים', c.transmission);
@@ -687,7 +687,7 @@ function buildTrimCompareHtml(trims) {
   const fields = [
     { k: 'price', label: 'מחיר', fmt: v => formatPrice(v) },
     { k: 'horsepower', label: 'הספק', fmt: v => v + ' כ"ס' },
-    { k: 'torque', label: 'מומנט', fmt: v => v + ' Nm' },
+    { k: 'torque', label: 'מומנט', fmt: v => nmToKgm(v) },
     { k: 'acceleration_0_100', label: 'תאוצה 0-100', fmt: v => v + ' שנ׳' },
     { k: 'top_speed', label: "מהירות מקס'", fmt: v => v + ' קמ"ש' },
     { k: 'range_ev', label: 'טווח חשמלי', fmt: v => v + ' ק"מ' },
@@ -813,6 +813,12 @@ function showError(msg) {
       <p>${msg}</p>
       <a href="/cars-list.html" style="color:var(--red);font-weight:700;display:inline-block;margin-top:16px;">← חזרה למאגר הרכבים</a>
     </div>`;
+}
+
+/* מומנט: במאגר הרכבים נשמר ב-Nm; מוצג בקג"מ (÷9.80665, ספרה אחת אחרי הנקודה) */
+function nmToKgm(v) {
+  const n = parseFloat(String(v).replace(/,/g, ''));
+  return isFinite(n) ? (Math.round(n / 9.80665 * 10) / 10) + ' קג"מ' : String(v);
 }
 
 function formatPrice(p) {
@@ -1188,7 +1194,7 @@ function renderPage() {
             </div>
             ${c.trunk_volume ? `<div class="key-spec-row"><span class="key-spec-label">🧳 תא מטען</span><span class="key-spec-val">${c.trunk_volume} ל'</span></div>` : ''}
             ${c.top_speed ? `<div class="key-spec-row"><span class="key-spec-label">⚡ מהירות מקס'</span><span class="key-spec-val">${c.top_speed} קמ"ש</span></div>` : ''}
-            ${c.torque ? `<div class="key-spec-row"><span class="key-spec-label">🔩 מומנט</span><span class="key-spec-val">${c.torque} Nm</span></div>` : ''}
+            ${c.torque ? `<div class="key-spec-row"><span class="key-spec-label">🔩 מומנט</span><span class="key-spec-val">${nmToKgm(c.torque)}</span></div>` : ''}
           </div>
         </div>
 
