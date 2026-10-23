@@ -82,6 +82,17 @@
     { k: 'warranty', label: 'אחריות', ph: '7 שנים / 150,000 ק"מ' }
   ];
 
+  document.addEventListener('click', function (e) {
+    var t = e.target && e.target.closest ? e.target.closest('[data-cmp-tab]') : null;
+    if (!t) return;
+    e.preventDefault();
+    var sec = document.getElementById(t.getAttribute('data-cmp-tab'));
+    var nav = t.parentNode;
+    Array.prototype.forEach.call(nav.querySelectorAll('.cmp-tab'), function (x) { x.classList.remove('on'); });
+    t.classList.add('on');
+    if (sec) { sec.open = true; sec.scrollIntoView({ behavior: 'smooth', block: 'start' }); }
+  });
+
   /* ───────── עזרים טהורים ───────── */
   function esc(s) {
     return String(s == null ? '' : s)
@@ -90,7 +101,8 @@
   }
   function str(v) { return v == null ? '' : String(v).trim(); }
   function num(v) {
-    var m = str(v).replace(/,/g, '').match(/-?\d+(\.\d+)?/);
+    // בלי מספרים שליליים: מקף לפני מספר ("החל מ-229,900") הוא מקף ולא מינוס
+    var m = str(v).replace(/,/g, '').match(/\d+(\.\d+)?/);
     return m ? parseFloat(m[0]) : null;
   }
   function isPlainNumber(v) { return /^-?[\d,]+(\.\d+)?$/.test(str(v)); }
@@ -173,7 +185,7 @@
       var src = img(c.img, 640);
       h += '<div class="cmp-car c' + i + (i === win ? ' is-win' : '') + '">';
       if (i === win) h += '<div class="cmp-win-badge">🏆 המנצח</div>';
-      h += '<div class="cmp-car-img">' + (src ? '<img src="' + esc(src) + '" alt="' + esc(c.name) + '" loading="lazy" decoding="async" width="640" height="400">' : '<div class="cmp-car-noimg">' + esc(String(i + 1)) + '</div>') + '</div>';
+      h += '<div class="cmp-car-img">' + (src ? '<img src="' + esc(src) + '" alt="' + esc(c.name) + '" loading="lazy" decoding="async" width="640" height="400">' : '<div class="cmp-car-noimg">' + esc(shortName(c.name)) + '</div>') + '</div>';
       h += '<div class="cmp-car-body">';
       h += '<div class="cmp-car-name">' + esc(c.name) + '</div>';
       if (str(c.trim)) h += '<div class="cmp-car-trim">' + esc(c.trim) + '</div>';
@@ -228,24 +240,46 @@
     // טבלת מפרט
     var fams = cars.map(function (c) { return family(c.engine); });
     var sameFam = fams.every(function (f) { return f === fams[0]; });
-    var rowsHtml = '';
-    ROWS.forEach(function (row) {
-      var vals = cars.map(function (c) { return str(c[row.k]); });
-      if (vals.every(function (v) { return !v; })) return;
-      var best = (row.better && (!row.sameFamily || sameFam)) ? bestIndexes(vals, row.better) : [];
-      rowsHtml += '<tr><th scope="row">' + esc(row.label) + '</th>';
-      vals.forEach(function (v, i) {
-        var isBest = best.indexOf(i) !== -1;
-        rowsHtml += '<td class="c' + i + (isBest ? ' best' : '') + '">' + (v ? esc(fmtVal(row, v)) : '<span class="cmp-na">—</span>') + (isBest ? '<span class="cmp-best-mark" aria-label="הטוב בשורה">✓</span>' : '') + '</td>';
+    var GROUPS = [
+      { id: 'id', name: 'תעודת זהות', icon: '🪪', keys: ['price', 'year', 'country', 'segment', 'trims', 'emission', 'warranty'] },
+      { id: 'engine', name: 'מנוע וביצועים', icon: '⚙️', keys: ['engine', 'power', 'torque', 'zeroToHundred', 'topspeed', 'gearbox', 'drive'] },
+      { id: 'ev', name: 'טעינה חשמלית', icon: '🔌', keys: ['range', 'battery'] },
+      { id: 'fuel', name: 'צריכת דלק', icon: '⛽', keys: ['consumption'] },
+      { id: 'dims', name: 'מידות', icon: '📐', keys: ['length', 'weight', 'trunk'] },
+      { id: 'safety', name: 'בטיחות', icon: '🛡️', keys: ['safety'] }
+    ];
+    var uid = 'cmp' + Math.floor(Math.random() * 1e6);
+    var secs = [];
+    GROUPS.forEach(function (g) {
+      var rowsHtml = '';
+      g.keys.forEach(function (key) {
+        var row = ROWS.filter(function (r) { return r.k === key; })[0];
+        if (!row) return;
+        var vals = cars.map(function (c) { return str(c[row.k]); });
+        if (vals.every(function (v) { return !v; })) return;
+        var best = (row.better && (!row.sameFamily || sameFam)) ? bestIndexes(vals, row.better) : [];
+        rowsHtml += '<tr><th scope="row">' + esc(row.label) + '</th>';
+        vals.forEach(function (v, i) {
+          var isBest = best.indexOf(i) !== -1;
+          rowsHtml += '<td class="c' + i + (isBest ? ' best' : '') + '">' + (v ? esc(fmtVal(row, v)) : '<span class="cmp-na">—</span>') + '</td>';
+        });
+        rowsHtml += '</tr>';
       });
-      rowsHtml += '</tr>';
+      if (rowsHtml) secs.push({ g: g, rows: rowsHtml });
     });
-    if (rowsHtml) {
-      h += '<h3 class="cmp-h">מפרט טכני זה מול זה</h3>';
-      h += '<div class="cmp-table-wrap" tabindex="0" role="region" aria-label="טבלת השוואת מפרט"><table class="cmp-table"><thead><tr><th scope="col"><span class="sr-only">נתון</span></th>';
-      cars.forEach(function (c, i) { h += '<th scope="col" class="c' + i + '"><span class="cmp-th-dot"></span>' + esc(c.name) + '</th>'; });
-      h += '</tr></thead><tbody>' + rowsHtml + '</tbody></table></div>';
-      h += '<p class="cmp-note"><span class="cmp-best-mark">✓</span> הנתון הטוב ביותר בשורה' + (!sameFam ? ' · צריכה לא מסומנת כי מערכות ההנעה שונות' : '') + '</p>';
+    if (secs.length) {
+      h += '<nav class="cmp-tabs" aria-label="קטגוריות מפרט">';
+      secs.forEach(function (x, k) {
+        h += '<a class="cmp-tab' + (k === 0 ? ' on' : '') + '" href="#' + uid + '-' + x.g.id + '" data-cmp-tab="' + uid + '-' + x.g.id + '">' + x.g.name + '</a>';
+      });
+      h += '</nav><div class="cmp-tabline"></div>';
+      secs.forEach(function (x) {
+        h += '<details class="cmp-sec" id="' + uid + '-' + x.g.id + '" open><summary class="cmp-sec-head"><span class="cmp-sec-ic" aria-hidden="true">' + x.g.icon + '</span><span class="cmp-sec-t">' + x.g.name + '</span><span class="cmp-chev" aria-hidden="true"></span></summary>';
+        h += '<div class="cmp-table-wrap"><table class="cmp-table"><tbody>';
+        h += '<tr class="cmp-namerow"><th scope="row"></th>' + cars.map(function (c, i) { return '<td class="c' + i + '">' + esc(shortName(c.name)) + '</td>'; }).join('') + '</tr>';
+        h += x.rows + '</tbody></table></div></details>';
+      });
+      h += '<p class="cmp-note">הנתון המודגש בכחול הוא הטוב ביותר בשורה' + (!sameFam ? ' · צריכה לא מסומנת כי מערכות ההנעה שונות' : '') + '</p>';
     }
 
     // יתרונות, חסרונות ולמי מתאים
