@@ -213,7 +213,7 @@ function parseBodyToHTML(text, bodyImages, articleTitle) {
   if (imgs.length === 0) return parts.map(p => p.html).join('\n');
 
   const figHTML = (img) =>
-    `<figure class="body-img-wrap"><img src="${esc(img.src)}" alt="${esc(img.cap || '')}" loading="lazy" decoding="async" width="800" height="450">${img.cap ? `<figcaption>${esc(img.cap)}</figcaption>` : ''}</figure>`;
+    `<figure class="body-img-wrap"><img src="${esc(isProxyable(img.src) ? wsrvW(img.src, 1000) : img.src)}" alt="${esc(img.cap || '')}" loading="lazy" decoding="async" width="800" height="450" data-lightbox="${esc(img.src)}" onerror="if(this.dataset.lightbox&&this.src!==this.dataset.lightbox){this.src=this.dataset.lightbox;}" style="cursor:zoom-in">${img.cap ? `<figcaption>${esc(img.cap)}</figcaption>` : ''}</figure>`;
 
   const paraCount = parts.filter(p => p.type === 'p').length;
   const interval = Math.max(2, Math.floor(paraCount / (imgs.length + 1)));
