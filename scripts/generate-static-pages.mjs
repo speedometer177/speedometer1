@@ -175,13 +175,14 @@ function schemaImages(url) {
     return url ? [url] : [];
   }
   const enc = encodeURIComponent(url);
+  // התמונה המקורית (ישירות מ-Supabase) ראשונה: גוגל לא תלוי רק בשירות חיצוני (wsrv)
   const v = (w, h) => ({
     '@type': 'ImageObject',
     url: `https://wsrv.nl/?url=${enc}&w=${w}&h=${h}&fit=cover&output=jpg&q=80`,
     width: w,
     height: h
   });
-  return [v(1200, 675), v(1200, 900), v(1200, 1200)];
+  return [url, v(1200, 675), v(1200, 900), v(1200, 1200)];
 }
 
 /** מקביל ל-parseBody בקליינט (index.html) - שומר על אותה לוגיקה בדיוק כדי שהתוכן הראשוני יתאים למה שה-JS ירנדר מחדש */
@@ -448,9 +449,14 @@ function hydrateTemplateForArticle(template, a) {
     `<nav class="breadcrumb-nav" id="art-breadcrumb" aria-label="נתיב ניווט">${bcHTML}</nav>`
   );
 
+  // גוגל מציג תמונה גדולה בתוצאות/Discover רק עם max-image-preview:large
+  html = html.replace(
+    '<meta name="robots" content="index, follow">',
+    '<meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1">'
+  );
   // חדשות בקליק: עמוד קיים (לא 404) אבל לא לאינדוקס
   if (a.cat === 'quick') {
-    html = html.replace('<meta name="robots" content="index, follow">', '<meta name="robots" content="noindex, follow">');
+    html = html.replace(/<meta name="robots" content="[^"]*">/, '<meta name="robots" content="noindex, follow">');
   }
   return html;
 }
@@ -475,13 +481,17 @@ function buildSitemap(articles, cars = []) {
       .filter(a => a.cat !== 'quick')
       .map(a => {
         const lastmod = toISODate(a.date)?.split('T')[0] || today;
-        return `<url><loc>${SITE}/article/${a.id}/</loc><lastmod>${lastmod}</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>`;
+        const rawImg = typeof a.img === 'string' ? a.img.trim() : '';
+        const imgTag = /^https?:\/\//.test(rawImg)
+          ? `<image:image><image:loc>${esc(rawImg)}</image:loc></image:image>`
+          : '';
+        return `<url><loc>${SITE}/article/${a.id}/</loc><lastmod>${lastmod}</lastmod><changefreq>weekly</changefreq><priority>0.8</priority>${imgTag}</url>`;
       }),
     ...cars.map(c =>
       `<url><loc>${SITE}/car/${c.slug}/</loc><lastmod>${today}</lastmod><changefreq>monthly</changefreq><priority>0.6</priority></url>`
     )
   ].join('\n  ');
-  return `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n  ${urls}\n</urlset>\n`;
+  return `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">\n  ${urls}\n</urlset>\n`;
 }
 
 // News Sitemap בפורמט הרשמי של גוגל ניוז — נפרד לגמרי מה-sitemap הרגיל.
@@ -517,9 +527,9 @@ function buildNewsSitemap(articles) {
 /* ═══ אופטימיזציית LCP: פונקציות זהות 1:1 לצד הלקוח (index.html) ═══
    קריטי: אם הנוסחה כאן שונה מהלקוח, ה-preload יוריד URL אחר ממה שהדף מרנדר
    והדפדפן יוריד את התמונה פעמיים. כל שינוי כאן מחייב שינוי זהה ב-index.html. */
-function wsrvW(url, w) { return 'https://wsrv.nl/?url=' + encodeURIComponent(url) + '&w=' + w + '&fit=cover&output=webp&q=75'; }
+function wsrvW(url, w) { return 'https://wsrv.nl/?url=' + encodeURIComponent(url) + '&w=' + w + '&fit=cover&output=webp&q=82'; }
 function isProxyable(url) { return typeof url === 'string' && /^https?:\/\//.test(url) && url.indexOf('wsrv.nl') === -1 && url.indexOf('images.unsplash.com') === -1; }
-function heroSrc(url) { return isProxyable(url) ? wsrvW(url, 800) : url; }
+function heroSrc(url) { return isProxyable(url) ? wsrvW(url, 1200) : url; }
 
 function heroSrcset(url) {
   if (typeof url !== 'string') return '';
@@ -527,7 +537,7 @@ function heroSrcset(url) {
     return [320, 500, 800, 1200].map(w => url.replace(/([?&])w=\d+/, '$1w=' + w) + ' ' + w + 'w').join(', ');
   }
   if (isProxyable(url)) {
-    return [400, 640, 800, 1200].map(w => wsrvW(url, w) + ' ' + w + 'w').join(', ');
+    return [400, 640, 800, 1200, 1600].map(w => wsrvW(url, w) + ' ' + w + 'w').join(', ');
   }
   return '';
 }
@@ -647,7 +657,7 @@ function buildHeroPreloadTag(lightRows) {
   const raw = String(main.img).trim();
   const href = heroSrc(raw);
   const srcset = heroSrcset(raw);
-  const srcsetAttrs = srcset ? ` imagesrcset="${esc(srcset)}" imagesizes="(max-width:980px) 100vw, 800px"` : '';
+  const srcsetAttrs = srcset ? ` imagesrcset="${esc(srcset)}" imagesizes="(max-width:980px) 100vw, 1000px"` : '';
   return `<link rel="preload" as="image" href="${esc(href)}"${srcsetAttrs} fetchpriority="high">`;
 }
 
