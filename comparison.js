@@ -416,8 +416,29 @@
     paint();
   }
 
+  function uploadCarImage(input) {
+    var idx = +input.getAttribute('data-up');
+    var file = input.files && input.files[0];
+    var st = document.getElementById('cmp-upst-' + idx);
+    var say = function (t) { if (st) st.textContent = t; };
+    if (!file || !state.cars[idx]) return;
+    if (typeof compressImageFile !== 'function' || typeof uploadImageOrBase64 !== 'function') { say('❌ ההעלאה לא זמינה כאן — הדבק קישור בשדה למטה'); return; }
+    say('⏳ מעלה...');
+    Promise.resolve(compressImageFile(file, 250)).then(function (c) {
+      if (!c) throw new Error('compress');
+      return uploadImageOrBase64(c);
+    }).then(function (url) {
+      if (!url || !/^https?:\/\//.test(url)) throw new Error('upload');
+      state.cars[idx].img = url;
+      paint();
+      var st2 = document.getElementById('cmp-upst-' + idx);
+      if (st2) st2.textContent = 'התמונה עלתה ✓';
+    }).catch(function () { say('❌ ההעלאה נכשלה — נסה שוב או הדבק קישור בשדה למטה'); });
+  }
+
   function onInput(e) {
     var el = e.target;
+    if (el.type === 'file' && el.getAttribute('data-up') !== null) { uploadCarImage(el); return; }
     var ci = el.getAttribute('data-car');
     var k = el.getAttribute('data-k');
     if (el.id === 'cmp-winner') { state.winner = el.value; paintSummary(); return; }
@@ -483,6 +504,7 @@
     if (str(car.slug)) h += '<span class="cmp-admin-linked">🔗 מקושר לדף הרכב /car/' + esc(car.slug) + '/ <button type="button" data-act="unlink" data-car="' + i + '">נתק</button></span>';
     h += '</div>';
 
+    h += '<div class="cmp-admin-upload"><label class="cmp-admin-btn" style="cursor:pointer;display:inline-block">📷 העלה תמונה מהמחשב<input type="file" accept="image/*" data-up="' + i + '" style="display:none"></label><span class="cmp-admin-hint" id="cmp-upst-' + i + '">' + (str(car.img) ? 'יש תמונה ✓ (אפשר להחליף)' : 'תמונה רוחבית, יחס 16:10') + '</span></div>';
     h += '<div class="cmp-admin-grid">';
     FIELDS.forEach(function (f) { h += fieldHtml(i, f, car); });
     h += '</div>';
