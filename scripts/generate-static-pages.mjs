@@ -433,6 +433,8 @@ function hydrateTemplateForArticle(template, a) {
     `<img class="article-hero-img" id="art-img" src="${esc(displayImg)}" alt="${esc(a.title)}" fetchpriority="high"`
   );
   html = injectBetween(html, 'HERO_PRELOAD', `<link rel="preload" as="image" href="${esc(displayImg)}" fetchpriority="high">`);
+  // שקופית ה-hero של דף הבית לא שייכת לעמוד כתבה: היא מכניסה לעמוד תמונה של כתבה אחרת, וגוגל עלול לבחור אותה כתמונה ממוזערת של הכתבה הזו
+  html = injectBetween(html, 'HERO_SLIDE', '');
   if (isComparison) {
     html = html.replace(
       '<div id="art-spec" style="display:none;margin-bottom:0;"></div>',
