@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">
-  <url><loc>https://speedometer10.co.il/</loc><lastmod>2026-10-30</lastmod><changefreq>hourly</changefreq><priority>1.0</priority></url>
-  <url><loc>https://speedometer10.co.il/cars-list.html</loc><lastmod>2026-10-30</lastmod><changefreq>weekly</changefreq><priority>0.7</priority></url>
-  <url><loc>https://speedometer10.co.il/usage-value-calculator.html</loc><lastmod>2026-10-30</lastmod><changefreq>monthly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://speedometer10.co.il/</loc><lastmod>2026-10-31</lastmod><changefreq>hourly</changefreq><priority>1.0</priority></url>
+  <url><loc>https://speedometer10.co.il/cars-list.html</loc><lastmod>2026-10-31</lastmod><changefreq>weekly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://speedometer10.co.il/usage-value-calculator.html</loc><lastmod>2026-10-31</lastmod><changefreq>monthly</changefreq><priority>0.7</priority></url>
   <url><loc>https://speedometer10.co.il/article/694/</loc><lastmod>2026-10-29</lastmod><changefreq>weekly</changefreq><priority>0.8</priority><image:image><image:loc>https://kaykrrnmykqrfhawgtqt.supabase.co/storage/v1/object/public/article-images/1793306526396-gyj6x5.jpg</image:loc></image:image></url>
   <url><loc>https://speedometer10.co.il/article/692/</loc><lastmod>2026-10-29</lastmod><changefreq>weekly</changefreq><priority>0.8</priority><image:image><image:loc>https://kaykrrnmykqrfhawgtqt.supabase.co/storage/v1/object/public/article-images/1793277199036-qnnjig.webp</image:loc></image:image></url>
   <url><loc>https://speedometer10.co.il/article/690/</loc><lastmod>2026-10-28</lastmod><changefreq>weekly</changefreq><priority>0.8</priority><image:image><image:loc>https://kaykrrnmykqrfhawgtqt.supabase.co/storage/v1/object/public/article-images/1793210500909-ay5mxq.webp</image:loc></image:image></url>
@@ -275,30 +275,30 @@
   <url><loc>https://speedometer10.co.il/article/81/</loc><lastmod>2026-05-24</lastmod><changefreq>weekly</changefreq><priority>0.8</priority><image:image><image:loc>https://www.cartube.co.il/images/artimage/4-2026/Mercedes-Benz-C-Class_EV-2027-1280-9902209aa7299ab39290803c40a0a8c336-1200.webp</image:loc></image:image></url>
   <url><loc>https://speedometer10.co.il/article/79/</loc><lastmod>2026-05-21</lastmod><changefreq>weekly</changefreq><priority>0.8</priority><image:image><image:loc>https://scene7.toyota.eu/is/image/toyotaeurope/CHRP0006a_26_WEB-1:Large-Landscape?ts=0&amp;resMode=sharp2&amp;op_usm=1.75,0.3,2,0&amp;fmt=png-alpha</image:loc></image:image></url>
   <url><loc>https://speedometer10.co.il/article/72/</loc><lastmod>2026-05-19</lastmod><changefreq>weekly</changefreq><priority>0.8</priority><image:image><image:loc>https://img.ice.co.il/giflib/news/rsPhoto/sz_596/rsz_615_346_11342022603.jpg</image:loc></image:image></url>
-  <url><loc>https://speedometer10.co.il/car/jaecoo-j7-phev-2025/</loc><lastmod>2026-10-30</lastmod><changefreq>monthly</changefreq><priority>0.6</priority></url>
-  <url><loc>https://speedometer10.co.il/car/hyundai-kona-2025/</loc><lastmod>2026-10-30</lastmod><changefreq>monthly</changefreq><priority>0.6</priority></url>
-  <url><loc>https://speedometer10.co.il/car/hyundai-elantra-hybrid-2025/</loc><lastmod>2026-10-30</lastmod><changefreq>monthly</changefreq><priority>0.6</priority></url>
-  <url><loc>https://speedometer10.co.il/car/byd-atto3-2025/</loc><lastmod>2026-10-30</lastmod><changefreq>monthly</changefreq><priority>0.6</priority></url>
-  <url><loc>https://speedometer10.co.il/car/toyota-corolla-cross-2025/</loc><lastmod>2026-10-30</lastmod><changefreq>monthly</changefreq><priority>0.6</priority></url>
-  <url><loc>https://speedometer10.co.il/car/skoda-octavia-2025/</loc><lastmod>2026-10-30</lastmod><changefreq>monthly</changefreq><priority>0.6</priority></url>
-  <url><loc>https://speedometer10.co.il/car/chery-tiggo8pro-2025/</loc><lastmod>2026-10-30</lastmod><changefreq>monthly</changefreq><priority>0.6</priority></url>
-  <url><loc>https://speedometer10.co.il/car/toyota-yaris-cross-2025/</loc><lastmod>2026-10-30</lastmod><changefreq>monthly</changefreq><priority>0.6</priority></url>
-  <url><loc>https://speedometer10.co.il/car/kia-sportage-hybrid-2025/</loc><lastmod>2026-10-30</lastmod><changefreq>monthly</changefreq><priority>0.6</priority></url>
-  <url><loc>https://speedometer10.co.il/car/kia-picanto-2025/</loc><lastmod>2026-10-30</lastmod><changefreq>monthly</changefreq><priority>0.6</priority></url>
-  <url><loc>https://speedometer10.co.il/car/mitsubishi-outlander-2025/</loc><lastmod>2026-10-30</lastmod><changefreq>monthly</changefreq><priority>0.6</priority></url>
-  <url><loc>https://speedometer10.co.il/car/toyota-rav4-hybrid-2025/</loc><lastmod>2026-10-30</lastmod><changefreq>monthly</changefreq><priority>0.6</priority></url>
-  <url><loc>https://speedometer10.co.il/car/byd-seal-u-2025/</loc><lastmod>2026-10-30</lastmod><changefreq>monthly</changefreq><priority>0.6</priority></url>
-  <url><loc>https://speedometer10.co.il/car/mg-hs-hybrid-2025/</loc><lastmod>2026-10-30</lastmod><changefreq>monthly</changefreq><priority>0.6</priority></url>
-  <url><loc>https://speedometer10.co.il/car/xpeng-g6-2025/</loc><lastmod>2026-10-30</lastmod><changefreq>monthly</changefreq><priority>0.6</priority></url>
-  <url><loc>https://speedometer10.co.il/car/mazda-cx5-2025/</loc><lastmod>2026-10-30</lastmod><changefreq>monthly</changefreq><priority>0.6</priority></url>
-  <url><loc>https://speedometer10.co.il/car/hyundai-tucson-hybrid-2025/</loc><lastmod>2026-10-30</lastmod><changefreq>monthly</changefreq><priority>0.6</priority></url>
-  <url><loc>https://speedometer10.co.il/car/toyota-chr-2025/</loc><lastmod>2026-10-30</lastmod><changefreq>monthly</changefreq><priority>0.6</priority></url>
-  <url><loc>https://speedometer10.co.il/car/skoda-kamiq-2025/</loc><lastmod>2026-10-30</lastmod><changefreq>monthly</changefreq><priority>0.6</priority></url>
-  <url><loc>https://speedometer10.co.il/car/seat-arona-2025/</loc><lastmod>2026-10-30</lastmod><changefreq>monthly</changefreq><priority>0.6</priority></url>
-  <url><loc>https://speedometer10.co.il/car/toyota-corolla-hybrid-2025/</loc><lastmod>2026-10-30</lastmod><changefreq>monthly</changefreq><priority>0.6</priority></url>
-  <url><loc>https://speedometer10.co.il/car/subaru-crosstrek-2025/</loc><lastmod>2026-10-30</lastmod><changefreq>monthly</changefreq><priority>0.6</priority></url>
-  <url><loc>https://speedometer10.co.il/car/kia-niro-hybrid-2025/</loc><lastmod>2026-10-30</lastmod><changefreq>monthly</changefreq><priority>0.6</priority></url>
-  <url><loc>https://speedometer10.co.il/car/volkswagen-tiguan-2025/</loc><lastmod>2026-10-30</lastmod><changefreq>monthly</changefreq><priority>0.6</priority></url>
-  <url><loc>https://speedometer10.co.il/car/mg3-hybrid-2026/</loc><lastmod>2026-10-30</lastmod><changefreq>monthly</changefreq><priority>0.6</priority></url>
-  <url><loc>https://speedometer10.co.il/car/chery-tiggo-9-pro-phev-2026/</loc><lastmod>2026-10-30</lastmod><changefreq>monthly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://speedometer10.co.il/car/jaecoo-j7-phev-2025/</loc><lastmod>2026-10-31</lastmod><changefreq>monthly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://speedometer10.co.il/car/hyundai-kona-2025/</loc><lastmod>2026-10-31</lastmod><changefreq>monthly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://speedometer10.co.il/car/hyundai-elantra-hybrid-2025/</loc><lastmod>2026-10-31</lastmod><changefreq>monthly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://speedometer10.co.il/car/byd-atto3-2025/</loc><lastmod>2026-10-31</lastmod><changefreq>monthly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://speedometer10.co.il/car/toyota-corolla-cross-2025/</loc><lastmod>2026-10-31</lastmod><changefreq>monthly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://speedometer10.co.il/car/skoda-octavia-2025/</loc><lastmod>2026-10-31</lastmod><changefreq>monthly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://speedometer10.co.il/car/chery-tiggo8pro-2025/</loc><lastmod>2026-10-31</lastmod><changefreq>monthly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://speedometer10.co.il/car/toyota-yaris-cross-2025/</loc><lastmod>2026-10-31</lastmod><changefreq>monthly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://speedometer10.co.il/car/kia-sportage-hybrid-2025/</loc><lastmod>2026-10-31</lastmod><changefreq>monthly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://speedometer10.co.il/car/kia-picanto-2025/</loc><lastmod>2026-10-31</lastmod><changefreq>monthly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://speedometer10.co.il/car/mitsubishi-outlander-2025/</loc><lastmod>2026-10-31</lastmod><changefreq>monthly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://speedometer10.co.il/car/toyota-rav4-hybrid-2025/</loc><lastmod>2026-10-31</lastmod><changefreq>monthly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://speedometer10.co.il/car/byd-seal-u-2025/</loc><lastmod>2026-10-31</lastmod><changefreq>monthly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://speedometer10.co.il/car/mg-hs-hybrid-2025/</loc><lastmod>2026-10-31</lastmod><changefreq>monthly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://speedometer10.co.il/car/xpeng-g6-2025/</loc><lastmod>2026-10-31</lastmod><changefreq>monthly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://speedometer10.co.il/car/mazda-cx5-2025/</loc><lastmod>2026-10-31</lastmod><changefreq>monthly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://speedometer10.co.il/car/hyundai-tucson-hybrid-2025/</loc><lastmod>2026-10-31</lastmod><changefreq>monthly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://speedometer10.co.il/car/toyota-chr-2025/</loc><lastmod>2026-10-31</lastmod><changefreq>monthly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://speedometer10.co.il/car/skoda-kamiq-2025/</loc><lastmod>2026-10-31</lastmod><changefreq>monthly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://speedometer10.co.il/car/seat-arona-2025/</loc><lastmod>2026-10-31</lastmod><changefreq>monthly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://speedometer10.co.il/car/toyota-corolla-hybrid-2025/</loc><lastmod>2026-10-31</lastmod><changefreq>monthly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://speedometer10.co.il/car/subaru-crosstrek-2025/</loc><lastmod>2026-10-31</lastmod><changefreq>monthly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://speedometer10.co.il/car/kia-niro-hybrid-2025/</loc><lastmod>2026-10-31</lastmod><changefreq>monthly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://speedometer10.co.il/car/volkswagen-tiguan-2025/</loc><lastmod>2026-10-31</lastmod><changefreq>monthly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://speedometer10.co.il/car/mg3-hybrid-2026/</loc><lastmod>2026-10-31</lastmod><changefreq>monthly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://speedometer10.co.il/car/chery-tiggo-9-pro-phev-2026/</loc><lastmod>2026-10-31</lastmod><changefreq>monthly</changefreq><priority>0.6</priority></url>
 </urlset>
