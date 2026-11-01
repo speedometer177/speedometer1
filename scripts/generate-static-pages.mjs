@@ -715,6 +715,18 @@ async function fetchCars(supabase) {
  * ═══════════════════════════════════════════════════════════════ */
 
 const CAR_TEMPLATE_PATH = path.join(SITE_DIR, 'car.html');
+
+/* עמוד הדגם החדש (29.10.2026): אותה פונקציית render בדיוק כמו בדפדפן (car-page.js בשורש הריפו),
+   נטענת דרך vm כמו comparison.js. אם הקובץ חסר או שבור — חוזרים ל-renderCarBodyHTML הישנה. */
+let spCarPage = null;
+try {
+  const sandbox = { module: { exports: {} }, URL };
+  vm.runInNewContext(readFileSync(new URL('../car-page.js', import.meta.url), 'utf-8'), sandbox, { filename: 'car-page.js' });
+  const api = sandbox.module.exports;
+  if (api && typeof api.render === 'function') spCarPage = api;
+} catch (e) {
+  console.warn('⚠️ car-page.js לא נטען — עמודי רכב ייבנו בתבנית הישנה:', e.message);
+}
 const CAR_OUT_DIR = path.resolve(process.cwd(), 'car');
 
 /* מומנט: במאגר הרכבים נשמר ב-Nm; מוצג בקג"מ (÷9.80665, ספרה אחת אחרי הנקודה) */
@@ -1161,7 +1173,7 @@ function hydrateTemplateForCar(template, c, allCars) {
     <span>טוען מידע על הרכב...</span>
   </div>
 </div>`,
-    `<div id="car-page-root">${renderCarBodyHTML(c, allCars)}</div>`
+    `<div id="car-page-root">${spCarPage ? spCarPage.render(c) : renderCarBodyHTML(c, allCars)}</div>`
   );
 
   return html;
