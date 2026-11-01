@@ -2,562 +2,521 @@
 <html lang="he" dir="rtl">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="description" content="מאגר רכבים ספידומטר — השווה רכבים, מצא מחירים ומפרטים. מסנן לפי קטגוריה, מחיר ויצרן.">
-<meta property="og:title" content="מאגר רכבים | ספידומטר">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>מאגר הרכבים | כל הרכבים במקום אחד | ספידומטר</title>
+<meta name="description" content="מאגר הרכבים של ספידומטר: מפרטים טכניים, השוואות, מבחני רכב ומחירים בישראל. חיפוש לפי מותג, דגם, תקציב וסוג הנעה.">
+<link rel="canonical" href="https://speedometer10.co.il/cars-list.html">
 <meta property="og:type" content="website">
-<title>מאגר רכבים | ספידומטר</title>
-
+<meta property="og:locale" content="he_IL">
+<meta property="og:site_name" content="ספידומטר">
+<meta property="og:title" content="מאגר הרכבים | ספידומטר">
+<meta property="og:description" content="מפרטים טכניים, השוואות, מבחני רכב ומחירים בישראל. כל הרכבים במקום אחד.">
+<meta property="og:url" content="https://speedometer10.co.il/cars-list.html">
+<meta property="og:image" content="https://speedometer10.co.il/favicon-512.png">
+<meta name="twitter:card" content="summary">
+<meta name="theme-color" content="#10263D">
+<link rel="icon" href="/sp-favicon-32.png" sizes="32x32">
+<link rel="apple-touch-icon" href="/sp-favicon-180.png">
+<link rel="preconnect" href="https://images.unsplash.com">
+<link rel="preconnect" href="https://kaykrrnmykqrfhawgtqt.supabase.co" crossorigin>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Rubik:wght@400;500;700;900&display=swap">
-
-<style>
-/* ════ RESET ════ */
-*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-:root{
-  --black:#0a0a0a; --ink:#1a1a1a; --dark:#222; --mid:#555; --muted:#6f6f6f;
-  --border:#e8e8e8; --bg:#f7f7f5; --white:#fff; --red:#e8001d;
-  --font:'Rubik',sans-serif; --radius:6px; --max:1280px;
-  --shadow:0 2px 12px rgba(0,0,0,0.07); --shadow-hover:0 8px 28px rgba(0,0,0,0.13);
-}
-html{scroll-behavior:smooth;overflow-x:hidden}
-body{font-family:var(--font);background:var(--bg);color:var(--ink);font-size:16px;line-height:1.6;-webkit-font-smoothing:antialiased}
-a{text-decoration:none;color:inherit}
-img{max-width:100%;display:block}
-button{font-family:var(--font);cursor:pointer}
-
-/* ════ HEADER ════ */
-header{background:var(--white);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:100;box-shadow:0 1px 0 rgba(0,0,0,0.04)}
-.header-inner{max-width:var(--max);margin:0 auto;padding:0 24px;height:68px;display:flex;align-items:center;justify-content:space-between;gap:20px}
-.logo{display:flex;flex-direction:column;gap:1px;cursor:pointer;text-decoration:none}
-.logo-name{font-size:1.8rem;font-weight:900;letter-spacing:-0.04em;line-height:1;color:var(--black)}
-.logo-name span{color:var(--red)}
-.logo-sub{font-size:0.58rem;color:var(--muted);font-weight:400;letter-spacing:0.1em;text-transform:uppercase}
-.header-breadcrumb{display:flex;align-items:center;gap:8px;font-size:0.8rem;color:var(--muted)}
-.header-breadcrumb a{color:var(--muted);transition:color 0.2s}
-.header-breadcrumb a:hover{color:var(--red)}
-.header-breadcrumb .sep{color:var(--border)}
-
-/* ════ PAGE HERO ════ */
-.page-hero{background:linear-gradient(135deg,#0f0f1a 0%,#1a1a2e 50%,#16213e 100%);padding:52px 24px;text-align:center;position:relative;overflow:hidden}
-.page-hero::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at 30% 50%,rgba(232,0,29,0.12) 0%,transparent 70%),radial-gradient(ellipse at 70% 50%,rgba(0,100,255,0.08) 0%,transparent 70%)}
-.page-hero-content{position:relative;max-width:640px;margin:0 auto}
-.page-hero h1{font-size:clamp(1.8rem,4vw,2.8rem);font-weight:900;color:#fff;margin-bottom:10px;letter-spacing:-0.03em}
-.page-hero h1 span{color:var(--red)}
-.page-hero p{color:rgba(255,255,255,0.62);font-size:0.95rem;max-width:480px;margin:0 auto}
-.car-count-badge{display:inline-block;background:rgba(232,0,29,0.18);border:1px solid rgba(232,0,29,0.35);color:#ff4d6a;font-size:0.72rem;font-weight:700;padding:3px 10px;border-radius:20px;margin-top:14px}
-
-/* ════ MAIN LAYOUT ════ */
-.main-wrap{max-width:var(--max);margin:0 auto;padding:32px 24px 60px;display:grid;grid-template-columns:280px 1fr;gap:28px;align-items:start}
-@media(max-width:960px){.main-wrap{grid-template-columns:1fr;padding:20px 16px 60px}}
-
-/* ════ FILTERS SIDEBAR ════ */
-.filters-panel{position:sticky;top:84px;background:var(--white);border:1px solid var(--border);border-radius:12px;padding:20px;box-shadow:var(--shadow)}
-.filters-title{font-size:0.8rem;font-weight:800;text-transform:uppercase;letter-spacing:0.1em;color:var(--muted);margin-bottom:16px}
-.filter-group{margin-bottom:20px;padding-bottom:20px;border-bottom:1px solid var(--border)}
-.filter-group:last-child{border-bottom:none;margin-bottom:0;padding-bottom:0}
-.filter-label{font-size:0.82rem;font-weight:700;color:var(--dark);margin-bottom:10px;display:block}
-.filter-options{display:flex;flex-direction:column;gap:7px}
-.filter-option{display:flex;align-items:center;gap:9px;cursor:pointer;font-size:0.82rem;color:var(--mid);transition:color 0.2s}
-.filter-option:hover{color:var(--ink)}
-.filter-option input[type=checkbox]{width:16px;height:16px;accent-color:var(--red);cursor:pointer;flex-shrink:0}
-.filter-option-count{margin-right:auto;font-size:0.7rem;color:var(--muted);background:var(--bg);padding:1px 7px;border-radius:10px}
-.price-range{padding:4px 0}
-.price-inputs{display:flex;gap:8px;align-items:center;font-size:0.78rem;color:var(--muted)}
-.price-inputs input{flex:1;padding:7px 10px;border:1.5px solid var(--border);border-radius:6px;font-size:0.82rem;font-family:var(--font);outline:none;transition:border-color 0.2s;width:0}
-.price-inputs input:focus{border-color:var(--red)}
-.price-inputs span{flex-shrink:0}
-.btn-apply-filter{width:100%;padding:10px;background:var(--red);color:#fff;border:none;border-radius:8px;font-size:0.85rem;font-weight:700;cursor:pointer;margin-top:8px;transition:all 0.2s}
-.btn-apply-filter:hover{background:#c0001a}
-.btn-reset-filter{width:100%;padding:9px;background:none;color:var(--muted);border:1px solid var(--border);border-radius:8px;font-size:0.8rem;cursor:pointer;margin-top:6px;transition:all 0.2s}
-.btn-reset-filter:hover{border-color:var(--ink);color:var(--ink)}
-
-/* Mobile filter toggle */
-.mobile-filter-toggle{display:none;width:100%;padding:12px 16px;background:var(--white);border:1px solid var(--border);border-radius:10px;font-size:0.88rem;font-weight:700;text-align:right;cursor:pointer;align-items:center;justify-content:space-between;gap:10px;margin-bottom:16px;box-shadow:var(--shadow)}
-@media(max-width:960px){.mobile-filter-toggle{display:flex}.filters-panel{position:static;display:none}.filters-panel.open{display:block}}
-
-/* ════ RESULTS PANEL ════ */
-.results-panel{}
-.results-bar{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;gap:12px;flex-wrap:wrap}
-.results-count{font-size:0.85rem;color:var(--muted)}
-.results-count strong{color:var(--ink)}
-.sort-select{padding:8px 14px;border:1.5px solid var(--border);border-radius:8px;font-size:0.82rem;font-family:var(--font);background:var(--white);color:var(--dark);outline:none;cursor:pointer;transition:border-color 0.2s}
-.sort-select:focus{border-color:var(--red)}
-.view-toggle{display:flex;gap:4px}
-.view-btn{padding:7px 10px;border:1.5px solid var(--border);border-radius:6px;background:none;cursor:pointer;color:var(--muted);transition:all 0.2s;display:flex;align-items:center}
-.view-btn.active,.view-btn:hover{border-color:var(--red);color:var(--red)}
-
-/* ════ CARS GRID ════ */
-.cars-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:20px}
-.cars-grid.list-view{grid-template-columns:1fr}
-
-/* ════ CAR CARD ════ */
-.car-card{background:var(--white);border:1px solid var(--border);border-radius:12px;overflow:hidden;transition:all 0.25s;position:relative;cursor:pointer;display:flex;flex-direction:column}
-.car-card:hover{box-shadow:var(--shadow-hover);transform:translateY(-3px);border-color:rgba(232,0,29,0.2)}
-.car-card a{display:flex;flex-direction:column;height:100%;color:inherit;text-decoration:none}
-.card-img{aspect-ratio:16/9;overflow:hidden;background:#f0f0ee;position:relative;flex-shrink:0}
-.card-img img{width:100%;height:100%;object-fit:cover;transition:transform 0.4s ease;display:block}
-.car-card:hover .card-img img{transform:scale(1.04)}
-.card-cat-badge{position:absolute;top:10px;right:10px;background:rgba(0,0,0,0.65);color:#fff;font-size:0.65rem;font-weight:700;padding:3px 9px;border-radius:20px;backdrop-filter:blur(4px);white-space:nowrap}
-.card-score-badge{position:absolute;bottom:10px;left:10px;background:var(--red);color:#fff;font-size:0.75rem;font-weight:900;padding:4px 10px;border-radius:8px;line-height:1}
-.card-body{padding:16px;flex:1;display:flex;flex-direction:column}
-.card-brand{font-size:0.7rem;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;color:var(--red);margin-bottom:3px}
-.card-name{font-size:1rem;font-weight:800;color:var(--ink);line-height:1.25;margin-bottom:8px}
-.card-specs-row{display:flex;gap:14px;margin-bottom:12px;flex-wrap:wrap}
-.card-spec{display:flex;flex-direction:column;gap:2px}
-.card-spec-val{font-size:0.82rem;font-weight:700;color:var(--ink)}
-.card-spec-label{font-size:0.65rem;color:var(--muted);white-space:nowrap}
-.card-foot{display:flex;align-items:center;justify-content:space-between;margin-top:auto;padding-top:12px;border-top:1px solid var(--border)}
-.card-price{font-size:1rem;font-weight:900;color:var(--ink)}
-.card-price span{font-size:0.7rem;font-weight:400;color:var(--muted)}
-.btn-card-details{padding:8px 14px;background:var(--red);color:#fff;border:none;border-radius:6px;font-size:0.78rem;font-weight:700;cursor:pointer;transition:background 0.2s;text-decoration:none;white-space:nowrap}
-.btn-card-details:hover{background:#c0001a}
-
-/* ════ LIST VIEW ════ */
-.cars-grid.list-view .car-card a{flex-direction:row}
-.cars-grid.list-view .card-img{width:220px;aspect-ratio:auto;height:140px;flex-shrink:0}
-.cars-grid.list-view .card-body{padding:16px 20px}
-@media(max-width:600px){.cars-grid.list-view .car-card a{flex-direction:column}.cars-grid.list-view .card-img{width:100%;height:auto;aspect-ratio:16/9}}
-
-/* ════ SHIMMER SKELETON ════ */
-.shimmer{background:linear-gradient(90deg,#f0f0ee 25%,#e8e8e6 50%,#f0f0ee 75%);background-size:200%;animation:shimmer 1.5s infinite}
-@keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
-.skel-card{background:var(--white);border:1px solid var(--border);border-radius:12px;overflow:hidden}
-.skel-img{aspect-ratio:16/9;width:100%}
-.skel-body{padding:16px}
-.skel-line{height:14px;border-radius:4px;margin-bottom:10px}
-.skel-line.w60{width:60%}
-.skel-line.w40{width:40%}
-.skel-line.w80{width:80%}
-
-/* ════ EMPTY STATE ════ */
-.empty-state{text-align:center;padding:60px 20px;grid-column:1/-1}
-.empty-state-icon{font-size:3rem;margin-bottom:16px;opacity:0.4}
-.empty-state h3{font-size:1.1rem;font-weight:800;margin-bottom:8px;color:var(--dark)}
-.empty-state p{font-size:0.85rem;color:var(--muted)}
-
-/* ════ ACTIVE FILTERS ════ */
-.active-filters{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px}
-.filter-tag{display:inline-flex;align-items:center;gap:6px;padding:5px 12px;background:rgba(232,0,29,0.08);border:1px solid rgba(232,0,29,0.25);border-radius:20px;font-size:0.75rem;font-weight:600;color:var(--red);cursor:pointer;transition:all 0.18s}
-.filter-tag:hover{background:rgba(232,0,29,0.15)}
-.filter-tag svg{flex-shrink:0}
-
-/* ════ FOOTER ════ */
-footer{background:var(--black);color:rgba(255,255,255,0.45);text-align:center;padding:20px 24px;font-size:0.75rem}
-footer a{color:var(--red);text-decoration:none}
-
-/* ════ RESPONSIVE ════ */
-@media(max-width:600px){
-  .cars-grid{grid-template-columns:1fr}
-  .results-bar{flex-direction:column;align-items:flex-start}
-}
-</style>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Rubik:wght@400;500;600;700;800;900&display=swap">
+<link rel="stylesheet" href="/cars-ui.css?v=12">
+<script>document.documentElement.classList.add('cx-js')</script>
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"CollectionPage","name":"מאגר הרכבים של ספידומטר","url":"https://speedometer10.co.il/cars-list.html","inLanguage":"he-IL","isPartOf":{"@type":"WebSite","name":"ספידומטר","url":"https://speedometer10.co.il/"},
+"breadcrumb":{"@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"בית","item":"https://speedometer10.co.il/"},{"@type":"ListItem","position":2,"name":"מאגר הרכבים","item":"https://speedometer10.co.il/cars-list.html"}]}}
+</script>
 </head>
-<body>
+<body class="cx">
+<a href="#main" class="cx-skip">דילוג לתוכן</a>
 
-<header>
-  <div class="header-inner">
-    <a href="/" class="logo" aria-label="ספידומטר - עמוד הבית">
-      <span class="logo-name">ספידו<span>מטר</span></span>
-      <span class="logo-sub">רכב · טכנולוגיה · חדשנות</span>
-    </a>
-    <nav class="header-breadcrumb" aria-label="נתיב ניווט">
-      <a href="/">בית</a>
-      <span class="sep">›</span>
-      <span>מאגר רכבים</span>
+<header class="cx-header" id="hdr">
+  <div class="cx-wrap cx-header-in">
+    <a href="/" class="cx-logo" aria-label="ספידומטר — לעמוד הבית"><b>ספידו<span>מטר</span></b><small>כל מה שצריך לדעת על רכב</small></a>
+    <nav class="cx-nav" id="cx-nav" aria-label="ניווט ראשי">
+      <a href="?view=brands" data-route="view=brands" id="nav-brands">מותגים</a>
+      <a href="/cars-list.html" data-route="" id="nav-models" aria-current="page">דגמים</a>
+      <a href="/?cat=buying">מדריכים</a>
+      <a href="/">חדשות</a>
+      <a href="/?cat=review">מבחני רכב</a>
+      <button type="button" data-open-compare>השוואות</button>
     </nav>
+    <div class="cx-header-tools">
+      <button type="button" class="cx-icon-btn" id="hdr-fav" aria-label="הרכבים ששמרתי"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6"/></svg><span class="cx-dot" id="fav-dot"></span></button>
+      <button type="button" class="cx-icon-btn" id="hdr-search" aria-label="חיפוש רכב"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg></button>
+      <button type="button" class="cx-icon-btn cx-icon-btn--ghost cx-menu-btn" id="hdr-menu" aria-label="תפריט" aria-expanded="false" aria-controls="cx-nav"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
+    </div>
   </div>
 </header>
 
-<div class="page-hero">
-  <div class="page-hero-content">
-    <h1>מאגר <span>הרכבים</span></h1>
-    <p>השווה רכבים, מצא מפרטים ומחירים. הכל במקום אחד.</p>
-    <div class="car-count-badge" id="total-badge">טוען...</div>
-  </div>
-</div>
-
-<div class="main-wrap">
-
-  <!-- ══ MOBILE FILTER TOGGLE ══ -->
-  <button class="mobile-filter-toggle" onclick="toggleMobileFilters()" aria-expanded="false" id="filter-toggle-btn">
-    <span>🔍 סינון וחיפוש</span>
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 9l6 6 6-6"/></svg>
-  </button>
-
-  <!-- ══ FILTERS SIDEBAR ══ -->
-  <aside class="filters-panel" id="filters-panel" role="complementary" aria-label="סינון רכבים">
-    <div class="filters-title">סינון</div>
-
-    <!-- Search -->
-    <div class="filter-group">
-      <label class="filter-label" for="search-input">🔍 חיפוש</label>
-      <input type="search" id="search-input" placeholder="יצרן, דגם, קטגוריה..." 
-        style="width:100%;padding:9px 12px;border:1.5px solid var(--border);border-radius:8px;font-family:var(--font);font-size:0.85rem;outline:none;transition:border-color 0.2s"
-        onfocus="this.style.borderColor='var(--red)'" onblur="this.style.borderColor='var(--border)'"
-        oninput="applyFilters()">
+<main id="main">
+<!-- ════════════════ דף הבית ════════════════ -->
+<div class="cx-home">
+  <section class="cx-hero" aria-labelledby="hero-title">
+    <div class="cx-hero-bg" id="hero-bg">
+      <img id="hero-img" alt="" fetchpriority="high" decoding="async"
+        src="https://images.unsplash.com/photo-1633230329829-a52df5940e69?auto=format&fit=crop&w=1800&q=72"
+        srcset="https://images.unsplash.com/photo-1633230329829-a52df5940e69?auto=format&fit=crop&w=900&q=70 900w,https://images.unsplash.com/photo-1633230329829-a52df5940e69?auto=format&fit=crop&w=1800&q=72 1800w,https://images.unsplash.com/photo-1633230329829-a52df5940e69?auto=format&fit=crop&w=2600&q=72 2600w"
+        sizes="100vw">
     </div>
+    <div class="cx-wrap cx-hero-in">
+      <div class="cx-hero-copy">
+        <h1 id="hero-title">כל הרכבים במקום אחד</h1>
+        <p class="cx-hero-sub"><span>מפרטים טכניים</span><span>השוואות</span><span>מבחני רכב</span><span>מחירים בישראל</span></p>
+      </div>
 
-    <!-- Category -->
-    <div class="filter-group">
-      <span class="filter-label">קטגוריה</span>
-      <div class="filter-options" id="cat-filters"></div>
-    </div>
-
-    <!-- Brand -->
-    <div class="filter-group">
-      <span class="filter-label">יצרן</span>
-      <div class="filter-options" id="brand-filters"></div>
-    </div>
-
-    <!-- Price range -->
-    <div class="filter-group">
-      <span class="filter-label">טווח מחיר (₪)</span>
-      <div class="price-range">
-        <div class="price-inputs">
-          <input type="number" id="price-min" placeholder="מינימום" min="0" step="10000" oninput="applyFilters()">
-          <span>עד</span>
-          <input type="number" id="price-max" placeholder="מקסימום" min="0" step="10000" oninput="applyFilters()">
+      <!-- תיבת חיפוש -->
+      <div class="cx-search" id="finder">
+        <div class="cx-tabs" role="tablist" aria-label="אופן החיפוש" id="f-tabs">
+          <button type="button" class="cx-tab" role="tab" aria-selected="false" aria-controls="p-free" id="t-free"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>חיפוש חופשי</button>
+          <button type="button" class="cx-tab" role="tab" aria-selected="true" aria-controls="p-brand" id="t-brand"><svg width="19" height="19" viewBox="0 0 24 24" fill="currentColor"><path d="M5 11l1.6-4.3A2 2 0 0 1 8.5 5.4h7a2 2 0 0 1 1.9 1.3L19 11a2 2 0 0 1 1.5 1.9V17a1 1 0 0 1-1 1h-1v1.2a.8.8 0 0 1-.8.8h-1.4a.8.8 0 0 1-.8-.8V18H8.5v1.2a.8.8 0 0 1-.8.8H6.3a.8.8 0 0 1-.8-.8V18h-1a1 1 0 0 1-1-1v-4.1A2 2 0 0 1 5 11zm2.2-.3h9.6l-1.2-3.3a.6.6 0 0 0-.6-.4H9a.6.6 0 0 0-.6.4zM7 15.2a1.2 1.2 0 1 0 0-2.4 1.2 1.2 0 0 0 0 2.4zm10 0a1.2 1.2 0 1 0 0-2.4 1.2 1.2 0 0 0 0 2.4z"/></svg>מותג</button>
+          <button type="button" class="cx-tab" role="tab" aria-selected="false" aria-controls="p-model" id="t-model"><svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M3.5 13.5c0-1 .6-1.8 1.5-2.1l2.8-1 2.6-2.6c.6-.6 1.4-.9 2.2-.9h3.1c.9 0 1.7.4 2.3 1l2.2 2.4.9.2c1 .2 1.6 1.1 1.6 2.1v1.7c0 .6-.5 1.1-1.1 1.1h-.9a2.6 2.6 0 0 0-5.1 0H9.9a2.6 2.6 0 0 0-5.1 0h-.2c-.6 0-1.1-.5-1.1-1.1zm6.4-3.2h4.1V8.5h-1.4c-.4 0-.7.1-1 .4zm5.5 0h3l-1.4-1.5c-.3-.2-.6-.3-1-.3h-.6zM7.3 17.9a1.6 1.6 0 1 1 0-3.2 1.6 1.6 0 0 1 0 3.2zm10.2 0a1.6 1.6 0 1 1 0-3.2 1.6 1.6 0 0 1 0 3.2z"/></svg>דגם</button>
+          <button type="button" class="cx-tab" role="tab" aria-selected="false" aria-controls="p-budget" id="t-budget"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M14.5 9.2c-.5-.8-1.4-1.2-2.5-1.2-1.5 0-2.6.8-2.6 2s1.1 1.6 2.6 2 2.6.8 2.6 2-1.1 2-2.6 2c-1.1 0-2.1-.5-2.6-1.3M12 6.5V8M12 16v1.5"/></svg>תקציב</button>
+          <button type="button" class="cx-tab" role="tab" aria-selected="false" aria-controls="p-pt" id="t-pt"><svg width="17" height="17" viewBox="0 0 24 24" fill="currentColor"><path d="M13.5 2 4 14h7l-1.5 8L19 10h-7z"/></svg>סוג הנעה</button>
+          <button type="button" class="cx-tab" role="tab" aria-selected="false" aria-controls="p-more" id="t-more"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M4 7h16M7 12h10M10 17h4"/></svg>עוד פילטרים</button>
+          <i class="cx-tab-ind" id="tab-ind" aria-hidden="true"></i>
+        </div>
+        <div class="cx-panes">
+          <form class="cx-pane cx-pane-row cx-pane-row--1" id="p-free" role="tabpanel" aria-labelledby="t-free" autocomplete="off">
+            <div class="cx-field cx-free">
+              <label for="q-hero">חיפוש לפי יצרן או דגם</label>
+              <svg class="lead" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>
+              <input class="cx-input" id="q-hero" type="search" placeholder="לדוגמה: קורולה, Seal U, טיגו" role="combobox" aria-expanded="false" aria-controls="q-suggest" aria-autocomplete="list">
+              <div class="cx-suggest" id="q-suggest" role="listbox" hidden></div>
+            </div>
+            <button type="submit" class="cx-btn cx-btn--red"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>חיפוש</button>
+          </form>
+          <form class="cx-pane cx-pane-row on" id="p-brand" role="tabpanel" aria-labelledby="t-brand">
+            <div class="cx-field"><label for="s-brand">בחר מותג</label><select class="cx-select" id="s-brand"><option value="">כל המותגים</option></select></div>
+            <div class="cx-field"><label for="s-model">בחר דגם</label><select class="cx-select" id="s-model"><option value="">כל הדגמים</option></select></div>
+            <button type="submit" class="cx-btn cx-btn--red"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>חיפוש</button>
+          </form>
+          <form class="cx-pane cx-pane-row cx-pane-row--1" id="p-model" role="tabpanel" aria-labelledby="t-model">
+            <div class="cx-field"><label for="s-any">בחר דגם</label><select class="cx-select" id="s-any"><option value="">כל הדגמים</option></select></div>
+            <button type="submit" class="cx-btn cx-btn--red">לעמוד הדגם</button>
+          </form>
+          <form class="cx-pane cx-pane-stack" id="p-budget" role="tabpanel" aria-labelledby="t-budget">
+            <div class="cx-field">
+              <label id="b-label">טווח מחיר</label>
+              <div class="cx-dual-vals"><span class="cx-num" id="b-min-v"></span><span class="cx-num" id="b-max-v"></span></div>
+              <div class="cx-dual" aria-labelledby="b-label"><div class="cx-dual-track"><div class="cx-dual-fill" id="b-fill"></div></div>
+                <input type="range" id="b-min" aria-label="מחיר מינימלי"><input type="range" id="b-max" aria-label="מחיר מקסימלי"></div>
+            </div>
+            <div class="cx-pane-foot"><span class="cx-live" id="b-live"></span><button type="submit" class="cx-btn cx-btn--red">חיפוש</button></div>
+          </form>
+          <form class="cx-pane cx-pane-stack" id="p-pt" role="tabpanel" aria-labelledby="t-pt">
+            <div class="cx-chipset" id="pt-picks"></div>
+            <div class="cx-pane-foot"><span class="cx-live" id="pt-live"></span><button type="submit" class="cx-btn cx-btn--red">חיפוש</button></div>
+          </form>
+          <form class="cx-pane cx-pane-stack" id="p-more" role="tabpanel" aria-labelledby="t-more">
+            <div class="cx-chipset" id="more-picks"></div>
+            <div class="cx-pane-foot"><span class="cx-live" id="more-live"></span><button type="submit" class="cx-btn cx-btn--red">חיפוש</button></div>
+          </form>
         </div>
       </div>
     </div>
+    <span class="cx-hero-credit">צילום: <a href="https://unsplash.com/photos/a-winding-road-in-the-middle-of-a-mountain-range-HHwr5FZ_aE4" target="_blank" rel="noopener">Will Truettner / Unsplash</a></span>
+  </section>
 
-    <!-- Drive type -->
-    <div class="filter-group">
-      <span class="filter-label">סוג הנעה</span>
-      <div class="filter-options">
-        <label class="filter-option">
-          <input type="checkbox" name="drive" value="הנעה כפולה" onchange="applyFilters()">
-          <span>הנעה כפולה AWD/4x4</span>
-        </label>
-        <label class="filter-option">
-          <input type="checkbox" name="drive" value="אחורי" onchange="applyFilters()">
-          <span>הנעה אחורית RWD</span>
-        </label>
-        <label class="filter-option">
-          <input type="checkbox" name="drive" value="קידמי" onchange="applyFilters()">
-          <span>הנעה קידמית FWD</span>
-        </label>
+  <!-- סמלי המותגים -->
+  <section class="cx-brandbar" aria-label="מותגים">
+    <div class="cx-wrap cx-brandbar-in">
+      <div class="cx-marquee" id="marquee"><div class="cx-marquee-track" id="mq-track"></div></div>
+      <a class="cx-link cx-brandbar-all" href="?view=brands" data-route="view=brands" aria-label="צפייה בכל המותגים"><span>צפייה בכל המותגים</span> <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M15 18l-6-6 6-6"/></svg></a>
+    </div>
+  </section>
+
+  <!-- הרכבים הפופולריים -->
+  <section class="cx-sec" aria-labelledby="pop-title">
+    <div class="cx-wrap">
+      <div class="cx-sec-head" data-reveal>
+        <div><h2 class="cx-sec-title" id="pop-title">הרכבים הפופולריים</h2><p class="cx-sec-sub">הדגמים המובילים בישראל – עם כל המידע במקום אחד</p></div>
+        <a class="cx-link" href="?view=all" data-route="view=all">הצג את כל הדגמים <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M15 18l-6-6 6-6"/></svg></a>
+      </div>
+      <div class="cx-grid" id="pop-grid"></div>
+    </div>
+  </section>
+
+  <!-- ארבעה כרטיסי ערך -->
+  <section class="cx-sec" style="padding-top:8px" aria-label="מה יש במאגר">
+    <div class="cx-wrap cx-values">
+      <div class="cx-value" data-reveal style="--i:0">
+        <svg class="cx-value-ico" width="26" height="26" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.8l2.8 5.8 6.3.9-4.6 4.4 1.1 6.3L12 17.2l-5.6 3 1.1-6.3L2.9 9.5l6.3-.9z"/></svg>
+        <b>דירוגים והמלצות</b><p>ציון לכל דגם שנבחן אצלנו, לפי קטגוריות ועם ניתוח.</p>
+        <a class="cx-link" href="/?cat=review">לכל הדירוגים <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M15 18l-6-6 6-6"/></svg></a>
+      </div>
+      <div class="cx-value" data-reveal style="--i:1">
+        <svg class="cx-value-ico" width="26" height="26" viewBox="0 0 24 24" fill="currentColor"><path d="M6 2h9l5 5v13a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2zm8 1.5V8h4.5zM8 11v1.6h8V11zm0 3.4V16h8v-1.6zm0 3.4v1.6h5.5v-1.6z"/></svg>
+        <b>מפרטים טכניים מלאים</b><p>מנועים, ביצועים, מידות, צריכת דלק ועוד.</p>
+        <a class="cx-link" href="?view=all" data-route="view=all">לכל המפרטים <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M15 18l-6-6 6-6"/></svg></a>
+      </div>
+      <div class="cx-value" data-reveal style="--i:2">
+        <svg class="cx-value-ico" width="26" height="26" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l8 3v6c0 5.2-3.4 9.6-8 11-4.6-1.4-8-5.8-8-11V5zm0 2.2L6 6.4V11c0 4 2.4 7.5 6 8.8z"/></svg>
+        <b>מבחני רכב מקצועיים</b><p>צפייה במבחני דרך, סרטונים והתרשמויות.</p>
+        <a class="cx-link" href="/?cat=review">לכל המבחנים <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M15 18l-6-6 6-6"/></svg></a>
+      </div>
+      <div class="cx-value" data-reveal style="--i:3">
+        <svg class="cx-value-ico" width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v18M8 21h8M5 7h14M5 7l-3 7a3 3 0 0 0 6 0zM19 7l-3 7a3 3 0 0 0 6 0z"/><circle cx="12" cy="4" r="1.2" fill="currentColor"/></svg>
+        <b>השוואות חכמות</b><p>השוואה בין דגמים וגרסאות לפי מה שחשוב לך.</p>
+        <button type="button" class="cx-link" data-open-compare>לעוד השוואות <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M15 18l-6-6 6-6"/></svg></button>
       </div>
     </div>
-
-    <button class="btn-reset-filter" onclick="resetFilters()">איפוס סינון</button>
-  </aside>
-
-  <!-- ══ RESULTS ══ -->
-  <section class="results-panel" aria-label="תוצאות">
-
-    <div id="active-filters-wrap" class="active-filters" style="display:none"></div>
-
-    <div class="results-bar">
-      <div class="results-count" id="results-count">טוען רכבים...</div>
-      <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
-        <select class="sort-select" id="sort-select" onchange="applyFilters()" aria-label="מיון">
-          <option value="default">מיון: ברירת מחדל</option>
-          <option value="price-asc">מחיר: נמוך לגבוה</option>
-          <option value="price-desc">מחיר: גבוה לנמוך</option>
-          <option value="hp-desc">כוחות סוס: גבוה לנמוך</option>
-          <option value="year-desc">שנה: חדש לישן</option>
-        </select>
-        <div class="view-toggle" role="group" aria-label="אופן תצוגה">
-          <button class="view-btn active" id="btn-grid" onclick="setView('grid')" aria-label="תצוגת רשת" title="רשת">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
-          </button>
-          <button class="view-btn" id="btn-list" onclick="setView('list')" aria-label="תצוגת רשימה" title="רשימה">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
-          </button>
-        </div>
-      </div>
-    </div>
-
-    <div class="cars-grid" id="cars-grid" role="list" aria-label="רשימת רכבים">
-      <!-- Shimmer skeletons shown while loading -->
-      <div class="skel-card"><div class="skel-img shimmer"></div><div class="skel-body"><div class="skel-line w40 shimmer"></div><div class="skel-line w80 shimmer"></div><div class="skel-line w60 shimmer"></div></div></div>
-      <div class="skel-card"><div class="skel-img shimmer"></div><div class="skel-body"><div class="skel-line w40 shimmer"></div><div class="skel-line w80 shimmer"></div><div class="skel-line w60 shimmer"></div></div></div>
-      <div class="skel-card"><div class="skel-img shimmer"></div><div class="skel-body"><div class="skel-line w40 shimmer"></div><div class="skel-line w80 shimmer"></div><div class="skel-line w60 shimmer"></div></div></div>
-    </div>
-
   </section>
 </div>
 
-<footer>
-  <p>© 2025 <a href="/">ספידומטר</a> | כל הזכויות שמורות | <a href="tel:+972559365579">055-936-5579</a></p>
-</footer>
+<!-- ════════════════ עמוד מותג / תוצאות / כל המותגים ════════════════ -->
+<div class="cx-results" id="results" aria-live="polite">
+  <div class="cx-rhead">
+    <div class="cx-wrap cx-rhead-in">
+      <div class="cx-rhead-mark" id="r-mark" hidden></div>
+      <div>
+        <div class="cx-crumbs"><a href="/cars-list.html" data-route="">מאגר הרכבים</a> › <span id="r-crumb"></span></div>
+        <h1 id="r-title"></h1>
+        <p id="r-sub"></p>
+      </div>
+    </div>
+  </div>
+  <section class="cx-sec">
+    <div class="cx-wrap">
+      <div id="r-list">
+        <div class="cx-rbar">
+          <div class="cx-rcount" id="r-count"></div>
+          <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+            <div class="cx-years" id="r-years" role="group" aria-label="שנתון"></div>
+            <label class="cx-sr" for="r-sort">מיון</label>
+            <select class="cx-select" id="r-sort">
+              <option value="rank">מיון: הנמכרים ביותר</option>
+              <option value="price-asc">מחיר: מהזול ליקר</option>
+              <option value="price-desc">מחיר: מהיקר לזול</option>
+              <option value="hp-desc">הספק: מהגבוה לנמוך</option>
+              <option value="name">שם: א-ת</option>
+            </select>
+          </div>
+        </div>
+        <div class="cx-chips" id="r-chips"></div>
+        <div class="cx-grid cx-grid--auto cx-grid--anim" id="r-grid"></div>
+      </div>
+      <div class="cx-brandgrid" id="r-brands" hidden></div>
+    </div>
+  </section>
+</div>
+</main>
 
+<!-- פס תחתון -->
+<section class="cx-band" id="band" aria-label="בחירת רכב">
+  <div class="cx-band-bg"><img alt="" loading="lazy" decoding="async" src="https://images.unsplash.com/photo-1633230329829-a52df5940e69?auto=format&fit=crop&w=1600&q=55"></div>
+  <div class="cx-wrap">
+    <a class="cx-band-in" href="#finder" id="band-cta">
+      <svg class="cx-gauge" viewBox="0 0 62 44" aria-hidden="true">
+        <path d="M6 36a25 25 0 0 1 50 0" fill="none" stroke="rgba(255,255,255,.2)" stroke-width="2.5"/>
+        <path class="arc" d="M6 36a25 25 0 0 1 50 0" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round"/>
+        <g class="ndl"><path d="M31 34V14" stroke="#e8001d" stroke-width="2.6" stroke-linecap="round"/></g>
+        <circle cx="31" cy="34" r="3.4" fill="#fff"/>
+      </svg>
+      <div><h3>בחר את הרכב שמתאים לך</h3><p>אנחנו כאן כדי לעזור לך לקבל את ההחלטה הטובה ביותר</p></div>
+    </a>
+    <div class="cx-band-foot">
+      <span>© <span id="yr"></span> ספידומטר · מחירים לפי מחירוני היבואנים, יש לאמת מול היבואן</span>
+      <nav aria-label="קישורים"><a href="/">חדשות</a><a href="/about/">אודות</a><a href="/contact/">צור קשר</a><a href="/terms/">תנאי שימוש</a></nav>
+    </div>
+  </div>
+</section>
+
+<script src="/cars-core.js?v=6"></script>
 <script>
-/* ══════════════════════════════
-   ספידומטר — מאגר רכבים v1
-══════════════════════════════ */
+/* ═══ ספידומטר — מאגר הרכבים, דף הבית (v4, 29.10.2026) ═══ */
+(function () {
+  'use strict';
+  const S = window.SPCars, $ = id => document.getElementById(id), esc = S.esc;
+  const RM = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const NEW_FROM = 2025; // עמוד מותג: הדגמים החדשים בישראל 2025-2026
+  let CARS = [];
+  const TAGS = { suv: { label: 'קרוסאובר / SUV', test: c => c._suv }, seven: { label: '7 מושבים', test: c => c._seven } };
+  const DRIVES = { awd: 'הנעה כפולה', fwd: 'הנעה קדמית', rwd: 'הנעה אחורית' };
+  const PT_ORDER = ['ev', 'erev', 'phev', 'hev', 'mhev', 'petrol', 'diesel'];
+  const SORTS = {
+    rank: (a, b) => (S.num(a.sales_rank) ?? 999) - (S.num(b.sales_rank) ?? 999),
+    'price-asc': (a, b) => (S.num(a.price) ?? 1e12) - (S.num(b.price) ?? 1e12),
+    'price-desc': (a, b) => (S.num(b.price) ?? -1) - (S.num(a.price) ?? -1),
+    'hp-desc': (a, b) => (S.num(b.horsepower) ?? -1) - (S.num(a.horsepower) ?? -1),
+    name: (a, b) => (a._brand.name + ' ' + a.model).localeCompare(b._brand.name + ' ' + b.model, 'he')
+  };
+  const norm = s => String(s || '').toLowerCase().replace(/[׳']/g, "'").replace(/["״]/g, '').trim();
+  const list = v => (v || '').split(',').map(x => x.trim()).filter(Boolean);
 
-let allCars = [];
-let filteredCars = [];
-let currentView = 'grid';
-
-// ── חיבור לסופרבייס (Phase 2, 18.9.2026) — אותו דפוס בדיוק כמו ב-app.js/car.html:
-//    ה-SDK נטען עם defer אחרי הסקריפט הזה, אז sbClient בהכרח null בטעינה
-//    הראשונה - loadCars נופל אז לפניה ישירה ל-REST API עם מפתח ה-anon הציבורי. ──
-const SB_URL = 'https://kaykrrnmykqrfhawgtqt.supabase.co';
-const SB_KEY = 'sb_publishable_Ms6YFTnADm-qAd9617Ey9A_D3x-Zumi';
-let sbClient = null;
-function __initSb() {
-  if (window.supabase && !sbClient) {
-    try { sbClient = supabase.createClient(SB_URL, SB_KEY); window.sbClient = sbClient; } catch(e) {}
+  /* ═══ ניתוב: ?brand= / ?q= / ?pt= / ?view=brands|all / ?fav=1 ═══ */
+  function readQ() {
+    const p = new URLSearchParams(location.search);
+    return { view: p.get('view') || '', brand: list(p.get('brand')).map(S.brandKey), q: p.get('q') || '', pt: list(p.get('pt')), tag: list(p.get('tag')), drive: list(p.get('drive')),
+      pmin: +p.get('pmin') || null, pmax: +p.get('pmax') || null, year: p.get('year') || '', sort: p.get('sort') || 'rank', fav: p.get('fav') === '1' };
   }
-}
-window.__initSb = __initSb;
-
-// Load cars: Supabase (public.cars) → cars.json הסטטי הישן → FALLBACK_CARS מוטמע
-async function loadCars() {
-  try {
-    let rows = null;
-    if (sbClient) {
-      const { data, error } = await sbClient.from('cars').select('*').eq('deleted', false).order('sales_rank', { ascending: true, nullsFirst: false });
-      if (error) throw error;
-      rows = data;
-    } else {
-      const r = await fetch(SB_URL + '/rest/v1/cars?select=*&deleted=eq.false&order=sales_rank.asc.nullslast', {
-        headers: { apikey: SB_KEY, Authorization: 'Bearer ' + SB_KEY }
-      });
-      if (!r.ok) throw new Error('supabase rest fetch failed: ' + r.status);
-      rows = await r.json();
-    }
-    if (!rows || !rows.length) throw new Error('empty result');
-    allCars = rows;
-  } catch(e) {
-    console.warn('Supabase cars fetch failed, falling back:', e);
-    try {
-      const res = await fetch('cars.json');
-      if (!res.ok) throw new Error('Failed to load');
-      allCars = await res.json();
-    } catch(e2) {
-      console.warn('Could not fetch cars.json either, using embedded fallback');
-      allCars = FALLBACK_CARS;
-    }
+  function toQS(o) {
+    const p = new URLSearchParams();
+    if (o.view) p.set('view', o.view);
+    ['brand', 'pt', 'tag', 'drive'].forEach(k => { if (o[k] && o[k].length) p.set(k, o[k].join(',')); });
+    if (o.q) p.set('q', o.q); if (o.pmin) p.set('pmin', o.pmin); if (o.pmax) p.set('pmax', o.pmax);
+    if (o.year) p.set('year', o.year); if (o.sort && o.sort !== 'rank') p.set('sort', o.sort); if (o.fav) p.set('fav', '1');
+    const s = p.toString(); return s ? '?' + s : location.pathname;
   }
-  filteredCars = [...allCars];
-  buildFilters();
-  renderCars();
-  document.getElementById('total-badge').textContent = allCars.length + ' רכבים במאגר';
-}
+  function nav(o, replace) {
+    const url = typeof o === 'string' ? (o ? '?' + o : location.pathname) : toQS(o);
+    history[replace ? 'replaceState' : 'pushState'](null, '', url);
+    route(); if (!replace) window.scrollTo({ top: 0, behavior: 'auto' });
+  }
+  function isResults(q) { return !!(q.view || q.brand.length || q.q || q.pt.length || q.tag.length || q.drive.length || q.pmin || q.pmax || q.fav); }
+  function route() {
+    const q = readQ(), res = isResults(q);
+    document.body.classList.toggle('is-results', res);
+    const br = q.view === 'brands';
+    $('nav-brands')[br ? 'setAttribute' : 'removeAttribute']('aria-current', 'page');
+    $('nav-models')[br ? 'removeAttribute' : 'setAttribute']('aria-current', 'page');
+    if (!CARS.length) return;
+    if (res) renderResults(q); else document.title = 'מאגר הרכבים | כל הרכבים במקום אחד | ספידומטר';
+  }
 
-function formatPrice(p) {
-  return '₪' + Number(p).toLocaleString('he-IL');
-}
-
-function buildFilters() {
-  // Categories
-  const cats = {};
-  allCars.forEach(c => { cats[c.category] = (cats[c.category]||0)+1; });
-  document.getElementById('cat-filters').innerHTML = Object.entries(cats)
-    .sort((a,b)=>b[1]-a[1])
-    .map(([cat,cnt]) => `
-      <label class="filter-option">
-        <input type="checkbox" name="cat" value="${cat}" onchange="applyFilters()">
-        <span>${cat}</span>
-        <span class="filter-option-count">${cnt}</span>
-      </label>
-    `).join('');
-
-  // Brands
-  const brands = {};
-  allCars.forEach(c => { brands[c.brand] = (brands[c.brand]||0)+1; });
-  document.getElementById('brand-filters').innerHTML = Object.entries(brands)
-    .sort((a,b)=>a[0].localeCompare(b[0]))
-    .map(([brand,cnt]) => `
-      <label class="filter-option">
-        <input type="checkbox" name="brand" value="${brand}" onchange="applyFilters()">
-        <span>${brand}</span>
-        <span class="filter-option-count">${cnt}</span>
-      </label>
-    `).join('');
-}
-
-function applyFilters() {
-  const q = (document.getElementById('search-input').value || '').trim().toLowerCase();
-  const selectedCats = [...document.querySelectorAll('input[name=cat]:checked')].map(i=>i.value);
-  const selectedBrands = [...document.querySelectorAll('input[name=brand]:checked')].map(i=>i.value);
-  const selectedDrives = [...document.querySelectorAll('input[name=drive]:checked')].map(i=>i.value);
-  const priceMin = parseInt(document.getElementById('price-min').value) || 0;
-  const priceMax = parseInt(document.getElementById('price-max').value) || Infinity;
-  const sort = document.getElementById('sort-select').value;
-
-  filteredCars = allCars.filter(c => {
-    // Search
-    if (q) {
-      const text = [c.brand, c.model, c.category, c.engine, String(c.year)].join(' ').toLowerCase();
-      if (!text.includes(q)) return false;
-    }
-    // Category
-    if (selectedCats.length && !selectedCats.includes(c.category)) return false;
-    // Brand
-    if (selectedBrands.length && !selectedBrands.includes(c.brand)) return false;
-    // Drive
-    if (selectedDrives.length && !selectedDrives.some(d => c.drive_type.includes(d))) return false;
-    // Price
-    if (c.price < priceMin || c.price > priceMax) return false;
+  /* ═══ סינון ═══ */
+  function matches(c, q) {
+    if (q.q) { const hay = norm(c._search); if (!norm(q.q).split(/\s+/).every(w => hay.indexOf(w) !== -1)) return false; }
+    if (q.brand.length && q.brand.indexOf(c._brand.key) === -1) return false;
+    if (q.pt.length && q.pt.indexOf(c._pt) === -1) return false;
+    if (q.tag.length && !q.tag.every(t => TAGS[t] && TAGS[t].test(c))) return false;
+    if (q.drive.length && !q.drive.some(d => c._drive.indexOf(d) !== -1)) return false;
+    const pr = S.num(c.price);
+    if (q.pmin && (pr == null || pr < q.pmin)) return false;
+    if (q.pmax && (pr == null || pr > q.pmax)) return false;
+    if (q.fav && !S.Fav.has(c._slug)) return false;
+    if (q.year === 'all') return true;
+    if (q.year) return String(c.year) === q.year;
+    if (q.brand.length === 1 && !q.q) return (S.num(c.year) || 0) >= NEW_FROM;
     return true;
+  }
+
+  /* ═══ שורת הסמלים ═══ */
+  let BRANDS_CACHE = null;
+  function allBrands() {
+    if (BRANDS_CACHE) return BRANDS_CACHE;
+    const m = {};
+    CARS.forEach(c => { const k = c._brand.key; if (!m[k]) m[k] = { n: 0, top: 999, name: c._brand.name }; m[k].n++; m[k].top = Math.min(m[k].top, S.num(c.sales_rank) ?? 999); });
+    const keys = S.BRAND_ORDER.slice(); Object.keys(m).forEach(k => { if (keys.indexOf(k) === -1) keys.push(k); });
+    BRANDS_CACHE = keys.map(k => { const b = S.brandInfo(k); return { key: k, name: (m[k] && m[k].name) || b.name || k, he: b.he, n: m[k] ? m[k].n : 0, top: m[k] ? m[k].top : 999 }; })
+      .sort((a, b) => (b.n > 0) - (a.n > 0) || a.top - b.top || S.BRAND_ORDER.indexOf(a.key) - S.BRAND_ORDER.indexOf(b.key));
+    return BRANDS_CACHE;
+  }
+  function mqItem(b) {
+    return '<a class="cx-mq-item" href="?brand=' + encodeURIComponent(b.key) + '" data-brand="' + esc(b.key) + '" title="' + esc(b.name + (b.n ? ' · ' + b.n + ' דגמים' : ' · בקרוב')) + '"><span class="cx-mq-logo">' + S.brandMark(b.key, b.name) + '</span><span class="cx-mq-name">' + esc(S.BRAND_LOGOS[b.key] ? b.name : (b.he && b.he !== b.name ? b.he : b.name)) + '</span></a>';
+  }
+  function initMarquee() {
+    const track = $('mq-track'), items = allBrands().map(mqItem).join('');
+    track.innerHTML = items + items; // שכפול ללולאה רציפה
+    track.querySelectorAll('.cx-mq-item').forEach((a, i, all) => { if (i >= all.length / 2) { a.setAttribute('aria-hidden', 'true'); a.tabIndex = -1; } });
+    if (RM) { $('marquee').style.overflowX = 'auto'; track.style.position = 'static'; return; }
+    let half = track.scrollWidth / 2, drift = 0, last = performance.now(), hover = false, vis = true;
+    const mq = $('marquee');
+    mq.addEventListener('mouseenter', () => hover = true); mq.addEventListener('mouseleave', () => hover = false);
+    mq.addEventListener('focusin', () => hover = true); mq.addEventListener('focusout', () => hover = false);
+    window.addEventListener('resize', () => { half = track.scrollWidth / 2; });
+    if ('IntersectionObserver' in window) new IntersectionObserver(es => { vis = es[0].isIntersecting; }).observe(mq);
+    (function tick(now) {
+      const dt = Math.min(64, now - last); last = now;
+      if (!vis || document.body.classList.contains('is-results')) { requestAnimationFrame(tick); return; }
+      if (!hover && vis && !document.body.classList.contains('is-results')) drift += dt * 0.025; // תנועה איטית קבועה
+      const x = ((drift + window.scrollY * 0.6) % half + half) % half;                              // + תנועה לפי הגלילה
+      track.style.transform = 'translate3d(' + x.toFixed(1) + 'px,0,0)';
+      requestAnimationFrame(tick);
+    })(last);
+  }
+
+  /* ═══ הרכבים הפופולריים ═══ */
+  function renderPopular() {
+    const ranked = CARS.filter(c => S.num(c.sales_rank)).sort(SORTS.rank);
+    const top = (ranked.length >= 5 ? ranked : CARS).slice(0, 5);
+    $('pop-grid').innerHTML = top.map((c, i) => S.card(c, { i, reveal: true, eager: i < 2 })).join('');
+    observe($('pop-grid'));
+  }
+
+  /* ═══ תיבת החיפוש ═══ */
+  function moveInd(tab) { const ind = $('tab-ind'); if (tab) { ind.style.left = tab.offsetLeft + 'px'; ind.style.width = tab.offsetWidth + 'px'; } }
+  function selectTab(id) {
+    document.querySelectorAll('#f-tabs .cx-tab').forEach(t => {
+      const on = t.id === id; t.setAttribute('aria-selected', on); t.tabIndex = on ? 0 : -1;
+      $(t.getAttribute('aria-controls')).classList.toggle('on', on); if (on) moveInd(t);
+    });
+  }
+  const draft = { pt: [], tag: [], drive: [], pmin: null, pmax: null };
+  const draftQ = () => ({ brand: [], q: '', pt: draft.pt, tag: draft.tag, drive: draft.drive, pmin: draft.pmin, pmax: draft.pmax, year: 'all', fav: false });
+  function liveCount() { const n = CARS.filter(c => matches(c, draftQ())).length, h = '<b class="cx-num">' + n + '</b> ' + (n === 1 ? 'דגם מתאים' : 'דגמים מתאימים'); ['b-live', 'pt-live', 'more-live'].forEach(id => $(id).innerHTML = h); }
+  function fillFinder() {
+    const bs = allBrands().filter(b => b.n);
+    $('s-brand').innerHTML = '<option value="">כל המותגים</option>' + bs.map(b => '<option value="' + esc(b.key) + '">' + esc(b.name) + '</option>').join('');
+    fillModels();
+    $('s-any').innerHTML = '<option value="">כל הדגמים</option>' + bs.map(b => '<optgroup label="' + esc(b.name) + '">' + CARS.filter(c => c._brand.key === b.key).sort((x, y) => x.model.localeCompare(y.model, 'he')).map(c => '<option value="' + esc(c._slug) + '">' + esc(b.name + ' ' + c.model + (c.year ? ' ' + c.year : '')) + '</option>').join('') + '</optgroup>').join('');
+    const prices = CARS.map(c => S.num(c.price)).filter(Boolean);
+    const lo = Math.floor(Math.min(...prices) / 10000) * 10000, hi = Math.ceil(Math.max(...prices) / 10000) * 10000;
+    ['b-min', 'b-max'].forEach(id => { const r = $(id); r.min = lo; r.max = hi; r.step = 5000; });
+    $('b-min').value = lo; $('b-max').value = hi;
+    const upd = () => {
+      let a = +$('b-min').value, b = +$('b-max').value;
+      if (a > b - 5000) { if (document.activeElement === $('b-min')) a = $('b-min').value = b - 5000; else b = $('b-max').value = a + 5000; }
+      $('b-min-v').textContent = S.fmtPrice(a); $('b-max-v').textContent = S.fmtPrice(b);
+      const f = $('b-fill'); f.style.right = ((a - lo) / (hi - lo) * 100) + '%'; f.style.left = (100 - (b - lo) / (hi - lo) * 100) + '%';
+      draft.pmin = a > lo ? a : null; draft.pmax = b < hi ? b : null; liveCount();
+    };
+    $('b-min').oninput = upd; $('b-max').oninput = upd; upd();
+    $('pt-picks').innerHTML = PT_ORDER.filter(k => CARS.some(c => c._pt === k)).map(k => '<button type="button" class="cx-pick" data-pick="pt" data-v="' + k + '" aria-pressed="false">' + S.PT[k].label + ' <em>' + CARS.filter(c => c._pt === k).length + '</em></button>').join('');
+    $('more-picks').innerHTML = Object.keys(TAGS).filter(k => CARS.some(TAGS[k].test)).map(k => '<button type="button" class="cx-pick" data-pick="tag" data-v="' + k + '" aria-pressed="false">' + TAGS[k].label + ' <em>' + CARS.filter(TAGS[k].test).length + '</em></button>').join('') +
+      Object.keys(DRIVES).filter(k => CARS.some(c => c._drive.indexOf(k) !== -1)).map(k => '<button type="button" class="cx-pick" data-pick="drive" data-v="' + k + '" aria-pressed="false">' + DRIVES[k] + ' <em>' + CARS.filter(c => c._drive.indexOf(k) !== -1).length + '</em></button>').join('');
+  }
+  function fillModels() {
+    const k = $('s-brand').value, ms = CARS.filter(c => !k || c._brand.key === k).sort(SORTS.name);
+    $('s-model').innerHTML = '<option value="">כל הדגמים' + (k ? ' (' + ms.length + ')' : '') + '</option>' + ms.map(c => '<option value="' + esc(c._slug) + '">' + esc((k ? '' : c._brand.name + ' ') + c.model + (c.year ? ' ' + c.year : '')) + '</option>').join('');
+  }
+  let sgIdx = -1, sgItems = [];
+  function hl(t, ws) { t = esc(t); ws.forEach(w => { if (w.length > 1) t = t.replace(new RegExp('(' + w.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + ')', 'ig'), '<mark>$1</mark>'); }); return t; }
+  function suggest() {
+    const inp = $('q-hero'), box = $('q-suggest'), q = norm(inp.value);
+    if (!q) { box.hidden = true; inp.setAttribute('aria-expanded', 'false'); return; }
+    const ws = q.split(/\s+/);
+    const bh = allBrands().filter(b => b.n && ws.some(w => norm([b.name, b.he].concat(S.brandInfo(b.key).alt || []).join(' ')).indexOf(w) !== -1)).slice(0, 3).map(b => ({ kind: 'brand', key: b.key, name: b.name, meta: b.n + ' דגמים' }));
+    const ch = CARS.filter(c => ws.every(w => norm(c._name).indexOf(w) !== -1)).sort(SORTS.rank).slice(0, 6).map(c => ({ kind: 'car', c, name: c._brand.name + ' ' + c.model, meta: [c.year, c._pt ? S.PT[c._pt].label : '', S.fmtPrice(c.price) ? 'מ-' + S.fmtPrice(c.price) : ''].filter(Boolean).join(' · ') }));
+    sgItems = bh.concat(ch); sgIdx = -1;
+    box.innerHTML = sgItems.length ? sgItems.map((it, i) => '<div class="cx-sg-item" role="option" id="sg-' + i + '" data-i="' + i + '" aria-selected="false"><span class="cx-sg-thumb">' + (it.c ? S.visual(it.c, 160).html : S.brandMark(it.key, it.name)) + '</span><span><div class="cx-sg-name">' + (it.c && /[\u0590-\u05FF]/.test(it.c.model) ? '<bdi dir="ltr">' + hl(it.c._brand.name, ws) + '</bdi> <bdi dir="rtl">' + hl(it.c.model, ws) + '</bdi>' : '<bdi dir="auto">' + hl(it.name, ws) + '</bdi>') + '</div><div class="cx-sg-meta">' + esc(it.meta) + '</div></span><span class="cx-sg-kind">' + (it.kind === 'car' ? 'דגם' : 'מותג') + '</span></div>').join('') +
+      '<div class="cx-sg-item" role="option" id="sg-all" data-i="all" aria-selected="false"><span class="cx-sg-name">כל התוצאות עבור "' + esc(inp.value) + '"</span></div>'
+      : '<div class="cx-sg-empty">אין דגם בשם הזה במאגר. נסו שם יצרן, או כתבו באנגלית.</div>';
+    box.hidden = false; inp.setAttribute('aria-expanded', 'true');
+  }
+  function pickSuggestion(i) {
+    $('q-suggest').hidden = true;
+    if (i === 'all' || i == null) { const v = $('q-hero').value.trim(); if (v) nav({ q: v }); return; }
+    const it = sgItems[i]; if (!it) return;
+    if (it.kind === 'car') location.href = it.c._url; else nav({ brand: [it.key] });
+  }
+
+  /* ═══ עמוד מותג / תוצאות / כל המותגים ═══ */
+  function renderResults(q) {
+    const mark = $('r-mark');
+    if (q.view === 'brands') {
+      $('r-list').hidden = true; $('r-brands').hidden = false; mark.hidden = true;
+      $('r-crumb').textContent = 'מותגים'; $('r-title').textContent = 'כל המותגים';
+      const all = allBrands(); $('r-sub').textContent = all.length + ' מותגים שנמכרים בישראל';
+      $('r-brands').innerHTML = all.map(b => '<a class="cx-btile' + (b.n ? '' : ' is-soon') + '" href="?brand=' + encodeURIComponent(b.key) + '" data-brand="' + esc(b.key) + '"><span class="cx-mq-logo">' + S.brandMark(b.key, b.name) + '</span><b>' + esc(S.BRAND_LOGOS[b.key] ? b.name : (b.he && b.he !== b.name ? b.he : b.name)) + '</b><small>' + (b.n ? b.n + (b.n === 1 ? ' דגם' : ' דגמים') : 'דגמים יתווספו בקרוב') + '</small></a>').join('');
+      document.title = 'כל המותגים | מאגר הרכבים | ספידומטר';
+      return;
+    }
+    $('r-list').hidden = false; $('r-brands').hidden = true;
+    const single = q.brand.length === 1 && !q.q && !q.pt.length && !q.tag.length && !q.drive.length && !q.pmin && !q.pmax && !q.fav;
+    const view = CARS.filter(c => matches(c, q)).sort(SORTS[q.sort] || SORTS.rank);
+    if (single) {
+      const b = allBrands().find(x => x.key === q.brand[0]) || { key: q.brand[0], name: S.brandInfo(q.brand[0]).name, he: '' };
+      mark.hidden = false; mark.innerHTML = S.brandMark(b.key, b.name);
+      $('r-crumb').innerHTML = '<a href="?view=brands" data-route="view=brands">מותגים</a> › ' + esc(b.name);
+      $('r-title').innerHTML = '<bdi>' + esc(b.name) + '</bdi>' + (b.he && b.he !== b.name ? ' · ' + esc(b.he) : '');
+      $('r-sub').textContent = 'כל הדגמים החדשים בישראל ' + (q.year && q.year !== 'all' ? q.year : '2025\u20112026');
+      document.title = b.name + ' — כל הדגמים בישראל | ספידומטר';
+    } else {
+      mark.hidden = true;
+      const t = q.fav ? 'הרכבים ששמרתי' : q.view === 'all' ? 'כל הדגמים' : q.q ? 'תוצאות עבור "' + q.q + '"' : 'תוצאות חיפוש';
+      $('r-crumb').textContent = q.fav ? 'הרכבים ששמרתי' : q.view === 'all' ? 'כל הדגמים' : 'תוצאות חיפוש';
+      $('r-title').textContent = t;
+      $('r-sub').textContent = q.view === 'all' ? 'מפרטים טכניים מלאים לכל הדגמים במאגר' : '';
+      document.title = t + ' | מאגר הרכבים | ספידומטר';
+    }
+    const yrs = Array.from(new Set(CARS.filter(c => !q.brand.length || q.brand.indexOf(c._brand.key) !== -1).map(c => S.num(c.year)).filter(y => y >= NEW_FROM))).sort();
+    $('r-years').innerHTML = single && yrs.length > 1 ? [''].concat(yrs.map(String)).map(y => '<button type="button" class="cx-pick" style="height:38px" data-year="' + y + '" aria-pressed="' + ((q.year || '') === y) + '">' + (y || yrs[0] + '-' + yrs[yrs.length - 1]) + '</button>').join('') : '';
+    $('r-sort').value = q.sort;
+    $('r-count').innerHTML = '<b class="cx-num">' + view.length + '</b> ' + (view.length === 1 ? 'דגם' : 'דגמים');
+    const chips = [];
+    if (!single) {
+      q.brand.forEach(v => chips.push(['brand', v, S.brandInfo(v).name]));
+      if (q.q) chips.push(['q', '', '"' + q.q + '"']);
+      q.pt.forEach(v => chips.push(['pt', v, S.PT[v] ? S.PT[v].label : v]));
+      q.tag.forEach(v => chips.push(['tag', v, TAGS[v] ? TAGS[v].label : v]));
+      q.drive.forEach(v => chips.push(['drive', v, DRIVES[v] || v]));
+      if (q.pmin) chips.push(['pmin', '', 'מ-' + S.fmtPrice(q.pmin)]);
+      if (q.pmax) chips.push(['pmax', '', 'עד ' + S.fmtPrice(q.pmax)]);
+    }
+    $('r-chips').innerHTML = chips.map(c => '<button type="button" class="cx-chip" data-chip="' + c[0] + '" data-val="' + esc(c[1]) + '">' + esc(c[2]) + ' <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M18 6L6 18M6 6l12 12"/></svg></button>').join('');
+    $('r-grid').innerHTML = view.length ? view.map((c, i) => S.card(c, { i })).join('') :
+      '<div class="cx-empty">' + S.lineCar() + '<h3>' + (q.fav ? 'עוד לא שמרתם רכבים' : single ? 'דגמי המותג יתווספו למאגר בקרוב' : 'לא נמצאו דגמים') + '</h3><p>' + (q.fav ? 'לחצו על הלב בכרטיס של רכב כדי לשמור אותו כאן.' : single ? 'אנחנו מוסיפים דגמים חדשים ישירות ממפרטי היבואנים.' : 'נסו להסיר אחד המסננים או לחפש מחדש.') + '</p><a class="cx-btn cx-btn--dark cx-btn--sm" href="/cars-list.html" data-route="">חזרה למאגר</a></div>';
+  }
+
+  /* ═══ תנועה ═══ */
+  let io = null;
+  function observe(root) {
+    if (RM || !('IntersectionObserver' in window)) { (root || document).querySelectorAll('[data-reveal]').forEach(e => e.classList.add('in')); return; }
+    if (!io) io = new IntersectionObserver(es => es.forEach(en => { if (en.isIntersecting) { en.target.classList.add('in'); io.unobserve(en.target); } }), { rootMargin: '0px 0px -6% 0px', threshold: .06 });
+    (root || document).querySelectorAll('[data-reveal]:not(.in)').forEach(e => io.observe(e));
+  }
+  function favDot() { const n = S.Fav.list.length, d = $('fav-dot'); d.textContent = n || ''; d.classList.toggle('on', n > 0); }
+  function toFinder(tab) {
+    if (document.body.classList.contains('is-results')) nav('');
+    setTimeout(() => { $('finder').scrollIntoView({ behavior: RM ? 'auto' : 'smooth', block: 'center' }); if (tab) selectTab(tab); if (tab === 't-free') setTimeout(() => $('q-hero').focus(), 350); }, 30);
+  }
+
+  /* ═══ אירועים ═══ */
+  function bind() {
+    window.addEventListener('popstate', route);
+    window.addEventListener('scroll', () => $('hdr').classList.toggle('is-scrolled', scrollY > 8), { passive: true });
+    document.addEventListener('click', e => {
+      const rt = e.target.closest('[data-route]');
+      if (rt && !e.metaKey && !e.ctrlKey) { e.preventDefault(); $('cx-nav').classList.remove('open'); nav(rt.getAttribute('data-route')); return; }
+      const br = e.target.closest('[data-brand]');
+      if (br && !e.metaKey && !e.ctrlKey) { e.preventDefault(); nav({ brand: [br.getAttribute('data-brand')] }); return; }
+      const oc = e.target.closest('[data-open-compare]'); if (oc) { e.preventDefault(); $('cx-nav').classList.remove('open'); S.openCompare(); return; }
+      const ch = e.target.closest('[data-chip]');
+      if (ch) { const q = readQ(), k = ch.getAttribute('data-chip'), v = ch.getAttribute('data-val'); if (k === 'q') q.q = ''; else if (k === 'pmin') q.pmin = null; else if (k === 'pmax') q.pmax = null; else q[k] = q[k].filter(x => x !== v); if (!isResults(q)) q.view = 'all'; nav(q, true); return; }
+      const yr = e.target.closest('[data-year]'); if (yr) { const q = readQ(); q.year = yr.getAttribute('data-year'); nav(q, true); return; }
+      const pk = e.target.closest('[data-pick]');
+      if (pk) { const k = pk.getAttribute('data-pick'), v = pk.getAttribute('data-v'), on = pk.getAttribute('aria-pressed') !== 'true'; pk.setAttribute('aria-pressed', on); draft[k] = on ? draft[k].concat(v) : draft[k].filter(x => x !== v); liveCount(); return; }
+      if (!e.target.closest('.cx-free')) $('q-suggest').hidden = true;
+    });
+    $('r-sort').addEventListener('change', () => { const q = readQ(); q.sort = $('r-sort').value; nav(q, true); });
+    $('f-tabs').addEventListener('click', e => { const t = e.target.closest('.cx-tab'); if (t) selectTab(t.id); });
+    $('f-tabs').addEventListener('keydown', e => {
+      const tabs = [...document.querySelectorAll('#f-tabs .cx-tab')], i = tabs.indexOf(document.activeElement);
+      if (i < 0 || (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight')) return;
+      e.preventDefault(); const n = tabs[(i + (e.key === 'ArrowLeft' ? 1 : -1) + tabs.length) % tabs.length]; n.focus(); selectTab(n.id);
+    });
+    window.addEventListener('resize', () => moveInd(document.querySelector('#f-tabs .cx-tab[aria-selected="true"]')));
+    const tabsEl = $('f-tabs'), endChk = () => tabsEl.classList.toggle('at-end', Math.abs(tabsEl.scrollLeft) + tabsEl.clientWidth >= tabsEl.scrollWidth - 4);
+    tabsEl.addEventListener('scroll', endChk, { passive: true }); window.addEventListener('resize', endChk); setTimeout(endChk, 50);
+    $('s-brand').addEventListener('change', fillModels);
+    $('p-brand').addEventListener('submit', e => { e.preventDefault(); const m = $('s-model').value; if (m) { const c = CARS.find(x => x._slug === m); if (c) { location.href = c._url; return; } } nav($('s-brand').value ? { brand: [$('s-brand').value] } : { view: 'all' }); });
+    $('p-model').addEventListener('submit', e => { e.preventDefault(); const c = CARS.find(x => x._slug === $('s-any').value); if (c) location.href = c._url; else nav({ view: 'all' }); });
+    ['p-budget', 'p-pt', 'p-more'].forEach(id => $(id).addEventListener('submit', e => { e.preventDefault(); const o = { pt: draft.pt.slice(), tag: draft.tag.slice(), drive: draft.drive.slice(), pmin: draft.pmin, pmax: draft.pmax }; if (!o.pt.length && !o.tag.length && !o.drive.length && !o.pmin && !o.pmax) o.view = 'all'; nav(o); }));
+    $('p-free').addEventListener('submit', e => { e.preventDefault(); const opt = sgIdx >= 0 && !$('q-suggest').hidden ? $('q-suggest').querySelectorAll('[role=option]')[sgIdx] : null; if (opt) { const i = opt.getAttribute('data-i'); pickSuggestion(i === 'all' ? 'all' : +i); } else pickSuggestion('all'); });
+    const inp = $('q-hero');
+    inp.addEventListener('input', suggest);
+    inp.addEventListener('focus', () => { if (inp.value) suggest(); });
+    inp.addEventListener('keydown', e => {
+      const box = $('q-suggest'); if (box.hidden) return;
+      const opts = box.querySelectorAll('[role=option]');
+      if (e.key === 'ArrowDown' || e.key === 'ArrowUp') { e.preventDefault(); sgIdx = e.key === 'ArrowDown' ? Math.min(sgIdx + 1, opts.length - 1) : Math.max(sgIdx - 1, -1); opts.forEach((o, i) => o.setAttribute('aria-selected', i === sgIdx)); inp.setAttribute('aria-activedescendant', sgIdx >= 0 ? opts[sgIdx].id : ''); if (sgIdx >= 0) opts[sgIdx].scrollIntoView({ block: 'nearest' }); }
+      else if (e.key === 'Escape') box.hidden = true;
+    });
+    $('q-suggest').addEventListener('click', e => { const it = e.target.closest('[data-i]'); if (it) { const i = it.getAttribute('data-i'); pickSuggestion(i === 'all' ? 'all' : +i); } });
+    $('hdr-search').addEventListener('click', () => toFinder('t-free'));
+    $('hdr-fav').addEventListener('click', () => nav({ fav: true }));
+    $('band-cta').addEventListener('click', e => { e.preventDefault(); toFinder('t-brand'); });
+    $('hdr-menu').addEventListener('click', () => { const o = $('cx-nav').classList.toggle('open'); $('hdr-menu').setAttribute('aria-expanded', o); });
+    document.addEventListener('sp:fav', () => { favDot(); if (readQ().fav) route(); });
+    const img = $('hero-img'); const ok = () => img.classList.add('ok'); if (img.complete && img.naturalWidth) ok(); else img.addEventListener('load', ok);
+    if (!RM && 'IntersectionObserver' in window) new IntersectionObserver((es, o) => es.forEach(en => { if (en.isIntersecting) { en.target.classList.add('in'); o.unobserve(en.target); } }), { threshold: .5 }).observe($('band'));
+    else $('band').classList.add('in');
+  }
+
+  /* ═══ אתחול ═══ */
+  $('yr').textContent = new Date().getFullYear();
+  $('pop-grid').innerHTML = S.skeleton(5);
+  bind(); favDot(); observe(); route();
+  requestAnimationFrame(() => selectTab('t-brand'));
+  S.load().then(res => {
+    CARS = res.cars; S.setCars(CARS);
+    initMarquee(); renderPopular(); fillFinder(); liveCount(); route(); S.renderTray(); observe();
+    const cmp = new URLSearchParams(location.search).get('compare'); if (cmp) S.openCompare(cmp.split(','));
   });
-
-  // Sort
-  if (sort === 'price-asc') filteredCars.sort((a,b)=>a.price-b.price);
-  else if (sort === 'price-desc') filteredCars.sort((a,b)=>b.price-a.price);
-  else if (sort === 'hp-desc') filteredCars.sort((a,b)=>b.horsepower-a.horsepower);
-  else if (sort === 'year-desc') filteredCars.sort((a,b)=>b.year-a.year);
-
-  updateActiveFilterTags(selectedCats, selectedBrands, selectedDrives, q);
-  renderCars();
-}
-
-function updateActiveFilterTags(cats, brands, drives, q) {
-  const wrap = document.getElementById('active-filters-wrap');
-  const tags = [];
-  cats.forEach(c => tags.push({label: c, type:'cat', value:c}));
-  brands.forEach(b => tags.push({label: b, type:'brand', value:b}));
-  drives.forEach(d => tags.push({label: d, type:'drive', value:d}));
-  if (q) tags.push({label: `"${q}"`, type:'search', value:q});
-
-  if (tags.length === 0) { wrap.style.display='none'; return; }
-  wrap.style.display='flex';
-  wrap.innerHTML = tags.map(t => `
-    <button class="filter-tag" onclick="removeFilter('${t.type}','${t.value}')" title="הסר סינון">
-      ${t.label}
-      <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-    </button>
-  `).join('');
-}
-
-function removeFilter(type, value) {
-  if (type === 'cat') { const el = document.querySelector(`input[name=cat][value="${value}"]`); if(el) el.checked=false; }
-  else if (type === 'brand') { const el = document.querySelector(`input[name=brand][value="${value}"]`); if(el) el.checked=false; }
-  else if (type === 'drive') { const el = document.querySelector(`input[name=drive][value="${value}"]`); if(el) el.checked=false; }
-  else if (type === 'search') { document.getElementById('search-input').value=''; }
-  applyFilters();
-}
-
-function resetFilters() {
-  document.querySelectorAll('.filters-panel input[type=checkbox]').forEach(i=>i.checked=false);
-  document.getElementById('search-input').value='';
-  document.getElementById('price-min').value='';
-  document.getElementById('price-max').value='';
-  document.getElementById('sort-select').value='default';
-  filteredCars=[...allCars];
-  document.getElementById('active-filters-wrap').style.display='none';
-  renderCars();
-}
-
-function renderCars() {
-  const grid = document.getElementById('cars-grid');
-  document.getElementById('results-count').innerHTML = `<strong>${filteredCars.length}</strong> רכבים נמצאו`;
-
-  if (!filteredCars.length) {
-    grid.innerHTML = `
-      <div class="empty-state">
-        <div class="empty-state-icon">🔍</div>
-        <h3>לא נמצאו רכבים</h3>
-        <p>נסה לשנות את הסינון או לאפס את כל הפילטרים</p>
-      </div>`;
-    return;
-  }
-
-  grid.innerHTML = filteredCars.map(car => {
-    const scoreColor = car.score >= 9 ? '#16a34a' : car.score >= 8 ? '#2563eb' : '#e8001d';
-    const isEV = !car.fuel_consumption;
-    const evRange = car.range_ev ?? car.range;
-    const spec1 = isEV
-      ? { val: evRange+'', label:'טווח (ק"מ)' }
-      : { val: car.fuel_consumption, label:'ל/100ק"מ' };
-
-    return `
-      <article class="car-card" role="listitem">
-        <a href="/car/${car.slug || car.id}/" aria-label="${car.brand} ${car.model} ${car.year}">
-          <div class="card-img">
-            <img src="${car.image_main}" alt="${car.brand} ${car.model} ${car.year}" loading="lazy" width="400" height="225">
-            <span class="card-cat-badge">${car.category}</span>
-            ${car.score ? `<span class="card-score-badge" style="background:${scoreColor}">${car.score}</span>` : ''}
-          </div>
-          <div class="card-body">
-            <div class="card-brand">${car.brand}</div>
-            <div class="card-name">${car.model} ${car.year}</div>
-            <div class="card-specs-row">
-              <div class="card-spec">
-                <span class="card-spec-val">${car.horsepower}</span>
-                <span class="card-spec-label">כ"ס</span>
-              </div>
-              <div class="card-spec">
-                <span class="card-spec-val">${car.acceleration_0_100}s</span>
-                <span class="card-spec-label">0-100</span>
-              </div>
-              <div class="card-spec">
-                <span class="card-spec-val">${spec1.val}</span>
-                <span class="card-spec-label">${spec1.label}</span>
-              </div>
-              <div class="card-spec">
-                <span class="card-spec-val" style="font-size:0.72rem;max-width:80px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${car.drive_type}</span>
-                <span class="card-spec-label">הנעה</span>
-              </div>
-            </div>
-            <div class="card-foot">
-              <div class="card-price">${formatPrice(car.price)} <span>מחיר</span></div>
-              <span class="btn-card-details">לפרטים ←</span>
-            </div>
-          </div>
-        </a>
-      </article>`;
-  }).join('');
-}
-
-function setView(v) {
-  currentView = v;
-  const grid = document.getElementById('cars-grid');
-  const btnGrid = document.getElementById('btn-grid');
-  const btnList = document.getElementById('btn-list');
-  if (v === 'list') {
-    grid.classList.add('list-view');
-    btnList.classList.add('active');
-    btnGrid.classList.remove('active');
-  } else {
-    grid.classList.remove('list-view');
-    btnGrid.classList.add('active');
-    btnList.classList.remove('active');
-  }
-}
-
-function toggleMobileFilters() {
-  const panel = document.getElementById('filters-panel');
-  const btn = document.getElementById('filter-toggle-btn');
-  const isOpen = panel.classList.toggle('open');
-  btn.setAttribute('aria-expanded', isOpen);
-}
-
-// Check for URL params on load (e.g. ?cat=קרוסאובר)
-function applyURLParams() {
-  const params = new URLSearchParams(window.location.search);
-  const cat = params.get('cat');
-  const brand = params.get('brand');
-  if (cat) {
-    const el = document.querySelector(`input[name=cat][value="${cat}"]`);
-    if (el) { el.checked = true; applyFilters(); }
-  }
-  if (brand) {
-    const el = document.querySelector(`input[name=brand][value="${brand}"]`);
-    if (el) { el.checked = true; applyFilters(); }
-  }
-}
-
-// ════ FALLBACK DATA (used if cars.json can't be fetched locally) ════
-const FALLBACK_CARS = [
-  {id:"toyota-corolla-cross-2025",brand:"Toyota",model:"Corolla Cross",year:2025,category:"קרוסאובר",price:148000,engine:"1.8L היברידי",horsepower:140,acceleration_0_100:8.1,range:null,fuel_consumption:"4.5",transmission:"CVT אוטומטית",drive_type:"קידמי",image_main:"https://images.unsplash.com/photo-1549317661-bd32c8ce0db2?w=800&q=75&fm=webp",slug:"toyota-corolla-cross-2025",score:8.4},
-  {id:"mazda-cx5-2025",brand:"Mazda",model:"CX-5",year:2025,category:"קרוסאובר",price:172000,engine:"2.5L טורבו",horsepower:227,acceleration_0_100:7.0,range:null,fuel_consumption:"8.2",transmission:"אוטומטית 6 הילוכים",drive_type:"הנעה כפולה AWD",image_main:"https://images.unsplash.com/photo-1546614042-7df3c24c9e5d?w=800&q=75&fm=webp",slug:"mazda-cx5-2025",score:8.7},
-];
-
-// Init
-loadCars().then(() => {
-  setTimeout(applyURLParams, 100);
-});
+})();
 </script>
-<!-- נטען אחרי הסקריפט הראשי (defer) בכוונה - loadCars כבר יודע לפעול גם בלי
-     sbClient (עדיין null בטעינה הראשונה) דרך פניית REST ישירה -->
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer onload="window.__initSb&&window.__initSb()"></script>
 </body>
 </html>
