@@ -1,6 +1,17 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:news="http://www.google.com/schemas/sitemap-news/0.9">
   <url>
+    <loc>https://speedometer10.co.il/article/703/</loc>
+    <news:news>
+      <news:publication>
+        <news:name>ספידומטר</news:name>
+        <news:language>he</news:language>
+      </news:publication>
+      <news:publication_date>2026-11-04T10:37:00.000Z</news:publication_date>
+      <news:title>אקספנג L03 בישראל: גרסאות חשמליות ובנזין מוארכת טווח  מ-170 אלף שקל</news:title>
+    </news:news>
+  </url>
+  <url>
     <loc>https://speedometer10.co.il/article/701/</loc>
     <news:news>
       <news:publication>
@@ -31,17 +42,6 @@
       </news:publication>
       <news:publication_date>2026-11-02T15:54:00.000Z</news:publication_date>
       <news:title>צ&#39;רי מוזלת, יונדאי מתייקרת: הוזלות במחירי הביטוח לצד התייקרות בדגמים  גניבים</news:title>
-    </news:news>
-  </url>
-  <url>
-    <loc>https://speedometer10.co.il/article/695/</loc>
-    <news:news>
-      <news:publication>
-        <news:name>ספידומטר</news:name>
-        <news:language>he</news:language>
-      </news:publication>
-      <news:publication_date>2026-11-02T07:53:00.000Z</news:publication_date>
-      <news:title>אריכות ימים: הסודות ההנדסיים מאחורי המנוע ההיברידי של טויוטה</news:title>
     </news:news>
   </url>
 </urlset>
