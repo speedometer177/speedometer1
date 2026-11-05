@@ -1,6 +1,17 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:news="http://www.google.com/schemas/sitemap-news/0.9">
   <url>
+    <loc>https://speedometer10.co.il/article/705/</loc>
+    <news:news>
+      <news:publication>
+        <news:name>ספידומטר</news:name>
+        <news:language>he</news:language>
+      </news:publication>
+      <news:publication_date>2026-11-05T09:26:00.000Z</news:publication_date>
+      <news:title>ג&#39;אקו 7 היברידי: גרסה מוזלת ללא טעינה משווקת בישראל</news:title>
+    </news:news>
+  </url>
+  <url>
     <loc>https://speedometer10.co.il/article/703/</loc>
     <news:news>
       <news:publication>
@@ -20,17 +31,6 @@
       </news:publication>
       <news:publication_date>2026-11-03T12:32:00.000Z</news:publication_date>
       <news:title>קיה EV5 החשמלי נוחת בישראל: החל מ-199,000 שקלים</news:title>
-    </news:news>
-  </url>
-  <url>
-    <loc>https://speedometer10.co.il/article/699/</loc>
-    <news:news>
-      <news:publication>
-        <news:name>ספידומטר</news:name>
-        <news:language>he</news:language>
-      </news:publication>
-      <news:publication_date>2026-11-03T07:23:00.000Z</news:publication_date>
-      <news:title>הכירו את ג&#39;יפ רנגלר סקרמבלר SRT - קונספט שטח עם מנוע V8</news:title>
     </news:news>
   </url>
 </urlset>
