@@ -526,11 +526,85 @@
     pState = {
       kind: kind, id: id, photos: photos, main: src.image_main && photos.indexOf(src.image_main) !== -1 ? src.image_main : (photos[0] || null),
       cutout: src.image_cutout || null, f: f,
+      trims: trimsToKgm(src.trims).filter(function (t) { return t && t.name; }), // מחיר לכל גרסה
       highlights: JSON.parse(JSON.stringify(Array.isArray(src.highlights) ? src.highlights.filter(function (h) { return h && h.title; }) : [])),
     };
     renderPersonal();
   };
   function pHost() { return pState ? document.getElementById((pState.kind === 'draft' ? 'draft-personal-' : 'car-personal-') + pState.id) : null; }
+  // מחיר לכל גרסה: המחיר הכללי = הזול מביניהם ("החל מ"), מחיר רמה עליונה = היקר
+  function pSyncTrimPrices() {
+    if (!pState || !pState.trims.length) return;
+    pState.trims.forEach(function (t, i) {
+      const el = document.getElementById('p-tp-' + i); if (!el) return;
+      const n = parseInt(String(el.value).replace(/[^\d]/g, ''), 10);
+      t.price = el.value.trim() === '' || isNaN(n) ? null : n;
+    });
+    const ps = pState.trims.map(function (t) { return t.price; }).filter(function (v) { return v != null; });
+    if (ps.length) { pState.f.price = Math.min.apply(null, ps); pState.f.price_top = ps.length > 1 ? Math.max.apply(null, ps) : null; }
+  }
+  // ── פענוח טקסט חופשי של מחירון → מחיר לכל גרסה (05.11.2026) ──
+  // מדביקים את המחירון כמו שהוא (מהיבואן/מהודעה). כל מחיר משויך לגרסה ששמה מופיע לידו;
+  // אם אין שמות בכלל ומספר המחירים = מספר הגרסאות — לפי הסדר. שום דבר לא נשמר עד שבודקים ולוחצים "שמור".
+  const priceTok = function (s) { return String(s || '').toLowerCase().replace(/[״"׳']/g, '').split(/[^a-z0-9\u0590-\u05ff+]+/).filter(Boolean); };
+  function parsePriceList(text, names) {
+    const t = String(text || '');
+    const found = []; // {price, start, end}
+    const re = /(\d{2,3}(?:[.,]\d{1,3})?)\s*(?:אלף|k\b)|(\d{1,3}(?:[,.]\d{3})+|\d{5,7})/gi; // רווח לא נחשב מפריד אלפים — אחרת 'E 450 529,000' מתחבר למספר אחד
+    let m;
+    while ((m = re.exec(t))) {
+      let v;
+      if (m[1]) v = Math.round(parseFloat(m[1].replace(',', '.')) * 1000);
+      else v = parseInt(m[2].replace(/[,.]/g, ''), 10);
+      if (v >= 20000 && v <= 5000000) found.push({ price: v, start: m.index, end: m.index + m[0].length });
+    }
+    if (!found.length) return { map: {}, notes: ['לא נמצאו מחירים בטקסט (מספרים כמו 189,990 או 189.9 אלף)'] };
+    // מקטעים: שורות עם מחיר אחד בדיוק → כל שורה מקטע; אחרת — מהמחיר הקודם עד סוף המחיר הנוכחי
+    const lines = t.split(/\n|;|•|\|/);
+    let segs = [];
+    let off = 0; const lineSegs = [];
+    lines.forEach(function (ln) { const st = off, en = off + ln.length; off = en + 1; const inLine = found.filter(function (f) { return f.start >= st && f.end <= en; }); if (inLine.length) lineSegs.push({ text: ln, prices: inLine }); });
+    if (lineSegs.length > 1 && lineSegs.every(function (x) { return x.prices.length === 1; })) segs = lineSegs.map(function (x) { return { text: x.text, price: x.prices[0].price }; });
+    else { let prev = 0; segs = found.map(function (f) { const sg = { text: t.slice(prev, f.end), price: f.price }; prev = f.end; return sg; }); }
+    const nameToks = names.map(priceTok);
+    const freq = {}; nameToks.forEach(function (ts) { ts.forEach(function (x) { freq[x] = (freq[x] || 0) + 1; }); });
+    const map = {}, notes = [];
+    let anyName = false;
+    segs.forEach(function (sg) {
+      const st = priceTok(sg.text);
+      const scores = nameToks.map(function (ts) { return ts.reduce(function (a, x) { return a + (st.indexOf(x) !== -1 ? 1 / freq[x] : 0); }, 0); });
+      const best = Math.max.apply(null, scores);
+      if (best <= 0) return;
+      anyName = true;
+      const idx = scores.indexOf(best);
+      if (scores.filter(function (x) { return x === best; }).length > 1) { notes.push('לא ברור לאיזו גרסה שייך ' + sg.price.toLocaleString('en-US') + ' — מלא ידנית'); return; }
+      if (map[idx] != null && map[idx] !== sg.price) { notes.push('לגרסה ' + names[idx] + ' נמצאו שני מחירים — נלקח הראשון (' + map[idx].toLocaleString('en-US') + ')'); return; }
+      map[idx] = sg.price;
+    });
+    if (!anyName) {
+      if (found.length === names.length) { found.forEach(function (f, i) { map[i] = f.price; }); notes.push('שמות הגרסאות לא הופיעו בטקסט — המחירים שויכו לפי הסדר. בדוק שזה נכון!'); }
+      else notes.push('שמות הגרסאות לא הופיעו בטקסט, ונמצאו ' + found.length + ' מחירים ל-' + names.length + ' גרסאות — מלא ידנית');
+    }
+    names.forEach(function (n, i) { if (map[i] == null && anyName) notes.push('לא נמצא מחיר לגרסה ' + n); });
+    return { map: map, notes: notes };
+  }
+  window.pParsePrices = function () {
+    if (!pState) return;
+    const ta = document.getElementById('p-price-text'); if (!ta) return;
+    const r = parsePriceList(ta.value, pState.trims.map(function (t) { return t.name; }));
+    let n = 0;
+    Object.keys(r.map).forEach(function (i) { const el = document.getElementById('p-tp-' + i); if (el) { el.value = Number(r.map[i]).toLocaleString('en-US'); el.style.borderColor = '#2ecc71'; n++; } });
+    window.pTrimPriceInput();
+    const out = document.getElementById('p-price-parse');
+    if (out) out.innerHTML = (n ? '<span style="color:#2ecc71;font-weight:700;">✓ שובצו ' + n + ' מתוך ' + pState.trims.length + ' מחירים — בדוק ולחץ "שמור"</span>' : '<span style="color:#e74c3c;font-weight:700;">לא שובץ אף מחיר</span>') +
+      (r.notes.length ? '<br>' + r.notes.map(function (x) { return '• ' + escapeHtml(x); }).join('<br>') : '');
+  };
+  window.pTrimPriceInput = function () {
+    pSyncTrimPrices();
+    const a = document.getElementById('p-f-price'), b = document.getElementById('p-f-price_top');
+    if (a) a.value = pState.f.price != null ? Number(pState.f.price).toLocaleString('en-US') : '';
+    if (b) b.value = pState.f.price_top != null ? Number(pState.f.price_top).toLocaleString('en-US') : '';
+  };
   function pReadInputs() {
     if (!pState) return;
     P_TEXT.forEach(function (p) {
@@ -541,6 +615,7 @@
       else if (p.type === 'float') { const n = parseFloat(raw); pState.f[p.key] = raw.trim() === '' || isNaN(n) ? null : n; }
       else pState.f[p.key] = raw.trim() === '' ? null : raw.trim();
     });
+    pSyncTrimPrices(); // כשיש מחירי גרסאות — הם קובעים את מחיר הבסיס והעליון
   }
   function renderPersonal(msg) {
     const host = pHost(); if (!host || !pState) return;
@@ -588,7 +663,15 @@
         '<div><div style="font-size:0.78rem;font-weight:700;margin-bottom:6px;">תמונות — לחץ על תמונה כדי לקבוע אותה כראשית</div>' + photosHtml +
           '<label class="tbl-btn" style="cursor:pointer;display:inline-block;margin-top:8px;"><input type="file" accept="image/*" multiple style="display:none;" onchange="pAddPhotos(this)">➕ הוסף תמונות</label></div>' +
         '<div><div style="font-size:0.78rem;font-weight:700;margin-bottom:6px;">תמונה ראשית ללא רקע</div>' + cutHtml +
-          '<div style="font-size:0.7rem;color:var(--adm-muted);margin-top:6px;">נפתח חלון של כלי הסרת הרקע. המודל רץ במחשב שלך; בפעם הראשונה הוא יורד (כ-180MB) ואחר כך נשמר בדפדפן. בכלי אפשר לתקן במברשת לפני השמירה.</div></div>' +
+          '<div style="font-size:0.7rem;color:var(--adm-muted);margin-top:6px;">נפתח חלון של כלי הסרת הרקע. המודל רץ במחשב שלך; בפעם הראשונה הוא יורד (כ-94MB) ואחר כך נשמר בדפדפן. בכלי אפשר לתקן במברשת לפני השמירה.</div></div>' +
+        (s.trims.length ? '<div><div style="font-size:0.78rem;font-weight:700;margin-bottom:6px;">₪ מחיר לכל גרסה <span style="font-weight:400;color:var(--adm-muted);">— מחיר הבסיס ומחיר הרמה העליונה מתעדכנים לבד (הזול / היקר)</span></div><div class="form-row" style="flex-wrap:wrap;">' +
+          s.trims.map(function (t, i) {
+            return '<div class="form-group" style="flex:1 1 200px;min-width:180px;"><label for="p-tp-' + i + '">' + escapeHtml(t.name) + '</label><input id="p-tp-' + i + '" type="text" inputmode="numeric" placeholder="למשל 189,990" oninput="pTrimPriceInput()" value="' + (t.price != null ? Number(t.price).toLocaleString('en-US') : '') + '" style="' + inCss + '"></div>';
+          }).join('') + '</div>' +
+          '<details style="margin-top:6px;"' + (s.trims.some(function (t) { return t.price != null; }) ? '' : ' open') + '><summary style="font-size:0.76rem;cursor:pointer;color:var(--adm-muted);">📋 הדבקת מחירון כטקסט חופשי — המערכת תשבץ לכל גרסה</summary>' +
+            '<textarea id="p-price-text" rows="4" placeholder="למשל:&#10;EV Standard Range – 179,990 ₪&#10;EV Long Range – 199,990 ₪&#10;REEV Long Range – 214,990 ₪" style="' + inCss + 'margin-top:6px;resize:vertical;"></textarea>' +
+            '<div style="display:flex;gap:8px;align-items:flex-start;margin-top:6px;flex-wrap:wrap;"><button type="button" class="tbl-btn" onclick="pParsePrices()">🧮 פענח ושבץ</button><div id="p-price-parse" style="font-size:0.74rem;color:var(--adm-muted);flex:1;min-width:200px;"></div></div>' +
+          '</details></div>' : '') +
         '<div class="form-row" style="flex-wrap:wrap;">' + fieldsHtml + '</div>' +
         '<div><div style="font-size:0.78rem;font-weight:700;margin-bottom:4px;">תמונות לפריטי האבזור הבולטים (עמוד "אבזור")</div>' + hlHtml + '</div>' +
       '</div>' +
@@ -679,6 +762,7 @@
     const s = pState, client = initCarsClient(); if (!client) return;
     if (s.f.score != null && (s.f.score < 0 || s.f.score > 10)) { pMsg('<span style="color:#e74c3c;">הציון חייב להיות בין 0 ל-10</span>'); return; }
     const patch = Object.assign({}, s.f, { image_main: s.main || null, image_cutout: s.cutout || null, highlights: s.highlights });
+    if (s.trims.length) patch.trims = s.trims;
     const btn = document.getElementById('p-save'); if (btn) { btn.disabled = true; btn.textContent = 'שומר…'; }
     try {
       if (s.kind === 'car') {
@@ -693,9 +777,17 @@
         const ex = Object.assign({}, d.extracted_data || {}, patch);
         const photos = s.photos.slice();
         if (s.main) { photos.splice(photos.indexOf(s.main), 1); photos.unshift(s.main); } // הראשית ראשונה
-        const { error } = await client.from('car_drafts').update({ extracted_data: ex, photo_urls: photos }).eq('id', s.id);
+        const upd = { extracted_data: ex, photo_urls: photos };
+        // הוזן מחיר → ההערה "אין מחיר במסמך" כבר לא רלוונטית
+        const vr = draftVerifications[s.id];
+        if (vr && ex.price != null && (vr.warnings || []).some(function (w) { return w.field === 'price'; })) {
+          const rep = JSON.parse(JSON.stringify(vr)); rep.warnings = rep.warnings.filter(function (w) { return w.field !== 'price'; });
+          upd.verification_report = rep;
+        }
+        const { error } = await client.from('car_drafts').update(upd).eq('id', s.id);
         if (error) throw new Error(error.message);
         d.extracted_data = ex; d.photo_urls = photos;
+        if (upd.verification_report) { draftVerifications[s.id] = upd.verification_report; d.verification_report = upd.verification_report; renderDraftVerifyResult(s.id); }
         const chk = document.getElementById('draft-check-' + s.id); if (chk) chk.innerHTML = personalChecklist(ex, photos, 'draft');
       }
       renderPersonal('<span style="color:#2ecc71;font-weight:700;">✓ נשמר</span>');
