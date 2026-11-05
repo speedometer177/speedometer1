@@ -72,8 +72,13 @@
     if (/אחורי|RWD/i.test(d)) out.push('אחורית');
     return out.length ? out.join(' / ') : d;
   }
-  /* מומנט מוצג בקג"מ (מוסכמת האתר). ערך מתחת ל-100 כבר בקג"מ; מעל — נ"מ ומומר. */
-  function torqueKgm(v) { const n = num(v); if (n == null) return null; return n < 100 ? String(n) : String(Math.round(n / 9.80665 * 10) / 10); }
+  /* מומנט בקג"מ (05.11.2026): כל המאגר נשמר בקג"מ, כפי שכתוב במפרט — מוצג כמו שהוא.
+     חריג יחיד: גרסה ישנה שנשמרה לפני המעבר (בלי tu:'kgm') עם ערך 100+ — זה נ"מ, וממירים. */
+  function torqueKgm(v, m) {
+    const n = num(v); if (n == null) return null;
+    const legacyNm = m && m._trim && m._trim.tu !== 'kgm' && n >= 100;
+    return String(legacyNm ? Math.round(n / 9.80665 * 10) / 10 : n);
+  }
   function brandName(raw) {
     const k = String(raw || '').trim();
     if (root.SPCars && root.SPCars.brandInfo) return root.SPCars.brandInfo(k).name || k;
@@ -105,7 +110,7 @@
       { k: 'acc', label: 'תאוצה 0-100', v: num(m.acceleration_0_100) != null ? String(num(m.acceleration_0_100)) : null, u: 'שנ׳' },
       { k: 'eng', label: 'מנוע', v: pt ? PT[pt] : (liters(m) || null), u: pt ? (liters(m) || '') : '' },
       { k: 'drv', label: 'סוג הנעה', v: driveShort(m.drive_type), u: '' },
-      { k: 'tq', label: num(m.system_nm) != null ? 'מומנט משולב' : 'מומנט מרבי', v: torqueKgm(nmOf(m)), u: 'קג״מ' }
+      { k: 'tq', label: num(m.system_nm) != null ? 'מומנט משולב' : 'מומנט מרבי', v: torqueKgm(nmOf(m), m), u: 'קג״מ' }
     ];
   }
   /* ערך ארוך (למשל "היברידי קל 2.0 ל׳") מקבל גופן קטן יותר כדי שלא ייחתך בעמודה */
@@ -227,7 +232,7 @@
   }
   const U = (v, u) => { const n = num(v); if (n == null) return (v != null && String(v).trim() !== '') ? String(v) : null; return fmt(n) + (u ? ' ' + u : ''); };
   const at = (s, rpm) => s && rpm ? s + '\n' + 'ב-' + rpm + ' סל״ד' : s;
-  const tqs = v => { const n = num(v); if (n == null) return null; return n < 100 ? fmt(n) + ' קג״מ' : fmt(n) + ' נ״מ · ' + torqueKgm(n) + ' קג״מ'; };
+  const tqs = (v, m) => { const k = torqueKgm(v, m); return k == null ? null : fmt(+k) + ' קג״מ'; };
   function safetyLevel(m) { const n = num(m.safety_level); if (n != null) return n; const r = String(m.safety_rating || '').match(/(\d)\s*מתוך\s*8/); return r ? +r[1] : null; }
   function airbags(m) { const n = num(m.airbags); if (n != null) return n; const r = String(m.safety_rating || '').match(/(\d+)\s*כריות/); return r ? +r[1] : null; }
   const hpOf = m => num(m.system_hp) != null ? num(m.system_hp) : num(m.horsepower);
@@ -239,20 +244,20 @@
       ['תצורה / מס׳ בוכנות', m => m.engine_layout || null],
       ['נפח מנוע', m => U(m.displacement_cc, 'סמ״ק')],
       ['הספק מרבי', m => at(U(m.horsepower, 'כ״ס'), m.hp_rpm)],
-      ['מומנט מרבי', m => at(tqs(m.torque), m.torque_rpm)],
+      ['מומנט מרבי', m => at(tqs(m.torque, m), m.torque_rpm)],
       ['נפח מיכל דלק', m => U(m.fuel_tank, 'ליטר')]
     ] },
     { t: 'ביצועים', rows: [
       ['תאוצה 0-100 קמ״ש', m => U(m.acceleration_0_100, 'שניות')],
       ['מהירות מרבית', m => U(m.top_speed, 'קמ״ש')],
       ['הספק משולב (בעירה + חשמל)', m => U(m.system_hp, 'כ״ס')],
-      ['מומנט משולב (בעירה + חשמל)', m => tqs(m.system_nm)]
+      ['מומנט משולב (בעירה + חשמל)', m => tqs(m.system_nm, m)]
     ] },
     { t: 'מערכת חשמלית והיברידית', rows: [
       ['הספק מנוע חשמלי', m => U(m.electric_hp, 'כ״ס')],
-      ['מומנט מנוע חשמלי', m => tqs(m.electric_nm)],
+      ['מומנט מנוע חשמלי', m => tqs(m.electric_nm, m)],
       ['תוספת הספק (מייל-היבריד)', m => U(m.boost_hp, 'כ״ס')],
-      ['תוספת מומנט (מייל-היבריד)', m => tqs(m.boost_nm)],
+      ['תוספת מומנט (מייל-היבריד)', m => tqs(m.boost_nm, m)],
       ['קיבולת סוללה', m => U(m.battery_capacity_kwh, 'קוט״ש')],
       ['טווח נסיעה חשמלית', m => U(m.range_ev, 'ק״מ')],
       ['הספק טעינה AC', m => U(m.charge_ac_kw, 'קו״ט')],
@@ -295,7 +300,7 @@
   /* מדדי הגרף — רק מדד עם 2 ערכים לפחות מוצג כלשונית */
   const SV_METRICS = [
     { k: 'hp', t: 'הספק', u: 'כ״ס', get: hpOf },
-    { k: 'tq', t: 'מומנט', u: 'קג״מ', get: m => { const n = nmOf(m); return n == null ? null : +torqueKgm(n); } },
+    { k: 'tq', t: 'מומנט', u: 'קג״מ', get: m => { const n = nmOf(m); return n == null ? null : +torqueKgm(n, m); } },
     { k: 'acc', t: '0-100', u: 'שנ׳', get: m => num(m.acceleration_0_100) },
     { k: 'vmax', t: 'מהירות מרבית', u: 'קמ״ש', get: m => num(m.top_speed) },
     { k: 'kg', t: 'משקל', u: 'ק״ג', get: m => num(m.weight) },

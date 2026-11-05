@@ -82,7 +82,7 @@
     { title: 'ביצועים ומנוע', fields: [
       { key: 'engine', label: 'מנוע', type: 'text' },
       { key: 'horsepower', label: 'הספק (כ"ס) *', type: 'number', required: true },
-      { key: 'torque', label: 'מומנט (Nm)', type: 'number' },
+      { key: 'torque', label: 'מומנט (קג״מ)', type: 'float', hint: 'כפי שכתוב במפרט (למשל 28.55). אם המפרט בנ״מ — לחלק ב-9.81' },
       { key: 'acceleration_0_100', label: 'תאוצה 0-100 (שניות)', type: 'float' },
       { key: 'top_speed', label: 'מהירות מקסימלית (קמ"ש)', type: 'number' },
       { key: 'range_ev', label: 'טווח חשמלי (ק"מ)', type: 'number' },
@@ -155,7 +155,7 @@
     { key: 'displacement_cc', label: 'נפח מנוע (סמ״ק)', type: 'number' },
     { key: 'horsepower', label: 'הספק מנוע (כ״ס)', type: 'number' },
     { key: 'hp_rpm', label: 'סל״ד הספק', type: 'text' },
-    { key: 'torque', label: 'מומנט מנוע (Nm)', type: 'number' },
+    { key: 'torque', label: 'מומנט מנוע (קג״מ)', type: 'float' },
     { key: 'torque_rpm', label: 'סל״ד מומנט', type: 'text' },
     { key: 'fuel_tank', label: 'מיכל דלק (ליטר)', type: 'number' },
     { group: 'ביצועים' },
@@ -163,11 +163,11 @@
     { key: 'top_speed', label: 'מהירות מרבית (קמ״ש)', type: 'number' },
     { group: 'מערכת חשמלית / היברידית' },
     { key: 'electric_hp', label: 'הספק מנוע חשמלי (כ״ס)', type: 'number' },
-    { key: 'electric_nm', label: 'מומנט מנוע חשמלי (Nm)', type: 'number' },
+    { key: 'electric_nm', label: 'מומנט מנוע חשמלי (קג״מ)', type: 'float' },
     { key: 'system_hp', label: 'הספק משולב (כ״ס)', type: 'number' },
-    { key: 'system_nm', label: 'מומנט משולב (Nm)', type: 'number' },
+    { key: 'system_nm', label: 'מומנט משולב (קג״מ)', type: 'float' },
     { key: 'boost_hp', label: 'תוספת הספק מייל-היבריד (כ״ס)', type: 'number' },
-    { key: 'boost_nm', label: 'תוספת מומנט מייל-היבריד (Nm)', type: 'number' },
+    { key: 'boost_nm', label: 'תוספת מומנט מייל-היבריד (קג״מ)', type: 'float' },
     { key: 'battery_capacity_kwh', label: 'קיבולת סוללה (kWh)', type: 'float' },
     { key: 'range_ev', label: 'טווח חשמלי (ק״מ)', type: 'number' },
     { key: 'charge_ac_kw', label: 'טעינת AC (kW)', type: 'float' },
@@ -202,6 +202,22 @@
     { key: 'notable_features', label: 'אבזור ייחודי לגרסה (שורה=פריט)', type: 'list' },
   ];
   const TRIM_INPUTS = TRIM_FIELDS.filter(function (f) { return f.key; });
+  // גרסה ישנה (לפני 05.11.2026, בלי tu:'kgm') שמרה מומנט בנ״מ — ממירים לקג״מ לפני שמציגים בטופס שכתוב בו קג״מ
+  const TQ_KEYS = ['torque', 'electric_nm', 'system_nm', 'boost_nm'];
+  function trimToKgm(t) {
+    if (!t || typeof t !== 'object' || t.tu === 'kgm') return t;
+    const o = Object.assign({}, t);
+    TQ_KEYS.forEach(function (k) { const n = typeof o[k] === 'number' ? o[k] : parseFloat(o[k]); if (!isNaN(n) && n >= 60) o[k] = Math.round(n / 9.80665 * 10) / 10; });
+    o.tu = 'kgm'; return o;
+  }
+  function trimsToKgm(arr) { return (Array.isArray(arr) ? arr : []).map(trimToKgm); }
+  // מומנט ברמת הרכב בטיוטה ישנה (חולץ לפני 05.11.2026) — בנ״מ. מזהים לפי הגרסאות שלא סומנו kgm.
+  function exTorqueKgm(ex) {
+    const n = ex && (typeof ex.torque === 'number' ? ex.torque : parseFloat(ex.torque));
+    if (isNaN(n)) return ex ? ex.torque : null;
+    const t0 = ex && Array.isArray(ex.trims) ? ex.trims[0] : null;
+    return n >= 100 && !(t0 && t0.tu === 'kgm') ? Math.round(n / 9.80665 * 10) / 10 : n;
+  }
 
   function slugify(brand, model, year) {
     const base = (String(brand || '') + '-' + String(model || '') + '-' + String(year || ''))
@@ -331,7 +347,20 @@
       const { data, error } = await client.from('car_drafts').select('*').eq('status', 'pending').order('created_at', { ascending: false });
       if (error) { list.innerHTML = '<div class="adm-empty-state">שגיאה בטעינת הטיוטות: ' + escapeAttr(error.message) + '</div>'; return; }
       if (!data || !data.length) { list.innerHTML = '<div class="adm-empty-state">אין טיוטות רכב ממתינות — העלה גיליון מפרט למעלה כדי להתחיל.</div>'; return; }
+      // טיוטות עדכון מציגות את שם הרכב באתר — טוענים שמות אם רשימת הרכבים עוד לא נטענה
+      if (data.some(function (d) { return d.published_car_id; }) && !(_allCarsCache && _allCarsCache.length)) {
+        const ids = data.map(function (d) { return d.published_car_id; }).filter(Boolean);
+        const { data: names } = await client.from('cars').select('id,brand,model').in('id', ids);
+        if (names && names.length && !(_allCarsCache && _allCarsCache.length)) _allCarsCache = names.map(function (c) { return Object.assign({ _lite: true }, c); });
+      }
+      data.forEach(function (d) {
+        _draftsCache[d.id] = d;
+        // הבדיקה האחרונה נשמרת במסד — מציגים אותה גם אחרי רענון הדף
+        const vr = d.verification_report;
+        if (!draftVerifications[d.id] && vr && !Array.isArray(vr) && typeof vr === 'object' && (vr.blockingIssues || vr.warnings)) draftVerifications[d.id] = vr;
+      });
       list.innerHTML = data.map(renderDraftRow).join('');
+      data.forEach(function (d) { if (draftVerifications[d.id]) renderDraftVerifyResult(d.id); });
     } catch (e) {
       list.innerHTML = '<div class="adm-empty-state">שגיאה בטעינת הטיוטות.</div>';
       console.error('[cars-admin] loadCarDrafts חריגה:', e);
@@ -340,23 +369,30 @@
 
   function renderDraftRow(d) {
     const ex = d.extracted_data;
-    const title = ex && ex.brand ? escapeAttr(ex.brand + ' ' + (ex.model || '') + (ex.year ? ' ' + ex.year : '')) : 'טיוטה #' + d.id + ' — עדיין לא חולצו נתונים';
+    const target = d.published_car_id ? (_allCarsCache || []).filter(function (c) { return c.id === d.published_car_id; })[0] : null;
+    const title = (d.published_car_id ? '🔄 עדכון: ' + escapeAttr(target ? target.brand + ' ' + target.model : 'רכב #' + d.published_car_id) + (ex && ex.brand ? ' <span style="font-weight:400;color:var(--adm-muted);">(במסמך: ' + escapeAttr(ex.brand + ' ' + (ex.model || '')) + ')</span>' : '') : '') ||
+      (ex && ex.brand ? escapeAttr(ex.brand + ' ' + (ex.model || '') + (ex.year ? ' ' + ex.year : '')) : 'טיוטה #' + d.id + ' — עדיין לא חולצו נתונים');
     const photoCount = Array.isArray(d.photo_urls) ? d.photo_urls.length : 0;
     const extractBtn = '<button class="tbl-btn" id="extract-btn-' + d.id + '" onclick="extractDraftSpec(' + d.id + ',this)">🔎 חלץ נתונים</button>';
     const verifyBtn = ex ? '<button class="tbl-btn" id="verify-btn-' + d.id + '" onclick="verifyDraftSpec(' + d.id + ',this)" title="בדיקה אוטומטית מול קובץ המקור">🔍 בדוק מול המקור</button>' : '';
-    const editBtn = ex ? '<button class="tbl-btn" onclick="openDraftForm(' + d.id + ')">📝 פתח לעריכה ופרסום</button>' : '';
+    const editBtn = ex ? '<button class="tbl-btn" onclick="openDraftForm(' + d.id + ')">' + (d.published_car_id ? '🔄 השוואה ועדכון הרכב' : '📝 עריכה מלאה') + '</button>' : '';
+    const isNew = ex && !d.published_car_id;
+    const personalBtn = isNew ? '<button class="tbl-btn" style="border-color:var(--adm-accent,#ff9d2e);" onclick="togglePersonalPanel(\'draft\',' + d.id + ')">✨ פרטים אישיים</button>' : '';
+    const publishBtn = isNew ? '<button class="tbl-btn" id="publish-btn-' + d.id + '" style="background:var(--adm-accent,#ff9d2e);color:#0a0e14;font-weight:700;" onclick="publishDraftDirect(' + d.id + ',this)">🚀 פרסם</button>' : '';
     return '<div class="adm-row">' +
       '<div class="adm-row-top">' +
         '<div class="adm-row-info">' +
           '<div class="adm-row-title">' + title + '</div>' +
-          '<div class="adm-row-meta"><span>📎 קובץ מפרט מועלה</span><span>🖼️ ' + photoCount + ' תמונות</span></div>' +
+          '<div class="adm-row-meta"><span>📎 קובץ מפרט מועלה</span><span>🖼️ ' + photoCount + ' תמונות</span>' + (ex && Array.isArray(ex.trims) && ex.trims.length ? '<span>🧩 ' + ex.trims.length + ' גרסאות</span>' : '') + '</div>' +
+          (isNew ? '<div id="draft-check-' + d.id + '">' + personalChecklist(ex, d.photo_urls || [], 'draft') + '</div>' : '') +
         '</div>' +
       '</div>' +
       '<div class="adm-row-bottom">' +
-        '<div class="tbl-actions">' + extractBtn + verifyBtn + editBtn +
+        '<div class="tbl-actions">' + personalBtn + extractBtn + verifyBtn + editBtn + publishBtn +
           '<button class="tbl-btn del" onclick="discardCarDraft(' + d.id + ')">✕ מחק טיוטה</button>' +
         '</div>' +
         '<div id="draft-verify-' + d.id + '" style="width:100%;"></div>' +
+        '<div id="draft-personal-' + d.id + '" style="width:100%;"></div>' +
       '</div>' +
     '</div>';
   }
@@ -392,7 +428,9 @@
         return;
       }
       delete draftVerifications[draftId]; // חילוץ חדש = צריך לבדוק מחדש
-      loadCarDrafts();
+      await loadCarDrafts();
+      // בדיקה מול המקור רצה אוטומטית מיד אחרי החילוץ — לא צריך ללחוץ
+      verifyDraftSpec(draftId, document.getElementById('verify-btn-' + draftId));
     } catch (e) {
       alert('שגיאה בחילוץ הנתונים (שגיאת רשת/JS):\n' + (e && e.message ? e.message : e));
       console.error('[cars-admin] extractDraftSpec חריגה:', e);
@@ -432,24 +470,409 @@
     }
   };
 
+  // ═══════════ פרטים אישיים — מחוץ לטופס העריכה (05.11.2026) ═══════════
+  // כל מה שלא מגיע מהמפרט ודורש אותך: תמונה ראשית, תמונה ללא רקע, מחיר, ציון, תיאור, יתרונות/חסרונות,
+  // סרטון ותמונות לפריטי האבזור הבולטים. נפתח ישירות משורת הטיוטה או משורת הרכב, בלי להיכנס לעריכה.
+  // טיוטה: נשמר בתוך car_drafts.extracted_data (+ סדר photo_urls) ונכנס לרכב כשמפרסמים. רכב קיים: נשמר ישר ב-cars.
+  const _draftsCache = {};
+  let pState = null; // {kind:'draft'|'car', id, photos[], main, cutout, f:{...}, highlights[]}
+  const P_TEXT = [
+    { key: 'price', label: 'מחיר בסיס (₪)', type: 'number', hint: 'ריק = "מחיר טרם פורסם"' },
+    { key: 'price_top', label: 'מחיר רמה עליונה (₪)', type: 'number' },
+    { key: 'score', label: 'ציון ספידומטר (0-10)', type: 'float', hint: 'העיגול שליד הרכב בעמוד הדגם' },
+    { key: 'youtube_video_url', label: 'קישור סרטון יוטיוב', type: 'text' },
+    { key: 'description', label: 'תיאור הרכב', type: 'textarea' },
+    { key: 'pros', label: '✅ יתרונות (שורה = פריט)', type: 'list' },
+    { key: 'cons', label: '❌ חסרונות (שורה = פריט)', type: 'list' },
+  ];
+  const isBlank = function (v) { return v === null || v === undefined || v === '' || (Array.isArray(v) && !v.length); };
+  function personalChecklist(src, photos, kind) {
+    const hl = Array.isArray(src.highlights) ? src.highlights.filter(function (h) { return h && h.title; }) : [];
+    const hlImg = hl.filter(function (h) { return h.image; }).length;
+    const items = [
+      ['★ תמונה ראשית', !!(src.image_main || (photos && photos.length))],
+      ['✂️ ללא רקע', !!src.image_cutout],
+      ['₪ מחיר', !isBlank(src.price)],
+      ['⭐ ציון', !isBlank(src.score)],
+      ['📝 תיאור', !isBlank(src.description)],
+      ['👍 יתרונות/חסרונות', !isBlank(src.pros) && !isBlank(src.cons)],
+      ['▶️ סרטון', !isBlank(src.youtube_video_url)],
+    ];
+    if (hl.length) items.push(['🖼️ תמונות אבזור ' + hlImg + '/' + hl.length, hlImg === hl.length]);
+    const done = items.filter(function (i) { return i[1]; }).length;
+    return '<div style="display:flex;flex-wrap:wrap;gap:4px;margin-top:6px;" title="' + (kind === 'draft' ? 'מה עוד חסר לפני הפרסום' : 'מה חסר ברכב') + '">' +
+      '<span style="font-size:0.7rem;font-weight:700;color:var(--adm-muted);align-self:center;margin-inline-end:2px;">' + done + '/' + items.length + '</span>' +
+      items.map(function (i) {
+        return '<span style="font-size:0.68rem;padding:2px 7px;border-radius:999px;border:1px solid ' + (i[1] ? 'rgba(45,212,191,.45)' : 'var(--adm-border)') + ';color:' + (i[1] ? 'var(--adm-good,#2dd4bf)' : 'var(--adm-muted)') + ';">' + (i[1] ? '✓ ' : '') + escapeAttr(i[0]) + '</span>';
+      }).join('') + '</div>';
+  }
+
+  window.togglePersonalPanel = function (kind, id) {
+    const host = document.getElementById((kind === 'draft' ? 'draft-personal-' : 'car-personal-') + id);
+    if (!host) return;
+    if (pState && pState.kind === kind && pState.id === id && host.innerHTML) { host.innerHTML = ''; pState = null; return; }
+    document.querySelectorAll('[id^="draft-personal-"],[id^="car-personal-"]').forEach(function (el) { el.innerHTML = ''; });
+    let src, photos;
+    if (kind === 'draft') {
+      const d = _draftsCache[id]; if (!d) return;
+      src = d.extracted_data || {}; photos = (d.photo_urls || []).slice();
+    } else {
+      src = (_allCarsCache || []).filter(function (c) { return c.id === id; })[0]; if (!src) return;
+      photos = (src.gallery_images || []).slice();
+      if (src.image_main && photos.indexOf(src.image_main) === -1) photos.unshift(src.image_main);
+    }
+    const f = {};
+    P_TEXT.forEach(function (p) { f[p.key] = src[p.key] === undefined ? null : src[p.key]; });
+    pState = {
+      kind: kind, id: id, photos: photos, main: src.image_main && photos.indexOf(src.image_main) !== -1 ? src.image_main : (photos[0] || null),
+      cutout: src.image_cutout || null, f: f,
+      highlights: JSON.parse(JSON.stringify(Array.isArray(src.highlights) ? src.highlights.filter(function (h) { return h && h.title; }) : [])),
+    };
+    renderPersonal();
+  };
+  function pHost() { return pState ? document.getElementById((pState.kind === 'draft' ? 'draft-personal-' : 'car-personal-') + pState.id) : null; }
+  function pReadInputs() {
+    if (!pState) return;
+    P_TEXT.forEach(function (p) {
+      const el = document.getElementById('p-f-' + p.key); if (!el) return;
+      const raw = el.value;
+      if (p.type === 'list') pState.f[p.key] = raw.split('\n').map(function (x) { return x.trim(); }).filter(Boolean);
+      else if (p.type === 'number') { const n = parseInt(String(raw).replace(/[^\d]/g, ''), 10); pState.f[p.key] = raw.trim() === '' || isNaN(n) ? null : n; }
+      else if (p.type === 'float') { const n = parseFloat(raw); pState.f[p.key] = raw.trim() === '' || isNaN(n) ? null : n; }
+      else pState.f[p.key] = raw.trim() === '' ? null : raw.trim();
+    });
+  }
+  function renderPersonal(msg) {
+    const host = pHost(); if (!host || !pState) return;
+    const s = pState;
+    const photosHtml = s.photos.length ? '<div style="display:flex;flex-wrap:wrap;gap:8px;">' + s.photos.map(function (u, i) {
+      const on = u === s.main;
+      return '<div style="width:96px;">' +
+        '<button type="button" onclick="pSetMain(' + i + ')" title="קבע כתמונה ראשית" style="display:block;padding:0;border:2px solid ' + (on ? 'var(--adm-accent,#ff9d2e)' : 'transparent') + ';border-radius:8px;background:none;cursor:pointer;">' +
+        '<img src="' + escapeAttr(u) + '" alt="" style="width:92px;height:66px;object-fit:cover;border-radius:6px;display:block;"></button>' +
+        '<div style="display:flex;gap:2px;margin-top:2px;"><button type="button" class="tbl-btn" style="flex:1;padding:2px;font-size:0.62rem;" onclick="pSetMain(' + i + ')">' + (on ? '★ ראשית' : '☆') + '</button>' +
+        '<button type="button" class="tbl-btn del" style="padding:2px 6px;font-size:0.62rem;" title="הסר" onclick="pRemovePhoto(' + i + ')">✕</button></div></div>';
+    }).join('') + '</div>' : '<div class="adm-empty-state" style="padding:8px;">אין תמונות עדיין</div>';
+    const cutHtml = '<div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap;">' +
+      '<div style="width:220px;aspect-ratio:16/10;border-radius:8px;background:repeating-conic-gradient(#e5e7eb 0 25%,#fff 0 50%) 0 0/16px 16px;display:grid;place-items:center;overflow:hidden;">' +
+        (s.cutout ? '<img src="' + escapeAttr(s.cutout) + '" alt="" style="max-width:94%;max-height:90%;object-fit:contain;">' : '<span style="font-size:0.72rem;color:#6b7280;">אין עדיין</span>') + '</div>' +
+      '<div style="display:flex;flex-direction:column;gap:6px;">' +
+        '<label class="tbl-btn" style="cursor:pointer;" title="הכי מדויק: קובץ המקור ברזולוציה מלאה"><input type="file" accept="image/*" style="display:none;" onchange="pCutoutFromFile(this)">✂️ הסר רקע מקובץ במחשב (מומלץ)</label>' +
+        (s.main ? '<button type="button" class="tbl-btn" onclick="pCutoutFromMain()">✂️ הסר רקע מהתמונה הראשית</button>' : '') +
+        '<label class="tbl-btn" style="cursor:pointer;"><input type="file" accept="image/png,image/webp" style="display:none;" onchange="pUploadReadyCutout(this)">⬆️ העלה PNG שקוף מוכן</label>' +
+        (s.cutout ? '<button type="button" class="tbl-btn del" onclick="pRemoveCutout()">הסר</button>' : '') +
+      '</div></div>';
+    const inCss = 'width:100%;padding:8px 10px;border-radius:8px;border:1px solid var(--adm-border);background:var(--adm-surface-2);color:var(--adm-text);font-family:var(--font);font-size:0.85rem;';
+    const fieldsHtml = P_TEXT.map(function (p) {
+      const v = s.f[p.key];
+      const val = v === null || v === undefined ? '' : (Array.isArray(v) ? v.join('\n') : String(v));
+      const input = (p.type === 'textarea' || p.type === 'list')
+        ? '<textarea id="p-f-' + p.key + '" rows="' + (p.type === 'list' ? 4 : 3) + '" style="' + inCss + 'resize:vertical;">' + escapeHtml(val) + '</textarea>'
+        : '<input id="p-f-' + p.key + '" type="' + (p.type === 'float' ? 'number' : 'text') + '"' + (p.type === 'float' ? ' step="0.1" min="0" max="10"' : p.type === 'number' ? ' inputmode="numeric" placeholder="למשל 189,990"' : '') + ' value="' + escapeAttr(p.type === 'number' && val ? Number(val).toLocaleString('en-US') : val) + '" style="' + inCss + '">';
+      const wide = p.type === 'textarea' || p.type === 'list';
+      return '<div class="form-group" style="flex:' + (wide ? '1 1 100%' : '1 1 180px') + ';min-width:' + (wide ? '240' : '160') + 'px;"><label for="p-f-' + p.key + '">' + escapeAttr(p.label) + '</label>' + input +
+        (p.hint ? '<div style="font-size:0.68rem;color:var(--adm-muted);margin-top:2px;">' + escapeAttr(p.hint) + '</div>' : '') + '</div>';
+    }).join('');
+    const hlHtml = s.highlights.length ? s.highlights.map(function (h, i) {
+      return '<div style="display:flex;align-items:center;gap:10px;padding:6px 0;border-bottom:1px solid var(--adm-border);">' +
+        '<div style="width:72px;height:48px;border-radius:6px;background:var(--adm-surface-2);overflow:hidden;flex:none;display:grid;place-items:center;">' +
+          (h.image ? '<img src="' + escapeAttr(h.image) + '" alt="" style="width:100%;height:100%;object-fit:cover;">' : '<span style="font-size:0.62rem;color:var(--adm-muted);">אין תמונה</span>') + '</div>' +
+        '<div style="flex:1;font-size:0.8rem;">' + escapeHtml(h.title) + '</div>' +
+        '<label class="tbl-btn" style="cursor:pointer;"><input type="file" accept="image/*" style="display:none;" onchange="pHighlightImage(this,' + i + ')">' + (h.image ? 'החלף' : '⬆️ תמונה') + '</label>' +
+        (h.image ? '<button type="button" class="tbl-btn del" onclick="pHighlightImageRemove(' + i + ')">✕</button>' : '') + '</div>';
+    }).join('') : '<div style="font-size:0.75rem;color:var(--adm-muted);">אין פריטי אבזור בולטים (נבחרים אוטומטית מהמפרט בזמן החילוץ).</div>';
+    host.innerHTML = '<div class="form-block" style="margin-top:10px;background:var(--adm-surface-2);">' +
+      '<div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:8px;"><strong style="font-size:0.9rem;">✨ פרטים אישיים — מה שלא מגיע מהמפרט</strong>' +
+        '<button type="button" class="tbl-btn" onclick="togglePersonalPanel(\'' + s.kind + '\',' + s.id + ')">סגור ✕</button></div>' +
+      '<div style="display:grid;gap:14px;">' +
+        '<div><div style="font-size:0.78rem;font-weight:700;margin-bottom:6px;">תמונות — לחץ על תמונה כדי לקבוע אותה כראשית</div>' + photosHtml +
+          '<label class="tbl-btn" style="cursor:pointer;display:inline-block;margin-top:8px;"><input type="file" accept="image/*" multiple style="display:none;" onchange="pAddPhotos(this)">➕ הוסף תמונות</label></div>' +
+        '<div><div style="font-size:0.78rem;font-weight:700;margin-bottom:6px;">תמונה ראשית ללא רקע</div>' + cutHtml +
+          '<div style="font-size:0.7rem;color:var(--adm-muted);margin-top:6px;">נפתח חלון של כלי הסרת הרקע. המודל רץ במחשב שלך; בפעם הראשונה הוא יורד (כ-180MB) ואחר כך נשמר בדפדפן. בכלי אפשר לתקן במברשת לפני השמירה.</div></div>' +
+        '<div class="form-row" style="flex-wrap:wrap;">' + fieldsHtml + '</div>' +
+        '<div><div style="font-size:0.78rem;font-weight:700;margin-bottom:4px;">תמונות לפריטי האבזור הבולטים (עמוד "אבזור")</div>' + hlHtml + '</div>' +
+      '</div>' +
+      '<div style="display:flex;gap:8px;justify-content:flex-end;align-items:center;margin-top:12px;flex-wrap:wrap;">' +
+        '<span id="p-msg" style="font-size:0.78rem;color:var(--adm-muted);">' + (msg || '') + '</span>' +
+        '<button type="button" class="btn-primary" id="p-save" onclick="savePersonal()">💾 שמור</button>' +
+      '</div></div>';
+  }
+  function pMsg(t) { const el = document.getElementById('p-msg'); if (el) el.innerHTML = t; }
+  window.pSetMain = function (i) { if (!pState) return; pReadInputs(); pState.main = pState.photos[i]; renderPersonal('לא לשכוח לשמור'); };
+  window.pRemovePhoto = function (i) {
+    if (!pState) return; pReadInputs();
+    const r = pState.photos.splice(i, 1)[0];
+    if (pState.main === r) pState.main = pState.photos[0] || null;
+    renderPersonal('לא לשכוח לשמור');
+  };
+  window.pAddPhotos = async function (input) {
+    const files = input.files ? Array.from(input.files) : []; if (!files.length || !pState) return;
+    pReadInputs(); pMsg('מעלה ' + files.length + ' תמונות…');
+    for (const file of files) { const u = await uploadCarPhoto(file); if (u) { pState.photos.push(u); if (!pState.main) pState.main = u; } }
+    input.value = ''; renderPersonal('התמונות עלו — לא לשכוח לשמור');
+  };
+  async function uploadCutoutBlob(blob) {
+    const client = initCarsClient(); if (!client) throw new Error('אין חיבור לשרת');
+    const type = blob.type === 'image/webp' ? 'image/webp' : 'image/png';
+    const path = 'cutouts/' + Date.now() + '-' + Math.random().toString(36).slice(2, 8) + (type === 'image/png' ? '.png' : '.webp');
+    const { error } = await client.storage.from(PHOTOS_BUCKET).upload(path, blob, { contentType: type, upsert: false });
+    if (error) throw new Error(error.message);
+    const { data } = client.storage.from(PHOTOS_BUCKET).getPublicUrl(path);
+    return data && data.publicUrl ? data.publicUrl : null;
+  }
+  // ── חיבור לכלי הסרת הרקע (חלון נפרד, cutout-tool.html) ──
+  let cutoutReq = null;
+  function openCutoutTool(src) {
+    return new Promise(function (resolve, reject) {
+      if (cutoutReq) cutoutReq.reject(new Error('בוטל — נפתחה בקשה חדשה'));
+      const win = window.open('/cutout-tool.html', 'sp-cutout', 'width=1320,height=900');
+      if (!win) { reject(new Error('הדפדפן חסם את החלון. אפשר חלונות קופצים לאתר ונסה שוב.')); return; }
+      cutoutReq = { reqId: 'c' + Date.now(), src: src, resolve: resolve, reject: reject, win: win };
+    });
+  }
+  window.addEventListener('message', function (ev) {
+    if (ev.origin !== location.origin || !ev.data || !cutoutReq) return;
+    if (ev.data.type === 'sp-cutout-ready' && ev.source === cutoutReq.win) {
+      const s = cutoutReq.src;
+      ev.source.postMessage({ type: 'sp-cutout-src', reqId: cutoutReq.reqId, url: s.url || null, blob: s.blob || null, name: s.name || 'car' }, location.origin);
+    } else if (ev.data.type === 'sp-cutout-result' && ev.data.reqId === cutoutReq.reqId && ev.data.blob) {
+      const r = cutoutReq; cutoutReq = null; r.resolve(ev.data.blob);
+    }
+  });
+  async function pRunCutout(src) {
+    if (!pState) return;
+    pReadInputs();
+    const st = pState;
+    pMsg('✂️ כלי הסרת הרקע נפתח בחלון נפרד — סיים שם ולחץ "שמור כתמונה ללא רקע".');
+    try {
+      const blob = await openCutoutTool(src);
+      if (pState !== st) return;
+      pMsg('מעלה את התמונה ללא הרקע…');
+      const url = await uploadCutoutBlob(blob);
+      if (!url) throw new Error('ההעלאה לא החזירה כתובת');
+      st.cutout = url;
+      renderPersonal('✓ התמונה ללא רקע עלתה — לחץ "שמור"');
+    } catch (e) { pMsg('<span style="color:#e74c3c;">✕ ' + escapeAttr(e && e.message ? e.message : e) + '</span>'); }
+  }
+  window.pCutoutFromFile = function (input) { const f = input.files && input.files[0]; input.value = ''; if (f) pRunCutout({ blob: f, name: f.name }); };
+  window.pCutoutFromMain = function () { if (pState && pState.main) pRunCutout({ url: pState.main, name: 'main' }); };
+  window.pUploadReadyCutout = async function (input) {
+    const file = input.files && input.files[0]; input.value = ''; if (!file || !pState) return;
+    if (!/^image\/(png|webp)$/.test(file.type)) { alert('יש להעלות PNG או WebP עם רקע שקוף.'); return; }
+    if (file.size > 6 * 1024 * 1024) { alert('הקובץ גדול מ-6MB.'); return; }
+    pReadInputs(); pMsg('מעלה…');
+    try { pState.cutout = await uploadCutoutBlob(file); renderPersonal('✓ עלה — לחץ "שמור"'); } catch (e) { pMsg('<span style="color:#e74c3c;">✕ ' + escapeAttr(e.message) + '</span>'); }
+  };
+  window.pRemoveCutout = function () { if (!pState) return; pReadInputs(); pState.cutout = null; renderPersonal('לא לשכוח לשמור'); };
+  window.pHighlightImage = async function (input, i) {
+    const file = input.files && input.files[0]; input.value = ''; if (!file || !pState) return;
+    pReadInputs(); pMsg('מעלה תמונה…');
+    const u = await uploadCarPhoto(file);
+    if (u && pState.highlights[i]) pState.highlights[i].image = u;
+    renderPersonal(u ? 'התמונה עלתה — לא לשכוח לשמור' : '<span style="color:#e74c3c;">ההעלאה נכשלה</span>');
+  };
+  window.pHighlightImageRemove = function (i) { if (!pState || !pState.highlights[i]) return; pReadInputs(); pState.highlights[i].image = null; renderPersonal('לא לשכוח לשמור'); };
+
+  window.savePersonal = async function () {
+    if (!pState) return;
+    pReadInputs();
+    const s = pState, client = initCarsClient(); if (!client) return;
+    if (s.f.score != null && (s.f.score < 0 || s.f.score > 10)) { pMsg('<span style="color:#e74c3c;">הציון חייב להיות בין 0 ל-10</span>'); return; }
+    const patch = Object.assign({}, s.f, { image_main: s.main || null, image_cutout: s.cutout || null, highlights: s.highlights });
+    const btn = document.getElementById('p-save'); if (btn) { btn.disabled = true; btn.textContent = 'שומר…'; }
+    try {
+      if (s.kind === 'car') {
+        patch.gallery_images = s.photos.slice();
+        const { error } = await client.from('cars').update(patch).eq('id', s.id);
+        if (error) throw new Error(error.message);
+        const c = (_allCarsCache || []).filter(function (x) { return x.id === s.id; })[0];
+        if (c) Object.assign(c, patch);
+        const chk = document.getElementById('car-check-' + s.id); if (c && chk) chk.innerHTML = personalChecklist(c, c.gallery_images, 'car');
+      } else {
+        const d = _draftsCache[s.id]; if (!d) throw new Error('הטיוטה לא נמצאה — רענן');
+        const ex = Object.assign({}, d.extracted_data || {}, patch);
+        const photos = s.photos.slice();
+        if (s.main) { photos.splice(photos.indexOf(s.main), 1); photos.unshift(s.main); } // הראשית ראשונה
+        const { error } = await client.from('car_drafts').update({ extracted_data: ex, photo_urls: photos }).eq('id', s.id);
+        if (error) throw new Error(error.message);
+        d.extracted_data = ex; d.photo_urls = photos;
+        const chk = document.getElementById('draft-check-' + s.id); if (chk) chk.innerHTML = personalChecklist(ex, photos, 'draft');
+      }
+      renderPersonal('<span style="color:#2ecc71;font-weight:700;">✓ נשמר</span>');
+    } catch (e) {
+      pMsg('<span style="color:#e74c3c;">✕ השמירה נכשלה: ' + escapeAttr(e && e.message ? e.message : e) + '</span>');
+    } finally { const b = document.getElementById('p-save'); if (b) { b.disabled = false; b.textContent = '💾 שמור'; } }
+  };
+
+  // ═══════════ בעיות מהבדיקה מול המקור — מתקנים ישירות בשורת הטיוטה (05.11.2026) ═══════════
+  // לכל בעיה: אמץ את ההצעה / הקלד ערך ושמור / התעלם. הכל נשמר ב-car_drafts (extracted_data + verification_report).
+  function ensureIssueIds(r) {
+    if (!r) return r;
+    (r.blockingIssues || []).forEach(function (x, i) { if (!x.id) x.id = 'b' + i; });
+    (r.warnings || []).forEach(function (x, i) { if (!x.id) x.id = 'w' + i; });
+    return r;
+  }
+  function parseIssueField(field) {
+    if (!field) return null;
+    const m = String(field).match(/^trims\[(.+)\]\.(\w+)$/);
+    if (m) { const def = TRIM_INPUTS.filter(function (f) { return f.key === m[2]; })[0]; return def ? { trim: m[1], key: m[2], def: def } : null; }
+    const def = ALL_FIELDS.filter(function (f) { return f.key === field; })[0];
+    return def ? { trim: null, key: field, def: def } : null;
+  }
+  function issueCurrentValue(ex, pf) {
+    if (!ex || !pf) return undefined;
+    if (pf.trim === null) return ex[pf.key];
+    const t = (ex.trims || []).filter(function (x) { return x && x.name === pf.trim; })[0];
+    return t ? t[pf.key] : undefined;
+  }
+  function parseByType(type, raw) {
+    if (raw === null || raw === undefined) return null;
+    const s = String(raw).trim();
+    if (s === '' || s === '(ריק)') return null;
+    if (type === 'number') { const n = parseInt(s.replace(/[^\d-]/g, ''), 10); return isNaN(n) ? null : n; }
+    if (type === 'float') { const n = parseFloat(s.replace(/,/g, '').replace(/[^\d.-]/g, '')); return isNaN(n) ? null : n; }
+    if (type === 'list') return s.split(/\n|,\s*/).map(function (x) { return x.trim(); }).filter(Boolean);
+    return s;
+  }
+  const showVal = function (v) { return v === null || v === undefined || v === '' ? '(ריק)' : Array.isArray(v) ? v.join(', ') : String(v); };
+  function issueCardHtml(draftId, it, kind, ex, sugg) {
+    const pf = parseIssueField(it.field);
+    const cur = issueCurrentValue(ex, pf);
+    const color = kind === 'b' ? '#e74c3c' : '#e6a23c';
+    let fix = '';
+    if (pf) {
+      const pre = sugg !== undefined ? (sugg === null ? '' : (Array.isArray(sugg) ? sugg.join('\n') : String(sugg))) : (cur === null || cur === undefined ? '' : (Array.isArray(cur) ? cur.join('\n') : String(cur)));
+      const inputType = pf.def.type === 'number' || pf.def.type === 'float' ? 'number' : 'text';
+      fix = '<div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-top:6px;">' +
+        '<span style="font-size:0.72rem;color:var(--adm-muted);">עכשיו: <b>' + escapeHtml(showVal(cur)) + '</b></span>' +
+        (sugg !== undefined ? '<button type="button" class="tbl-btn" style="border-color:#2ecc71;color:#2ecc71;" onclick="fixDraftIssue(' + draftId + ',\'' + it.id + '\',\'suggest\',this)">✓ אמץ: ' + escapeHtml(showVal(sugg)) + '</button>' : '') +
+        (pf.def.type === 'list' || pf.def.type === 'textarea'
+          ? '<textarea id="fix-' + draftId + '-' + it.id + '" rows="2" style="flex:1;min-width:180px;padding:6px 8px;border-radius:7px;border:1px solid var(--adm-border);background:var(--adm-surface-2);color:var(--adm-text);font-family:var(--font);font-size:0.8rem;">' + escapeHtml(pre) + '</textarea>'
+          : '<input id="fix-' + draftId + '-' + it.id + '" type="' + inputType + '"' + (pf.def.type === 'float' ? ' step="any"' : '') + ' value="' + escapeAttr(pre) + '" aria-label="ערך מתוקן" style="width:150px;padding:6px 8px;border-radius:7px;border:1px solid var(--adm-border);background:var(--adm-surface-2);color:var(--adm-text);font-family:var(--font);font-size:0.8rem;">') +
+        '<button type="button" class="tbl-btn" onclick="fixDraftIssue(' + draftId + ',\'' + it.id + '\',\'input\',this)">💾 שמור ערך</button>' +
+        '<button type="button" class="tbl-btn" onclick="fixDraftIssue(' + draftId + ',\'' + it.id + '\',\'dismiss\',this)" title="הערך הנוכחי נכון — הסר את ההערה">התעלם</button>' +
+      '</div>';
+    } else {
+      fix = '<div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-top:6px;">' +
+        (it.field ? '<span style="font-size:0.72rem;color:var(--adm-muted);">תיקון של ' + escapeHtml(it.field === 'equipment' ? 'רשימת האבזור' : it.field === 'trims' ? 'רשימת הגרסאות' : it.field) + ' — בטופס העריכה</span>' : '') +
+        '<button type="button" class="tbl-btn" onclick="fixDraftIssue(' + draftId + ',\'' + it.id + '\',\'dismiss\',this)">התעלם</button></div>';
+    }
+    return '<li style="list-style:none;border:1px solid var(--adm-border);border-inline-start:3px solid ' + color + ';border-radius:8px;padding:8px 10px;margin-top:6px;">' +
+      '<div style="font-size:0.76rem;"><b style="color:' + color + ';">' + escapeHtml(it.category || '') + '</b> · ' + escapeHtml(it.text || '') + '</div>' + fix + '</li>';
+  }
   function renderDraftVerifyResult(draftId) {
     const resultEl = document.getElementById('draft-verify-' + draftId);
-    const result = draftVerifications[draftId];
+    const result = ensureIssueIds(draftVerifications[draftId]);
     if (!resultEl || !result) return;
-    if (result.ok) {
-      let html = '<div style="font-size:0.78rem;color:#2ecc71;margin-top:6px;font-weight:600;">✓ עברה בדיקה — כל השדות תואמים לקובץ המקור</div>';
-      if (result.warnings && result.warnings.length) {
-        html += '<div style="font-size:0.74rem;color:var(--adm-muted);margin-top:3px;">הערות (לא חוסמות): ' +
-          result.warnings.map(function (w) { return escapeAttr(w.text); }).join(' · ') + '</div>';
-      }
-      resultEl.innerHTML = html;
-    } else {
-      const issues = (result.blockingIssues || []).map(function (i) { return '<li>' + escapeAttr(i.category) + ': ' + escapeAttr(i.text) + '</li>'; }).join('');
-      resultEl.innerHTML = '<div style="font-size:0.78rem;color:#e74c3c;margin-top:6px;font-weight:600;">✕ נמצאו בעיות — עבור לטופס העריכה כדי לתקן</div>' +
-        '<ul style="font-size:0.74rem;color:var(--adm-muted);margin:4px 0 0;padding-inline-start:16px;">' + issues + '</ul>' +
-        '<div style="font-size:0.72rem;color:var(--adm-muted);margin-top:4px;">פתח את הטופס לעריכה — ההצעות לתיקון יופיעו ליד כל שדה רלוונטי.</div>';
-    }
+    const d = _draftsCache[draftId], ex = d && d.extracted_data;
+    const sug = result.fieldSuggestions || {};
+    const blocking = result.blockingIssues || [], warns = result.warnings || [];
+    const when = result.checkedAt ? ' <span style="font-weight:400;color:var(--adm-muted);">(' + new Date(result.checkedAt).toLocaleString('he-IL', { dateStyle: 'short', timeStyle: 'short' }) + ')</span>' : '';
+    let html = blocking.length
+      ? '<div style="font-size:0.8rem;color:#e74c3c;margin-top:8px;font-weight:700;">✕ ' + blocking.length + ' בעיות לתיקון' + when + ' — אפשר לתקן כאן ישירות</div>'
+      : '<div style="font-size:0.8rem;color:#2ecc71;margin-top:8px;font-weight:700;">✓ ' + (result.sourceChecked ? 'עברה בדיקה מול קובץ המקור' : 'אין בעיות פתוחות') + when + '</div>';
+    if (blocking.length) html += '<ul style="margin:0;padding:0;">' + blocking.map(function (it) { return issueCardHtml(draftId, it, 'b', ex, it.field ? sug[it.field] : undefined); }).join('') + '</ul>';
+    if (warns.length) html += '<details style="margin-top:6px;"' + (blocking.length ? '' : ' open') + '><summary style="font-size:0.76rem;color:var(--adm-muted);cursor:pointer;">הערות לא חוסמות (' + warns.length + ')</summary><ul style="margin:0;padding:0;">' +
+      warns.map(function (it) { return issueCardHtml(draftId, it, 'w', ex, it.field ? sug[it.field] : undefined); }).join('') + '</ul></details>';
+    resultEl.innerHTML = html;
   }
+  window.fixDraftIssue = async function (draftId, issueId, mode, btn) {
+    const client = initCarsClient(); if (!client) return;
+    const d = _draftsCache[draftId], r = draftVerifications[draftId];
+    if (!d || !r) return;
+    const all = (r.blockingIssues || []).concat(r.warnings || []);
+    const it = all.filter(function (x) { return x.id === issueId; })[0]; if (!it) return;
+    const ex = JSON.parse(JSON.stringify(d.extracted_data || {}));
+    let changed = false;
+    if (mode !== 'dismiss') {
+      const pf = parseIssueField(it.field); if (!pf) return;
+      let val;
+      if (mode === 'suggest') val = parseByType(pf.def.type, (r.fieldSuggestions || {})[it.field]);
+      else { const el = document.getElementById('fix-' + draftId + '-' + issueId); val = parseByType(pf.def.type, el ? el.value : null); }
+      if (pf.trim === null) ex[pf.key] = val;
+      else {
+        ex.trims = trimsToKgm(ex.trims);
+        const t = (ex.trims || []).filter(function (x) { return x && x.name === pf.trim; })[0];
+        if (!t) { alert('הגרסה "' + pf.trim + '" לא נמצאה בנתונים — תקן בטופס העריכה.'); return; }
+        t[pf.key] = val;
+        if (['torque', 'electric_nm', 'system_nm', 'boost_nm'].indexOf(pf.key) !== -1) t.tu = 'kgm';
+        // הגרסה הבסיסית מזינה את ערכי הרכב הכלליים — מעדכנים גם אותם כשהם היו זהים
+        if (ex.trims[0] === t && ex[pf.key] !== undefined && JSON.stringify(ex[pf.key]) === JSON.stringify(issueCurrentValue(d.extracted_data, pf))) ex[pf.key] = val;
+      }
+      changed = true;
+    }
+    const rep = JSON.parse(JSON.stringify(r));
+    rep.blockingIssues = (rep.blockingIssues || []).filter(function (x) { return x.id !== issueId; });
+    rep.warnings = (rep.warnings || []).filter(function (x) { return x.id !== issueId; });
+    if (rep.fieldSuggestions && it.field && !all.some(function (x) { return x.id !== issueId && x.field === it.field; })) delete rep.fieldSuggestions[it.field];
+    rep.ok = rep.blockingIssues.length === 0;
+    (rep.resolved = rep.resolved || []).push({ id: issueId, field: it.field || null, how: mode, at: new Date().toISOString() });
+    if (btn) { btn.disabled = true; btn.textContent = '…'; }
+    const upd = { verification_report: rep }; if (changed) upd.extracted_data = ex;
+    const { error } = await client.from('car_drafts').update(upd).eq('id', draftId);
+    if (error) { alert('השמירה נכשלה: ' + error.message); if (btn) btn.disabled = false; return; }
+    draftVerifications[draftId] = rep; d.verification_report = rep; if (changed) d.extracted_data = ex;
+    renderDraftVerifyResult(draftId);
+    const pub = document.getElementById('publish-btn-' + draftId); if (pub) pub.title = rep.ok ? '' : 'יש עדיין בעיות פתוחות';
+  };
+
+  // ═══════════ פרסום ישיר משורת הטיוטה — בלי לפתוח את טופס העריכה ═══════════
+  function valuesFromDraft(d) {
+    const ex = d.extracted_data || {};
+    const values = {};
+    ALL_FIELDS.forEach(function (f) {
+      const v = ex[f.key];
+      if (v === undefined || v === null || v === '') { values[f.key] = f.type === 'list' ? [] : null; return; }
+      if (f.type === 'list') values[f.key] = Array.isArray(v) ? v : parseByType('list', v);
+      else if (f.type === 'number' || f.type === 'float') values[f.key] = typeof v === 'number' ? (f.type === 'number' ? Math.round(v) : v) : parseByType(f.type, v);
+      else values[f.key] = Array.isArray(v) ? v.join(', ') : String(v);
+    });
+    if (!values.slug && values.brand && values.model) values.slug = slugify(values.brand, values.model, values.year);
+    ['colors', 'features', 'safety_features', 'pros', 'cons'].forEach(function (k) { if (!Array.isArray(values[k])) values[k] = []; });
+    const photos = (d.photo_urls || []).slice();
+    values.image_main = ex.image_main || photos[0] || null;
+    values.gallery_images = photos;
+    values.image_cutout = ex.image_cutout || null;
+    values.torque = exTorqueKgm(ex);
+    values.trims = trimsToKgm(ex.trims).filter(function (t) { return t && t.name; });
+    const eq = ex.equipment || {};
+    values.equipment = { base_name: eq.base_name || null, groups: Array.isArray(eq.groups) ? eq.groups : [], packages: Array.isArray(eq.packages) ? eq.packages : [] };
+    values.highlights = (Array.isArray(ex.highlights) ? ex.highlights : []).map(function (h) { return typeof h === 'string' ? { title: h, image: null } : h; }).filter(function (h) { return h && h.title; }).slice(0, 6);
+    return values;
+  }
+  // שמירה של רכב חדש מטיוטה — משותף לטופס העריכה ולפרסום הישיר
+  async function insertCarFromDraft(values, draftId) {
+    const client = initCarsClient();
+    values.date_added = new Date().toISOString().slice(0, 10);
+    const { data: newCar, error } = await client.from('cars').insert(values).select().single();
+    if (error) { alert('פרסום הרכב נכשל: ' + error.message + (error.message && error.message.indexOf('duplicate') !== -1 ? '\n\n(ייתכן שכתובת ה-URL הזו כבר בשימוש — בדוק/שנה את ה-slug)' : '')); return null; }
+    await client.from('car_drafts').update({ status: 'published', published_car_id: newCar.id, reviewed_at: new Date().toISOString() }).eq('id', draftId);
+    delete draftVerifications[draftId];
+    alert('✓ הרכב פורסם בהצלחה! ייכנס לעמוד /car/' + values.slug + '/ בריצה הבאה של יצירת הדפים הסטטיים (עד 4 שעות, או הרצה ידנית).');
+    return newCar;
+  }
+  window.publishDraftDirect = async function (draftId, btn) {
+    const d = _draftsCache[draftId]; if (!d || !d.extracted_data) return;
+    const values = valuesFromDraft(d);
+    const missing = [['brand', 'יצרן'], ['model', 'דגם'], ['year', 'שנה'], ['horsepower', 'הספק'], ['slug', 'כתובת URL']].filter(function (x) { return isBlank(values[x[0]]); }).map(function (x) { return x[1]; });
+    if (missing.length) { alert('חסרים שדות חובה: ' + missing.join(', ') + '.\nאפשר להשלים בטופס העריכה (📝).'); return; }
+    if (!/^[a-z0-9]+(-[a-z0-9]+)*$/.test(values.slug)) { alert('כתובת ה-URL (slug) לא תקינה: "' + values.slug + '". תקן בטופס העריכה.'); return; }
+    const r = draftVerifications[draftId];
+    const open = r && r.blockingIssues ? r.blockingIssues.length : 0;
+    const notes = [];
+    if (!r || !r.sourceChecked) notes.push('• הטיוטה עוד לא עברה בדיקה מול קובץ המקור');
+    if (open) notes.push('• יש ' + open + ' בעיות פתוחות מהבדיקה');
+    if (!values.price) notes.push('• אין מחיר (יוצג "מחיר טרם פורסם")');
+    if (!values.image_cutout) notes.push('• אין תמונה ללא רקע');
+    if (!values.image_main) notes.push('• אין תמונה ראשית');
+    if (!confirm('לפרסם את ' + values.brand + ' ' + values.model + ' ' + values.year + ' באתר?' + (notes.length ? '\n\nלתשומת לבך:\n' + notes.join('\n') : ''))) return;
+    const t0 = btn ? btn.textContent : ''; if (btn) { btn.disabled = true; btn.textContent = 'מפרסם…'; }
+    try {
+      const car = await insertCarFromDraft(values, draftId);
+      if (car) { loadCarDrafts(); loadExistingCars(); }
+    } catch (e) { alert('שגיאה בפרסום: ' + (e && e.message ? e.message : e)); }
+    finally { if (btn && btn.isConnected) { btn.disabled = false; btn.textContent = t0; } }
+  };
 
   // ═══════════ טופס עריכה משותף (טיוטה חדשה / רכב קיים) ═══════════
 
@@ -637,6 +1060,7 @@
   function readTrimCard(idx) {
     const prev = (currentFormState && currentFormState.trims && currentFormState.trims[idx]) || {};
     const out = Object.assign({}, prev); // שומר מפתחות שאין להם שדה בטופס (למשל v)
+    out.tu = 'kgm'; // שדות המומנט בטופס הם בקג״מ (05.11.2026)
     TRIM_INPUTS.forEach(function (f) {
       const el = document.getElementById('car-trim-' + idx + '-' + f.key);
       if (!el) return;
@@ -841,10 +1265,105 @@
 
     const actionsBlock = '<div class="form-block" style="display:flex;gap:12px;justify-content:flex-end;">' +
       '<button class="btn-secondary" onclick="closeCarForm()">ביטול</button>' +
-      '<button class="btn-primary" id="car-form-submit-btn" onclick="submitCarForm()">' + (mode === 'edit' ? '✓ שמור שינויים' : '✓ פרסם רכב') + '</button>' +
+      '<button class="btn-primary" id="car-form-submit-btn" onclick="submitCarForm()">' + (mode === 'edit' ? '✓ שמור שינויים' : mode === 'update' ? '✓ עדכן את הרכב' : '✓ פרסם רכב') + '</button>' +
     '</div>';
 
     return photosBlock + groupsHtml + trimsBlockHtml() + equipmentBlockHtml() + actionsBlock;
+  }
+
+  // ═══════════ עדכון רכב קיים ממפרט (04.11.2026) ═══════════
+  // מעלים מפרט לרכב שכבר באתר → טיוטה מקושרת (car_drafts.published_car_id = הרכב, status = pending)
+  // → אותו חילוץ ואותה בדיקה מול המקור → טופס עם השוואה "ישן ← חדש" → עדכון הרכב הקיים (לא רכב חדש).
+  // כללי המיזוג: לא נוגעים בזהות ובכתובת, לא מוחקים עבודה ידנית, ונתוני המפרט מתעדכנים רק כשהמפרט נותן ערך.
+  const UPD_KEEP_ALWAYS = ['slug', 'brand', 'model', 'year'];
+  const UPD_KEEP_IF_SET = ['category', 'description', 'meta_title', 'meta_description', 'score', 'pros', 'cons', 'youtube_video_url', 'sales_rank', 'sales_units', 'sales_year'];
+  const isEmptyVal = function (v) { return v === null || v === undefined || v === '' || (Array.isArray(v) && !v.length); };
+  function mergeForUpdate(car, ex) {
+    const out = {};
+    ALL_FIELDS.forEach(function (f) {
+      const k = f.key, oldV = car[k], newV = ex[k];
+      if (UPD_KEEP_ALWAYS.indexOf(k) !== -1) out[k] = oldV;
+      else if (UPD_KEEP_IF_SET.indexOf(k) !== -1) out[k] = isEmptyVal(oldV) ? newV : oldV;
+      else out[k] = isEmptyVal(newV) ? oldV : newV;
+    });
+    return out;
+  }
+  const normTok = function (s) { return String(s || '').toLowerCase().replace(/mercedes-benz/g, 'mercedes').split(/[^a-z0-9֐-׿]+/).filter(function (t) { return t.length > 1; }); };
+  function looksLikeOtherCar(car, ex) {
+    const b1 = normTok(car.brand), b2 = normTok(ex.brand), m1 = normTok(car.model), m2 = normTok(ex.model);
+    const brandOk = !b2.length || b1.some(function (t) { return b2.indexOf(t) !== -1 || b2.some(function (u) { return u.indexOf(t) === 0 || t.indexOf(u) === 0; }); });
+    const modelOk = !m2.length || m1.some(function (t) { return m2.indexOf(t) !== -1; });
+    return !(brandOk && modelOk);
+  }
+  const shortVal = function (v) {
+    if (isEmptyVal(v)) return '—';
+    if (Array.isArray(v)) return v.length + ' פריטים';
+    const s = String(v); return s.length > 60 ? s.slice(0, 57) + '…' : s;
+  };
+  function updateDiffHtml(car, merged, ex, trimsNew, eqNew) {
+    const rows = [];
+    ALL_FIELDS.forEach(function (f) {
+      const a = car[f.key], b = merged[f.key];
+      if (JSON.stringify(isEmptyVal(a) ? null : a) === JSON.stringify(isEmptyVal(b) ? null : b)) return;
+      rows.push('<tr><td style="padding:4px 8px;color:var(--adm-muted);">' + escapeAttr(f.label.replace(' *', '')) + '</td><td style="padding:4px 8px;text-decoration:line-through;color:var(--adm-muted);">' + escapeAttr(shortVal(a)) + '</td><td style="padding:4px 8px;font-weight:600;">' + escapeAttr(shortVal(b)) + '</td></tr>');
+    });
+    const oldTrims = Array.isArray(car.trims) ? car.trims.length : 0;
+    if (trimsNew) rows.push('<tr><td style="padding:4px 8px;color:var(--adm-muted);">גרסאות (מפרט מלא)</td><td style="padding:4px 8px;color:var(--adm-muted);">' + oldTrims + ' גרסאות</td><td style="padding:4px 8px;font-weight:600;">' + trimsNew + ' גרסאות במפרט מלא</td></tr>');
+    if (eqNew) rows.push('<tr><td style="padding:4px 8px;color:var(--adm-muted);">רשימת האבזור</td><td style="padding:4px 8px;color:var(--adm-muted);">' + ((car.equipment && car.equipment.groups) ? car.equipment.groups.length + ' קבוצות' : '—') + '</td><td style="padding:4px 8px;font-weight:600;">' + eqNew + '</td></tr>');
+    const warn = looksLikeOtherCar(car, ex)
+      ? '<div style="background:#fdecea;color:#c0392b;border-radius:8px;padding:10px 12px;margin-bottom:10px;font-weight:600;">⚠️ המפרט נראה של רכב אחר: במסמך כתוב "' + escapeAttr((ex.brand || '') + ' ' + (ex.model || '')) + '" והרכב באתר הוא "' + escapeAttr(car.brand + ' ' + car.model) + '". ודא שהעלית את הקובץ הנכון לפני העדכון.</div>' : '';
+    return '<div class="form-block" id="car-update-diff"><h3>🔄 מה ישתנה ב-' + escapeAttr(car.brand + ' ' + car.model) + ' (' + rows.length + ')</h3>' + warn +
+      '<div style="font-size:0.74rem;color:var(--adm-muted);margin-bottom:8px;">הכתובת, השם, השנה, התמונות, הציון, היתרונות/חסרונות, התיאור וה-SEO נשמרים כמו שהם. נתון שלא מופיע במפרט לא נמחק. אפשר לערוך כל שדה בטופס לפני העדכון.</div>' +
+      (rows.length ? '<div style="overflow-x:auto;"><table style="width:100%;border-collapse:collapse;font-size:0.8rem;"><thead><tr><th style="text-align:right;padding:4px 8px;">שדה</th><th style="text-align:right;padding:4px 8px;">עכשיו באתר</th><th style="text-align:right;padding:4px 8px;">אחרי העדכון</th></tr></thead><tbody>' + rows.join('') + '</tbody></table></div>'
+        : '<div class="adm-empty-state" style="padding:8px;">המפרט לא משנה אף נתון ברכב.</div>') + '</div>';
+  }
+  window.startCarSpecUpdate = async function (carId, input) {
+    const file = input && input.files && input.files[0]; if (!file) return;
+    const client = initCarsClient(); if (!client) return;
+    const token = await getAuthToken(); if (!token) { alert('יש להתחבר לניהול קודם.'); input.value = ''; return; }
+    const car = (_allCarsCache || []).filter(function (c) { return c.id === carId; })[0];
+    const label = input.closest('label'); const t0 = label ? label.lastChild.textContent : '';
+    if (label) label.lastChild.textContent = ' מעלה…';
+    try {
+      const specPath = await uploadSpecFile(file);
+      if (!specPath) { alert('העלאת קובץ המפרט נכשלה.'); return; }
+      const { data: draft, error } = await client.from('car_drafts').insert({ source_file_url: specPath, photo_urls: [], status: 'pending', published_car_id: carId }).select().single();
+      if (error) { alert('יצירת טיוטת העדכון נכשלה: ' + error.message); return; }
+      const tabBtn = document.querySelector('.cars-subtab[onclick*="\'new\'"]');
+      if (typeof window.carsSubTab === 'function') window.carsSubTab('new', tabBtn);
+      alert('✓ המפרט הועלה' + (car ? ' עבור ' + car.brand + ' ' + car.model : '') + '. החילוץ מתחיל עכשיו — הטיוטה מסומנת "🔄 עדכון" ברשימת הטיוטות.');
+      setTimeout(function () { extractDraftSpec(draft.id); }, 300);
+    } catch (e) {
+      alert('שגיאה: ' + (e && e.message ? e.message : e));
+    } finally {
+      if (label) label.lastChild.textContent = t0; input.value = '';
+    }
+  };
+  async function openUpdateForm(draft) {
+    const client = initCarsClient(); if (!client) return;
+    const { data: car } = await client.from('cars').select('*').eq('id', draft.published_car_id).single();
+    if (!car) { alert('הרכב שהטיוטה מעדכנת לא נמצא (אולי נמחק).'); return; }
+    const ex = Object.assign({}, draft.extracted_data || {});
+    ex.torque = exTorqueKgm(ex);
+    const merged = mergeForUpdate(car, ex);
+    const exTrims = Array.isArray(ex.trims) ? ex.trims.filter(function (t) { return t && t.name; }) : [];
+    const exEq = ex.equipment && Array.isArray(ex.equipment.groups) && ex.equipment.groups.length ? ex.equipment : null;
+    const carHl = Array.isArray(car.highlights) ? car.highlights : [];
+    const photos = (car.gallery_images || []).slice(); if (car.image_main && photos.indexOf(car.image_main) === -1) photos.unshift(car.image_main);
+    currentFormState = {
+      mode: 'update', carId: car.id, draftId: draft.id,
+      photos: photos, mainPhoto: car.image_main || photos[0] || null, cutout: car.image_cutout || null,
+      trims: trimsToKgm(exTrims.length ? exTrims : car.trims),
+      equipment: JSON.parse(JSON.stringify(exEq || car.equipment || {})),
+      highlights: JSON.parse(JSON.stringify(carHl.length ? carHl : (ex.highlights || []))),
+      verification: draftVerifications[draft.id],
+    };
+    renderCarForm('update', merged, draftVerifications[draft.id]);
+    const host = document.getElementById('cars-form-host');
+    const eqTxt = exEq ? exEq.groups.length + ' קבוצות' + (exEq.packages && exEq.packages.length ? ' + ' + exEq.packages.length + ' חבילות' : '') : '';
+    if (host && host.firstChild) host.firstChild.insertAdjacentHTML('afterend', updateDiffHtml(car, merged, ex, exTrims.length, eqTxt));
+    const slug = document.getElementById('car-f-slug');
+    if (slug) { slug.readOnly = true; slug.style.opacity = '.6'; slug.title = 'בעדכון ממפרט הכתובת לא משתנה (שומר על הקישורים והדירוג בגוגל)'; }
   }
 
   window.openDraftForm = function (draftId) {
@@ -853,12 +1372,14 @@
     client.from('car_drafts').select('*').eq('id', draftId).single().then(function (res) {
       const draft = res.data;
       if (!draft) { alert('הטיוטה לא נמצאה.'); return; }
+      if (draft.published_car_id) { openUpdateForm(draft); return; } // טיוטת עדכון לרכב קיים
       const data = Object.assign({}, draft.extracted_data || {});
+      data.torque = exTorqueKgm(data);
       if (!data.slug && data.brand && data.model) data.slug = slugify(data.brand, data.model, data.year);
       currentFormState = {
         mode: 'draft', draftId: draftId,
-        photos: (draft.photo_urls || []).slice(), mainPhoto: (draft.photo_urls || [])[0] || null, cutout: null,
-        trims: Array.isArray(data.trims) ? data.trims.slice() : [],
+        photos: (draft.photo_urls || []).slice(), mainPhoto: data.image_main || (draft.photo_urls || [])[0] || null, cutout: data.image_cutout || null,
+        trims: trimsToKgm(data.trims),
         equipment: JSON.parse(JSON.stringify(data.equipment || {})), highlights: JSON.parse(JSON.stringify(data.highlights || [])),
         verification: draftVerifications[draftId],
       };
@@ -875,7 +1396,7 @@
       currentFormState = {
         mode: 'edit', carId: carId,
         photos: (car.gallery_images || []).slice(), mainPhoto: car.image_main || null, cutout: car.image_cutout || null,
-        trims: Array.isArray(car.trims) ? car.trims.slice() : [],
+        trims: trimsToKgm(car.trims),
         equipment: JSON.parse(JSON.stringify(car.equipment || {})), highlights: JSON.parse(JSON.stringify(car.highlights || [])),
         verification: null,
       };
@@ -887,7 +1408,7 @@
   function renderCarForm(mode, data, verification) {
     const host = document.getElementById('cars-form-host');
     if (!host) return;
-    host.innerHTML = '<div class="form-block"><h3>' + (mode === 'edit' ? '✏️ עריכת רכב' : '📝 סקירת נתונים ופרסום') + '</h3>' +
+    host.innerHTML = '<div class="form-block"><h3>' + (mode === 'edit' ? '✏️ עריכת רכב' : mode === 'update' ? '🔄 עדכון רכב קיים מהמפרט' : '📝 סקירת נתונים ופרסום') + '</h3>' +
       (verification && !verification.ok ? '<p style="color:#e74c3c;font-size:0.85rem;">⚠️ נמצאו בעיות בבדיקת האימות — מסומנות ליד השדות הרלוונטיים. תקן או אמץ את ההצעות לפני הפרסום.</p>' : '') +
     '</div>' + buildFormHtml(mode, data, verification);
     host.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -953,13 +1474,15 @@
         const { error } = await client.from('cars').update(values).eq('id', currentFormState.carId);
         if (error) { alert('שמירת השינויים נכשלה: ' + error.message); return; }
         alert('✓ הרכב עודכן בהצלחה.');
-      } else {
-        values.date_added = new Date().toISOString().slice(0, 10);
-        const { data: newCar, error } = await client.from('cars').insert(values).select().single();
-        if (error) { alert('פרסום הרכב נכשל: ' + error.message + (error.message && error.message.indexOf('duplicate') !== -1 ? '\n\n(ייתכן שכתובת ה-URL הזו כבר בשימוש — בדוק/שנה את ה-slug)' : '')); return; }
-        await client.from('car_drafts').update({ status: 'published', published_car_id: newCar.id, reviewed_at: new Date().toISOString() }).eq('id', currentFormState.draftId);
+      } else if (currentFormState.mode === 'update') {
+        const { error } = await client.from('cars').update(values).eq('id', currentFormState.carId);
+        if (error) { alert('עדכון הרכב נכשל: ' + error.message); return; }
+        await client.from('car_drafts').update({ status: 'published', reviewed_at: new Date().toISOString() }).eq('id', currentFormState.draftId);
         delete draftVerifications[currentFormState.draftId];
-        alert('✓ הרכב פורסם בהצלחה! ייכנס לעמוד /car/' + values.slug + '/ בריצה הבאה של יצירת הדפים הסטטיים (עד 4 שעות, או הרצה ידנית).');
+        alert('✓ הרכב עודכן מהמפרט. עמוד הרכב יתעדכן בריצה הבאה של יצירת הדפים הסטטיים (עד 4 שעות, או הרצה ידנית).');
+      } else {
+        const newCar = await insertCarFromDraft(values, currentFormState.draftId);
+        if (!newCar) return;
       }
       closeCarForm();
       loadCarDrafts();
@@ -1180,16 +1703,20 @@
           '<div class="adm-row-info">' +
             '<div class="adm-row-title">' + escapeAttr(c.brand + ' ' + c.model) + '</div>' +
             '<div class="adm-row-meta"><span class="adm-cat-pill">' + escapeAttr(c.category || '—') + '</span><span>' + (c.year || '') + '</span><span>₪' + (c.price ? c.price.toLocaleString('he-IL') : '—') + '</span></div>' +
+            '<div id="car-check-' + c.id + '">' + personalChecklist(c, c.gallery_images || [], 'car') + '</div>' +
           '</div>' +
         '</div>' +
         '<div class="adm-row-bottom">' +
           '<div class="adm-row-views"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>' + (c.views || 0) + ' צפיות</div>' +
           '<div class="tbl-actions">' +
             '<a href="/car/' + encodeURIComponent(c.slug) + '/" target="_blank" class="tbl-btn">צפה באתר ↗</a>' +
+            '<button class="tbl-btn" style="border-color:var(--adm-accent,#ff9d2e);" onclick="togglePersonalPanel(\'car\',' + c.id + ')">✨ פרטים אישיים</button>' +
             '<button class="tbl-btn" onclick="editExistingCar(' + c.id + ')">ערוך</button>' +
+            '<label class="tbl-btn" style="cursor:pointer;" title="מעלים מפרט רשמי — הנתונים מחולצים ומושווים לפני העדכון"><input type="file" accept=".pdf,image/*" style="display:none;" onchange="startCarSpecUpdate(' + c.id + ',this)"> 🔄 עדכן ממפרט</label>' +
             '<button class="tbl-btn" onclick="openReviewEditor(' + c.id + ')" title="' + escapeAttr(reviewStatus(c.id).t) + '">📝 חוות דעת <span style="color:' + reviewStatus(c.id).c + ';">●</span></button>' +
             '<button class="tbl-btn del" onclick="deleteExistingCar(' + c.id + ')">מחק</button>' +
           '</div>' +
+          '<div id="car-personal-' + c.id + '" style="width:100%;"></div>' +
         '</div>' +
       '</div>';
     }).join('');

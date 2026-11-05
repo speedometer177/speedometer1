@@ -545,22 +545,10 @@ function heroSrcset(url) {
 }
 
 /* שליפת שדות light לצורך ה-snapshot המוטמע בדף הבית (אותם שדות שהלקוח מסנכרן) */
-/** שולף את כל השורות בעמודים: ל-Supabase API יש תקרת שורות (ברירת מחדל 1000) והיא חותכת בשקט.
- *  בלי זה, כשיהיו יותר מ-1000 כתבות, הכתבות הישנות היו נעלמות והעמודים שלהן נמחקים בריצה מלאה. */
-async function fetchAllPages(buildQuery, pageSize = 200) {
-  let all = [];
-  for (let from = 0; from < 50000; from += pageSize) {
-    const { data, error } = await buildQuery().range(from, from + pageSize - 1);
-    if (error) throw new Error(`Supabase fetch failed: ${error.message}`);
-    all = all.concat(data || []);
-    if (!data || data.length < pageSize) break;
-  }
-  return all;
-}
-
 async function fetchLightRows(supabase) {
   const LIGHT = 'id,title,sub,cat,author,date,time,read_time,img,img_caption,score,views,featured,specs,gallery_captions,yt_urls,tags,scheduled_at,deleted';
-  const data = await fetchAllPages(() => supabase.from('articles').select(LIGHT).order('id', { ascending: false }));
+  const { data, error } = await supabase.from('articles').select(LIGHT).order('id', { ascending: false });
+  if (error) throw new Error(`Supabase light fetch failed: ${error.message}`);
   const now = new Date();
   return (data || []).filter(r =>
     !r.deleted &&
@@ -690,10 +678,11 @@ function injectBetween(html, name, content) {
 }
 
 async function fetchArticles(supabase) {
-  const data = await fetchAllPages(() => supabase
+  const { data, error } = await supabase
     .from('articles')
     .select('id,title,sub,cat,author,date,time,img,body,body_images,score,specs,deleted,live_updates,yt_urls,faq')
-    .order('id', { ascending: false }));
+    .order('id', { ascending: false });
+  if (error) throw new Error(`Supabase fetch failed: ${error.message}`);
   return (data || []).filter(a => !a.deleted); // כולל 'quick' - הם מקבלים עמוד סטטי עם noindex (במקום 404)
 }
 
@@ -740,10 +729,10 @@ try {
 }
 const CAR_OUT_DIR = path.resolve(process.cwd(), 'car');
 
-/* מומנט: במאגר הרכבים נשמר ב-Nm; מוצג בקג"מ (÷9.80665, ספרה אחת אחרי הנקודה) */
+/* מומנט: מ-05.11.2026 המאגר נשמר בקג"מ, כפי שכתוב במפרט — מוצג כמו שהוא (השם נשאר לתאימות) */
 function nmToKgm(v) {
   const n = parseFloat(String(v).replace(/,/g, ''));
-  return isFinite(n) ? (Math.round(n / 9.80665 * 10) / 10) + ' קג"מ' : String(v);
+  return isFinite(n) ? n + ' קג"מ' : String(v);
 }
 
 function formatPriceILS(p) {

@@ -404,7 +404,7 @@
     t.name = [c.brand, c.model].filter(Boolean).join(' ');
     setIf('img', c.image_main);
     setIf('price', c.price != null ? fmtNum(c.price) : '');
-    setIf('engine', c.engine); setIf('power', c.horsepower); setIf('torque', c.torque != null && !isNaN(parseFloat(c.torque)) ? String(Math.round(parseFloat(c.torque) / 9.80665 * 10) / 10) : '');
+    setIf('engine', c.engine); setIf('power', c.horsepower); setIf('torque', c.torque != null && !isNaN(parseFloat(c.torque)) ? String(parseFloat(c.torque)) : ''); /* המאגר בקג"מ מ-05.11.2026 */
     setIf('zeroToHundred', c.acceleration_0_100); setIf('topspeed', c.top_speed);
     setIf('gearbox', c.transmission); setIf('drive', c.drive_type);
     setIf('range', c.range_ev); setIf('battery', c.battery_capacity_kwh);
