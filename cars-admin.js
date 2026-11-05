@@ -634,7 +634,7 @@
       '<div style="display:flex;flex-direction:column;gap:6px;">' +
         '<label class="tbl-btn" style="cursor:pointer;" title="הכי מדויק: קובץ המקור ברזולוציה מלאה"><input type="file" accept="image/*" style="display:none;" onchange="pCutoutFromFile(this)">✂️ הסר רקע מקובץ במחשב (מומלץ)</label>' +
         (s.main ? '<button type="button" class="tbl-btn" onclick="pCutoutFromMain()">✂️ הסר רקע מהתמונה הראשית</button>' : '') +
-        '<label class="tbl-btn" style="cursor:pointer;"><input type="file" accept="image/png,image/webp" style="display:none;" onchange="pUploadReadyCutout(this)">⬆️ העלה PNG שקוף מוכן</label>' +
+        '<label class="tbl-btn" style="cursor:pointer;"><input type="file" accept="image/*" style="display:none;" onchange="pUploadReadyCutout(this)">⬆️ העלה PNG שקוף מוכן</label>' +
         (s.cutout ? '<button type="button" class="tbl-btn del" onclick="pRemoveCutout()">הסר</button>' : '') +
       '</div></div>';
     const inCss = 'width:100%;padding:8px 10px;border-radius:8px;border:1px solid var(--adm-border);background:var(--adm-surface-2);color:var(--adm-text);font-family:var(--font);font-size:0.85rem;';
@@ -703,6 +703,31 @@
     const { data } = client.storage.from(PHOTOS_BUCKET).getPublicUrl(path);
     return data && data.publicUrl ? data.publicUrl : null;
   }
+  // תמונה שקופה גדולה (למשל PNG של 8MB ממקור אחר) — מקטינים בדפדפן ושומרים על השקיפות, במקום לחסום
+  const CUT_MAX_BYTES = 4.5 * 1024 * 1024, CUT_MAX_SIDE = 2400;
+  async function shrinkCutout(file) {
+    if (file.size <= CUT_MAX_BYTES) return file;
+    const bmp = await createImageBitmap(file);
+    let side = Math.min(CUT_MAX_SIDE, Math.max(bmp.width, bmp.height)), out = null;
+    for (let round = 0; round < 4; round++, side = Math.round(side * 0.8)) {
+      const k = side / Math.max(bmp.width, bmp.height);
+      const c = document.createElement('canvas'); c.width = Math.round(bmp.width * k); c.height = Math.round(bmp.height * k);
+      const x = c.getContext('2d'); x.imageSmoothingQuality = 'high'; x.drawImage(bmp, 0, 0, c.width, c.height);
+      const enc = function (t, q) { return new Promise(function (r) { c.toBlob(r, t, q); }); };
+      out = await enc('image/png');
+      for (const q of [0.95, 0.9]) { if (out && out.size <= CUT_MAX_BYTES) break; const w = await enc('image/webp', q); if (w && w.type === 'image/webp') out = w; }
+      if (out && out.size <= CUT_MAX_BYTES) return out;
+    }
+    throw new Error('לא הצלחתי להקטין את הקובץ מתחת ל-4.5MB');
+  }
+  // קובץ שהמנהל מעלה כ"תמונה ללא רקע": שקוף → מקטינים ומעלים; תמונה רגילה (JPG) → מציעים להסיר רקע בכלי
+  async function cutoutFromUpload(file, runTool) {
+    if (!/^image\/(png|webp)$/.test(file.type)) {
+      if (confirm('זו תמונה רגילה (לא שקופה). לפתוח את כלי הסרת הרקע עם התמונה הזו?')) { runTool({ blob: file, name: file.name }); }
+      return null;
+    }
+    return uploadCutoutBlob(await shrinkCutout(file));
+  }
   // ── חיבור לכלי הסרת הרקע (חלון נפרד, cutout-tool.html) ──
   let cutoutReq = null;
   function openCutoutTool(src) {
@@ -741,10 +766,8 @@
   window.pCutoutFromMain = function () { if (pState && pState.main) pRunCutout({ url: pState.main, name: 'main' }); };
   window.pUploadReadyCutout = async function (input) {
     const file = input.files && input.files[0]; input.value = ''; if (!file || !pState) return;
-    if (!/^image\/(png|webp)$/.test(file.type)) { alert('יש להעלות PNG או WebP עם רקע שקוף.'); return; }
-    if (file.size > 6 * 1024 * 1024) { alert('הקובץ גדול מ-6MB.'); return; }
     pReadInputs(); pMsg('מעלה…');
-    try { pState.cutout = await uploadCutoutBlob(file); renderPersonal('✓ עלה — לחץ "שמור"'); } catch (e) { pMsg('<span style="color:#e74c3c;">✕ ' + escapeAttr(e.message) + '</span>'); }
+    try { const u = await cutoutFromUpload(file, pRunCutout); if (u) { pState.cutout = u; renderPersonal('✓ עלה — לחץ "שמור"'); } else pMsg(''); } catch (e) { pMsg('<span style="color:#e74c3c;">✕ ' + escapeAttr(e.message) + '</span>'); }
   };
   window.pRemoveCutout = function () { if (!pState) return; pReadInputs(); pState.cutout = null; renderPersonal('לא לשכוח לשמור'); };
   window.pHighlightImage = async function (input, i) {
@@ -1197,23 +1220,31 @@
       '<button type="button" class="tbl-btn" onclick="removeCarCutout()">הסר</button></div>';
   }
   window.uploadCarCutout = async function (input) {
-    const file = input.files && input.files[0];
+    const file = input.files && input.files[0]; input.value = '';
     if (!file || !currentFormState) return;
-    if (!/^image\/(png|webp)$/.test(file.type)) { alert('יש להעלות PNG או WebP עם רקע שקוף.'); input.value = ''; return; }
-    if (file.size > 6 * 1024 * 1024) { alert('הקובץ גדול מ-6MB. יש להקטין אותו לפני ההעלאה.'); input.value = ''; return; }
-    const client = initCarsClient();
-    if (!client) return;
     const host = document.getElementById('car-cutout-preview');
     if (host) host.innerHTML = '<div style="font-size:0.78rem;color:var(--adm-muted);">מעלה…</div>';
-    const ext = file.type === 'image/png' ? 'png' : 'webp';
-    const path = 'cutouts/' + Date.now() + '-' + Math.random().toString(36).slice(2, 8) + '.' + ext;
-    const { error } = await client.storage.from(PHOTOS_BUCKET).upload(path, file, { contentType: file.type, upsert: false });
-    if (error) { console.error('[cars-admin] העלאת תמונה מבודדת נכשלה:', error); alert('ההעלאה נכשלה: ' + error.message); if (host) host.innerHTML = cutoutPreviewHtml(currentFormState.cutout); return; }
-    const { data } = client.storage.from(PHOTOS_BUCKET).getPublicUrl(path);
-    currentFormState.cutout = data && data.publicUrl ? data.publicUrl : null;
+    try {
+      const u = await cutoutFromUpload(file, formRunCutout);
+      if (u) currentFormState.cutout = u;
+    } catch (e) { alert('ההעלאה נכשלה: ' + (e && e.message ? e.message : e)); }
     if (host) host.innerHTML = cutoutPreviewHtml(currentFormState.cutout);
-    input.value = '';
   };
+  // כלי הסרת הרקע גם מתוך טופס העריכה המלא
+  async function formRunCutout(src) {
+    const st = currentFormState; if (!st) return;
+    const host = document.getElementById('car-cutout-preview');
+    if (host) host.innerHTML = '<div style="font-size:0.78rem;color:var(--adm-muted);">✂️ כלי הסרת הרקע נפתח בחלון נפרד — סיים שם ולחץ "שמור כתמונה ללא רקע".</div>';
+    try {
+      const blob = await openCutoutTool(src);
+      if (currentFormState !== st) return;
+      if (host) host.innerHTML = '<div style="font-size:0.78rem;color:var(--adm-muted);">מעלה…</div>';
+      st.cutout = await uploadCutoutBlob(blob);
+    } catch (e) { alert(e && e.message ? e.message : e); }
+    if (host && currentFormState === st) host.innerHTML = cutoutPreviewHtml(st.cutout);
+  }
+  window.formCutoutFromFile = function (input) { const f = input.files && input.files[0]; input.value = ''; if (f) formRunCutout({ blob: f, name: f.name }); };
+  window.formCutoutFromMain = function () { if (currentFormState && currentFormState.mainPhoto) formRunCutout({ url: currentFormState.mainPhoto, name: 'main' }); };
   window.removeCarCutout = function () {
     if (!currentFormState) return;
     currentFormState.cutout = null;
@@ -1350,8 +1381,10 @@
         '<div style="font-size:0.72rem;color:var(--adm-muted);margin:4px 0 8px;">PNG או WebP שקוף, רכב שלם בזווית קדמית-צדית. כשקיימת — מוצגת בכרטיסים ובהשוואה במקום התמונה הראשית. המקור לא משתנה.</div>' +
         '<div id="car-cutout-preview">' + cutoutPreviewHtml(currentFormState.cutout) + '</div>' +
         '<label style="display:inline-flex;align-items:center;gap:8px;padding:10px 14px;margin-top:8px;border:1.5px dashed var(--adm-border);border-radius:8px;cursor:pointer;font-size:0.82rem;color:var(--adm-muted);">' +
-          '<input type="file" accept="image/png,image/webp" style="display:none;" onchange="uploadCarCutout(this)">⬆️ העלאת תמונה מבודדת' +
-        '</label>' +
+          '<input type="file" accept="image/*" style="display:none;" onchange="uploadCarCutout(this)">⬆️ העלאת תמונה מבודדת (PNG שקוף מוכן)' +
+        '</label> ' +
+        '<label class="tbl-btn" style="cursor:pointer;margin-top:8px;"><input type="file" accept="image/*" style="display:none;" onchange="formCutoutFromFile(this)">✂️ הסר רקע מקובץ במחשב</label> ' +
+        (currentFormState.mainPhoto ? '<button type="button" class="tbl-btn" style="margin-top:8px;" onclick="formCutoutFromMain()">✂️ הסר רקע מהתמונה הראשית</button>' : '') +
       '</div>' +
     '</div>';
 
