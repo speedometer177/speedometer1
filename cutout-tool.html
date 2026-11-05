@@ -122,7 +122,9 @@ kbd{font-family:inherit;font-size:.72rem;border:1px solid var(--line);border-bot
 (function () {
   'use strict';
   const qs = new URLSearchParams(location.search);
-  const MODEL_BASE = qs.get('model') || '/models/birefnet-lite/';
+  // המודל (כ-94MB ב-10 חלקים) יושב ב-Supabase Storage — דלי article-images הציבורי, תיקייה models/cutout (חלקים של 4MB).
+  // (העלאה דרך אתר GitHub נחסמת בגודל כזה, ו-Supabase מגיש עם CORS פתוח.)
+  const MODEL_BASE = qs.get('model') || 'https://kaykrrnmykqrfhawgtqt.supabase.co/storage/v1/object/public/article-images/models/cutout/';
   const S = 1024;                 // רזולוציית הקלט של המודל
   const WORK_MAX = 2800;          // צלע ארוכה מרבית לעבודה (מסכה ועריכה)
   const OUT_MAX = 2400;           // צלע ארוכה מרבית לקובץ הסופי
