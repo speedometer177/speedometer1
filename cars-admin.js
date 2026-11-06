@@ -784,7 +784,7 @@
     pReadInputs();
     const s = pState, client = initCarsClient(); if (!client) return;
     if (s.f.score != null && (s.f.score < 0 || s.f.score > 10)) { pMsg('<span style="color:#e74c3c;">הציון חייב להיות בין 0 ל-10</span>'); return; }
-    const patch = Object.assign({}, s.f, { image_main: s.main || null, image_cutout: s.cutout || null, highlights: s.highlights });
+    const patch = noZeroPrice(Object.assign({}, s.f, { image_main: s.main || null, image_cutout: s.cutout || null, highlights: s.highlights }));
     if (s.trims.length) patch.trims = s.trims;
     const btn = document.getElementById('p-save'); if (btn) { btn.disabled = true; btn.textContent = 'שומר…'; }
     try {
@@ -956,7 +956,10 @@
     return values;
   }
   // שמירה של רכב חדש מטיוטה — משותף לטופס העריכה ולפרסום הישיר
+  // מחיר 0 = אין מחיר (אחרת נכנס לנתונים המובנים לגוגל כ"מחיר 0 ₪")
+  function noZeroPrice(v) { ['price', 'price_top'].forEach(function (k) { if (v && (v[k] === 0 || v[k] === '0')) v[k] = null; }); return v; }
   async function insertCarFromDraft(values, draftId) {
+    noZeroPrice(values);
     const client = initCarsClient();
     values.date_added = new Date().toISOString().slice(0, 10);
     const { data: newCar, error } = await client.from('cars').insert(values).select().single();
@@ -1581,6 +1584,7 @@
       return;
     }
 
+    noZeroPrice(values);
     values.image_main = currentFormState.mainPhoto || (currentFormState.photos[0] || null);
     values.gallery_images = currentFormState.photos.slice();
     values.image_cutout = currentFormState.cutout || null;
