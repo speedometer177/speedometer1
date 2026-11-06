@@ -490,7 +490,8 @@ function buildSitemap(articles, cars = []) {
         return `<url><loc>${SITE}/article/${a.id}/</loc><lastmod>${lastmod}</lastmod><changefreq>weekly</changefreq><priority>0.8</priority>${imgTag}</url>`;
       }),
     ...cars.map(c =>
-      `<url><loc>${SITE}/car/${c.slug}/</loc><lastmod>${today}</lastmod><changefreq>monthly</changefreq><priority>0.6</priority></url>`
+      /* lastmod = מתי הרכב באמת השתנה (updated_at), לא "היום" בכל ריצה — אחרת גוגל לומד להתעלם מהתאריך */
+      `<url><loc>${SITE}/car/${c.slug}/</loc><lastmod>${String(c.updated_at || c.created_at || '').slice(0, 10) || today}</lastmod><changefreq>monthly</changefreq><priority>0.7</priority>${/^https?:\/\//.test(String(c.image_main || '')) ? `<image:image><image:loc>${esc(c.image_main)}</image:loc></image:image>` : ''}</url>`
     )
   ].join('\n  ');
   return `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">\n  ${urls}\n</urlset>\n`;
@@ -733,6 +734,14 @@ const CAR_OUT_DIR = path.resolve(process.cwd(), 'car');
 function nmToKgm(v) {
   const n = parseFloat(String(v).replace(/,/g, ''));
   return isFinite(n) ? n + ' קג"מ' : String(v);
+}
+
+/* 404.html: רכב חדש שפורסם אחרי הבנייה האחרונה עוד אין לו /car/{slug}/ סטטי. במקום שהכתובת תיפול לדף הבית,
+   ה-404 טוען את car.html כמו שהוא (אותה כתובת), והעמוד מרונדר מהמאגר החי עד שהבנייה הבאה יוצרת עמוד סטטי. */
+const CAR_404_ROUTE = `<script>/* sp-car-404 */(function(){var m=location.pathname.match(/^\\/car\\/([^\\/]+)\\/?$/);if(!m)return;try{var x=new XMLHttpRequest();x.open('GET','/car.html',false);x.send();if(x.status===200&&x.responseText.indexOf('car-page-root')!==-1){document.write(x.responseText+'<plaintext hidden style="display:none">');}}catch(e){}})();</script>`;
+function with404CarRoute(html) {
+  if (html.includes('sp-car-404')) return html;
+  return html.replace('<meta charset="UTF-8">', '<meta charset="UTF-8">\n' + CAR_404_ROUTE);
 }
 
 function formatPriceILS(p) {
@@ -1152,10 +1161,16 @@ function hydrateTemplateForCar(template, c, allCars) {
     name: `${c.brand} ${c.model} ${c.year}`,
     brand: { '@type': 'Brand', name: c.brand },
     modelDate: String(c.year),
-    description: c.description,
-    image: c.image_main,
-    offers: { '@type': 'Offer', price: c.price, priceCurrency: 'ILS' }
+    description: c.description || undefined,
+    image: [c.image_main, c.image_cutout].filter(Boolean),
+    url: canonicalUrl,
   };
+  /* מחיר: רק כשיש מחיר אמיתי. Offer עם מחיר ריק/0 = שגיאת "נתונים מובנים" ב-Search Console.
+     כמה רמות גימור במחירים שונים → AggregateOffer (מ-/עד) */
+  const pLow = Number(c.price) > 0 ? Number(c.price) : null, pHigh = Number(c.price_top) > 0 ? Number(c.price_top) : null;
+  if (pLow && pHigh && pHigh > pLow) ld.offers = { '@type': 'AggregateOffer', lowPrice: pLow, highPrice: pHigh, priceCurrency: 'ILS', availability: 'https://schema.org/InStock' };
+  else if (pLow) ld.offers = { '@type': 'Offer', price: pLow, priceCurrency: 'ILS', availability: 'https://schema.org/InStock', url: canonicalUrl };
+  if (!ld.image.length) delete ld.image;
   html = html.replace(
     '</head>',
     `<script type="application/ld+json">${JSON.stringify(ld).replace(/</g, '\\u003c')}</script>\n</head>`
@@ -1216,7 +1231,7 @@ async function main() {
   let rootHtml = injectBetween(template, 'HERO_PRELOAD', heroPreloadTag);
   rootHtml = injectBetween(rootHtml, 'HERO_SLIDE', buildStaticHeroSlide(lightRows));
   await writeFile(TEMPLATE_PATH, rootHtml, 'utf-8');
-  await writeFile(path.join(SITE_DIR, '404.html'), rootHtml, 'utf-8');
+  await writeFile(path.join(SITE_DIR, '404.html'), with404CarRoute(rootHtml), 'utf-8');
   console.log(`✅ index.html + 404.html עודכנו (snapshot: ${Math.min(lightRows.length,16)} כתבות, preload: ${heroPreloadTag ? 'כן' : 'אין תמונת hero'})`);
   if (!template.includes('id="art-body"')) {
     throw new Error('התבנית לא מכילה את המבנה הצפוי (#art-body) - בדוק את index.html בשורש הריפו');
