@@ -1,0 +1,574 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>הסרת רקע | ספידומטר</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Assistant:wght@400;600;700;800&display=swap">
+<!--
+  כלי הסרת רקע לתמונה הראשית של הרכב (05.11.2026).
+  רץ כולו בדפדפן: מודל BiRefNet (רישיון MIT) בגרסת lite, מיוצא מחדש עם קונבולוציה דפורמבילית חסכונית בזיכרון.
+  שלבים: מעבר 1 על כל התמונה → מעבר 2 בזום על אזור הרכב (קצוות חדים יותר) → ניקוי כתמים → תיקון צבע בקצוות
+  → מברשת מחיקה/שחזור ידנית → חיתוך אוטומטי עם שוליים → PNG/WebP שקוף שנשלח לאדמין.
+  נפתח מהאדמין בחלון נפרד (window.open) כי ה-CSP של עמוד הניהול לא מאפשר WebAssembly.
+-->
+<style>
+:root{--bg:#0a0e14;--panel:#12171f;--panel-2:#1a212c;--line:#242c38;--text:#eef2f6;--muted:#8993a3;--accent:#ff9d2e;--accent-dim:rgba(255,157,46,.15);--good:#2dd4bf;--bad:#ff5a6a}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html,body{margin:0;height:100%;background:var(--bg);color:var(--text);font-family:Assistant,system-ui,sans-serif}
+body{display:flex;flex-direction:column;min-height:100vh}
+header{display:flex;align-items:center;gap:12px;padding:12px 18px;border-bottom:1px solid var(--line);background:var(--panel)}
+header h1{font-size:1.05rem;margin:0;font-weight:800}
+header .sub{font-size:.8rem;color:var(--muted)}
+main{flex:1;display:grid;grid-template-columns:minmax(0,1fr) 300px;min-height:0}
+#stageWrap{position:relative;overflow:auto;min-height:420px;display:grid;place-items:center;padding:16px}
+#stage{position:relative;line-height:0;touch-action:none}
+#view{display:block;max-width:none;border-radius:10px;box-shadow:0 0 0 1px var(--line)}
+#cursor{position:absolute;pointer-events:none;border:1.5px solid #fff;border-radius:50%;box-shadow:0 0 0 1px rgba(0,0,0,.6);display:none;transform:translate(-50%,-50%)}
+#drop{position:absolute;inset:16px;border:2px dashed var(--line);border-radius:14px;display:grid;place-items:center;text-align:center;color:var(--muted);font-size:.95rem;padding:20px}
+#drop.over{border-color:var(--accent);color:var(--text);background:var(--accent-dim)}
+#drop label{display:inline-block;margin-top:12px;padding:10px 18px;border-radius:10px;background:var(--accent);color:#0a0e14;font-weight:800;cursor:pointer}
+aside{border-inline-start:1px solid var(--line);background:var(--panel);padding:14px;overflow:auto;display:flex;flex-direction:column;gap:14px}
+.box{background:var(--panel-2);border:1px solid var(--line);border-radius:12px;padding:12px}
+.box h2{font-size:.82rem;margin:0 0 8px;color:var(--muted);font-weight:700}
+.row{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+button,.btn{font:inherit;font-size:.85rem;font-weight:700;padding:8px 12px;border-radius:9px;border:1px solid var(--line);background:var(--panel);color:var(--text);cursor:pointer}
+button:hover:not(:disabled){border-color:var(--accent)}
+button:disabled{opacity:.45;cursor:not-allowed}
+button.on{background:var(--accent-dim);border-color:var(--accent);color:var(--accent)}
+button.primary{background:var(--accent);border-color:var(--accent);color:#0a0e14;width:100%;padding:11px}
+button:focus-visible,input:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+input[type=range]{width:100%;accent-color:var(--accent)}
+.lbl{display:flex;justify-content:space-between;font-size:.78rem;color:var(--muted);margin:8px 0 2px}
+.chk{display:flex;gap:8px;align-items:flex-start;font-size:.82rem;margin-top:6px;cursor:pointer}
+.chk input{margin-top:3px;accent-color:var(--accent)}
+#status{font-size:.84rem;line-height:1.5}
+#status .err{color:var(--bad);font-weight:700}
+#status .ok{color:var(--good);font-weight:700}
+.bar{height:6px;border-radius:4px;background:var(--line);overflow:hidden;margin-top:8px;display:none}
+.bar i{display:block;height:100%;width:0;background:var(--accent);transition:width .2s}
+.hint{font-size:.74rem;color:var(--muted);line-height:1.5;margin-top:6px}
+kbd{font-family:inherit;font-size:.72rem;border:1px solid var(--line);border-bottom-width:2px;border-radius:4px;padding:0 4px}
+@media (max-width:820px){main{grid-template-columns:1fr}aside{border-inline-start:0;border-top:1px solid var(--line)}}
+</style>
+</head>
+<body>
+<header>
+  <div>
+    <h1>✂️ הסרת רקע — תמונה ראשית</h1>
+    <div class="sub">המודל רץ במחשב שלך. התמונה לא נשלחת לשום שירות חיצוני.</div>
+  </div>
+</header>
+<main>
+  <div id="stageWrap">
+    <div id="drop">
+      <div>
+        גרור לכאן תמונה של הרכב (JPG/PNG/WebP)<br>
+        <span style="font-size:.8rem;">עדיף תמונה ברזולוציה גבוהה, רכב שלם בזווית קדמית-צדית</span><br>
+        <label>בחר תמונה<input type="file" id="file" accept="image/*" hidden></label>
+      </div>
+    </div>
+    <div id="stage" hidden>
+      <canvas id="view"></canvas>
+      <div id="cursor"></div>
+    </div>
+  </div>
+  <aside>
+    <div class="box">
+      <h2>מצב</h2>
+      <div id="status">ממתין לתמונה.</div>
+      <div class="bar" id="bar"><i></i></div>
+    </div>
+    <div class="box">
+      <h2>תיקון ידני</h2>
+      <div class="row">
+        <button type="button" id="mErase" class="on" aria-pressed="true">🧽 מחק</button>
+        <button type="button" id="mRestore" aria-pressed="false">🖌️ שחזר</button>
+        <button type="button" id="undo" disabled title="Ctrl+Z">↶ בטל</button>
+      </div>
+      <div class="lbl"><span>גודל מברשת</span><span id="bsV">40</span></div>
+      <input type="range" id="bs" min="4" max="200" value="40" aria-label="גודל מברשת">
+      <div class="lbl"><span>זום</span><span id="zV">100%</span></div>
+      <input type="range" id="zoom" min="100" max="400" step="25" value="100" aria-label="זום">
+      <div class="hint">מחק = מוריד שאריות רקע (צל, כביש). שחזר = מחזיר חלק מהרכב שנחתך. <kbd>E</kbd> מחק · <kbd>R</kbd> שחזר · <kbd>[</kbd> <kbd>]</kbd> גודל · <kbd>Ctrl+Z</kbd> בטל</div>
+    </div>
+    <div class="box">
+      <h2>תצוגה</h2>
+      <div class="row" role="group" aria-label="רקע תצוגה">
+        <button type="button" data-bg="checker" class="on">משבצות</button>
+        <button type="button" data-bg="#ffffff">לבן</button>
+        <button type="button" data-bg="#0a0e14">כהה</button>
+        <button type="button" id="orig" title="לחיצה ממושכת מציגה את התמונה המקורית">👁️ מקור</button>
+      </div>
+      <label class="chk"><input type="checkbox" id="fillHoles"> <span>מלא חורים שקופים בתוך הרכב (חלונות שנראים דרכם)</span></label>
+    </div>
+    <div class="box">
+      <h2>שמירה</h2>
+      <button type="button" class="primary" id="send" disabled>✓ שמור כתמונה ללא רקע</button>
+      <div class="row" style="margin-top:8px;">
+        <button type="button" id="dl" disabled>⬇️ הורד קובץ</button>
+        <button type="button" id="again" disabled>↻ תמונה אחרת</button>
+      </div>
+      <div class="hint" id="outInfo"></div>
+    </div>
+  </aside>
+</main>
+<script src="https://cdn.jsdelivr.net/npm/onnxruntime-web@1.22.0/dist/ort.min.js"></script>
+<script>
+(function () {
+  'use strict';
+  const qs = new URLSearchParams(location.search);
+  // המודל (כ-94MB ב-10 חלקים) יושב ב-Supabase Storage — דלי article-images הציבורי, תיקייה models/cutout (חלקים של 4MB).
+  // (העלאה דרך אתר GitHub נחסמת בגודל כזה, ו-Supabase מגיש עם CORS פתוח.)
+  const MODEL_BASE = qs.get('model') || 'https://kaykrrnmykqrfhawgtqt.supabase.co/storage/v1/object/public/article-images/models/cutout/';
+  const S = 1024;                 // רזולוציית הקלט של המודל
+  const WORK_MAX = 2800;          // צלע ארוכה מרבית לעבודה (מסכה ועריכה)
+  const OUT_MAX = 2400;           // צלע ארוכה מרבית לקובץ הסופי
+  const OUT_MAX_BYTES = 5.5 * 1024 * 1024; // מגבלת ההעלאה באדמין היא 6MB
+  const MEAN = [0.485, 0.456, 0.406], STD = [0.229, 0.224, 0.225];
+  const $ = id => document.getElementById(id);
+  const statusEl = $('status'), bar = $('bar'), barI = bar.querySelector('i');
+  const view = $('view'), vctx = view.getContext('2d');
+  let session = null, sessionEP = '';
+  let W = 0, H = 0;               // מידות העבודה
+  let src = null;                 // ImageData של המקור (RGBA) במידות העבודה
+  let alpha = null;               // Uint8ClampedArray W*H — המסכה הנוכחית
+  let alphaAuto = null;           // המסכה כפי שהמודל הפיק (לפני מילוי חורים)
+  let cut = null, cutCtx = null;  // canvas במידות העבודה: מקור + שקיפות
+  let undoStack = [];
+  let mode = 'erase', brush = 40, zoom = 1, bg = 'checker', showOrig = false, busy = false;
+  let srcName = 'car';
+
+  function setStatus(html, cls) { statusEl.innerHTML = cls ? '<span class="' + cls + '">' + html + '</span>' : html; }
+  function progress(p) { if (p == null) { bar.style.display = 'none'; return; } bar.style.display = 'block'; barI.style.width = Math.round(p * 100) + '%'; }
+  const tick = () => new Promise(r => setTimeout(r, 0));
+
+  // ═══ טעינת המודל (פעם אחת, נשמר במטמון הדפדפן) ═══
+  async function loadModelBytes() {
+    const man = await (await fetch(MODEL_BASE + 'manifest.json', { cache: 'no-cache' })).json();
+    const key = new Request(location.origin + MODEL_BASE + '__model-' + man.version + '.onnx');
+    let cache = null;
+    try { cache = await caches.open('sp-cutout-models'); const hit = await cache.match(key); if (hit) { const b = new Uint8Array(await hit.arrayBuffer()); if (b.byteLength === man.total) return b; } } catch (e) { cache = null; }
+    const out = new Uint8Array(man.total);
+    let off = 0;
+    for (let i = 0; i < man.parts.length; i++) {
+      const p = man.parts[i];
+      const res = await fetch(MODEL_BASE + p.file);
+      if (!res.ok) throw new Error('הורדת חלק ' + (i + 1) + ' של המודל נכשלה (' + res.status + ')');
+      const reader = res.body.getReader();
+      let got = 0;
+      for (;;) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        out.set(value, off + got); got += value.byteLength;
+        progress((off + got) / man.total);
+        setStatus('מוריד את מודל הסרת הרקע (פעם ראשונה בלבד): ' + Math.round((off + got) / 1048576) + ' / ' + Math.round(man.total / 1048576) + 'MB');
+      }
+      if (got !== p.size) throw new Error('חלק ' + (i + 1) + ' של המודל הגיע חסר — נסה שוב');
+      off += got;
+    }
+    if (off !== man.total) throw new Error('המודל הגיע חסר — נסה שוב');
+    try { if (cache) await cache.put(key, new Response(out, { headers: { 'Content-Type': 'application/octet-stream' } })); } catch (e) { /* אין מקום במטמון — ימשיך לעבוד, יוריד שוב בפעם הבאה */ }
+    return out;
+  }
+  // בלי arena ובלי memory pattern: חוסך כמחצית מזיכרון השיא. ב-WASM גם בלי אופטימיזציות גרף —
+  // נבדק: עם אופטימיזציות (אפילו basic) ההרצה ב-WASM קורסת על המודל הזה; בלעדיהן היא תקינה וזהה בתוצאה.
+  const sessionOpts = eps => ({ executionProviders: eps, graphOptimizationLevel: eps[0] === 'webgpu' ? 'all' : 'disabled', enableCpuMemArena: false, enableMemPattern: false });
+  let sessionP = null;
+  function getSession() {
+    if (!sessionP) sessionP = createSession().catch(e => { sessionP = null; throw e; });
+    return sessionP;
+  }
+  async function createSession() {
+    const bytes = await loadModelBytes();
+    progress(null);
+    setStatus('מכין את המודל…');
+    ort.env.wasm.numThreads = self.crossOriginIsolated ? Math.min(4, navigator.hardwareConcurrency || 1) : 1;
+    const tries = [];
+    let adapter = null;
+    try { if (navigator.gpu && qs.get('ep') !== 'wasm') adapter = await navigator.gpu.requestAdapter(); } catch (e) { adapter = null; }
+    if (adapter) tries.push(['webgpu', 'wasm']);
+    tries.push(['wasm']);
+    let lastErr = null;
+    for (const eps of tries) {
+      try {
+        session = await ort.InferenceSession.create(bytes, sessionOpts(eps));
+        sessionEP = eps[0];
+        return session;
+      } catch (e) { lastErr = e; console.warn('[cutout] ' + eps[0] + ' נכשל:', e); }
+    }
+    throw lastErr || new Error('לא ניתן להפעיל את המודל בדפדפן הזה');
+  }
+  async function infer(sx, sy, sw, sh) {
+    const c = document.createElement('canvas'); c.width = S; c.height = S;
+    const x = c.getContext('2d', { willReadFrequently: true });
+    x.imageSmoothingEnabled = true; x.imageSmoothingQuality = 'high';
+    x.drawImage(cut._srcCanvas, sx, sy, sw, sh, 0, 0, S, S);
+    const d = x.getImageData(0, 0, S, S).data;
+    const n = S * S, t = new Float32Array(3 * n);
+    for (let i = 0; i < n; i++) {
+      t[i] = (d[i * 4] / 255 - MEAN[0]) / STD[0];
+      t[n + i] = (d[i * 4 + 1] / 255 - MEAN[1]) / STD[1];
+      t[2 * n + i] = (d[i * 4 + 2] / 255 - MEAN[2]) / STD[2];
+    }
+    const feeds = { input_image: new ort.Tensor('float32', t, [1, 3, S, S]) };
+    let out;
+    try { out = await session.run(feeds); }
+    catch (e) {
+      if (sessionEP !== 'wasm') { // WebGPU נכשל (זיכרון) — עוברים ל-WASM ומנסים שוב
+        console.warn('[cutout] הרצה ב-WebGPU נכשלה, עובר ל-WASM', e);
+        try { await session.release(); } catch (e2) { /* ממשיכים */ }
+        session = await ort.InferenceSession.create(await loadModelBytes(), sessionOpts(['wasm'])); sessionEP = 'wasm'; sessionP = Promise.resolve(session);
+        out = await session.run(feeds);
+      } else throw e;
+    }
+    const y = out.output_image.data, m = new Float32Array(n);
+    for (let i = 0; i < n; i++) m[i] = 1 / (1 + Math.exp(-y[i]));
+    return m;
+  }
+  // דגימה בילינארית של מסכה S×S לתוך מלבן ביעד
+  function paintMask(m, dst, rx, ry, rw, rh) {
+    for (let y = 0; y < rh; y++) {
+      const fy = Math.min(S - 1, Math.max(0, (y + 0.5) * S / rh - 0.5)), y0 = Math.floor(fy), y1 = Math.min(S - 1, y0 + 1), wy = fy - y0;
+      for (let x = 0; x < rw; x++) {
+        const fx = Math.min(S - 1, Math.max(0, (x + 0.5) * S / rw - 0.5)), x0 = Math.floor(fx), x1 = Math.min(S - 1, x0 + 1), wx = fx - x0;
+        const v = (m[y0 * S + x0] * (1 - wx) + m[y0 * S + x1] * wx) * (1 - wy) + (m[y1 * S + x0] * (1 - wx) + m[y1 * S + x1] * wx) * wy;
+        dst[(ry + y) * W + rx + x] = v * 255;
+      }
+    }
+  }
+  // רכיבים מחוברים: משאיר את הרכב ומוחק כתמים קטנים מנותקים (שאריות רקע)
+  function removeIslands(a) {
+    const n = W * H, lab = new Int32Array(n), stack = new Int32Array(n), sizes = [0];
+    let cur = 0;
+    for (let i = 0; i < n; i++) {
+      if (a[i] < 24 || lab[i]) continue;
+      cur++; let sp = 0, cnt = 0; stack[sp++] = i; lab[i] = cur;
+      while (sp) {
+        const p = stack[--sp]; cnt++;
+        const x = p % W, y = (p / W) | 0;
+        if (x > 0 && !lab[p - 1] && a[p - 1] >= 24) { lab[p - 1] = cur; stack[sp++] = p - 1; }
+        if (x < W - 1 && !lab[p + 1] && a[p + 1] >= 24) { lab[p + 1] = cur; stack[sp++] = p + 1; }
+        if (y > 0 && !lab[p - W] && a[p - W] >= 24) { lab[p - W] = cur; stack[sp++] = p - W; }
+        if (y < H - 1 && !lab[p + W] && a[p + W] >= 24) { lab[p + W] = cur; stack[sp++] = p + W; }
+      }
+      sizes.push(cnt);
+    }
+    const big = Math.max(0, ...sizes), keepMin = big * 0.015;
+    let removed = 0;
+    for (let i = 0; i < n; i++) {
+      if (lab[i] && sizes[lab[i]] < keepMin) { a[i] = 0; removed++; }
+      else if (!lab[i] && a[i] < 24) a[i] = 0; // רעש חלש מאוד מחוץ לרכב
+    }
+    return removed;
+  }
+  // מילוי חורים: אזורים שקופים שלא נוגעים בשולי התמונה (למשל חלון שרואים דרכו את הרקע)
+  function fillHoles(a) {
+    const n = W * H, seen = new Uint8Array(n), stack = new Int32Array(n);
+    let sp = 0;
+    const push = p => { if (!seen[p] && a[p] < 128) { seen[p] = 1; stack[sp++] = p; } };
+    for (let x = 0; x < W; x++) { push(x); push((H - 1) * W + x); }
+    for (let y = 0; y < H; y++) { push(y * W); push(y * W + W - 1); }
+    while (sp) {
+      const p = stack[--sp], x = p % W, y = (p / W) | 0;
+      if (x > 0) push(p - 1); if (x < W - 1) push(p + 1); if (y > 0) push(p - W); if (y < H - 1) push(p + W);
+    }
+    for (let i = 0; i < n; i++) if (!seen[i]) a[i] = 255;
+  }
+  function applyAlphaToCut(x0, y0, w, h) {
+    x0 = Math.max(0, x0 | 0); y0 = Math.max(0, y0 | 0); w = Math.min(W - x0, Math.ceil(w)); h = Math.min(H - y0, Math.ceil(h));
+    if (w <= 0 || h <= 0) return;
+    const img = cutCtx.createImageData(w, h), d = img.data, s = src.data;
+    for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) {
+      const si = ((y0 + y) * W + x0 + x), di = (y * w + x) * 4;
+      d[di] = s[si * 4]; d[di + 1] = s[si * 4 + 1]; d[di + 2] = s[si * 4 + 2]; d[di + 3] = alpha[si];
+    }
+    cutCtx.putImageData(img, x0, y0);
+  }
+
+  // ═══ תצוגה ═══
+  let checker = null;
+  function render() {
+    if (!cut) return;
+    const vw = view.width, vh = view.height;
+    vctx.save();
+    if (bg === 'checker') {
+      if (!checker) { const c = document.createElement('canvas'); c.width = c.height = 24; const x = c.getContext('2d'); x.fillStyle = '#fff'; x.fillRect(0, 0, 24, 24); x.fillStyle = '#d9dde3'; x.fillRect(0, 0, 12, 12); x.fillRect(12, 12, 12, 12); checker = vctx.createPattern(c, 'repeat'); }
+      vctx.fillStyle = checker;
+    } else vctx.fillStyle = bg;
+    vctx.fillRect(0, 0, vw, vh);
+    vctx.imageSmoothingEnabled = true; vctx.imageSmoothingQuality = 'high';
+    vctx.drawImage(showOrig ? cut._srcCanvas : cut, 0, 0, vw, vh);
+    vctx.restore();
+  }
+  function layout() {
+    if (!cut) return;
+    const wrap = $('stageWrap');
+    const fit = Math.min((wrap.clientWidth - 32) / W, (Math.max(420, wrap.clientHeight) - 32) / H, 1);
+    const scale = fit * zoom;
+    view.width = Math.round(W * scale); view.height = Math.round(H * scale);
+    render(); updateCursorSize();
+  }
+  const viewScale = () => view.width / W;
+
+  // ═══ מברשת ═══
+  let drawing = false, lastPt = null;
+  // גודל המברשת מוגדר בפיקסלים של המסך (מה שהעין רואה), ומומר לפיקסלים של התמונה
+  function updateCursorSize() { const c = $('cursor'); c.style.width = c.style.height = (brush * 2) + 'px'; }
+  function toImg(ev) { const r = view.getBoundingClientRect(); return { x: (ev.clientX - r.left) / r.width * W, y: (ev.clientY - r.top) / r.height * H }; }
+  function dab(px, py) {
+    const rad = brush / viewScale();
+    const x0 = Math.max(0, Math.floor(px - rad)), x1 = Math.min(W - 1, Math.ceil(px + rad));
+    const y0 = Math.max(0, Math.floor(py - rad)), y1 = Math.min(H - 1, Math.ceil(py + rad));
+    const r2 = rad * rad, inner = rad * 0.7;
+    for (let y = y0; y <= y1; y++) for (let x = x0; x <= x1; x++) {
+      const dx = x - px, dy = y - py, d2 = dx * dx + dy * dy;
+      if (d2 > r2) continue;
+      const d = Math.sqrt(d2);
+      const f = d <= inner ? 1 : 1 - (d - inner) / (rad - inner); // קצה רך
+      const i = y * W + x;
+      if (mode === 'erase') alpha[i] = alpha[i] * (1 - f);
+      else alpha[i] = Math.max(alpha[i], 255 * f);
+    }
+    return [x0, y0, x1 - x0 + 1, y1 - y0 + 1];
+  }
+  function stroke(p) {
+    const pts = [];
+    if (lastPt) { const dx = p.x - lastPt.x, dy = p.y - lastPt.y, dist = Math.hypot(dx, dy), step = Math.max(1, brush / viewScale() / 4), k = Math.ceil(dist / step); for (let i = 1; i <= k; i++) pts.push({ x: lastPt.x + dx * i / k, y: lastPt.y + dy * i / k }); }
+    else pts.push(p);
+    let bx0 = Infinity, by0 = Infinity, bx1 = -Infinity, by1 = -Infinity;
+    for (const q of pts) { const r = dab(q.x, q.y); bx0 = Math.min(bx0, r[0]); by0 = Math.min(by0, r[1]); bx1 = Math.max(bx1, r[0] + r[2]); by1 = Math.max(by1, r[1] + r[3]); }
+    applyAlphaToCut(bx0, by0, bx1 - bx0, by1 - by0);
+    lastPt = p; render();
+  }
+  function pushUndo() { undoStack.push(alpha.slice()); if (undoStack.length > 25) undoStack.shift(); $('undo').disabled = false; }
+  function undo() { if (!undoStack.length) return; alpha = undoStack.pop(); applyAlphaToCut(0, 0, W, H); render(); $('undo').disabled = !undoStack.length; }
+  view.addEventListener('pointerdown', ev => { if (!alpha || busy) return; view.setPointerCapture(ev.pointerId); pushUndo(); drawing = true; lastPt = null; stroke(toImg(ev)); });
+  view.addEventListener('pointermove', ev => {
+    const c = $('cursor'), r = view.getBoundingClientRect(), sr = $('stage').getBoundingClientRect();
+    c.style.display = alpha ? 'block' : 'none'; c.style.left = (ev.clientX - sr.left) + 'px'; c.style.top = (ev.clientY - sr.top) + 'px';
+    c.style.borderColor = mode === 'erase' ? '#ff5a6a' : '#2dd4bf';
+    if (drawing) stroke(toImg(ev));
+  });
+  const endStroke = () => { drawing = false; lastPt = null; };
+  view.addEventListener('pointerup', endStroke); view.addEventListener('pointercancel', endStroke);
+  view.addEventListener('pointerleave', () => { $('cursor').style.display = 'none'; });
+
+  // ═══ זרימת העבודה ═══
+  async function processImage(blob, name) {
+    if (busy) return; busy = true; setControls(false);
+    try {
+      srcName = (name || 'car').replace(/\.[a-z0-9]+$/i, '').replace(/[^a-z0-9א-ת_-]+/gi, '-').slice(0, 40) || 'car';
+      setStatus('טוען תמונה…');
+      const bmp = await createImageBitmap(blob, { imageOrientation: 'from-image' });
+      const k = Math.min(1, WORK_MAX / Math.max(bmp.width, bmp.height));
+      W = Math.round(bmp.width * k); H = Math.round(bmp.height * k);
+      if (W < 300 || H < 200) setStatus('⚠️ התמונה קטנה (' + bmp.width + '×' + bmp.height + ') — התוצאה תהיה מטושטשת. עדיף תמונה גדולה יותר.');
+      const sc = document.createElement('canvas'); sc.width = W; sc.height = H;
+      const sx = sc.getContext('2d', { willReadFrequently: true }); sx.imageSmoothingQuality = 'high'; sx.drawImage(bmp, 0, 0, W, H);
+      src = sx.getImageData(0, 0, W, H);
+      cut = document.createElement('canvas'); cut.width = W; cut.height = H; cutCtx = cut.getContext('2d', { willReadFrequently: true }); cut._srcCanvas = sc;
+      alpha = new Uint8ClampedArray(W * H).fill(255); undoStack = []; $('undo').disabled = true;
+      $('drop').hidden = true; $('stage').hidden = false; zoom = 1; $('zoom').value = 100; $('zV').textContent = '100%';
+      applyAlphaToCut(0, 0, W, H); layout();
+      await getSession();
+      const t0 = performance.now();
+      setStatus('שלב 1 מתוך 2: מזהה את הרכב בתמונה…' + (sessionEP === 'wasm' ? ' (עד כדקה)' : '')); progress(0.15); await tick();
+      const m1 = await infer(0, 0, W, H);
+      // אזור הרכב לפי מעבר 1, עם שוליים של 8%
+      let mnx = S, mny = S, mxx = -1, mxy = -1;
+      for (let y = 0; y < S; y++) for (let x = 0; x < S; x++) if (m1[y * S + x] > 0.5) { if (x < mnx) mnx = x; if (x > mxx) mxx = x; if (y < mny) mny = y; if (y > mxy) mxy = y; }
+      if (mxx < 0) throw new Error('לא זוהה רכב בתמונה. נסה תמונה שבה הרכב שלם וברור.');
+      let bx0 = mnx / S * W, by0 = mny / S * H, bx1 = (mxx + 1) / S * W, by1 = (mxy + 1) / S * H;
+      const pw = (bx1 - bx0) * 0.08 + 6, ph = (by1 - by0) * 0.08 + 6;
+      bx0 = Math.max(0, Math.floor(bx0 - pw)); by0 = Math.max(0, Math.floor(by0 - ph)); bx1 = Math.min(W, Math.ceil(bx1 + pw)); by1 = Math.min(H, Math.ceil(by1 + ph));
+      const a = new Float32Array(W * H);
+      const cropFrac = (bx1 - bx0) * (by1 - by0) / (W * H);
+      if (cropFrac < 0.85) {
+        setStatus('שלב 2 מתוך 2: זום על הרכב לחידוד הקצוות…'); progress(0.6); await tick();
+        const m2 = await infer(bx0, by0, bx1 - bx0, by1 - by0);
+        paintMask(m2, a, bx0, by0, bx1 - bx0, by1 - by0);
+      } else {
+        paintMask(m1, a, 0, 0, W, H);
+      }
+      progress(0.9); setStatus('מנקה שאריות…'); await tick();
+      alphaAuto = new Uint8ClampedArray(W * H);
+      for (let i = 0; i < a.length; i++) { const v = (a[i] - 6) * 255 / 243; alphaAuto[i] = v; } // 6..249 → 0..255: מנקה ערפל חלש וממלא כמעט-אטום
+      const removed = removeIslands(alphaAuto);
+      rebuildAlpha();
+      progress(null);
+      const secs = ((performance.now() - t0) / 1000).toFixed(1);
+      setStatus('<span class="ok">✓ הרקע הוסר</span> (' + secs + ' שנ׳, ' + (sessionEP === 'wasm' ? 'מעבד' : 'כרטיס מסך') + ').<br>בדוק את הקצוות בזום. אם נשארה שארית — מחק אותה; אם חלק מהרכב נחתך — שחזר.' + (removed ? '<br><span style="color:var(--muted);font-size:.78rem;">נוקו ' + removed.toLocaleString('he-IL') + ' פיקסלים של כתמי רקע מנותקים.</span>' : ''));
+      setControls(true);
+    } catch (e) {
+      console.error('[cutout]', e); progress(null);
+      setStatus('✕ ' + (e && e.message ? e.message : e), 'err');
+      $('again').disabled = false;
+    } finally { busy = false; }
+  }
+  function rebuildAlpha() {
+    alpha = alphaAuto.slice();
+    if ($('fillHoles').checked) fillHoles(alpha);
+    undoStack = []; $('undo').disabled = true;
+    applyAlphaToCut(0, 0, W, H); render();
+  }
+  function setControls(on) { ['send', 'dl', 'again'].forEach(id => { $(id).disabled = !on; }); }
+
+  // ═══ ייצוא: חיתוך לפי הרכב + שוליים, הקטנה, תיקון צבע בקצוות ═══
+  function boxBlur(src1, dst, w, h, r, ch) { // ממוצע ריבועי מהיר בשני מעברים (ch ערוצים משולבים)
+    const tmp = new Float32Array(src1.length);
+    for (let y = 0; y < h; y++) for (let c = 0; c < ch; c++) {
+      let acc = 0; const row = y * w;
+      for (let x = -r; x <= r; x++) acc += src1[(row + Math.min(w - 1, Math.max(0, x))) * ch + c];
+      for (let x = 0; x < w; x++) {
+        tmp[(row + x) * ch + c] = acc / (2 * r + 1);
+        acc += src1[(row + Math.min(w - 1, x + r + 1)) * ch + c] - src1[(row + Math.max(0, x - r)) * ch + c];
+      }
+    }
+    for (let x = 0; x < w; x++) for (let c = 0; c < ch; c++) {
+      let acc = 0;
+      for (let y = -r; y <= r; y++) acc += tmp[(Math.min(h - 1, Math.max(0, y)) * w + x) * ch + c];
+      for (let y = 0; y < h; y++) {
+        dst[(y * w + x) * ch + c] = acc / (2 * r + 1);
+        acc += tmp[(Math.min(h - 1, y + r + 1) * w + x) * ch + c] - tmp[(Math.max(0, y - r) * w + x) * ch + c];
+      }
+    }
+  }
+  // הערכת צבע החזית (Forte & Pitié 2021, "blur fusion"): מסיר את צבע הרקע שדולף לפיקסלים חצי-שקופים בקצה
+  function estimateForeground(rgb, a, w, h) {
+    const n = w * h;
+    let F = rgb.slice(), B = rgb.slice();
+    for (const r of [Math.max(6, Math.round(Math.max(w, h) / 40)), 3]) {
+      const FA = new Float32Array(n * 3), BA = new Float32Array(n * 3), A = new Float32Array(n);
+      for (let i = 0; i < n; i++) { A[i] = a[i]; for (let c = 0; c < 3; c++) { FA[i * 3 + c] = F[i * 3 + c] * a[i]; BA[i * 3 + c] = B[i * 3 + c] * (1 - a[i]); } }
+      const bA = new Float32Array(n), bFA = new Float32Array(n * 3), bBA = new Float32Array(n * 3);
+      boxBlur(A, bA, w, h, r, 1); boxBlur(FA, bFA, w, h, r, 3); boxBlur(BA, bBA, w, h, r, 3);
+      const nF = new Float32Array(n * 3), nB = new Float32Array(n * 3);
+      for (let i = 0; i < n; i++) {
+        const ai = a[i];
+        for (let c = 0; c < 3; c++) {
+          const bf = bFA[i * 3 + c] / (bA[i] + 1e-5), bb = bBA[i * 3 + c] / (1 - bA[i] + 1e-5);
+          let f = bf + ai * (rgb[i * 3 + c] - ai * bf - (1 - ai) * bb);
+          nF[i * 3 + c] = f < 0 ? 0 : f > 1 ? 1 : f; nB[i * 3 + c] = bb;
+        }
+      }
+      F = nF; B = nB;
+    }
+    return F;
+  }
+  async function exportBlob() {
+    let x0 = W, y0 = H, x1 = -1, y1 = -1;
+    for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) if (alpha[y * W + x] > 10) { if (x < x0) x0 = x; if (x > x1) x1 = x; if (y < y0) y0 = y; if (y > y1) y1 = y; }
+    if (x1 < 0) throw new Error('התמונה ריקה — לא נשאר רכב אחרי המחיקה');
+    const pad = Math.round(Math.max(x1 - x0, y1 - y0) * 0.02);
+    x0 = Math.max(0, x0 - pad); y0 = Math.max(0, y0 - pad); x1 = Math.min(W - 1, x1 + pad); y1 = Math.min(H - 1, y1 + pad);
+    const cw = x1 - x0 + 1, chh = y1 - y0 + 1, k = Math.min(1, OUT_MAX / Math.max(cw, chh));
+    const ow = Math.round(cw * k), oh = Math.round(chh * k);
+    // הקטנה איכותית בנפרד לצבע ולשקיפות (בלי לערבב צבע רקע לתוך הקצה)
+    const rc = document.createElement('canvas'); rc.width = ow; rc.height = oh;
+    const rx = rc.getContext('2d', { willReadFrequently: true }); rx.imageSmoothingQuality = 'high';
+    rx.drawImage(cut._srcCanvas, x0, y0, cw, chh, 0, 0, ow, oh);
+    const rgbD = rx.getImageData(0, 0, ow, oh).data;
+    const ac = document.createElement('canvas'); ac.width = cw; ac.height = chh;
+    const ax = ac.getContext('2d', { willReadFrequently: true }); const aimg = ax.createImageData(cw, chh);
+    for (let y = 0; y < chh; y++) for (let x = 0; x < cw; x++) { const v = alpha[(y0 + y) * W + x0 + x], d = (y * cw + x) * 4; aimg.data[d] = aimg.data[d + 1] = aimg.data[d + 2] = v; aimg.data[d + 3] = 255; }
+    ax.putImageData(aimg, 0, 0);
+    const ac2 = document.createElement('canvas'); ac2.width = ow; ac2.height = oh;
+    const ax2 = ac2.getContext('2d', { willReadFrequently: true }); ax2.imageSmoothingQuality = 'high'; ax2.drawImage(ac, 0, 0, ow, oh);
+    const aD = ax2.getImageData(0, 0, ow, oh).data;
+    const n = ow * oh, rgb = new Float32Array(n * 3), a = new Float32Array(n);
+    for (let i = 0; i < n; i++) { rgb[i * 3] = rgbD[i * 4] / 255; rgb[i * 3 + 1] = rgbD[i * 4 + 1] / 255; rgb[i * 3 + 2] = rgbD[i * 4 + 2] / 255; a[i] = aD[i * 4] / 255; }
+    const F = estimateForeground(rgb, a, ow, oh);
+    const out = rx.createImageData(ow, oh);
+    for (let i = 0; i < n; i++) {
+      const ai = a[i];
+      // פיקסלים אטומים לגמרי שומרים את הצבע המקורי בדיוק; רק הקצה החצי-שקוף מקבל צבע מתוקן
+      const useF = ai < 0.98;
+      out.data[i * 4] = Math.round((useF ? F[i * 3] : rgb[i * 3]) * 255);
+      out.data[i * 4 + 1] = Math.round((useF ? F[i * 3 + 1] : rgb[i * 3 + 1]) * 255);
+      out.data[i * 4 + 2] = Math.round((useF ? F[i * 3 + 2] : rgb[i * 3 + 2]) * 255);
+      out.data[i * 4 + 3] = Math.round(ai * 255);
+    }
+    rx.putImageData(out, 0, 0);
+    const toBlob = (type, q) => new Promise(r => rc.toBlob(r, type, q));
+    let blob = await toBlob('image/png');
+    if (blob.size > OUT_MAX_BYTES) { const wb = await toBlob('image/webp', 0.95); if (wb && wb.type === 'image/webp') blob = wb; }
+    if (blob.size > OUT_MAX_BYTES) { const wb = await toBlob('image/webp', 0.85); if (wb && wb.type === 'image/webp') blob = wb; }
+    if (blob.size > OUT_MAX_BYTES) throw new Error('הקובץ יצא גדול מדי (' + (blob.size / 1048576).toFixed(1) + 'MB)');
+    return { blob, w: ow, h: oh };
+  }
+  async function doExport(send) {
+    if (busy) return; busy = true; setControls(false);
+    try {
+      setStatus('מכין את הקובץ הסופי (חיתוך ותיקון צבע בקצוות)…'); await tick();
+      const r = await exportBlob();
+      $('outInfo').textContent = r.w + '×' + r.h + ' · ' + (r.blob.type === 'image/png' ? 'PNG' : 'WebP') + ' · ' + (r.blob.size / 1048576).toFixed(2) + 'MB';
+      if (send) {
+        if (!window.opener || window.opener.closed) throw new Error('חלון הניהול נסגר — הורד את הקובץ והעלה אותו ידנית');
+        window.opener.postMessage({ type: 'sp-cutout-result', blob: r.blob, w: r.w, h: r.h, reqId: reqId }, location.origin);
+        setStatus('<span class="ok">✓ נשלח לניהול</span> — הקובץ נשמר. אפשר לסגור את החלון.');
+        setTimeout(() => { try { window.close(); } catch (e) {} }, 1200);
+      } else {
+        const u = URL.createObjectURL(r.blob), aEl = document.createElement('a');
+        aEl.href = u; aEl.download = srcName + '-cutout.' + (r.blob.type === 'image/png' ? 'png' : 'webp'); document.body.appendChild(aEl); aEl.click(); aEl.remove();
+        setTimeout(() => URL.revokeObjectURL(u), 4000);
+        setStatus('<span class="ok">✓ הקובץ הורד.</span>');
+      }
+    } catch (e) { setStatus('✕ ' + (e && e.message ? e.message : e), 'err'); }
+    finally { busy = false; setControls(true); }
+  }
+
+  // ═══ אירועים ═══
+  const setMode = m => { mode = m; $('mErase').classList.toggle('on', m === 'erase'); $('mRestore').classList.toggle('on', m === 'restore'); $('mErase').setAttribute('aria-pressed', m === 'erase'); $('mRestore').setAttribute('aria-pressed', m === 'restore'); };
+  $('mErase').onclick = () => setMode('erase'); $('mRestore').onclick = () => setMode('restore'); $('undo').onclick = undo;
+  $('bs').oninput = e => { brush = +e.target.value; $('bsV').textContent = brush; updateCursorSize(); };
+  $('zoom').oninput = e => { zoom = +e.target.value / 100; $('zV').textContent = e.target.value + '%'; layout(); };
+  document.querySelectorAll('[data-bg]').forEach(b => b.onclick = () => { bg = b.dataset.bg; document.querySelectorAll('[data-bg]').forEach(x => x.classList.toggle('on', x === b)); render(); });
+  const origOn = () => { showOrig = true; render(); }, origOff = () => { if (showOrig) { showOrig = false; render(); } };
+  $('orig').addEventListener('pointerdown', origOn); $('orig').addEventListener('pointerup', origOff); $('orig').addEventListener('pointerleave', origOff);
+  $('fillHoles').onchange = () => { if (alphaAuto && confirm('לחשב מחדש את המסכה? תיקונים ידניים שעשית יאופסו.')) rebuildAlpha(); else if (alphaAuto) $('fillHoles').checked = !$('fillHoles').checked; };
+  $('send').onclick = () => doExport(true); $('dl').onclick = () => doExport(false);
+  $('again').onclick = () => { $('stage').hidden = true; $('drop').hidden = false; cut = null; alpha = alphaAuto = null; setControls(false); setStatus('ממתין לתמונה.'); };
+  $('file').onchange = e => { const f = e.target.files && e.target.files[0]; if (f) processImage(f, f.name); e.target.value = ''; };
+  const drop = $('drop');
+  drop.addEventListener('dragover', e => { e.preventDefault(); drop.classList.add('over'); });
+  drop.addEventListener('dragleave', () => drop.classList.remove('over'));
+  drop.addEventListener('drop', e => { e.preventDefault(); drop.classList.remove('over'); const f = e.dataTransfer.files && e.dataTransfer.files[0]; if (f && /^image\//.test(f.type)) processImage(f, f.name); });
+  document.addEventListener('keydown', e => {
+    if (e.target && /INPUT|TEXTAREA/.test(e.target.tagName) && e.target.type !== 'range') return;
+    if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'z') { e.preventDefault(); undo(); }
+    else if (e.key === 'e' || e.key === 'ק') setMode('erase');
+    else if (e.key === 'r' || e.key === 'ר') setMode('restore');
+    else if (e.key === '[' || e.key === ']') { brush = Math.max(4, Math.min(200, brush + (e.key === ']' ? 6 : -6))); $('bs').value = brush; $('bsV').textContent = brush; updateCursorSize(); }
+  });
+  let rz = 0; window.addEventListener('resize', () => { clearTimeout(rz); rz = setTimeout(layout, 120); });
+
+  // ═══ קבלת תמונה מחלון הניהול ═══
+  let reqId = null, pickMode = false;
+  window.addEventListener('message', async ev => {
+    if (ev.origin !== location.origin || !ev.data || ev.data.type !== 'sp-cutout-src') return;
+    reqId = ev.data.reqId || null;
+    try {
+      let blob = ev.data.blob;
+      if (!blob && ev.data.url) {
+        setStatus('טוען את התמונה מהאתר…');
+        const res = await fetch(ev.data.url, { mode: 'cors' });
+        if (!res.ok) throw new Error('טעינת התמונה נכשלה (' + res.status + ')');
+        blob = await res.blob();
+      }
+      if (blob) processImage(blob, ev.data.name || 'car');
+      else { pickMode = true; if (!cut) setStatus(session ? 'המודל מוכן. <b>בחר את תמונת הרכב</b> — גרור אותה לכאן או לחץ "בחר תמונה".' : 'בחר את תמונת הרכב — גרור אותה לכאן או לחץ "בחר תמונה". המודל נטען ברקע.'); }
+    } catch (e) { setStatus('✕ ' + (e && e.message ? e.message : e) + ' — אפשר לגרור את התמונה ידנית.', 'err'); }
+  });
+  if (window.opener && !window.opener.closed) { try { window.opener.postMessage({ type: 'sp-cutout-ready' }, location.origin); } catch (e) {} }
+  // מתחילים להוריד את המודל מיד ברקע, כדי שיהיה מוכן כשהתמונה מגיעה
+  getSession().then(() => { if (!cut) setStatus('המודל מוכן. ' + (window.opener && !pickMode ? 'ממתין לתמונה מהניהול…' : '<b>בחר את תמונת הרכב</b> — גרור אותה לכאן או לחץ "בחר תמונה".')); progress(null); })
+    .catch(e => { progress(null); setStatus('✕ טעינת המודל נכשלה: ' + (e && e.message ? e.message : e) + '. בדוק חיבור לאינטרנט ורענן.', 'err'); });
+})();
+</script>
+</body>
+</html>

@@ -52,7 +52,7 @@
   const PT = { ev: 'חשמלי', erev: 'מאריך טווח', phev: 'פלאג-אין', hev: 'היברידי', mhev: 'היברידי קל', petrol: 'בנזין', diesel: 'דיזל' };
   const PT_AL = { electric: 'ev', bev: 'ev', 'חשמלי': 'ev', erev: 'erev', reev: 'erev', phev: 'phev', 'פלאג-אין': 'phev', hybrid: 'hev', hev: 'hev', 'היברידי': 'hev', mhev: 'mhev', 'היברידי קל': 'mhev', petrol: 'petrol', 'בנזין': 'petrol', diesel: 'diesel', 'דיזל': 'diesel' };
   function powertrain(c) {
-    if (c.powertrain) { const k = PT_AL[String(c.powertrain).trim().toLowerCase()] || PT_AL[String(c.powertrain).trim()]; if (k) return k; }
+    if (c.powertrain) { const r = String(c.powertrain).trim(), l = r.toLowerCase(); const k = PT[l] ? l : (PT_AL[l] || PT_AL[r]); if (k) return k; }
     const e = String(c.engine || ''), fuel = c.fuel_consumption != null && String(c.fuel_consumption).trim() !== '';
     if (/PHEV|פלאג/i.test(e)) return 'phev';
     if (/^\s*חשמלי/.test(e) && !fuel) return 'ev';
@@ -131,7 +131,58 @@
   const LINE_CAR = '<svg class="cx-line-car" viewBox="0 0 400 140" aria-hidden="true"><path d="M22 104h28M126 104h150M352 104h28"/><path d="M50 104c-12 0-20-6-20-15v-11c0-8 5-13 13-15l52-10 44-27c9-6 19-9 30-9h88c12 0 23 5 31 12l30 26 42 7c12 2 20 11 20 23v6c0 8-6 13-14 13h-16"/><path d="M126 104a38 38 0 0 0-76 0M352 104a38 38 0 0 0-76 0"/><circle cx="88" cy="104" r="27"/><circle cx="88" cy="104" r="15" class="soft"/><circle cx="314" cy="104" r="27"/><circle cx="314" cy="104" r="15" class="soft"/><path d="M141 51l28-17c7-4 14-6 22-6h22v23z" class="soft"/><path d="M224 28h40c9 0 17 3 23 9l15 14h-78z" class="soft"/><path d="M219 28v58M150 58h196" class="soft"/><path d="M12 132h376" class="dim"/></svg>';
   function frame(img, alt, eager) {
     if (!img) return '<div class="cp-frame is-line">' + LINE_CAR + '<span class="cp-note">תמונה רשמית תעלה בקרוב</span></div>';
-    return '<div class="cp-frame ' + (img.cut ? 'is-cut' : 'is-photo') + '"><img src="' + esc(thumb(img.src, 1600)) + '" alt="' + esc(alt) + '" width="1200" height="' + (img.cut ? 520 : 750) + '"' + (eager ? ' fetchpriority="high"' : ' loading="lazy"') + ' decoding="async"></div>';
+    return '<div class="cp-frame ' + (img.cut ? 'is-cut' : 'is-photo') + '"><img src="' + esc(thumb(img.src, 1600)) + '"' + (img.cut ? ' data-cut="' + esc(img.src) + '"' : '') + ' alt="' + esc(alt) + '" width="1200" height="' + (img.cut ? 520 : 750) + '"' + (eager ? ' fetchpriority="high"' : ' loading="lazy"') + ' decoding="async"></div>';
+  }
+  const photosOf = c => images(c).filter(im => !im.cut);
+  /* ── רכב ללא רקע על "הבמה": הצמיגים חייבים לשבת על הצל, גם כשבתחתית הקובץ יש שוליים שקופים או צל חלש
+     מהתמונה המקורית. מודדים פעם אחת לכל קובץ איפה השורה האטומה התחתונה (הצמיגים) ומורידים את התמונה בדיוק בזה. ── */
+  const CUT_CACHE = {};
+  function measureCut(src, cb) {
+    const hit = CUT_CACHE[src];
+    if (Array.isArray(hit)) { hit.push(cb); return; }
+    if (hit !== undefined) { cb(hit); return; }
+    CUT_CACHE[src] = [cb];
+    const done = f => { const l = CUT_CACHE[src]; CUT_CACHE[src] = f; (Array.isArray(l) ? l : []).forEach(fn => fn(f)); };
+    if (typeof Image === 'undefined') { done(0); return; }
+    const im = new Image(); im.crossOrigin = 'anonymous';
+    im.onload = () => {
+      let f = 0;
+      try {
+        const w = im.naturalWidth, h = im.naturalHeight, cv = document.createElement('canvas'); cv.width = w; cv.height = h;
+        const x = cv.getContext('2d', { willReadFrequently: true }); x.drawImage(im, 0, 0);
+        const d = x.getImageData(0, 0, w, h).data, need = Math.max(3, Math.round(w * 0.02));
+        for (let y = h - 1; y >= 0; y--) {
+          let n = 0; for (let k = 0; k < w; k++) if (d[(y * w + k) * 4 + 3] > 200 && ++n >= need) break;
+          if (n >= need) { f = (h - 1 - y) / h; break; }
+        }
+      } catch (e) { f = 0; }
+      done(Math.min(0.3, f));
+    };
+    im.onerror = () => done(0);
+    im.src = thumb(src, 360);
+  }
+  function fitCuts(scope) {
+    if (!scope || !scope.querySelectorAll) return;
+    Array.from(scope.querySelectorAll('.cp-frame.is-cut img[data-cut]')).forEach(img => {
+      if (img._fit) return; img._fit = true;
+      measureCut(img.getAttribute('data-cut'), f => { if (f > 0.002) img.style.setProperty('--cb', f.toFixed(4)); });
+    });
+  }
+  /* החלפת תמונה בתיבה בהנפשה. תמיד נשארת רק התמונה החדשה (גם בלחיצות מהירות), ומעבר מ/אל רכב ללא רקע
+     הוא דהייה ואז כניסה — כדי שהרכב השקוף לא יופיע לרגע מעל התמונה הקודמת. */
+  function swapFrame(box, html, dir, RM) {
+    const doc = box.ownerDocument;
+    while (box.children.length > 1) box.firstElementChild.remove();
+    const old = box.firstElementChild, tmp = doc.createElement('div'); tmp.innerHTML = html; const nu = tmp.firstElementChild;
+    clearTimeout(box._swapT);
+    if (RM || !old) { box.innerHTML = ''; box.appendChild(nu); fitCuts(box); return nu; }
+    const cutSwap = old.classList.contains('is-cut') || nu.classList.contains('is-cut');
+    old.classList.remove('in-r', 'in-l', 'is-late');
+    old.classList.add(cutSwap ? 'out-fade' : (dir > 0 ? 'out-l' : 'out-r'));
+    nu.classList.add(dir > 0 ? 'in-r' : 'in-l'); if (cutSwap) nu.classList.add('is-late');
+    box.appendChild(nu); fitCuts(box);
+    box._swapT = setTimeout(() => { Array.from(box.children).forEach(ch => { if (ch !== nu) ch.remove(); }); nu.classList.remove('in-r', 'in-l', 'is-late'); }, cutSwap ? 850 : 650);
+    return nu;
   }
 
   const ICO = {
@@ -139,6 +190,7 @@
     next: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>',
     share: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="M8.6 13.5l6.8 4M15.4 6.5l-6.8 4"/></svg>',
     mail: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3.5 6.5l8.5 6.5 8.5-6.5"/></svg>',
+    heart: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20.5s-7.5-4.6-9.2-9.4C1.6 7.6 3.9 4.5 7.2 4.5c2 0 3.6 1.1 4.8 2.8 1.2-1.7 2.8-2.8 4.8-2.8 3.3 0 5.6 3.1 4.4 6.6-1.7 4.8-9.2 9.4-9.2 9.4z"/></svg>',
     scale: '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v18M7 21h10M5 7h14M5 7l-3 7a3 3 0 0 0 6 0zM19 7l-3 7a3 3 0 0 0 6 0z"/></svg>'
   };
   const SITE = 'https://speedometer10.co.il';
@@ -190,13 +242,15 @@
           '<button type="button" class="cp-cta" data-cmp="' + esc(c.slug || c.id) + '" aria-pressed="false">' + ICO.scale + '<span>הוספה להשוואה</span>' + ICO.arrow + '</button>' +
         '</div>' +
       '</div></div>' +
+      /* מובייל: שורת הלשוניות נפרדת ונדבקת לראש המסך בגלילה (בדסקטופ היא בתוך הפס) */
+      '<div class="cp-subnav"><nav class="cp-nav" aria-label="עמודי הדגם"><a href="' + url + '" data-view="" aria-current="page">דגם</a>' + VIEWS.map(v => '<a href="' + url + '?view=' + v.id + '" data-view="' + v.id + '">' + esc(v.label) + '</a>').join('') + '</nav></div>' +
 
       /* במת התצוגה */
       '<section class="cp-show" id="cp-show" aria-label="' + esc(full) + '">' +
         '<div class="cp-trims-wrap"><div class="cp-trims" role="tablist" aria-label="רמות גימור">' +
           tabs.map((t, i) => '<button type="button" role="tab" class="cp-trim" data-trim="' + i + '" aria-selected="' + (i === ti) + '"' + (tabs.length < 2 ? ' tabindex="-1"' : '') + '>' + mix(t.name) + '</button>').join('') +
           '<i class="cp-trim-bar" aria-hidden="true"></i></div></div>' +
-        '<div class="cp-stage">' +
+        '<div class="cp-stage' + (main && !main.cut ? ' is-photo' : '') + '">' +
           '<h1 class="cp-title"><span class="cx-sr">' + esc(bn) + ' </span><span class="cp-title-in"><span class="cp-title-model">' + mix(c.model) + '</span> <span class="cp-title-trim">' + mix(trims[ti] ? trims[ti].name : (c.year || '')) + '</span></span></h1>' +
           '<div class="cp-car" id="cp-car">' + frame(main, full + (c.year ? ' ' + c.year : ''), true) + '</div>' +
           scoreBadge(c, url) +
@@ -205,7 +259,9 @@
         '<div class="cp-price">' + (p ? '<small>החל מ-</small><b class="cx-num" id="cp-price">' + p + '</b>' : '<small>מחיר טרם פורסם</small>') + '</div>' +
         '<dl class="cp-specs" id="cp-specs">' + specsHTML(m) + '</dl>' +
         sharePanel(c, full) +
-        (imgs.length > 1 ? '<div class="cp-strip" role="list" aria-label="תמונות הדגם">' + imgs.map((im, i) => '<button type="button" role="listitem" class="cp-thumb' + (im.cut ? ' is-cut' : '') + '" style="--i:' + i + '" data-img="' + i + '" aria-pressed="' + (i === 0) + '" aria-label="תמונה ' + (i + 1) + ' מתוך ' + imgs.length + '"><img src="' + esc(thumb(im.src, 280)) + '" alt="" loading="lazy" decoding="async"></button>').join('') + '</div>' : '') +
+        (imgs.length > 1 ? '<div class="cp-strip-wrap"><button type="button" class="cp-strip-arr is-prev" data-strip="-1" aria-label="תמונות קודמות">' + ICO.next + '</button>' +
+          '<div class="cp-strip" role="list" aria-label="תמונות הדגם">' + imgs.map((im, i) => '<button type="button" role="listitem" class="cp-thumb' + (im.cut ? ' is-cut' : '') + '" style="--i:' + i + '" data-img="' + i + '" aria-pressed="' + (i === 0) + '" aria-label="תמונה ' + (i + 1) + ' מתוך ' + imgs.length + '"><img src="' + esc(thumb(im.src, 280)) + '" alt="" loading="lazy" decoding="async" draggable="false"></button>').join('') + '</div>' +
+          '<button type="button" class="cp-strip-arr is-next" data-strip="1" aria-label="תמונות נוספות">' + ICO.next + '</button></div>' : '') +
       '</section>' +
 
       /* על הדגם — טקסט קצר ל-SEO ולקריאה */
@@ -213,6 +269,13 @@
         '<div class="cp-about-meta">' + [c.category, c.importer ? 'יבואן: ' + c.importer : '', c.country_of_origin ? 'ארץ ייצור: ' + c.country_of_origin : ''].filter(Boolean).map(x => '<span>' + esc(x) + '</span>').join('') + '</div></section>' : '') +
 
       '<div class="cp-view" id="cp-view" hidden></div>' +
+      /* פס פעולות תחתון — מובייל בלבד (08.11.2026): מחיר + שמירה + שיתוף + השוואה, תמיד בהישג האגודל */
+      '<div class="cp-dock" role="group" aria-label="פעולות מהירות">' +
+        '<div class="cp-dock-p"><small>' + mix(full) + '</small>' + (p ? '<b class="cx-num" id="cp-dock-price">' + p + '</b>' : '<b class="cp-dock-np">מחיר טרם פורסם</b>') + '</div>' +
+        '<button type="button" class="cp-dock-b" data-fav="' + esc(c.slug || c.id) + '" aria-pressed="false" aria-label="שמירה למועדפים: ' + esc(full) + '">' + ICO.heart + '</button>' +
+        '<button type="button" class="cp-dock-b" data-share="' + esc(SITE + url) + '" aria-label="שיתוף או העתקת קישור">' + ICO.share + '</button>' +
+        '<button type="button" class="cp-dock-cmp" data-dock-cmp="' + esc(c.slug || c.id) + '" aria-pressed="false">' + ICO.scale + '<span>השוואה</span></button>' +
+      '</div>' +
     '</div>';
   }
 
@@ -235,23 +298,38 @@
   const tqs = (v, m) => { const k = torqueKgm(v, m); return k == null ? null : fmt(+k) + ' קג״מ'; };
   function safetyLevel(m) { const n = num(m.safety_level); if (n != null) return n; const r = String(m.safety_rating || '').match(/(\d)\s*מתוך\s*8/); return r ? +r[1] : null; }
   function airbags(m) { const n = num(m.airbags); if (n != null) return n; const r = String(m.safety_rating || '').match(/(\d+)\s*כריות/); return r ? +r[1] : null; }
-  const hpOf = m => num(m.system_hp) != null ? num(m.system_hp) : num(m.horsepower);
-  const nmOf = m => num(m.system_nm) != null ? num(m.system_nm) : num(m.torque);
+  /* הספק מרבי (08.11.2026): משולב אם כתוב; ברכב חשמלי / מאריך טווח — המנוע החשמלי שמניע את הגלגלים
+     (מנוע הבנזין רק מייצר חשמל); אחרת — החזק מבין מנוע הבעירה והחשמלי. אותו היגיון למומנט. */
+  function hpOf(m) {
+    const s = num(m.system_hp); if (s != null) return s;
+    const pt = powertrain(m), h = num(m.horsepower), e = num(m.electric_hp);
+    if (pt === 'ev' || pt === 'erev') return e != null ? e : h;
+    if (h != null && e != null) return Math.max(h, e);
+    return h != null ? h : e;
+  }
+  function nmOf(m) {
+    const s = num(m.system_nm); if (s != null) return s;
+    const pt = powertrain(m), t = num(m.torque), e = num(m.electric_nm);
+    if (pt === 'ev' || pt === 'erev') return e != null ? e : t;
+    if (t != null && e != null) return Math.max(t, e);
+    return t != null ? t : e;
+  }
   const SPEC_SECTIONS = [
     { t: 'מנוע', rows: [
       ['סוג מנוע', m => m.engine || null],
       ['סוג הנעה', m => powertrain(m) ? PT[powertrain(m)] : null],
       ['תצורה / מס׳ בוכנות', m => m.engine_layout || null],
       ['נפח מנוע', m => U(m.displacement_cc, 'סמ״ק')],
-      ['הספק מרבי', m => at(U(m.horsepower, 'כ״ס'), m.hp_rpm)],
-      ['מומנט מרבי', m => at(tqs(m.torque, m), m.torque_rpm)],
+      [m => powertrain(m) === 'erev' ? 'הספק מנוע הבנזין (מחולל)' : /^(phev|hev|mhev)$/.test(powertrain(m) || '') ? 'הספק מנוע הבנזין' : 'הספק מרבי', m => (powertrain(m) === 'ev' ? null : at(U(m.horsepower, 'כ״ס'), m.hp_rpm))],
+      [m => /^(erev|phev|hev|mhev)$/.test(powertrain(m) || '') ? 'מומנט מנוע הבנזין' : 'מומנט מרבי', m => (powertrain(m) === 'ev' || (powertrain(m) === 'erev' && num(m.torque) != null && num(m.torque) === num(m.electric_nm)) ? null : at(tqs(m.torque, m), m.torque_rpm))],
       ['נפח מיכל דלק', m => U(m.fuel_tank, 'ליטר')]
     ] },
     { t: 'ביצועים', rows: [
+      [m => num(m.system_hp) != null ? 'הספק משולב' : 'הספק מרבי (לגלגלים)', m => U(hpOf(m), 'כ״ס')],
+      [m => num(m.system_nm) != null ? 'מומנט משולב' : 'מומנט מרבי (לגלגלים)', m => tqs(nmOf(m), m)],
       ['תאוצה 0-100 קמ״ש', m => U(m.acceleration_0_100, 'שניות')],
       ['מהירות מרבית', m => U(m.top_speed, 'קמ״ש')],
-      ['הספק משולב (בעירה + חשמל)', m => U(m.system_hp, 'כ״ס')],
-      ['מומנט משולב (בעירה + חשמל)', m => tqs(m.system_nm, m)]
+      ['מקדם גרר (Cd)', m => m.drag_coefficient != null && m.drag_coefficient !== '' ? String(m.drag_coefficient) : null]
     ] },
     { t: 'מערכת חשמלית והיברידית', rows: [
       ['הספק מנוע חשמלי', m => U(m.electric_hp, 'כ״ס')],
@@ -259,11 +337,13 @@
       ['תוספת הספק (מייל-היבריד)', m => U(m.boost_hp, 'כ״ס')],
       ['תוספת מומנט (מייל-היבריד)', m => tqs(m.boost_nm, m)],
       ['קיבולת סוללה', m => U(m.battery_capacity_kwh, 'קוט״ש')],
+      ['סוג תאי הסוללה', m => m.battery_chemistry || null],
       ['טווח נסיעה חשמלית', m => U(m.range_ev, 'ק״מ')],
+      ['טווח נסיעה כולל (חשמל + דלק)', m => U(m.range_total, 'ק״מ')],
       ['הספק טעינה AC', m => U(m.charge_ac_kw, 'קו״ט')],
-      ['זמן טעינה AC (0-100%)', m => m.charge_ac_time || null],
+      ['זמן טעינה AC', m => m.charge_ac_time ? timeText(m.charge_ac_time, 'ac') : null],
       ['הספק טעינה DC', m => U(m.charge_dc_kw, 'קו״ט')],
-      ['זמן טעינה DC', m => m.charge_dc_time || null]
+      ['זמן טעינה DC', m => m.charge_dc_time ? timeText(m.charge_dc_time, 'dc') : null]
     ] },
     { t: 'מערכת הינע', rows: [
       ['הנעה', m => m.drive_type || null],
@@ -279,7 +359,10 @@
       ['משקל עצמי', m => U(m.weight, 'ק״ג')],
       ['משקל כולל מורשה', m => U(m.gross_weight, 'ק״ג')],
       ['נפח תא מטען', m => U(m.trunk_volume, 'ליטר')],
+      ['נפח תא מטען מרבי (מושבים מקופלים)', m => U(m.trunk_volume_max, 'ליטר')],
+      ['תא מטען קדמי', m => U(m.frunk_volume, 'ליטר')],
       ['קוטר סיבוב', m => U(m.turning_circle, 'מטר')],
+      ['רדיוס סיבוב', m => U(m.turning_radius, 'מטר')],
       ['כושר גרירה (ללא / עם בלמים)', m => (num(m.towing_unbraked) != null && num(m.towing_braked) != null) ? fmt(m.towing_unbraked) + ' / ' + fmt(m.towing_braked) + ' ק״ג' : U(m.towing_braked || m.towing_capacity, 'ק״ג')],
       ['מושבים', m => U(m.seats, '')],
       ['צמיגים', m => m.tires || null]
@@ -314,6 +397,14 @@
     home: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 11l9-7 9 7M5 9.5V20h14V9.5"/></svg>',
     chev: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>'
   };
+  const rowLabel = (r, m) => typeof r[0] === 'function' ? r[0](m) : r[0];
+  /* זמן טעינה: מספר בלי יחידה במפרט — AC בשעות, DC בדקות (המוסכמה בכל מפרטי היבואנים) */
+  function timeText(t, kind) {
+    t = String(t || '').trim(); if (!t) return null;
+    if (/שע|דק|min|h\b|hour|:/i.test(t)) return t;
+    const u = kind === 'ac' ? ' שעות' : ' דק׳';
+    return t.split(/\s*[,;]\s*/).filter(Boolean).map(x => x.replace(/^(\d+(?:\.\d+)?)/, (n) => n + u).replace(/\(?\s*(\d{1,3})\s*%\s*[-–→]\s*(\d{1,3})\s*%\s*\)?/, '(מ-$1% עד $2%)')).join(' · ');
+  }
   function svVersions(c) { const t = trimsOf(c); return t.length ? t : [null]; }
   function svFacts(m) {
     const f = [
@@ -350,23 +441,69 @@
       '<b class="cx-num" dir="ltr">' + esc(r.v) + '<i>' + esc(r.u) + '</i></b></span>' +
       '<strong>' + esc(r.t) + '</strong><small>' + esc(r.s) + ' · ' + Math.round(r.p * 100) + '%</small></li>').join('');
   }
+  /* "מה ההבדל בין הגרסאות" (08.11.2026): רק השורות שהערך בהן שונה בין רמות הגימור, כולל מחיר — כל השאר זהה ולא חוזר על עצמו */
+  function svDiffHTML(c, ti) {
+    const ts = trimsOf(c); if (ts.length < 2) return '';
+    const ms = ts.map(t => specOf(c, t));
+    const out = [];
+    const pr = ms.map(m => price(m.price) || null);
+    if (pr.some(Boolean) && new Set(pr).size > 1) out.push(['מחיר', pr]);
+    SPEC_SECTIONS.forEach(sec => sec.rows.forEach(r => {
+      const vals = ms.map(m => { const v = r[1](m); return v == null || v === '' ? null : String(v).split('\n')[0]; });
+      if (vals.filter(Boolean).length && new Set(vals).size > 1) {
+        const mi = vals.findIndex(Boolean); out.push([rowLabel(r, ms[mi]), vals]);
+      }
+    }));
+    if (!out.length) return '';
+    const seen = new Set(), rows = out.filter(x => { const k = x[1].every(Boolean) ? x[1].join('|') : x[0] + '|' + x[1].join('|'); if (seen.has(k)) return false; seen.add(k); return true; });
+    return '<section class="sv-diff" aria-labelledby="sv-diff-h"><h3 class="sv-h" id="sv-diff-h">מה ההבדל בין הגרסאות <small>רק מה שמשתנה · ' + ts.length + ' גרסאות</small></h3>' +
+      '<div class="sv-diff-w" tabindex="0" role="region" aria-labelledby="sv-diff-h"><table><thead><tr><th scope="col"><span class="sv-vh">נתון</span></th>' +
+      ts.map((t, i) => '<th scope="col"' + (i === ti ? ' class="is-sel"' : '') + ' data-sv-dcol="' + i + '">' + mix(t.name) + '</th>').join('') + '</tr></thead><tbody>' +
+      rows.map(x => '<tr><th scope="row">' + esc(x[0]) + '</th>' + x[1].map((v, i) => '<td class="cx-num' + (i === ti ? ' is-sel' : '') + '" data-sv-dcol="' + i + '">' + (v == null ? '<span class="sv-na">—</span>' : esc(v)) + '</td>').join('') + '</tr>').join('') +
+      '</tbody></table></div></section>';
+  }
   function svAccHTML(m, open) {
     let n = 0;
     return SPEC_SECTIONS.map((sec, si) => {
-      const rows = sec.rows.map(r => { const v = r[1](m); if (v == null || v === '') return ''; const pr = String(v).split('\n'); return '<div class="sv-row' + (pr[0].length > 24 ? ' is-wide' : '') + '"><dt>' + esc(r[0]) + '</dt><dd>' + esc(pr[0]) + (pr[1] ? '<small>' + esc(pr[1]) + '</small>' : '') + '</dd></div>'; }).join('');
+      const rows = sec.rows.map(r => { const v = r[1](m); if (v == null || v === '') return ''; const pr = String(v).split('\n'); return '<div class="sv-row' + (pr[0].length > 24 ? ' is-wide' : '') + '"><dt>' + esc(rowLabel(r, m)) + '</dt><dd>' + esc(pr[0]) + (pr[1] ? '<small>' + esc(pr[1]) + '</small>' : '') + '</dd></div>'; }).join('');
       if (!rows) return '';
       const on = open ? open.indexOf(si) !== -1 : n++ === 0;
       return '<section class="sv-sec' + (on ? ' is-open' : '') + '"><h4><button type="button" data-sv-sec="' + si + '" aria-expanded="' + on + '" aria-controls="sv-sec-' + si + '">' + esc(sec.t) + SVI.chev + '</button></h4>' +
         '<div class="sv-sec-b" id="sv-sec-' + si + '"><dl>' + rows + '</dl></div></section>';
     }).join('');
   }
-  /* נתוני הגרף: גרסאות הדגם (2+) — אחרת דגמים מאותה קטגוריה במאגר */
-  function svSeries(c, cars, ti) {
-    const vs = svVersions(c);
-    if (vs.length > 1) return { mode: 'trims', title: 'השוואה בין הגרסאות', note: 'לפי נתוני היצרן', pts: vs.map((t, i) => ({ l: t.name, m: specOf(c, t), sel: i === ti })) };
-    const peers = (cars || []).filter(x => x.category && x.category === c.category);
-    if (peers.length > 1) return { mode: 'peers', title: 'מול המתחרים', note: 'באותה קטגוריה במאגר', pts: peers.map(x => ({ l: x.model, m: x === c || x.slug === c.slug ? specOf(c, vs[0]) : x, sel: x === c || x.slug === c.slug })) };
-    return null;
+  /* סגמנט: סוג המרכב מתוך הקטגוריה ("קרוסאובר חשמלי" ו"קרוסאובר" = אותו סגמנט) */
+  function segKey(cat) {
+    const t = String(cat || '').toLowerCase();
+    if (/קרוסאובר|crossover|suv|פנאי|שטח/.test(t)) return 'suv';
+    if (/סדאן|sedan|ליפטבק|liftback|פאסטבק/.test(t)) return 'sedan';
+    if (/סטיישן|wagon|estate/.test(t)) return 'wagon';
+    if (/מיני|עירוני|city/.test(t)) return 'city';
+    if (/הא?ט?צ'?בק|hatch/.test(t)) return 'hatch';
+    if (/טנדר|pickup|פיקאפ/.test(t)) return 'pickup';
+    if (/מיניוואן|mpv|van/.test(t)) return 'mpv';
+    return t.trim() || null;
+  }
+  const SEG_HE = { suv: 'קרוסאובר / SUV', sedan: 'סדאן', wagon: 'סטיישן', city: 'עירוני', hatch: 'האצ׳בק', pickup: 'טנדר', mpv: 'מיניוואן' };
+  /* מתחרים: אותו סגמנט, הקרובים ביותר במחיר (או בגודל כשאין מחיר) — עד 6, והדגם עצמו בגרסה שנבחרה */
+  function svPeers(c, cars, m) {
+    const k = segKey(c.category); if (!k) return [];
+    const me = c.slug || c.id, base = x => { const ts = trimsOf(x); return ts.length ? specOf(x, ts[0]) : x; };
+    const ref = num(m.price) || num(c.price), refL = num(m.length) || num(c.length);
+    const near = x => { const p = num(x.price), l = num(x.length); if (ref && p) return Math.abs(p - ref) / ref; if (refL && l) return Math.abs(l - refL) / refL + .5; return 9; };
+    const list = (cars || []).filter(x => (x.slug || x.id) !== me && !x.deleted && segKey(x.category) === k).sort((a, b) => near(a) - near(b)).slice(0, 6);
+    return list.map(x => ({ l: x.model, m: base(x), sel: false })).concat([{ l: c.model, m: m, sel: true }]);
+  }
+  /* נתוני הגרף: בין גרסאות הדגם, או מול המתחרים בסגמנט — הגולש בוחר (כשיש את שתי האפשרויות) */
+  function svSeries(c, cars, ti, mode) {
+    const vs = svVersions(c), m = specOf(c, vs[ti] || vs[0]);
+    const trimsOk = vs.length > 1, peers = svPeers(c, cars, m), peersOk = peers.length > 2;
+    const modes = [trimsOk ? 'trims' : null, peersOk ? 'peers' : null].filter(Boolean);
+    if (!modes.length) return null;
+    const md = modes.indexOf(mode) !== -1 ? mode : modes[0];
+    const seg = SEG_HE[segKey(c.category)] || c.category;
+    if (md === 'trims') return { mode: 'trims', modes, title: 'השוואה בין הגרסאות', note: 'לפי נתוני היצרן', pts: vs.map((t, i) => ({ l: t.name, m: specOf(c, t), sel: i === ti })) };
+    return { mode: 'peers', modes, title: 'מול המתחרים בסגמנט', note: seg + ' · הקרובים במחיר במאגר', pts: peers };
   }
   function svMetrics(se) { return SV_METRICS.filter(mt => se.pts.filter(p => mt.get(p.m) != null).length >= 2); }
   function svChartHTML(se, mk) {
@@ -386,10 +523,12 @@
     const line = pts.map((p, i) => (i ? 'L' : 'M') + X(i).toFixed(1) + ' ' + Y(p.v).toFixed(1)).join(' ');
     const area = line + ' L' + X(pts.length - 1).toFixed(1) + ' ' + (pt + ph) + ' L' + X(0).toFixed(1) + ' ' + (pt + ph) + ' Z';
     const si = Math.max(0, pts.findIndex(p => p.sel));
-    const xl = pts.map((p, i) => '<span class="sv-xl' + (p.sel ? ' is-sel' : '') + '" style="left:' + (X(i) / W * 100).toFixed(2) + '%">' + esc(p.l) + '</span>').join('');
+    const xl = pts.map((p, i) => { const xp = X(i) / W * 100; return '<span class="sv-xl' + (p.sel ? ' is-sel' : '') + '" style="left:' + xp.toFixed(2) + '%' + (xp < 14 ? ';transform:none' : xp > 86 ? ';transform:translateX(-100%)' : '') + '" title="' + esc(p.l) + '">' + esc(p.l) + '</span>'; }).join('');
     const dots = pts.map((p, i) => '<circle cx="' + X(i).toFixed(1) + '" cy="' + Y(p.v).toFixed(1) + '" r="5" class="sv-dot' + (p.sel ? ' is-sel' : '') + '"/>').join('');
     const hits = pts.map((p, i) => '<button type="button" class="sv-hit" data-sv-pt="' + i + '" ' + (se.mode === 'trims' ? 'data-sv-ver="' + se.pts.findIndex(q => q.l === p.l) + '" ' : '') + 'style="left:' + (X(i) / W * 100).toFixed(2) + '%" aria-label="' + esc(p.l + ': ' + f(p.v) + ' ' + mt.u) + '" data-x="' + (X(i) / W * 100).toFixed(2) + '" data-y="' + (Y(p.v) / H * 100).toFixed(2) + '" data-t="' + esc(f(p.v) + ' ' + mt.u) + '"></button>').join('');
-    return '<div class="sv-tabs" role="tablist" aria-label="מדד להשוואה">' + ms.map(x => '<button type="button" role="tab" data-sv-m="' + x.k + '" aria-selected="' + (x === mt) + '">' + esc(x.t) + '</button>').join('') + '</div>' +
+    const modeSw = se.modes && se.modes.length > 1 ? '<div class="sv-mode" role="group" aria-label="למה להשוות">' +
+      se.modes.map(x => '<button type="button" data-sv-mode="' + x + '" aria-pressed="' + (x === se.mode) + '">' + (x === 'trims' ? 'בין גרסאות הדגם' : 'מול מתחרים בסגמנט') + '</button>').join('') + '</div>' : '';
+    return modeSw + '<div class="sv-tabs" role="tablist" aria-label="מדד להשוואה">' + ms.map(x => '<button type="button" role="tab" data-sv-m="' + x.k + '" aria-selected="' + (x === mt) + '">' + esc(x.t) + '</button>').join('') + '</div>' +
       '<div class="sv-cbox"><div class="sv-plot"><svg viewBox="0 0 ' + W + ' ' + H + '" preserveAspectRatio="none" aria-hidden="true"><defs><linearGradient id="svA" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#e8001d" stop-opacity=".16"/><stop offset="1" stop-color="#e8001d" stop-opacity="0"/></linearGradient></defs>' + g +
         '<path d="' + area + '" class="sv-area"/><path d="' + line + '" class="sv-line" pathLength="1"/>' +
         '<line class="sv-vline" x1="' + X(si).toFixed(1) + '" x2="' + X(si).toFixed(1) + '" y1="' + (pt - 6) + '" y2="' + (pt + ph) + '"/>' + dots + '</svg>' +
@@ -401,7 +540,7 @@
     const bn = brandName(c.brand), url = '/car/' + encodeURIComponent(c.slug || c.id) + '/';
     const imgs = images(c), p = price(m.price) || price(c.price);
     const rs = svRings(m, ctx.cars);
-    const se = svSeries(c, ctx.cars, ti);
+    const se = svSeries(c, ctx.cars, ti, ctx.cmode);
     const chart = se ? svChartHTML(se, ctx.metric) : '';
     const sub = [vs[ti] && vs[ti].name, m.engine].filter(Boolean).join(' · ');
     return '<div class="sv" id="sv">' +
@@ -426,8 +565,8 @@
       '</div>' +
       '<div class="sv-bot' + (chart ? '' : ' is-solo') + '">' +
         '<div><h3 class="sv-h">מפרט טכני' + (vs[ti] ? ' <small id="sv-acc-ver">' + mix(vs[ti].name) + '</small>' : '') + '</h3><div class="sv-acc" id="sv-acc">' + svAccHTML(m, ctx.open) + '</div></div>' +
-        (chart ? '<div><h3 class="sv-h">' + esc(se.title) + ' <small>(' + esc(se.note) + ')</small></h3><div class="sv-chart" id="sv-chart">' + chart + '</div></div>' : '') +
-      '</div>' +
+        (chart ? '<div><h3 class="sv-h" id="sv-ch-h">' + esc(se.title) + ' <small>(' + esc(se.note) + ')</small></h3><div class="sv-chart" id="sv-chart">' + chart + '</div></div>' : '') +
+      '</div>' + svDiffHTML(c, ti) +
     '</div>';
   }
   function mountSpecs(el, c, ctx, onVersion) {
@@ -438,13 +577,18 @@
     if (el._svAC) el._svAC.abort(); const ac = new AbortController(); el._svAC = ac; const O = { signal: ac.signal };
     requestAnimationFrame(() => requestAnimationFrame(() => { const s = $('#sv'); if (s) s.classList.add('is-on'); }));
     function openList() { return $$('.sv-sec').map((s, i) => s.classList.contains('is-open') ? +s.querySelector('[data-sv-sec]').getAttribute('data-sv-sec') : -1).filter(i => i >= 0); }
-    function chart() { const se = svSeries(c, ctx.cars, ctx.ti), box = $('#sv-chart'); if (box && se) box.innerHTML = svChartHTML(se, ctx.metric); }
+    function chart() {
+      const se = svSeries(c, ctx.cars, ctx.ti, ctx.cmode), box = $('#sv-chart'); if (!box || !se) return;
+      box.innerHTML = svChartHTML(se, ctx.metric);
+      const h = $('#sv-ch-h'); if (h) h.innerHTML = esc(se.title) + ' <small>(' + esc(se.note) + ')</small>';
+    }
     function setVer(n) {
       n = Math.max(0, Math.min(vs.length - 1, n)); if (n === ctx.ti) return;
       ctx.ti = n; const m = specOf(c, vs[n]);
       const r = $('input[name="sv-ver"][value="' + n + '"]'); if (r) r.checked = true;
       const pill = $('#sv-pill'); if (pill) pill.innerHTML = '' + mix(vs[n].name) + '';
       const av = $('#sv-acc-ver'); if (av) av.innerHTML = '' + mix(vs[n].name) + '';
+      $$('[data-sv-dcol]').forEach(e => e.classList.toggle('is-sel', e.dataset.svDcol === String(n)));
       $('#sv-sub').innerHTML = '' + mix([vs[n].name, m.engine].filter(Boolean).join(' · ')) + '';
       const p = price(m.price) || price(c.price); $('#sv-price').innerHTML = p ? '<b class="cx-num">' + p + '</b><small>מחיר מחירון</small>' : '<b class="sv-np">מחיר טרם פורסם</b>';
       $('#sv-facts').innerHTML = svFacts(m);
@@ -462,6 +606,8 @@
     el.addEventListener('click', e => {
       const sb = e.target.closest('[data-sv-sec]');
       if (sb) { const s = sb.closest('.sv-sec'), on = !s.classList.contains('is-open'); s.classList.toggle('is-open', on); sb.setAttribute('aria-expanded', on); return; }
+      const cm = e.target.closest('[data-sv-mode]');
+      if (cm) { ctx.cmode = cm.getAttribute('data-sv-mode'); chart(); const nb = $('[data-sv-mode="' + ctx.cmode + '"]'); if (nb) nb.focus(); return; }
       const mb = e.target.closest('[data-sv-m]');
       if (mb) { ctx.metric = mb.getAttribute('data-sv-m'); chart(); const nb = $('[data-sv-m="' + ctx.metric + '"]'); if (nb) nb.focus(); return; }
       const vb = e.target.closest('[data-sv-ver]');
@@ -470,11 +616,8 @@
       if (tb) {
         const n = +tb.getAttribute('data-sv-img'); if (n === ii) return; const dir = n > ii ? 1 : -1; ii = n;
         $$('.sv-th').forEach((b, i) => b.setAttribute('aria-pressed', i === ii));
-        const box = $('#sv-media'); box.classList.remove('is-init'); const old = box.firstElementChild, tmp = el.ownerDocument.createElement('div');
-        tmp.innerHTML = frame(imgs[ii], brandName(c.brand) + ' ' + c.model, true); const nu = tmp.firstElementChild;
-        if (RM || !old) { box.innerHTML = ''; box.appendChild(nu); return; }
-        old.classList.add(dir > 0 ? 'out-l' : 'out-r'); nu.classList.add(dir > 0 ? 'in-r' : 'in-l'); box.appendChild(nu);
-        setTimeout(() => { if (old.parentNode) old.remove(); nu.classList.remove('in-r', 'in-l'); }, 650);
+        const box = $('#sv-media'); box.classList.remove('is-init');
+        swapFrame(box, frame(imgs[ii], brandName(c.brand) + ' ' + c.model, true), dir, RM);
       }
     }, O);
     /* ריחוף על נקודה בגרף מזיז את התווית */
@@ -551,14 +694,22 @@
       '<div class="gv-car-meta"><h3><a href="' + url + '">' + mix(bn + ' ' + x.model) + '</a></h3>' + (p ? '<small>החל מ-<b class="cx-num">' + p + '</b></small>' : '') + '</div>' +
       '<dl class="gv-stats">' + gvStats(x).map(s => '<div><dt>' + esc(s[0]) + '</dt><dd class="cx-num">' + esc(s[1]) + '</dd></div>').join('') + '</dl></article>';
   }
+  /* פריסה מוצדקת (08.11.2026): כל תמונה בפרופורציה המקורית שלה — בלי חיתוך ובלי הגדלה —
+     בשורות בגובה אחיד ורווח קטן וקבוע. היחס האמיתי נקבע כשהתמונה נטענת (--r). התמונה ללא הרקע לא כאן. */
+  function gvJust(imgs, full) {
+    return '<div class="gv-just gv-rv">' + imgs.map((im, i) =>
+      '<button type="button" class="gv-jt" style="--r:1.5" data-lb="' + i + '" aria-label="הגדלת תמונה ' + (i + 1) + ' מתוך ' + imgs.length + '">' +
+        '<img src="' + esc(thumb(im.src, 1400)) + '" alt="' + esc(full) + ' — תמונה ' + (i + 1) + '"' + (i < 4 ? '' : ' loading="lazy"') + ' decoding="async">' +
+        '<span class="gv-zoom" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/></svg></span></button>').join('') + '</div>';
+  }
   function galleryView(c, ctx) {
-    const bn = brandName(c.brand), full = bn + ' ' + c.model, all = images(c), imgs = all.slice(0, GV_MAX);
+    const bn = brandName(c.brand), full = bn + ' ' + c.model, imgs = photosOf(c).slice(0, GV_MAX);
     const o = gvOthers(c, ctx.cars);
     const pts = []; o.list.forEach(x => { const p = powertrain(x); if (p && pts.indexOf(p) === -1) pts.push(p); });
     return '<div class="gv" id="gv">' +
       '<header class="gv-head gv-rv"><h2>גלריית התמונות של ' + mix(full) + '</h2>' +
         (imgs.length ? '<p class="cx-num">' + imgs.length + ' תמונות · לחיצה על תמונה לתצוגה מלאה</p>' : '') + '</header>' +
-      (imgs.length ? '<div class="gv-grid">' + gvGrid(imgs, full) + '</div>'
+      (imgs.length ? gvJust(imgs, full)
         : '<div class="cp-empty">' + LINE_CAR + '<p>התמונות של הדגם יעלו בקרוב.</p></div>') +
       (o.list.length ? '<section class="gv-more gv-rv" aria-label="דגמים נוספים">' +
         '<div class="gv-more-head"><h2>' + (o.kind === 'brand' ? 'דגמים נוספים של ' + mix(bn) + '' : 'דגמים נוספים מאותה קטגוריה') + '</h2>' +
@@ -578,6 +729,11 @@
     const rv = $$('.gv-rv');
     if (RM || !('IntersectionObserver' in win)) rv.forEach(r => r.classList.add('in'));
     else { const io = new win.IntersectionObserver(es => es.forEach(e => { if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); } }), { rootMargin: '0px 0px -8% 0px', threshold: .08 }); rv.forEach(r => io.observe(r)); ac.signal.addEventListener('abort', () => io.disconnect()); }
+    /* היחס האמיתי של כל תמונה (פריסה מוצדקת בלי חיתוך) */
+    $$('.gv-jt img').forEach(im => {
+      const set = () => { if (im.naturalWidth && im.naturalHeight) im.parentElement.style.setProperty('--r', (im.naturalWidth / im.naturalHeight).toFixed(4)); };
+      if (im.complete) set(); else im.addEventListener('load', set, Object.assign({ once: true }, O));
+    });
     /* סליידרים קטנים */
     function slide(sl, dir) {
       const tr = sl.querySelector('.gv-track'), n = tr.children.length, w = tr.clientWidth;
@@ -675,16 +831,40 @@
     const d = t.match(/(\d+)\s*(דקות|דק['׳]?|min)/i); if (d) { m += +d[1]; ok = true; }
     return ok ? m : null;
   }
+  /* טעינה (08.11.2026): לכל גרסה — שורת AC ושורת DC, עם "סוללה": ירוק = טווח הטעינה, אפור = מה שלא בטווח.
+     טווח האחוזים רק כשכתוב במפרט (למשל 10%-80%); AC בלי טווח = טעינה מלאה 0%-100%. גרסאות זהות מאוחדות. */
+  function chargeRow(kind, kw, t) {
+    const first = String(t || '').split(/[,;\n]/)[0].trim();
+    if (!first) return num(kw) ? { k: kind, t: (kind === 'ac' ? 'טעינה ביתית (AC)' : 'טעינה מהירה (DC)'), kw: null, v: 'עד ' + fmt(num(kw)) + ' קו״ט', a: null, b: null, nt: 1 } : null;
+    const r = first.match(/(\d{1,3})\s*%\s*[-–→]\s*(\d{1,3})\s*%/);
+    const a = r ? Math.min(100, +r[1]) : (kind === 'ac' ? 0 : null), b = r ? Math.min(100, +r[2]) : (kind === 'ac' ? 100 : null);
+    const v = timeText(first.replace(/\(?\s*\d{1,3}\s*%\s*[-–→]\s*\d{1,3}\s*%\s*\)?/, '').trim() || first, kind);
+    return { k: kind, t: (kind === 'ac' ? 'טעינה ביתית (AC)' : 'טעינה מהירה (DC)'), kw: num(kw), v, a, b };
+  }
   function eqCharge(c) {
     const vs = trimsOf(c).length ? trimsOf(c).map(t => specOf(c, t)) : [c];
-    const m = vs.find(x => x.charge_ac_time || x.charge_dc_time) || vs.find(x => num(x.battery_capacity_kwh)); if (!m) return null;
-    const rows = [];
-    if (m.charge_dc_time) rows.push({ t: 'טעינה מהירה DC' + (num(m.charge_dc_kw) ? ' עד ' + fmt(m.charge_dc_kw) + ' קו״ט' : ''), v: m.charge_dc_time, min: toMinutes(m.charge_dc_time) });
-    if (m.charge_ac_time) rows.push({ t: 'טעינה ביתית AC' + (num(m.charge_ac_kw) ? ' עד ' + fmt(m.charge_ac_kw) + ' קו״ט' : ''), v: m.charge_ac_time, min: toMinutes(m.charge_ac_time) });
-    if (!rows.length) return null;
-    const mx = Math.max.apply(null, rows.map(r => r.min || 0)) || 1;
-    rows.forEach(r => { r.p = r.min ? Math.max(.08, r.min / mx) : null; });
-    return { kwh: num(m.battery_capacity_kwh), name: m._trim && trimsOf(c).length > 1 ? m._trim.name : null, rows };
+    const groups = [];
+    vs.forEach(m => {
+      const rows = [chargeRow('dc', m.charge_dc_kw, m.charge_dc_time), chargeRow('ac', m.charge_ac_kw, m.charge_ac_time)].filter(Boolean);
+      if (!rows.some(r => !r.nt)) return;
+      const key = JSON.stringify([num(m.battery_capacity_kwh), rows]);
+      const g = groups.find(x => x.key === key);
+      if (g) g.names.push(m._trim ? m._trim.name : null); else groups.push({ key, kwh: num(m.battery_capacity_kwh), rows, names: [m._trim ? m._trim.name : null] });
+    });
+    return groups.length ? { groups, multi: vs.length > 1 } : null;
+  }
+  function eqChargeHTML(ch) {
+    const one = r => {
+      const has = r.a != null && r.b != null;
+      return '<div class="eq-chg">' +
+        '<div class="eq-chg-top"><span>' + esc(r.t) + (r.kw ? ' <small>· עד ' + esc(fmt(r.kw)) + ' קו״ט</small>' : '') + '</span><b class="cx-num">' + esc(r.v) + '</b></div>' +
+        (r.nt ? '<p class="eq-chg-nt">זמן הטעינה לא פורסם במפרט</p>' : '<div class="eq-batt' + (has ? '' : ' is-full') + '" style="--a:' + (has ? r.a : 0) + ';--b:' + (has ? r.b : 100) + '" role="img" aria-label="' + esc(has ? 'טעינה מ-' + r.a + '% עד ' + r.b + '% ב-' + r.v : 'זמן טעינה ' + r.v) + '"><i></i></div>') +
+        (has ? '<div class="eq-batt-sc cx-num" dir="ltr">' + [r.a, r.b].map(x => '<small style="left:' + x + '%;transform:translateX(' + (x <= 3 ? 0 : x >= 97 ? -100 : -50) + '%)">' + x + '%</small>').join('') + '</div>' : '') +
+      '</div>';
+    };
+    return ch.groups.map(g => '<div class="eq-chg-g">' +
+      ((ch.multi && g.names.filter(Boolean).length) || g.kwh ? '<h4>' + (g.kwh ? 'סוללה ' + esc(fmt(g.kwh)) + ' קוט״ש' : '') + (ch.multi && g.names.filter(Boolean).length ? ' <small>' + g.names.filter(Boolean).map(mix).join(' · ') + '</small>' : '') + '</h4>' : '') +
+      g.rows.map(one).join('') + '</div>').join('');
   }
   const EQ_SLOTS = [ // מיקום כרטיס (אחוזים מהבמה) + נקודת עגינה על הרכב
     { x: 81, y: 31, ax: 76, ay: 66 }, { x: 5, y: 9, ax: 44, ay: 14 }, { x: 3, y: 57, ax: 18, ay: 64 }, { x: 80, y: 68, ax: 54, ay: 93 }
@@ -692,6 +872,7 @@
   function equipmentView(c, ctx) {
     const bn = brandName(c.brand), full = bn + ' ' + c.model, d = eqData(c), imgs = images(c).slice(0, 5);
     const colors = (Array.isArray(c.colors) ? c.colors : []).slice(0, 10);
+    const cimg = c.color_images && typeof c.color_images === 'object' ? c.color_images : {};
     const ch = eqCharge(c), stats = gvStats(c), sub = [c.category, c.year, d.base ? 'רמת אבזור ' + d.base : null].filter(Boolean).join(' · ');
     const hero = d.hl.slice(0, 4), rest = d.hl.slice(4);
     const card = (h, i, cls) => '<figure class="eq-call ' + (cls || '') + '" data-call="' + i + '"' + (cls ? '' : ' style="--x:' + EQ_SLOTS[i].x + '%;--y:' + EQ_SLOTS[i].y + '%"') + '>' +
@@ -702,7 +883,11 @@
     return '<div class="eq" id="eq">' +
       '<section class="eq-hero" aria-label="אבזור בולט">' +
         '<div class="eq-id"><h2><small>' + mix(bn) + '</small>' + mix(c.model) + '</h2>' + (sub ? '<p>' + esc(sub) + '</p>' : '') +
-          (colors.length ? '<ul class="eq-colors" aria-label="צבעים">' + colors.map(n => { const s = swatch(n); return '<li title="' + esc(n) + '"><span' + (s ? ' style="--sw:' + s + '"' : ' class="is-unknown"') + '></span><em>' + esc(n) + '</em></li>'; }).join('') + '</ul>' : '') + '</div>' +
+          (colors.length ? '<ul class="eq-colors" aria-label="צבעים">' + colors.map(n => {
+              const s = swatch(n), has = !!(cimg[n]);
+              const dot = '<span' + (s ? ' style="--sw:' + s + '"' : ' class="is-unknown"') + '></span><em>' + esc(n) + '</em>';
+              return '<li title="' + esc(n) + '">' + (has ? '<button type="button" class="eq-color" data-eq-color="' + esc(n) + '" aria-pressed="false" aria-label="הצגת הרכב בצבע ' + esc(n) + '">' + dot + '</button>' : dot) + '</li>';
+            }).join('') + '</ul>' + (Object.keys(cimg).length ? '<p class="eq-color-name" id="eq-color-name" aria-live="polite">לחצו על צבע כדי לראות את הרכב בצבע הזה</p>' : '') : '') + '</div>' +
         '<span class="eq-ghost" aria-hidden="true" dir="auto" style="--n:' + Math.max(6, String(c.model).length) + '">' + esc(c.model) + '</span>' +
         '<div class="eq-stage"><div class="eq-floor" aria-hidden="true"></div><div class="eq-car" id="eq-car">' + frame(imgs[0] || null, full, true) + '</div>' +
           hero.map((h, i) => '<span class="eq-dot" data-dot="' + i + '" style="--ax:' + EQ_SLOTS[i].ax + '%;--ay:' + EQ_SLOTS[i].ay + '%"><i class="cx-num">' + (i + 1) + '</i></span>').join('') + '</div>' +
@@ -714,9 +899,8 @@
         (stats.length ? '<dl class="gv-stats eq-stats">' + stats.map(s => '<div><dt>' + esc(s[0]) + '</dt><dd class="cx-num">' + esc(s[1]) + '</dd></div>').join('') + '</dl>' : '') +
       '</div>' +
       (ch || c.description || rest.length ? '<div class="eq-cards' + (ch && c.description ? '' : ' is-one') + '">' +
-        (ch ? '<section class="eq-card eq-charge"><h3>' + (ch.kwh ? 'טעינת סוללה ' + esc(fmt(ch.kwh)) + ' קוט״ש' : 'זמני טעינה') + (ch.name ? ' <small>' + mix(ch.name) + '</small>' : '') + '</h3>' +
-          ch.rows.map(r => '<div class="eq-bar"><span>' + esc(r.t) + '</span><div class="eq-bar-row"><i' + (r.p ? ' style="--p:' + r.p.toFixed(3) + '"' : ' class="is-na"') + '></i><b class="cx-num">' + esc(r.v) + '</b></div></div>').join('') +
-          '<p class="eq-note">לפי נתוני היצרן. זמן הטעינה בפועל תלוי בעמדה, בטמפרטורה ובמצב הסוללה.</p></section>' : '') +
+        (ch ? '<section class="eq-card eq-charge"><h3>זמני טעינה</h3>' + eqChargeHTML(ch) +
+          '<p class="eq-note"><span class="eq-key is-on"></span>טווח הטעינה <span class="eq-key"></span>מחוץ לטווח · לפי נתוני היצרן. בפועל תלוי בעמדה, בטמפרטורה ובמצב הסוללה.</p></section>' : '') +
         (c.description ? '<section class="eq-card eq-over"><h3>סקירה</h3><p>' + esc(c.description) + '</p></section>' : '') +
       '</div>' : '') +
       (rest.length ? '<div class="eq-more-calls">' + rest.map((h, i) => card(h, i + 4, 'is-flat')).join('') + '</div>' : '') +
@@ -759,21 +943,29 @@
     function hi(i, on) { [$('[data-call="' + i + '"]'), $('[data-dot="' + i + '"]'), $('[data-ln="' + i + '"]')].forEach(n => n && n.classList.toggle('is-hi', on)); }
     el.addEventListener('pointerover', e => { const t = e.target.closest('[data-call],[data-dot]'); if (t) hi(t.getAttribute('data-call') || t.getAttribute('data-dot'), true); }, O);
     el.addEventListener('pointerout', e => { const t = e.target.closest('[data-call],[data-dot]'); if (t) hi(t.getAttribute('data-call') || t.getAttribute('data-dot'), false); }, O);
+    function clearColor() { $$('[data-eq-color]').forEach(b => b.setAttribute('aria-pressed', 'false')); const lab = $('#eq-color-name'); if (lab) lab.textContent = 'לחצו על צבע כדי לראות את הרכב בצבע הזה'; }
     function setImg(n) {
       if (imgs.length < 2) return; n = (n + imgs.length) % imgs.length; if (n === ii) return;
       const dir = n > ii ? 1 : -1; ii = n;
       $$('.eq-th').forEach((b, k) => b.setAttribute('aria-pressed', k === ii));
       const nEl = $('#eq-imgn'); if (nEl) nEl.textContent = (ii + 1) + ' / ' + imgs.length;
-      const box = $('#eq-car'), old = box.firstElementChild, tmp = doc.createElement('div'); tmp.innerHTML = frame(imgs[ii], full, true); const nu = tmp.firstElementChild;
-      if (RM || !old) { box.innerHTML = ''; box.appendChild(nu); return; }
-      old.classList.add(dir > 0 ? 'out-l' : 'out-r'); nu.classList.add(dir > 0 ? 'in-r' : 'in-l'); box.appendChild(nu);
-      setTimeout(() => { if (old.parentNode) old.remove(); nu.classList.remove('in-r', 'in-l'); }, 650);
+      swapFrame($('#eq-car'), frame(imgs[ii], full, true), dir, RM);
       /* נקודות העגינה מתאימות רק לתמונת הצד של הרכב — בתמונות אחרות מוסתרות */
       el.querySelector('.eq-hero').classList.toggle('is-alt', ii !== 0);
     }
     el.addEventListener('click', e => {
-      const s = e.target.closest('[data-eq-img]'); if (s) { setImg(ii + +s.getAttribute('data-eq-img')); return; }
-      const t = e.target.closest('[data-eq-th]'); if (t) { setImg(+t.getAttribute('data-eq-th')); return; }
+      const s = e.target.closest('[data-eq-img]'); if (s) { setImg(ii + +s.getAttribute('data-eq-img')); clearColor(); return; }
+      const t = e.target.closest('[data-eq-th]'); if (t) { setImg(+t.getAttribute('data-eq-th')); clearColor(); return; }
+      const cb = e.target.closest('[data-eq-color]');
+      if (cb) {
+        const n = cb.getAttribute('data-eq-color'), url = (c.color_images || {})[n]; if (!url) return;
+        const on = cb.getAttribute('aria-pressed') === 'true';
+        $$('[data-eq-color]').forEach(b => b.setAttribute('aria-pressed', b === cb && !on));
+        swapFrame($('#eq-car'), frame(on ? imgs[ii] : { src: url, cut: true }, full + (on ? '' : ' — ' + n), true), 1, RM);
+        const lab = $('#eq-color-name'); if (lab) lab.textContent = on ? 'לחצו על צבע כדי לראות את הרכב בצבע הזה' : 'צבע: ' + n;
+        el.querySelector('.eq-hero').classList.toggle('is-alt', on ? ii !== 0 : false);
+        return;
+      }
       const tb = e.target.closest('[data-eq-tab]');
       if (tb) {
         const i = tb.getAttribute('data-eq-tab');
@@ -958,6 +1150,7 @@
       const m = merged(c, trims[ti]);
       const tt = $('.cp-title-trim'); tt.classList.remove('swap'); void tt.offsetWidth; tt.innerHTML = '' + mix(trims[ti].name) + ''; tt.classList.add('swap'); fitTitle();
       const pe = $('#cp-price'); countTo(pe, num(m.price) || num(c.price));
+      const dp = $('#cp-dock-price'); if (dp) dp.textContent = price(m.price) || price(c.price) || dp.textContent;
       /* ששת הנתונים מתגלגלים */
       const next = sixSpecs(m);
       $$('.cp-spec').forEach((el, i) => {
@@ -971,6 +1164,8 @@
       });
       /* הרכב נוסע קצת לכיוון החדש */
       const car = $('#cp-car'); car.classList.remove('nudge', 'nudge-r'); void car.offsetWidth; car.classList.add(dir > 0 ? 'nudge' : 'nudge-r');
+      /* הרכב שבצד מתחלף יחד עם רמת הגימור: יוצא ונכנס מחדש */
+      const pk = $('.cp-peek-img'); if (pk && !RM) { pk.classList.remove('swap', 'swap-r'); void pk.offsetWidth; pk.classList.add(dir > 0 ? 'swap' : 'swap-r'); }
     }
     $$('.cp-trim').forEach(b => b.addEventListener('click', () => setTrim(+b.getAttribute('data-trim'))));
     const nx = $('[data-trim-next]'); if (nx) nx.addEventListener('click', () => setTrim(ti + 1));
@@ -982,39 +1177,78 @@
       n = (n + imgs.length) % imgs.length; if (n === ii) return;
       const dir = n > ii ? 1 : -1; ii = n;
       $$('.cp-thumb').forEach((b, i) => b.setAttribute('aria-pressed', i === ii));
-      const car = $('#cp-car'), old = car.firstElementChild;
-      const tmp = doc.createElement('div'); tmp.innerHTML = frame(imgs[ii], full, true); const nu = tmp.firstElementChild;
-      if (RM || !old) { car.innerHTML = ''; car.appendChild(nu); return; }
-      old.classList.add(dir > 0 ? 'out-l' : 'out-r');
-      nu.classList.add(dir > 0 ? 'in-r' : 'in-l');
-      car.appendChild(nu);
-      setTimeout(() => { if (old.parentNode) old.remove(); nu.classList.remove('in-r', 'in-l'); }, 650);
-      const th = $$('.cp-thumb')[ii]; if (th) th.scrollIntoView({ block: 'nearest', inline: 'center', behavior: RM ? 'auto' : 'smooth' });
+      const car = $('#cp-car');
+      swapFrame(car, frame(imgs[ii], full, true), dir, RM);
+      $('.cp-stage').classList.toggle('is-photo', !imgs[ii].cut);
+      const th = $$('.cp-thumb')[ii], sp = $('.cp-strip');
+      if (th && sp) { const sr = sp.getBoundingClientRect(), tr = th.getBoundingClientRect(); sp.scrollBy({ left: (tr.left + tr.width / 2) - (sr.left + sr.width / 2), behavior: RM ? 'auto' : 'smooth' }); }
     }
     $$('.cp-thumb').forEach(b => b.addEventListener('click', () => setImg(+b.getAttribute('data-img'))));
     /* החלקה על הרכב במובייל */
     let x0 = null; const carEl = $('#cp-car');
-    carEl.addEventListener('pointerdown', e => { x0 = e.clientX; });
-    carEl.addEventListener('pointerup', e => { if (x0 == null) return; const dx = e.clientX - x0; x0 = null; if (Math.abs(dx) > 45 && imgs.length > 1) setImg(ii + (dx < 0 ? 1 : -1)); });
+    let swiped = false;
+    carEl.addEventListener('pointerdown', e => { x0 = e.clientX; swiped = false; });
+    carEl.addEventListener('pointerup', e => { if (x0 == null) return; const dx = e.clientX - x0; x0 = null; if (Math.abs(dx) > 45 && imgs.length > 1) { swiped = true; setImg(ii + (dx < 0 ? 1 : -1)); } });
+    /* לחיצה על תמונה (לא רכב ללא רקע) — פותחת אותה בגודל מלא */
+    carEl.addEventListener('click', () => { if (swiped || !imgs[ii] || imgs[ii].cut) return; const ph = photosOf(c); openLightbox(ph, Math.max(0, ph.findIndex(p => p.src === imgs[ii].src))); });
+    fitCuts(rootEl);
+    /* פס התמונות: חצים, גלגלת וגרירה — בלי צורך ללחוץ על התמונה בקצה כדי שיזוז */
+    const strip = $('.cp-strip');
+    if (strip) {
+      const wrap = strip.parentElement, pv = wrap.querySelector('[data-strip="-1"]'), nx2 = wrap.querySelector('[data-strip="1"]');
+      const rtl = () => getComputedStyle(strip).direction === 'rtl';
+      const upd = () => {
+        const max = strip.scrollWidth - strip.clientWidth, pos = Math.abs(strip.scrollLeft), over = max > 4;
+        wrap.classList.toggle('is-over', over);
+        if (pv) pv.disabled = !over || pos <= 2; if (nx2) nx2.disabled = !over || pos >= max - 2;
+      };
+      const step = d => strip.scrollBy({ left: (rtl() ? -1 : 1) * d * strip.clientWidth * 0.8, behavior: RM ? 'auto' : 'smooth' });
+      if (pv) pv.addEventListener('click', () => step(-1));
+      if (nx2) nx2.addEventListener('click', () => step(1));
+      strip.addEventListener('scroll', upd, { passive: true }); win.addEventListener('resize', upd); upd();
+      strip.addEventListener('wheel', e => { if (Math.abs(e.deltaY) <= Math.abs(e.deltaX) || strip.scrollWidth <= strip.clientWidth) return; e.preventDefault(); strip.scrollBy({ left: (rtl() ? -1 : 1) * e.deltaY, behavior: 'auto' }); }, { passive: false });
+      let dx0 = null, sl0 = 0, dragged = false;
+      strip.addEventListener('pointerdown', e => { if (e.pointerType !== 'mouse') return; dx0 = e.clientX; sl0 = strip.scrollLeft; dragged = false; });
+      win.addEventListener('pointermove', e => { if (dx0 == null) return; const d = e.clientX - dx0; if (Math.abs(d) > 6) { dragged = true; strip.classList.add('is-drag'); } if (dragged) strip.scrollLeft = sl0 - d; });
+      win.addEventListener('pointerup', () => { dx0 = null; setTimeout(() => strip.classList.remove('is-drag'), 0); });
+      strip.addEventListener('click', e => { if (dragged) { e.stopPropagation(); e.preventDefault(); dragged = false; } }, true);
+    }
     /* הטיה עדינה של הרכב עם העכבר */
     const stage = $('.cp-stage');
     if (!RM) stage.addEventListener('pointermove', e => { if (e.pointerType !== 'mouse') return; const r = stage.getBoundingClientRect(), mx = (e.clientX - r.left) / r.width - .5; carEl.style.translate = (mx * -14).toFixed(1) + 'px 0'; $('.cp-title').style.translate = (mx * 18).toFixed(1) + 'px 0'; });
 
     /* שיתוף */
-    const sh = $('[data-share]');
-    if (sh) sh.addEventListener('click', () => {
+    $$('[data-share]').forEach(sh => sh.addEventListener('click', () => {
       const u = sh.getAttribute('data-share');
       if (navigator.share) navigator.share({ title: doc.title, url: u }).catch(() => {});
       else if (navigator.clipboard) navigator.clipboard.writeText(u).then(() => root.SPCars && root.SPCars.toast('הקישור הועתק'), () => win.prompt('העתיקו את הקישור:', u));
       else win.prompt('העתיקו את הקישור:', u);
-    });
+    }));
 
+    /* פס הפעולות (מובייל): לחיצה ראשונה מוסיפה להשוואה, לחיצה כשהדגם כבר בהשוואה פותחת אותה */
+    const dockCmp = $('[data-dock-cmp]');
+    if (dockCmp) {
+      const slug = dockCmp.getAttribute('data-dock-cmp');
+      const upd = () => { const S = root.SPCars; if (!S || !S.Compare) return; const on = S.Compare.has(slug), n = S.Compare.list.length;
+        dockCmp.setAttribute('aria-pressed', on); dockCmp.querySelector('span').textContent = on ? (n > 1 ? 'להשוואה (' + n + ')' : 'בהשוואה') : 'השוואה';
+        dockCmp.setAttribute('aria-label', on ? 'פתיחת ההשוואה (' + n + ' דגמים)' : 'הוספה להשוואה: ' + full); };
+      dockCmp.addEventListener('click', e => { e.preventDefault(); e.stopPropagation(); const S = root.SPCars; if (!S || !S.Compare) return;
+        if (S.Compare.has(slug)) { S.openCompare(); return; }
+        if (S.Compare.toggle(slug)) S.toast(S.Compare.list.length > 1 ? 'נוסף להשוואה · הקישו שוב כדי להשוות' : 'נוסף להשוואה · הוסיפו דגם נוסף מהמאגר'); upd(); });
+      doc.addEventListener('sp:cmp', upd); setTimeout(upd, 0);
+    }
+    /* הלשונית הפעילה תמיד גלויה בשורה הנגללת (מובייל) */
+    function navCenter() {
+      $$('.cp-subnav .cp-nav').forEach(nv => { const a = nv.querySelector('[aria-current]'); if (!a || nv.scrollWidth <= nv.clientWidth) return;
+        const r = a.getBoundingClientRect(), n = nv.getBoundingClientRect(); nv.scrollBy({ left: (r.left + r.width / 2) - (n.left + n.width / 2), behavior: RM ? 'auto' : 'smooth' }); });
+    }
     /* עמודי המשנה: ?view=specs|gallery|equipment|review */
     const viewEl = $('#cp-view');
     function showView(id, push) {
       const valid = VIEWS.some(v => v.id === id);
       if (push) { const u = new URL(location.href); if (valid) u.searchParams.set('view', id); else u.searchParams.delete('view'); history.pushState({ view: id }, '', u.pathname + u.search); }
       $$('.cp-nav a').forEach(a => { const on = a.getAttribute('data-view') === (valid ? id : ''); if (on) a.setAttribute('aria-current', 'page'); else a.removeAttribute('aria-current'); });
+      navCenter();
       rootEl.querySelector('.cp').classList.toggle('is-view', valid);
       if (!valid) { viewEl.hidden = true; viewEl.innerHTML = ''; doc.title = doc.title.replace(/^[^|]+\| /, ''); placeTrims(false); return; }
       const sctx = { ti: ti, cars: opts.cars || [], metric: null, open: null };
@@ -1022,6 +1256,7 @@
       if (id === 'specs') mountSpecs(viewEl, c, sctx, n => setTrim(n));
       if (id === 'gallery') mountGallery(viewEl, c);
       if (id === 'equipment') mountEquipment(viewEl, c);
+      fitCuts(viewEl);
       if (id === 'review') {
         if (reviewCache !== undefined || !opts.loadReview) { sctx.review = reviewCache || null; viewEl.innerHTML = viewHTML(id, c, sctx); mountReview(viewEl, c, sctx.cars); }
         else {
@@ -1045,26 +1280,61 @@
       const v = e.target.closest('[data-view]'); if (!v || e.metaKey || e.ctrlKey) return;
       e.preventDefault(); showView(v.getAttribute('data-view'), true);
     });
-    win.addEventListener('popstate', () => showView(new URLSearchParams(location.search).get('view') || '', false));
+    let lbSkip = 0; // הלייטבוקס מוסיף שלב בהיסטוריה; החזרה ממנו לא אמורה לבנות מחדש את העמוד
+    win.addEventListener('popstate', () => { if (lbSkip) { lbSkip = 0; return; } showView(new URLSearchParams(location.search).get('view') || '', false); });
     const initial = new URLSearchParams(location.search).get('view'); if (initial) showView(initial, false);
 
     /* לייטבוקס לגלריה */
     rootEl.addEventListener('click', e => {
       const it = e.target.closest('[data-lb]'); if (!it) return;
-      openLightbox(+it.getAttribute('data-lb'));
+      openLightbox(photosOf(c).slice(0, GV_MAX), +it.getAttribute('data-lb'));
     });
-    function openLightbox(i) {
-      const imgs = images(c).slice(0, GV_MAX);
+    /* לייטבוקס: הקובץ המקורי (לא מוקטן, לא חתוך), בגודל הטבעי שלו עד גבול המסך.
+       מובייל (08.11.2026): החלקה לצדדים = תמונה הבאה/קודמת, החלקה למטה = סגירה, כפתור "חזרה" של הטלפון סוגר,
+       התמונות השכנות נטענות מראש כדי שההחלקה תהיה מיידית. */
+    function openLightbox(imgs, i) {
+      if (!imgs || !imgs.length) return;
       let k = i; const lb = doc.createElement('div'); lb.className = 'cp-lb'; lb.setAttribute('role', 'dialog'); lb.setAttribute('aria-modal', 'true'); lb.setAttribute('aria-label', 'גלריית תמונות');
-      const draw = () => { lb.querySelector('.cp-lb-img').innerHTML = '<img src="' + esc(thumb(imgs[k].src, 2000)) + '" alt="' + esc(full) + '">'; lb.querySelector('.cp-lb-n').textContent = (k + 1) + ' / ' + imgs.length; lb.querySelector('.cp-lb-n').dir = 'ltr'; };
-      lb.innerHTML = '<button type="button" class="cp-lb-x" aria-label="סגירה">✕</button><button type="button" class="cp-lb-prev" aria-label="הקודמת">' + ICO.next + '</button><div class="cp-lb-img"></div><button type="button" class="cp-lb-next" aria-label="הבאה">' + ICO.next + '</button><span class="cp-lb-n"></span>';
-      doc.body.appendChild(lb); doc.documentElement.style.overflow = 'hidden'; draw();
-      const close = () => { lb.remove(); doc.documentElement.style.overflow = ''; doc.removeEventListener('keydown', key); };
-      const key = e => { if (e.key === 'Escape') close(); if (e.key === 'ArrowLeft') { k = (k + 1) % imgs.length; draw(); } if (e.key === 'ArrowRight') { k = (k - 1 + imgs.length) % imgs.length; draw(); } };
-      lb.querySelector('.cp-lb-x').onclick = close;
-      lb.querySelector('.cp-lb-next').onclick = () => { k = (k + 1) % imgs.length; draw(); };
-      lb.querySelector('.cp-lb-prev').onclick = () => { k = (k - 1 + imgs.length) % imgs.length; draw(); };
+      const pre = n => { const im = new win.Image(); im.src = imgs[(n + imgs.length) % imgs.length].src; };
+      const draw = dir => {
+        const box = lb.querySelector('.cp-lb-img');
+        box.innerHTML = '<img src="' + esc(imgs[k].src) + '" alt="' + esc(full) + ' — תמונה ' + (k + 1) + '" draggable="false"' + (dir ? ' class="in-' + (dir > 0 ? 'l' : 'r') + '"' : '') + '>';
+        lb.querySelector('.cp-lb-n').textContent = (k + 1) + ' / ' + imgs.length; lb.querySelector('.cp-lb-n').dir = 'ltr';
+        if (imgs.length > 1) { pre(k + 1); pre(k - 1); }
+      };
+      const go = d => { if (imgs.length < 2) return; k = (k + d + imgs.length) % imgs.length; draw(d); };
+      lb.innerHTML = '<button type="button" class="cp-lb-x" aria-label="סגירה">✕</button>' + (imgs.length > 1 ? '<button type="button" class="cp-lb-prev" aria-label="הקודמת">' + ICO.next + '</button>' : '') + '<div class="cp-lb-img"></div>' + (imgs.length > 1 ? '<button type="button" class="cp-lb-next" aria-label="הבאה">' + ICO.next + '</button>' : '') + '<span class="cp-lb-n"></span>' + (imgs.length > 1 ? '<span class="cp-lb-hint" aria-hidden="true">החליקו לתמונה הבאה</span>' : '');
+      doc.body.appendChild(lb); doc.documentElement.style.overflow = 'hidden'; draw(0);
+      let closed = false;
+      const close = fromPop => {
+        if (closed) return; closed = true;
+        lb.remove(); doc.documentElement.style.overflow = ''; doc.removeEventListener('keydown', key); win.removeEventListener('popstate', onPop);
+        if (!fromPop) { if (history.state && history.state.cpLb) history.back(); else lbSkip = 0; }
+      };
+      const onPop = () => close(true);
+      try { history.pushState(Object.assign({}, history.state || {}, { cpLb: 1 }), ''); lbSkip = 1; win.addEventListener('popstate', onPop); } catch (e) {}
+      const key = e => { if (e.key === 'Escape') close(); if (e.key === 'ArrowLeft') go(1); if (e.key === 'ArrowRight') go(-1); };
+      lb.querySelector('.cp-lb-x').onclick = () => close();
+      const nx = lb.querySelector('.cp-lb-next'), pv = lb.querySelector('.cp-lb-prev');
+      if (nx) nx.onclick = () => go(1); if (pv) pv.onclick = () => go(-1);
       lb.addEventListener('click', e => { if (e.target === lb) close(); });
+      /* מגע: גרירה חיה של התמונה */
+      const box = lb.querySelector('.cp-lb-img'); let sx = null, sy = 0, dx = 0, dy = 0, axis = '';
+      box.addEventListener('pointerdown', e => { if (e.pointerType === 'mouse' || !e.isPrimary) return; sx = e.clientX; sy = e.clientY; dx = dy = 0; axis = ''; });
+      box.addEventListener('pointermove', e => {
+        if (sx == null) return; dx = e.clientX - sx; dy = e.clientY - sy;
+        if (!axis && Math.abs(dx) + Math.abs(dy) > 10) axis = Math.abs(dx) > Math.abs(dy) ? 'x' : 'y';
+        const im = box.querySelector('img'); if (!im) return;
+        if (axis === 'x' && imgs.length > 1) im.style.transform = 'translateX(' + dx + 'px)';
+        if (axis === 'y' && dy > 0) { im.style.transform = 'translateY(' + dy + 'px) scale(' + Math.max(.85, 1 - dy / 1200) + ')'; lb.style.backgroundColor = 'rgba(8,16,26,' + Math.max(.35, .94 - dy / 500) + ')'; }
+      });
+      const end = () => {
+        if (sx == null) return; sx = null; const im = box.querySelector('img');
+        if (axis === 'x' && Math.abs(dx) > 55 && imgs.length > 1) { go(dx < 0 ? 1 : -1); return; }
+        if (axis === 'y' && dy > 110) { close(); return; }
+        if (im) { im.style.transition = 'transform .25s'; im.style.transform = ''; setTimeout(() => { im.style.transition = ''; }, 260); } lb.style.backgroundColor = '';
+      };
+      box.addEventListener('pointerup', end); box.addEventListener('pointercancel', end);
       doc.addEventListener('keydown', key); lb.querySelector('.cp-lb-x').focus();
     }
   }

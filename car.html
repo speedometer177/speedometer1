@@ -27,7 +27,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Rubik:wght@300;400;500;600;700;800;900&display=swap">
-<link rel="stylesheet" href="/cars-ui.css?v=12">
+<link rel="stylesheet" href="/cars-ui.css?v=14">
 <script>document.documentElement.classList.add('cx-js')</script>
 <style>
 .car-page-loading{min-height:60vh;display:grid;place-items:center;align-content:center;gap:14px;color:var(--mute)}
@@ -52,7 +52,7 @@
       <button type="button" data-open-compare>השוואות</button>
     </nav>
     <div class="cx-header-tools">
-      <a class="cx-icon-btn" href="/cars-list.html?fav=1" aria-label="הרכבים ששמרתי"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6"/></svg></a>
+      <a class="cx-icon-btn" href="/cars-list.html?fav=1" aria-label="הרכבים ששמרתי"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20.5s-7.5-4.6-9.2-9.4C1.6 7.6 3.9 4.5 7.2 4.5c2 0 3.6 1.1 4.8 2.8 1.2-1.7 2.8-2.8 4.8-2.8 3.3 0 5.6 3.1 4.4 6.6-1.7 4.8-9.2 9.4-9.2 9.4z"/></svg><span class="cx-dot" id="fav-dot"></span></a>
       <a class="cx-icon-btn" href="/cars-list.html#finder" aria-label="חיפוש רכב"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg></a>
       <button type="button" class="cx-icon-btn cx-icon-btn--ghost cx-menu-btn" id="hdr-menu" aria-label="תפריט" aria-expanded="false" aria-controls="cx-nav"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
     </div>
@@ -78,8 +78,8 @@
   </div>
 </footer>
 
-<script src="/cars-core.js?v=7"></script>
-<script src="/car-page.js?v=9"></script>
+<script src="/cars-core.js?v=9"></script>
+<script src="/car-page.js?v=12"></script>
 <script>
 /* ═══ ספידומטר — עמוד הדגם (car.html v2, 29.10.2026) ═══
    הנתיב הקנוני: /car/{slug}/ (עמוד סטטי שנבנה ב-generate-static-pages.mjs מאותו car-page.js).
@@ -132,6 +132,8 @@
     rootEl.innerHTML = P.render(c);
     P.mount(rootEl, c, { cars: res.cars, loadReview: loadReview });
     S.Compare.sync(); S.renderTray();
+    const favSync = () => { document.querySelectorAll('[data-fav]').forEach(b => b.setAttribute('aria-pressed', S.Fav.has(b.getAttribute('data-fav')))); const d = document.getElementById('fav-dot'); if (d) { d.textContent = S.Fav.list.length || ''; d.classList.toggle('on', S.Fav.list.length > 0); } };
+    favSync(); document.addEventListener('sp:fav', favSync);
     trackView(c.id);
   }).catch(err => { console.error(err); showError('שגיאה בטעינת הנתונים'); });
 })();

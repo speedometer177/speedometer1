@@ -113,7 +113,7 @@
     petrol:{label:'בנזין',plural:'בנזין'},
     diesel:{label:'דיזל',plural:'דיזל'}
   };
-  const PT_ALIASES = {electric:'ev',bev:'ev','חשמלי':'ev',phev:'phev','פלאג-אין':'phev',hybrid:'hev',hev:'hev','היברידי':'hev',mhev:'mhev',mild:'mhev',erev:'erev',reev:'erev','היברידי קל':'mhev',petrol:'petrol',gasoline:'petrol','בנזין':'petrol',diesel:'diesel','דיזל':'diesel'};
+  const PT_ALIASES = {ev:'ev',electric:'ev',bev:'ev','חשמלי':'ev',phev:'phev','פלאג-אין':'phev',hybrid:'hev',hev:'hev','היברידי':'hev',mhev:'mhev',mild:'mhev',erev:'erev',reev:'erev','היברידי קל':'mhev',petrol:'petrol',gasoline:'petrol','בנזין':'petrol',diesel:'diesel','דיזל':'diesel'};
   function derivePowertrain(c) {
     if (c.powertrain) {
       const p = PT_ALIASES[String(c.powertrain).trim().toLowerCase()] || PT_ALIASES[String(c.powertrain).trim()];
@@ -217,6 +217,18 @@
     if (t0) ['engine', 'powertrain', 'horsepower', 'torque', 'acceleration_0_100', 'top_speed', 'range_ev', 'battery_capacity_kwh', 'fuel_consumption', 'transmission', 'drive_type', 'trunk_volume', 'weight', 'length', 'width', 'height', 'price']
       .forEach(k => { if ((c[k] === null || c[k] === undefined || c[k] === '') && t0[k] != null && t0[k] !== '') c[k] = t0[k]; });
     c._pt = derivePowertrain(c);
+    /* דגם עם כמה סוגי הנעה (למשל חשמלי + מאריך טווח) — כל הסוגים, לסינון ולתצוגה */
+    const tr = Array.isArray(c.trims) ? c.trims.filter(t => t && typeof t === 'object' && t.name) : [];
+    const pts = []; tr.forEach(t => { const p = derivePowertrain(t); if (p && pts.indexOf(p) === -1) pts.push(p); });
+    if (c._pt && pts.indexOf(c._pt) === -1) pts.unshift(c._pt);
+    c._pts = pts.length ? pts : (c._pt ? [c._pt] : []);
+    /* הספק מרבי של הגרסה הבסיסית: משולב / מנוע חשמלי ברכב חשמלי ומאריך טווח / החזק מבין השניים */
+    if (t0) {
+      const n = v => (v === null || v === undefined || v === '' || isNaN(+v)) ? null : +v;
+      const ptb = derivePowertrain(Object.assign({}, c, t0)), sh = n(t0.system_hp), h = n(t0.horsepower), e = n(t0.electric_hp);
+      const mp = sh != null ? sh : (ptb === 'ev' || ptb === 'erev') ? (e != null ? e : h) : (h != null && e != null ? Math.max(h, e) : (h != null ? h : e));
+      if (mp != null && (n(c.horsepower) == null || mp > n(c.horsepower))) c.horsepower = mp;
+    }
     c._drive = deriveDrive(c);
     c._slug = c.slug || c.id;
     c._url = '/car/' + encodeURIComponent(c._slug) + '/';
@@ -297,7 +309,7 @@
     opts = opts || {};
     const v = visual(c, 640, opts.eager);
     const name = c._brand.name + ' ' + c.model;
-    const line = [engineLiters(c), c._pt ? PT[c._pt].label : null, gearShort(c)].filter(Boolean);
+    const line = [engineLiters(c), c._pts && c._pts.length ? c._pts.map(p => PT[p].label).join(' / ') : null, gearShort(c)].filter(Boolean);
     if (!line.length && num(c.horsepower)) line.push(fmtNum(c.horsepower) + ' כ״ס');
     const price = fmtPrice(c.price);
     const inCmp = Compare.has(c._slug), fav = Fav.has(c._slug);
@@ -360,6 +372,7 @@
       });
       renderTray();
       if (cmpEl && cmpEl.classList.contains('open')) renderCompare();
+      document.dispatchEvent(new CustomEvent('sp:cmp', { detail: { list: this.list.slice() } }));
     }
   };
 
@@ -384,7 +397,7 @@
     }
     const L = Compare.list.filter(s => carsBySlug[s]);
     trayEl.classList.toggle('show', L.length > 0);
-    document.body.style.paddingBottom = L.length ? '88px' : '';
+    document.body.style.paddingBottom = L.length ? 'calc(88px + var(--dock-h, 0px))' : '';
     let slots = '';
     for (let i = 0; i < MAX_COMPARE; i++) {
       const c = carsBySlug[L[i]];
@@ -406,7 +419,7 @@
     { k: 'price', t: 'מחיר החל מ-', v: c => num(c.price), f: c => fmtPrice(c.price), best: 'min' },
     { k: 'price_top', t: 'גרסה מאובזרת', v: c => num(c.price_top), f: c => fmtPrice(c.price_top) },
     { g: 'מנוע וביצועים' },
-    { k: 'pt', t: 'סוג הנעה', f: c => c._pt ? PT[c._pt].label : null },
+    { k: 'pt', t: 'סוג הנעה', f: c => c._pts && c._pts.length ? c._pts.map(p => PT[p].label).join(' / ') : null },
     { k: 'engine', t: 'מנוע', f: c => c.engine || null, small: true },
     { k: 'hp', t: 'הספק (כ״ס)', v: c => num(c.horsepower), f: c => fmtNum(c.horsepower), best: 'max' },
     { k: 'tq', t: 'מומנט', f: c => torqueText(c) },
@@ -532,6 +545,44 @@
       toast((c ? c._brand.name + ' ' + c.model : 'הדגם') + ' נוסף להשוואה');
     }
   });
+
+  /* ═══ מובייל (08.11.2026): תפריט עם רקע וסגירה, כותרת שנעלמת בגלילה למטה, לשוניות דביקות ופס פעולות בעמוד הדגם ═══ */
+  (function mobileChrome() {
+    const mq = window.matchMedia('(max-width: 900px)');
+    const nav = document.getElementById('cx-nav'), btn = document.getElementById('hdr-menu');
+    if (nav && btn) {
+      const bk = document.createElement('div'); bk.className = 'cx-nav-bk'; bk.setAttribute('aria-hidden', 'true'); document.body.appendChild(bk);
+      const close = () => { nav.classList.remove('open'); btn.setAttribute('aria-expanded', 'false'); };
+      const sync = () => { const o = nav.classList.contains('open'); document.body.classList.toggle('nav-open', o); btn.setAttribute('aria-label', o ? 'סגירת התפריט' : 'תפריט'); if (o) document.body.classList.remove('hdr-hide'); };
+      new MutationObserver(sync).observe(nav, { attributes: true, attributeFilter: ['class'] });
+      bk.addEventListener('click', close);
+      nav.addEventListener('click', e => { if (e.target.closest('a,button')) close(); });
+      document.addEventListener('keydown', e => { if (e.key === 'Escape' && nav.classList.contains('open')) { close(); btn.focus(); } });
+      mq.addEventListener && mq.addEventListener('change', () => { if (!mq.matches) close(); });
+    }
+    let lastY = window.scrollY, dock = null, sub = null, isView = false, ticking = false;
+    function frame() {
+      ticking = false;
+      const y = window.scrollY, d = y - lastY;
+      if (!dock) { dock = document.querySelector('.cp-dock'); if (dock) { document.body.classList.add('has-dock'); document.documentElement.classList.add('has-cp'); } }
+      if (!sub) sub = document.querySelector('.cp-subnav');
+      const open = document.body.classList.contains('nav-open');
+      if (mq.matches && !open) {
+        if (y < 140 || d < -6) document.body.classList.remove('hdr-hide');
+        else if (d > 6) document.body.classList.add('hdr-hide');
+      } else document.body.classList.remove('hdr-hide');
+      if (Math.abs(d) > 6 || y < 140) lastY = y;
+      isView = /[?&]view=/.test(location.search);
+      if (dock) dock.classList.toggle('on', mq.matches && !open && (y > 160 || isView));
+      if (sub) { const t = sub.getBoundingClientRect().top; sub.classList.toggle('is-stuck', t <= 66 && y > 40); }
+    }
+    const req = () => { if (!ticking) { ticking = true; requestAnimationFrame(frame); } };
+    window.addEventListener('scroll', req, { passive: true });
+    window.addEventListener('resize', req);
+    window.addEventListener('popstate', () => setTimeout(req, 30));
+    document.addEventListener('click', () => setTimeout(req, 60));
+    setTimeout(req, 400); setTimeout(req, 1500);
+  })();
 
   window.SPCars = {
     BRAND_ORDER, BRAND_LOGOS, brandMark, visual, lineCar, ghostName, isHeb, load, normalize, brandInfo, brandKey, BRANDS, PT, derivePowertrain, pickImage, thumb, placeholder, card, skeleton, mix,
