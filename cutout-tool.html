@@ -126,8 +126,10 @@ kbd{font-family:inherit;font-size:.72rem;border:1px solid var(--line);border-bot
   // (העלאה דרך אתר GitHub נחסמת בגודל כזה, ו-Supabase מגיש עם CORS פתוח.)
   const MODEL_BASE = qs.get('model') || 'https://kaykrrnmykqrfhawgtqt.supabase.co/storage/v1/object/public/article-images/models/cutout/';
   const S = 1024;                 // רזולוציית הקלט של המודל
-  const WORK_MAX = 2800;          // צלע ארוכה מרבית לעבודה (מסכה ועריכה)
-  const OUT_MAX = 2400;           // צלע ארוכה מרבית לקובץ הסופי
+  // 09.11.2026: הוקטן מ-2800/2400 — חוסך כמחצית מהזיכרון והחישוב (במחשבים חלשים העבודה תקעה את כל המחשב).
+  // באתר הרכב מוצג לכל היותר ברוחב ~1300px, כך ש-2000 מספיק בשפע.
+  const WORK_MAX = 2000;          // צלע ארוכה מרבית לעבודה (מסכה ועריכה)
+  const OUT_MAX = 2000;           // צלע ארוכה מרבית לקובץ הסופי
   const OUT_MAX_BYTES = 5.5 * 1024 * 1024; // מגבלת ההעלאה באדמין היא 6MB
   const MEAN = [0.485, 0.456, 0.406], STD = [0.229, 0.224, 0.225];
   const $ = id => document.getElementById(id);
@@ -190,7 +192,12 @@ kbd{font-family:inherit;font-size:.72rem;border:1px solid var(--line);border-bot
     ort.env.wasm.numThreads = self.crossOriginIsolated ? Math.min(4, navigator.hardwareConcurrency || 1) : 1;
     const tries = [];
     let adapter = null;
-    try { if (navigator.gpu && qs.get('ep') !== 'wasm') adapter = await navigator.gpu.requestAdapter(); } catch (e) { adapter = null; }
+    // כרטיס מסך חלש (משולב) שמריץ מודל כבד נתקע לגמרי — וכל המסך נתקע איתו. במחשב חלש עובדים על המעבד בליבה אחת:
+    // לוקח יותר זמן, אבל המחשב נשאר זמין. ?ep=gpu מכריח כרטיס מסך, ?ep=wasm מכריח מעבד.
+    const weak = (navigator.deviceMemory && navigator.deviceMemory < 8) || (navigator.hardwareConcurrency && navigator.hardwareConcurrency < 6);
+    const useGpu = qs.get('ep') === 'gpu' || (qs.get('ep') !== 'wasm' && !weak);
+    try { if (navigator.gpu && useGpu) adapter = await navigator.gpu.requestAdapter({ powerPreference: 'high-performance' }); } catch (e) { adapter = null; }
+    if (adapter && adapter.info && /intel|uhd|iris|basic render|swiftshader|llvmpipe/i.test((adapter.info.vendor || '') + ' ' + (adapter.info.description || '') + ' ' + (adapter.info.architecture || '')) && qs.get('ep') !== 'gpu') adapter = null;
     if (adapter) tries.push(['webgpu', 'wasm']);
     tries.push(['wasm']);
     let lastErr = null;
@@ -482,6 +489,7 @@ kbd{font-family:inherit;font-size:.72rem;border:1px solid var(--line);border-bot
     const aD = ax2.getImageData(0, 0, ow, oh).data;
     const n = ow * oh, rgb = new Float32Array(n * 3), a = new Float32Array(n);
     for (let i = 0; i < n; i++) { rgb[i * 3] = rgbD[i * 4] / 255; rgb[i * 3 + 1] = rgbD[i * 4 + 1] / 255; rgb[i * 3 + 2] = rgbD[i * 4 + 2] / 255; a[i] = aD[i * 4] / 255; }
+    await tick();
     const F = estimateForeground(rgb, a, ow, oh);
     const out = rx.createImageData(ow, oh);
     for (let i = 0; i < n; i++) {
