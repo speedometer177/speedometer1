@@ -661,6 +661,7 @@
         '<button type="button" onclick="pSetMain(' + i + ')" title="קבע כתמונה ראשית" style="display:block;padding:0;border:2px solid ' + (on ? 'var(--adm-accent,#ff9d2e)' : 'transparent') + ';border-radius:8px;background:none;cursor:pointer;">' +
         '<img src="' + escapeAttr(u) + '" alt="" style="width:92px;height:66px;object-fit:cover;border-radius:6px;display:block;"></button>' +
         '<div style="display:flex;gap:2px;margin-top:2px;"><button type="button" class="tbl-btn" style="flex:1;padding:2px;font-size:0.62rem;" onclick="pSetMain(' + i + ')">' + (on ? '★ ראשית' : '☆') + '</button>' +
+        '<button type="button" class="tbl-btn" style="padding:2px 5px;font-size:0.62rem;" title="הסר רקע מהתמונה הזו" onclick="pCutoutFromPhoto(' + i + ')">✂️</button>' +
         '<button type="button" class="tbl-btn del" style="padding:2px 6px;font-size:0.62rem;" title="הסר" onclick="pRemovePhoto(' + i + ')">✕</button></div></div>';
     }).join('') + '</div>' : '<div class="adm-empty-state" style="padding:8px;">אין תמונות עדיין</div>';
     const cutHtml = '<div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap;">' +
@@ -833,6 +834,8 @@
     } catch (e) { pMsg('<span style="color:#e74c3c;">✕ ' + escapeAttr(e.message) + '</span>'); }
   };
   window.pColorRemove = function (i) { if (!pState || !pState.colors[i]) return; pReadInputs(); delete pState.colorImages[pState.colors[i]]; renderPersonal('לא לשכוח לשמור'); };
+  // הסרת רקע מכל תמונה בגלריה (לא רק מהראשית) — אותו מסלול כמו מהתמונה הראשית
+  window.pCutoutFromPhoto = function (i) { if (pState && pState.photos[i]) pRunCutout({ url: pState.photos[i], name: 'photo-' + (i + 1) }); };
   window.pCutoutFromMain = function () { if (pState && pState.main) pRunCutout({ url: pState.main, name: 'main' }); };
   window.pUploadReadyCutout = async function (input) {
     const file = input.files && input.files[0]; input.value = ''; if (!file || !pState) return;
@@ -1171,6 +1174,7 @@
         '<img src="' + escapeAttr(url) + '" style="width:90px;height:68px;object-fit:cover;border-radius:6px;border:2px solid ' + (isMain ? 'var(--adm-accent,#ff9d2e)' : 'transparent') + ';">' +
         '<div style="display:flex;gap:2px;margin-top:2px;">' +
           '<button type="button" class="tbl-btn" style="flex:1;padding:2px;font-size:0.62rem;" title="הפוך לתמונה ראשית" onclick="setMainCarPhoto(' + i + ')">' + (isMain ? '★' : '☆') + '</button>' +
+          '<button type="button" class="tbl-btn" style="flex:1;padding:2px;font-size:0.62rem;" title="הסר רקע מהתמונה הזו" onclick="formCutoutFromPhoto(' + i + ')">✂️</button>' +
           '<button type="button" class="tbl-btn del" style="flex:1;padding:2px;font-size:0.62rem;" title="הסר" onclick="removeCarPhoto(' + i + ')">✕</button>' +
         '</div>' +
       '</div>';
@@ -1352,6 +1356,7 @@
   }
   window.formCutoutFromFile = function (input) { const f = input.files && input.files[0]; input.value = ''; if (f) formRunCutout({ blob: f, name: f.name }); };
   window.formCutoutOpenTool = function () { formRunCutout({ pick: true }); };
+  window.formCutoutFromPhoto = function (i) { if (currentFormState && currentFormState.photos[i]) formRunCutout({ url: currentFormState.photos[i], name: 'photo-' + (i + 1) }); };
   window.formCutoutFromMain = function () { if (currentFormState && currentFormState.mainPhoto) formRunCutout({ url: currentFormState.mainPhoto, name: 'main' }); };
   window.removeCarCutout = function () {
     if (!currentFormState) return;
