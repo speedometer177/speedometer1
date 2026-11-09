@@ -652,88 +652,394 @@
     });
     pSyncTrimPrices(); // כשיש מחירי גרסאות — הם קובעים את מחיר הבסיס והעליון
   }
+  // ═══════════ ✨ פרטים אישיים — "סטודיו זכוכית" (09.11.2026) ═══════════
+  // הרקע של הפאנל הוא התמונה הראשית של הרכב עצמה, מטושטשת (כמו עטיפת אלבום ב-Apple Music) — לכל רכב אווירה משלו.
+  // מעליה כרטיסי זכוכית שקופים עם הברקה שעוקבת אחרי העכבר; הטקסט יושב על שכבה כהה מספיק כדי להיות חד תמיד.
+  const PP_CSS = `
+.admin-page .pp{--g-txt:#f5f7fa;--g-sub:#c3cad6;--g-dim:#97a1b0;--g-line:rgba(255,255,255,.13);--g-hi:rgba(255,255,255,.28);--g-fill:rgba(16,20,28,.5);--g-fill-2:rgba(255,255,255,.06);--g-acc:#ff9d2e;--g-ok:#34d399;--g-bad:#fb7185;
+  position:relative;margin-top:12px;border-radius:28px;overflow:clip;isolation:isolate;color:var(--g-txt);text-align:start;font-family:var(--font);padding:0 0 4px;
+  box-shadow:0 30px 80px -30px rgba(0,0,0,.8),0 0 0 1px rgba(255,255,255,.07) inset;background:#07090d}
+.pp-amb{position:absolute;inset:-80px;z-index:-2;background-size:cover;background-position:center;filter:blur(70px) saturate(1.8) brightness(.55);transform:scale(1.1)}
+.pp-amb.is-aurora{background:radial-gradient(40% 50% at 15% 20%,rgba(255,157,46,.55),transparent 70%),radial-gradient(45% 55% at 85% 30%,rgba(56,189,248,.45),transparent 70%),radial-gradient(50% 50% at 50% 95%,rgba(167,139,250,.4),transparent 70%);filter:blur(40px)}
+.pp-amb::after{content:'';position:absolute;inset:0;background:linear-gradient(180deg,rgba(5,7,10,.25),rgba(5,7,10,.6) 45%,rgba(5,7,10,.78))}
+.pp-grain{position:absolute;inset:0;z-index:-1;pointer-events:none;opacity:.06;mix-blend-mode:overlay;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")}
+.pp-glass{position:relative;background:var(--g-fill);-webkit-backdrop-filter:blur(30px) saturate(170%);backdrop-filter:blur(30px) saturate(170%);border:1px solid var(--g-line);
+  box-shadow:inset 0 1px 0 var(--g-hi),inset 0 -1px 0 rgba(255,255,255,.04),0 12px 34px -14px rgba(0,0,0,.65)}
+.pp-glass::before{content:'';position:absolute;inset:0;border-radius:inherit;pointer-events:none;opacity:0;transition:opacity .35s;
+  background:radial-gradient(260px circle at var(--mx,50%) var(--my,0%),rgba(255,255,255,.12),transparent 60%)}
+.pp-glass:hover::before{opacity:1}
+/* ── כותרת ── */
+.pp-hero{display:grid;grid-template-columns:auto 1fr auto auto;gap:18px;align-items:center;padding:22px 24px 18px}
+.pp-kind{display:inline-flex;align-items:center;gap:6px;font-size:.68rem;font-weight:700;letter-spacing:.04em;color:var(--g-sub);padding:4px 10px;border-radius:999px;background:var(--g-fill-2);border:1px solid var(--g-line);margin-bottom:8px}
+.pp-kind i{width:6px;height:6px;border-radius:50%;background:var(--g-acc);box-shadow:0 0 10px var(--g-acc)}
+.pp-kind.is-live i{background:var(--g-ok);box-shadow:0 0 10px var(--g-ok)}
+.pp-title{margin:0;line-height:1.05;font-size:clamp(1.45rem,3.2vw,2.15rem);letter-spacing:-.02em;text-shadow:0 2px 18px rgba(0,0,0,.45)}
+.pp-title b{font-weight:900}.pp-title span{font-weight:300;color:var(--g-sub)}
+.pp-title em{font-style:normal;font-family:var(--adm-num);font-weight:600;font-size:.62em;color:var(--g-acc);margin-inline-start:8px;vertical-align:.25em}
+.pp-tag{font-size:.78rem;color:var(--g-sub);margin-top:6px}
+.pp-thumb{width:118px;aspect-ratio:16/10;border-radius:16px;overflow:hidden;border:1px solid var(--g-line);box-shadow:0 10px 30px -10px rgba(0,0,0,.8),inset 0 1px 0 var(--g-hi);background:#0c1017}
+.pp-thumb img{width:100%;height:100%;object-fit:cover;display:block}
+.pp-gauge{position:relative;width:120px;text-align:center}
+.pp-gauge svg{width:120px;height:70px;overflow:visible}
+.pp-gauge .trk{fill:none;stroke:rgba(255,255,255,.1);stroke-width:9;stroke-linecap:round}
+.pp-gauge .val{fill:none;stroke:url(#ppGrad);stroke-width:9;stroke-linecap:round;transition:stroke-dashoffset 1s cubic-bezier(.2,.8,.2,1);filter:drop-shadow(0 0 6px rgba(255,157,46,.55))}
+.pp-gauge .tick{stroke:rgba(255,255,255,.22);stroke-width:1.5}
+.pp-gauge .ndl{transform-origin:60px 62px;transition:transform 1s cubic-bezier(.2,.8,.2,1)}
+.pp-gauge .ndl line{stroke:#fff;stroke-width:2.5;stroke-linecap:round;filter:drop-shadow(0 0 4px rgba(255,255,255,.6))}
+.pp-gauge .hub{fill:#fff}
+.pp-gauge-n{margin-top:2px;font-family:var(--adm-num);font-weight:700;font-size:1.25rem;line-height:1}
+.pp-gauge-n small{display:block;font-family:var(--font);font-size:.6rem;font-weight:600;color:var(--g-dim);letter-spacing:.06em;margin-top:2px}
+.pp-x{align-self:start;width:36px;height:36px;border-radius:50%;display:grid;place-items:center;cursor:pointer;color:var(--g-txt);font-size:1rem;background:rgba(255,255,255,.08);border:1px solid var(--g-line);-webkit-backdrop-filter:blur(20px);backdrop-filter:blur(20px);transition:transform .2s,background .2s}
+.pp-x:hover{transform:rotate(90deg);background:rgba(255,255,255,.16)}
+/* ── ניווט מקטעים ── */
+.pp-nav{position:relative;z-index:5;margin:0 16px 14px;padding:5px;border-radius:999px;display:flex;gap:2px;overflow-x:auto;scrollbar-width:none}
+.pp-nav::-webkit-scrollbar{display:none}
+.pp-nav.is-float,.pp-dock.is-float{position:fixed;margin:0;z-index:60;background:rgba(14,18,26,.62);box-shadow:inset 0 1px 0 var(--g-hi),0 18px 40px -12px rgba(0,0,0,.85)}
+.pp-nav.is-float{top:10px}.pp-dock.is-float{bottom:12px}
+.pp-ph-spc{display:none}.pp-ph-spc.on{display:block}
+.pp-nav button{flex:1 0 auto;display:inline-flex;align-items:center;justify-content:center;gap:7px;border:0;background:none;color:var(--g-sub);font:600 .78rem var(--font);padding:9px 14px;border-radius:999px;cursor:pointer;transition:background .2s,color .2s;white-space:nowrap}
+.pp-nav button:hover{background:rgba(255,255,255,.08);color:var(--g-txt)}
+.pp-nav button.on{background:rgba(255,255,255,.16);color:#fff;box-shadow:inset 0 1px 0 var(--g-hi)}
+.pp-nav i{width:7px;height:7px;border-radius:50%;background:#f59e0b;box-shadow:0 0 8px #f59e0b}
+.pp-nav i.ok{background:var(--g-ok);box-shadow:0 0 8px var(--g-ok)}
+/* ── מקטעים ── */
+.pp-body{display:grid;grid-template-columns:minmax(0,1fr);gap:14px;padding:0 16px}
+.pp-sec,.pp-sh>div{min-width:0}
+.pp-sec{border-radius:22px;padding:18px 20px 20px;scroll-margin-top:70px}
+.pp-sh{display:flex;align-items:center;gap:12px;margin-bottom:16px}
+.pp-ic{flex:none;width:40px;height:40px;border-radius:13px;display:grid;place-items:center;color:#fff;background:linear-gradient(145deg,rgba(255,255,255,.22),rgba(255,255,255,.04));border:1px solid var(--g-line);box-shadow:inset 0 1px 0 var(--g-hi)}
+.pp-ic svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.pp-sh .pp-h{margin:0;font-size:1rem;font-weight:800;color:var(--g-txt);letter-spacing:-.01em}
+.pp-sh .pp-p{margin:2px 0 0;font-size:.76rem;color:var(--g-sub);line-height:1.45}
+.pp-st{margin-inline-start:auto;flex:none;font-size:.7rem;font-weight:700;padding:4px 10px;border-radius:999px;border:1px solid rgba(245,158,11,.4);color:#fcd34d;background:rgba(245,158,11,.1)}
+.pp-st.ok{border-color:rgba(52,211,153,.4);color:#6ee7b7;background:rgba(52,211,153,.1)}
+.pp-num{position:absolute;top:10px;inset-inline-end:18px;font-family:var(--adm-num);font-size:2.6rem;font-weight:700;line-height:1;color:transparent;-webkit-text-stroke:1px rgba(255,255,255,.13);pointer-events:none}
+.pp-sec .pp-st{margin-inline-end:66px}
+/* ── שדות ── */
+.pp-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:12px}
+.pp-f{display:flex;flex-direction:column;gap:6px;min-width:0}
+.pp-f.wide{grid-column:1/-1}
+.pp-f>label{font-size:.74rem;font-weight:700;color:var(--g-sub);letter-spacing:.01em}
+.pp-hint{font-size:.7rem;color:var(--g-dim);line-height:1.45}
+.admin-page .pp .pp-in{width:100%;padding:11px 14px;border-radius:13px;border:1px solid rgba(255,255,255,.14);background:rgba(6,9,14,.55);color:#fff;font:500 .9rem var(--font);
+  box-shadow:inset 0 1px 2px rgba(0,0,0,.35);transition:border-color .2s,box-shadow .2s,background .2s;outline:none}
+.admin-page .pp .pp-in::placeholder{color:#7d8798;opacity:1}
+.admin-page .pp .pp-in:hover{border-color:rgba(255,255,255,.24)}
+.admin-page .pp .pp-in:focus{border-color:var(--g-acc);background:rgba(6,9,14,.72);box-shadow:0 0 0 4px rgba(255,157,46,.18),inset 0 1px 2px rgba(0,0,0,.35)}
+.admin-page .pp textarea.pp-in{resize:vertical;line-height:1.55;min-height:96px}
+.pp-in.ltr{direction:ltr;text-align:left;font-family:var(--adm-num),var(--font);letter-spacing:.02em}
+/* ── כפתורים ── */
+.pp-b{display:inline-flex;align-items:center;justify-content:center;gap:7px;font:700 .8rem var(--font);color:var(--g-txt);padding:9px 15px;border-radius:12px;cursor:pointer;
+  background:linear-gradient(180deg,rgba(255,255,255,.14),rgba(255,255,255,.05));border:1px solid var(--g-line);box-shadow:inset 0 1px 0 var(--g-hi),0 6px 16px -8px rgba(0,0,0,.6);transition:transform .15s,background .2s,border-color .2s;white-space:nowrap}
+.pp-b:hover{border-color:rgba(255,255,255,.32);background:linear-gradient(180deg,rgba(255,255,255,.2),rgba(255,255,255,.08))}
+.pp-b:active{transform:scale(.97)}
+.pp-b.acc{color:#1a1206;background:linear-gradient(180deg,#ffc173,#ff9d2e);border-color:rgba(255,200,140,.8);box-shadow:inset 0 1px 0 rgba(255,255,255,.55),0 8px 22px -8px rgba(255,157,46,.8)}
+.pp-b.acc:hover{background:linear-gradient(180deg,#ffcd8a,#ffa94a)}
+.pp-b.del:hover{border-color:rgba(251,113,133,.6);color:#fecdd3}
+.pp-b.sm{padding:6px 10px;font-size:.72rem;border-radius:10px}
+.pp-b input{display:none}
+.admin-page .pp label.pp-b,.admin-page .pp label.pp-add{margin:0;font-weight:700}
+.admin-page .pp label.pp-b{color:var(--g-txt)}.admin-page .pp label.pp-b.acc{color:#1a1206}
+.pp-row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+/* ── מחירים ── */
+.pp-trim{position:relative}
+.pp-trim .pp-in{padding-inline-end:34px;font-family:var(--adm-num),var(--font);font-size:1.05rem;font-weight:600;direction:ltr;text-align:right}
+.pp-trim::after{content:'₪';position:absolute;inset-inline-end:14px;bottom:12px;color:var(--g-dim);font-weight:700;pointer-events:none}
+#p-price-parse{font-size:.76rem;color:var(--g-sub);flex:1;min-width:200px;line-height:1.5}
+/* ── גלריה ── */
+.pp-photos{display:grid;grid-template-columns:repeat(auto-fill,minmax(132px,1fr));gap:10px}
+.pp-ph{position:relative;aspect-ratio:4/3;border-radius:16px;overflow:hidden;background:#0b0f15;border:1px solid var(--g-line);transition:transform .25s cubic-bezier(.2,.8,.2,1),box-shadow .25s}
+.pp-ph:hover{transform:translateY(-3px);box-shadow:0 14px 30px -12px rgba(0,0,0,.9)}
+.pp-ph>button.pp-ph-img{all:unset;position:absolute;inset:0;cursor:pointer}
+.pp-ph img{width:100%;height:100%;object-fit:cover;display:block;transition:transform .5s}
+.pp-ph:hover img{transform:scale(1.05)}
+.pp-ph.is-main{border-color:rgba(255,157,46,.9);box-shadow:0 0 0 2px rgba(255,157,46,.35),0 12px 30px -10px rgba(255,157,46,.45)}
+.pp-badge{position:absolute;top:8px;inset-inline-start:8px;font-size:.66rem;font-weight:800;color:#1a1206;background:linear-gradient(180deg,#ffd29b,#ff9d2e);padding:3px 9px;border-radius:999px;box-shadow:0 4px 12px rgba(0,0,0,.4)}
+.pp-ph-act{position:absolute;inset-inline:6px;bottom:6px;display:flex;gap:4px;justify-content:center;padding:4px;border-radius:12px;background:rgba(10,13,19,.55);-webkit-backdrop-filter:blur(14px) saturate(160%);backdrop-filter:blur(14px) saturate(160%);border:1px solid rgba(255,255,255,.14);
+  opacity:0;transform:translateY(6px);transition:opacity .2s,transform .2s}
+.pp-ph:hover .pp-ph-act,.pp-ph:focus-within .pp-ph-act{opacity:1;transform:none}
+@media (hover:none){.pp-ph-act{opacity:1;transform:none}}
+.pp-ph-act button{all:unset;flex:1;text-align:center;cursor:pointer;font-size:.82rem;padding:5px 0;border-radius:8px;color:#fff;transition:background .15s}
+.pp-ph-act button:hover{background:rgba(255,255,255,.16)}
+.pp-ph-act button.del:hover{background:rgba(251,113,133,.3)}
+.pp-add{aspect-ratio:4/3;border-radius:16px;border:1.5px dashed rgba(255,255,255,.25);display:grid;place-content:center;gap:4px;text-align:center;color:var(--g-sub);font-size:.76rem;font-weight:700;cursor:pointer;transition:border-color .2s,background .2s,color .2s}
+.pp-add:hover{border-color:var(--g-acc);color:#fff;background:rgba(255,157,46,.08)}
+.pp-add b{font-size:1.6rem;font-weight:300;line-height:1}
+.pp-add input{display:none}
+.pp-empty{padding:18px;border-radius:16px;text-align:center;color:var(--g-dim);font-size:.8rem;border:1px dashed var(--g-line)}
+/* ── סטודיו (ללא רקע) ── */
+.pp-studio-w{display:grid;grid-template-columns:minmax(0,1.4fr) minmax(0,1fr);gap:16px;align-items:center}
+.pp-studio{position:relative;aspect-ratio:16/9;border-radius:20px;overflow:hidden;display:grid;place-items:center;
+  background:radial-gradient(70% 60% at 50% 35%,#3a4352,#161b23 70%,#0b0e13);border:1px solid var(--g-line);box-shadow:inset 0 1px 0 var(--g-hi)}
+.pp-studio::before{content:'';position:absolute;inset-inline:8%;bottom:12%;height:16%;border-radius:50%;background:radial-gradient(50% 50% at 50% 50%,rgba(0,0,0,.75),transparent 70%);filter:blur(6px)}
+.pp-studio::after{content:'';position:absolute;inset:auto 0 0;height:30%;background:linear-gradient(180deg,transparent,rgba(255,255,255,.04));border-top:1px solid rgba(255,255,255,.05)}
+.pp-studio img{position:relative;z-index:1;max-width:86%;max-height:78%;object-fit:contain;filter:drop-shadow(0 14px 18px rgba(0,0,0,.55))}
+.pp-studio span{position:relative;z-index:1;color:var(--g-dim);font-size:.8rem;text-align:center;line-height:1.6}
+.pp-studio span b{display:block;font-size:2rem;opacity:.5}
+.pp-acts{display:flex;flex-direction:column;gap:8px}
+.pp-acts .pp-b{justify-content:flex-start}
+/* ── צבעים ── */
+.pp-colors{display:grid;grid-template-columns:repeat(auto-fill,minmax(172px,1fr));gap:10px}
+.pp-col{border-radius:18px;padding:10px;background:rgba(255,255,255,.04);border:1px solid var(--g-line)}
+.pp-col .pp-cn{margin:0 0 8px;font-size:.78rem;font-weight:700;color:var(--g-txt);display:flex;align-items:center;gap:7px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pp-col .pp-cn i{flex:none;width:10px;height:10px;border-radius:50%;background:var(--g-dim)}
+.pp-col .pp-cn i.ok{background:var(--g-ok);box-shadow:0 0 8px var(--g-ok)}
+.pp-col .pp-studio{aspect-ratio:16/10;border-radius:12px;margin-bottom:8px}
+.pp-col .pp-studio span{font-size:.7rem}
+/* ── ביקורת ── */
+.pp-score{display:flex;align-items:center;gap:14px}
+.pp-ring{--v:0;flex:none;width:64px;height:64px;border-radius:50%;display:grid;place-items:center;font-family:var(--adm-num);font-weight:700;font-size:1.3rem;color:#fff;
+  background:conic-gradient(var(--g-acc) calc(var(--v)*36deg),rgba(255,255,255,.1) 0);-webkit-mask:radial-gradient(farthest-side,transparent 74%,#000 75%);mask:radial-gradient(farthest-side,transparent 74%,#000 75%)}
+.pp-ring-w{position:relative;width:64px;height:64px;flex:none}
+.pp-ring-w b{position:absolute;inset:0;display:grid;place-items:center;font-family:var(--adm-num);font-size:1.35rem;font-weight:700}
+.pp-pc{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.pp-pc .pp-f.wide{grid-column:auto}
+.pp-pc .pp-f:first-child .pp-in{border-color:rgba(52,211,153,.35)}
+.pp-pc .pp-f:last-child .pp-in{border-color:rgba(251,113,133,.35)}
+/* ── אבזור ── */
+.pp-hl{display:flex;align-items:center;gap:12px;padding:9px;border-radius:16px;background:rgba(255,255,255,.035);border:1px solid rgba(255,255,255,.07)}
+.pp-hl+.pp-hl{margin-top:8px}
+.pp-hl-img{flex:none;width:84px;height:56px;border-radius:11px;overflow:hidden;background:rgba(0,0,0,.35);display:grid;place-items:center;color:var(--g-dim);font-size:.64rem;border:1px solid var(--g-line)}
+.pp-hl-img img{width:100%;height:100%;object-fit:cover}
+.pp-hl-t{flex:1;font-size:.84rem;font-weight:600;line-height:1.4}
+/* ── עגינת שמירה ── */
+.pp-dock{position:relative;z-index:6;margin:16px 16px 12px;padding:10px 10px 10px 16px;border-radius:20px;display:flex;align-items:center;gap:12px}
+#p-msg{flex:1;font-size:.8rem;color:var(--g-sub);min-height:1em;line-height:1.45}
+#p-msg:empty::before{content:'השינויים נשמרים רק בלחיצה על שמור';color:var(--g-dim)}
+.admin-page .pp #p-save{position:relative;overflow:hidden;border:0;cursor:pointer;font:800 .92rem var(--font);color:#1a1206;padding:12px 26px;border-radius:14px;
+  background:linear-gradient(180deg,#ffc173,#ff9d2e);box-shadow:inset 0 1px 0 rgba(255,255,255,.6),0 10px 26px -8px rgba(255,157,46,.85)}
+.admin-page .pp #p-save::after{content:'';position:absolute;top:0;bottom:0;width:40%;left:-60%;background:linear-gradient(100deg,transparent,rgba(255,255,255,.55),transparent);transform:skewX(-20deg);animation:ppShine 3.6s ease-in-out infinite}
+.admin-page .pp #p-save:disabled{filter:saturate(.4) brightness(.8);cursor:wait}
+@keyframes ppShine{0%,60%{left:-60%}100%{left:130%}}
+/* ── כניסה ── */
+.pp.is-in .pp-hero,.pp.is-in .pp-nav,.pp.is-in .pp-sec,.pp.is-in .pp-dock{animation:ppIn .6s cubic-bezier(.2,.8,.2,1) both}
+.pp.is-in .pp-sec:nth-child(2){animation-delay:.05s}.pp.is-in .pp-sec:nth-child(3){animation-delay:.1s}.pp.is-in .pp-sec:nth-child(4){animation-delay:.15s}.pp.is-in .pp-sec:nth-child(n+5){animation-delay:.2s}
+@keyframes ppIn{from{opacity:0;transform:translateY(14px) scale(.985)}to{opacity:1;transform:none}}
+@media (prefers-reduced-motion:reduce){.pp *,.pp *::before,.pp *::after{animation:none!important;transition:none!important}}
+@media (max-width:720px){
+  .admin-page .pp{border-radius:22px}
+  .pp-hero{grid-template-columns:1fr auto;padding:16px 14px 14px;gap:10px 12px}
+  .pp-hero .pp-gauge{order:1;justify-self:start}.pp-hero .pp-x{order:2}.pp-hero>div:nth-child(2){order:3;grid-column:1/-1}
+  .pp-sec{padding-top:18px}.pp-sh{padding-inline-end:70px}.pp-sh .pp-st{position:absolute;top:14px;inset-inline-end:14px;margin:0}
+  .pp-thumb{display:none}
+  .pp-body{padding:0 10px}.pp-nav{margin:0 10px 12px}.pp-dock{margin:14px 10px 10px}
+  .pp-sec{padding:16px 14px}
+  .pp-studio-w,.pp-pc{grid-template-columns:1fr}
+  .pp-num{display:none}.pp-sec .pp-st{margin-inline-end:0}
+}`;
+  function ppEnsureCss() {
+    if (document.getElementById('pp-css')) return;
+    const st = document.createElement('style'); st.id = 'pp-css'; st.textContent = PP_CSS; document.head.appendChild(st);
+  }
+  const PP_IC = {
+    id: '<path d="M4 6h16v12H4z"/><circle cx="9" cy="11" r="2"/><path d="M6.5 15.5c.6-1.3 1.5-2 2.5-2s1.9.7 2.5 2M14 10h4M14 13h3"/>',
+    price: '<path d="M3 12V4h8l10 10-8 8z"/><circle cx="7.5" cy="8.5" r="1.4"/>',
+    photos: '<rect x="3" y="5" width="18" height="14" rx="3"/><circle cx="9" cy="10" r="1.8"/><path d="m21 16-5-5-8 8"/>',
+    cut: '<circle cx="6" cy="6" r="2.6"/><circle cx="6" cy="18" r="2.6"/><path d="M8.2 7.6 20 18M8.2 16.4 20 6"/>',
+    color: '<path d="M12 3s6 6.4 6 11a6 6 0 0 1-12 0c0-4.6 6-11 6-11z"/><path d="M9.5 14.5a2.6 2.6 0 0 0 2.5 2.6"/>',
+    review: '<path d="m12 3 2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1-4.4-4.3 6.1-.9z"/>',
+    eq: '<path d="M12 3v4M12 17v4M3 12h4M17 12h4M5.6 5.6l2.8 2.8M15.6 15.6l2.8 2.8M5.6 18.4l2.8-2.8M15.6 8.4l2.8-2.8"/>',
+  };
+  const ppSvg = function (k) { return '<svg viewBox="0 0 24 24" aria-hidden="true">' + PP_IC[k] + '</svg>'; };
   function renderPersonal(msg) {
     const host = pHost(); if (!host || !pState) return;
-    const s = pState;
-    const photosHtml = s.photos.length ? '<div style="display:flex;flex-wrap:wrap;gap:8px;">' + s.photos.map(function (u, i) {
-      const on = u === s.main;
-      return '<div style="width:96px;">' +
-        '<button type="button" onclick="pSetMain(' + i + ')" title="קבע כתמונה ראשית" style="display:block;padding:0;border:2px solid ' + (on ? 'var(--adm-accent,#ff9d2e)' : 'transparent') + ';border-radius:8px;background:none;cursor:pointer;">' +
-        '<img src="' + escapeAttr(u) + '" alt="" style="width:92px;height:66px;object-fit:cover;border-radius:6px;display:block;"></button>' +
-        '<div style="display:flex;gap:2px;margin-top:2px;"><button type="button" class="tbl-btn" style="flex:1;padding:2px;font-size:0.62rem;" onclick="pSetMain(' + i + ')">' + (on ? '★ ראשית' : '☆') + '</button>' +
-        '<button type="button" class="tbl-btn" style="padding:2px 5px;font-size:0.62rem;" title="הסר רקע מהתמונה הזו" onclick="pCutoutFromPhoto(' + i + ')">✂️</button>' +
-        '<button type="button" class="tbl-btn del" style="padding:2px 6px;font-size:0.62rem;" title="הסר" onclick="pRemovePhoto(' + i + ')">✕</button></div></div>';
-    }).join('') + '</div>' : '<div class="adm-empty-state" style="padding:8px;">אין תמונות עדיין</div>';
-    const cutHtml = '<div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap;">' +
-      '<div style="width:220px;aspect-ratio:16/10;border-radius:8px;background:repeating-conic-gradient(#e5e7eb 0 25%,#fff 0 50%) 0 0/16px 16px;display:grid;place-items:center;overflow:hidden;">' +
-        (s.cutout ? '<img src="' + escapeAttr(s.cutout) + '" alt="" style="max-width:94%;max-height:90%;object-fit:contain;">' : '<span style="font-size:0.72rem;color:#6b7280;">אין עדיין</span>') + '</div>' +
-      '<div style="display:flex;flex-direction:column;gap:6px;">' +
-        '<button type="button" class="tbl-btn" style="border-color:var(--adm-accent,#ff9d2e);font-weight:700;" onclick="pCutoutOpenTool()" title="נפתח הכלי ובוחרים בו את התמונה המקורית ברזולוציה מלאה">✂️ הסר רקע מקובץ במחשב (מומלץ)</button>' +
-        (s.main ? '<button type="button" class="tbl-btn" onclick="pCutoutFromMain()">✂️ הסר רקע מהתמונה הראשית</button>' : '') +
-        '<label class="tbl-btn" style="cursor:pointer;"><input type="file" accept="image/*" style="display:none;" onchange="pUploadReadyCutout(this)">⬆️ העלה PNG שקוף מוכן</label>' +
-        (s.cutout ? '<button type="button" class="tbl-btn del" onclick="pRemoveCutout()">הסר</button>' : '') +
-      '</div></div>';
-    const inCss = 'width:100%;padding:8px 10px;border-radius:8px;border:1px solid var(--adm-border);background:var(--adm-surface-2);color:var(--adm-text);font-family:var(--font);font-size:0.85rem;';
-    const fieldsHtml = P_TEXT.filter(function (p) { return !(s.trims.length && (p.key === 'price' || p.key === 'price_top')); }).map(function (p) {
-      const v = s.f[p.key];
+    ppEnsureCss();
+    const s = pState, f = s.f;
+    const first = !s._shown; s._shown = true;
+    const keepY = window.scrollY;
+    // ── מצב השלמה (מה עוד חסר) ──
+    const hasColorsDone = !s.colors.length || s.colors.every(function (n) { return s.colorImages[n]; });
+    const hlDone = !s.highlights.length || s.highlights.every(function (h) { return h.image; });
+    const pricesDone = s.trims.length ? s.trims.every(function (t) { return t.price != null; }) : !isBlank(f.price);
+    const reviewDone = !isBlank(f.score) && !isBlank(f.description) && !isBlank(f.pros) && !isBlank(f.cons);
+    const checks = [!!s.main, !!s.cutout, pricesDone, !isBlank(f.score), !isBlank(f.description), !isBlank(f.pros) && !isBlank(f.cons), !isBlank(f.youtube_video_url)];
+    if (s.colors.length) checks.push(hasColorsDone);
+    if (s.highlights.length) checks.push(hlDone);
+    const pct = Math.round(checks.filter(Boolean).length / checks.length * 100);
+    // ── עזרי בנייה ──
+    let secN = 0;
+    const st = function (ok, okTxt, noTxt) { return '<span class="pp-st' + (ok ? ' ok' : '') + '">' + (ok ? '✓ ' + (okTxt || 'מוכן') : (noTxt || 'חסר')) + '</span>'; };
+    const sec = function (id, ic, title, sub, ok, body, okTxt, noTxt) {
+      secN++;
+      return '<div class="pp-sec pp-glass" id="pp-s-' + id + '">' +
+        '<span class="pp-num">' + (secN < 10 ? '0' : '') + secN + '</span>' +
+        '<div class="pp-sh"><span class="pp-ic">' + ppSvg(ic) + '</span><div><div class="pp-h">' + title + '</div>' + (sub ? '<div class="pp-p">' + sub + '</div>' : '') + '</div>' + (ok == null ? '' : st(ok, okTxt, noTxt)) + '</div>' + body + '</div>';
+    };
+    const fld = function (p, extra) {
+      const v = f[p.key];
       const val = v === null || v === undefined ? '' : (Array.isArray(v) ? v.join('\n') : String(v));
-      const input = (p.type === 'textarea' || p.type === 'list')
-        ? '<textarea id="p-f-' + p.key + '" rows="' + (p.type === 'list' ? 4 : 3) + '" style="' + inCss + 'resize:vertical;">' + escapeHtml(val) + '</textarea>'
-        : '<input id="p-f-' + p.key + '" type="' + (p.type === 'float' ? 'number' : 'text') + '"' + (p.type === 'float' ? ' step="0.1" min="0" max="10"' : p.type === 'number' ? ' inputmode="numeric" placeholder="למשל 189,990"' : '') + ' value="' + escapeAttr(p.type === 'number' && val ? Number(val).toLocaleString('en-US') : val) + '" style="' + inCss + '">';
-      const wide = p.type === 'textarea' || p.type === 'list';
-      return '<div class="form-group" style="flex:' + (wide ? '1 1 100%' : '1 1 180px') + ';min-width:' + (wide ? '240' : '160') + 'px;"><label for="p-f-' + p.key + '">' + escapeAttr(p.label) + '</label>' + input +
-        (p.hint ? '<div style="font-size:0.68rem;color:var(--adm-muted);margin-top:2px;">' + escapeAttr(p.hint) + '</div>' : '') + '</div>';
-    }).join('');
-    const hlHtml = s.highlights.length ? s.highlights.map(function (h, i) {
-      return '<div style="display:flex;align-items:center;gap:10px;padding:6px 0;border-bottom:1px solid var(--adm-border);">' +
-        '<div style="width:72px;height:48px;border-radius:6px;background:var(--adm-surface-2);overflow:hidden;flex:none;display:grid;place-items:center;">' +
-          (h.image ? '<img src="' + escapeAttr(h.image) + '" alt="" style="width:100%;height:100%;object-fit:cover;">' : '<span style="font-size:0.62rem;color:var(--adm-muted);">אין תמונה</span>') + '</div>' +
-        '<div style="flex:1;font-size:0.8rem;">' + escapeHtml(h.title) + '</div>' +
-        '<label class="tbl-btn" style="cursor:pointer;"><input type="file" accept="image/*" style="display:none;" onchange="pHighlightImage(this,' + i + ')">' + (h.image ? 'החלף' : '⬆️ תמונה') + '</label>' +
-        (h.image ? '<button type="button" class="tbl-btn del" onclick="pHighlightImageRemove(' + i + ')">✕</button>' : '') + '</div>';
-    }).join('') : '<div style="font-size:0.75rem;color:var(--adm-muted);">אין פריטי אבזור בולטים (נבחרים אוטומטית מהמפרט בזמן החילוץ).</div>';
-    host.innerHTML = '<div class="form-block" style="margin-top:10px;background:var(--adm-surface-2);">' +
-      '<div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:8px;"><strong style="font-size:0.9rem;">✨ פרטים אישיים — מה שלא מגיע מהמפרט</strong>' +
-        '<button type="button" class="tbl-btn" onclick="togglePersonalPanel(\'' + s.kind + '\',' + s.id + ')">סגור ✕</button></div>' +
-      '<div style="display:grid;gap:14px;">' +
-        (s.ident ? '<div><div style="font-size:0.78rem;font-weight:700;margin-bottom:6px;">🪪 זיהוי הרכב <span style="font-weight:400;color:var(--adm-muted);">— בדוק במיוחד את שנת הדגם</span></div><div class="form-row" style="flex-wrap:wrap;">' +
-          [['brand', 'יצרן', 'text'], ['model', 'דגם', 'text'], ['year', 'שנת דגם', 'number'], ['slug', 'כתובת בעמוד (slug)', 'text']].map(function (f) {
-            return '<div class="form-group" style="flex:1 1 ' + (f[0] === 'slug' ? '260' : '140') + 'px;min-width:120px;"><label for="p-id-' + f[0] + '">' + f[1] + '</label><input id="p-id-' + f[0] + '" type="' + f[2] + '" dir="' + (f[0] === 'brand' || f[0] === 'slug' ? 'ltr' : 'auto') + '" value="' + escapeAttr(s.ident[f[0]]) + '" oninput="pIdentInput(\'' + f[0] + '\')" style="' + inCss + '"></div>';
-          }).join('') + '</div><div style="font-size:0.7rem;color:var(--adm-muted);">הכתובת מתעדכנת לבד לפי יצרן-דגם-שנה, כל עוד לא שינית אותה ידנית.</div></div>' : '') +
-        (s.trims.length ? '<div id="p-prices"><div style="font-size:0.78rem;font-weight:700;margin-bottom:6px;">₪ מחירים לפי רמת גימור <span style="font-weight:400;color:var(--adm-muted);">— הדבק את המחירון כמו שהוא, או מלא כל רמה ידנית</span></div>' +
-          '<textarea id="p-price-text" rows="4" placeholder="הדבק כאן את המחירון כמו שקיבלת אותו, למשל:&#10;' + escapeAttr(s.trims.map(function (t, i) { return t.name + ' – ' + (189990 + i * 15000).toLocaleString('en-US') + ' ₪'; }).join('\n')).replace(/\n/g, '&#10;') + '" style="' + inCss + 'resize:vertical;"></textarea>' +
-          '<div style="display:flex;gap:8px;align-items:flex-start;margin:6px 0 10px;flex-wrap:wrap;"><button type="button" class="tbl-btn" style="border-color:var(--adm-accent,#ff9d2e);" onclick="pParsePrices()">🧮 פענח ושבץ לפי רמות</button><div id="p-price-parse" style="font-size:0.74rem;color:var(--adm-muted);flex:1;min-width:200px;"></div></div>' +
-          '<div class="form-row" style="flex-wrap:wrap;">' +
-          s.trims.map(function (t, i) {
-            return '<div class="form-group" style="flex:1 1 200px;min-width:180px;"><label for="p-tp-' + i + '">' + escapeHtml(t.name) + '</label><input id="p-tp-' + i + '" type="text" inputmode="numeric" placeholder="מחיר בש״ח" oninput="pTrimPriceInput()" value="' + (t.price != null ? Number(t.price).toLocaleString('en-US') : '') + '" style="' + inCss + '"></div>';
-          }).join('') + '</div>' +
-          '<div style="font-size:0.7rem;color:var(--adm-muted);">מחיר הבסיס ("החל מ-") ומחיר הרמה העליונה מתעדכנים לבד מהזול והיקר.</div></div>' : '') +
-        '<div><div style="font-size:0.78rem;font-weight:700;margin-bottom:6px;">תמונות — לחץ על תמונה כדי לקבוע אותה כראשית</div>' + photosHtml +
-          '<label class="tbl-btn" style="cursor:pointer;display:inline-block;margin-top:8px;"><input type="file" accept="image/*" multiple style="display:none;" onchange="pAddPhotos(this)">➕ הוסף תמונות</label></div>' +
-        '<div><div style="font-size:0.78rem;font-weight:700;margin-bottom:6px;">תמונה ראשית ללא רקע</div>' + cutHtml +
-          '<div style="font-size:0.7rem;color:var(--adm-muted);margin-top:6px;">נפתח חלון של כלי הסרת הרקע. המודל רץ במחשב שלך; בפעם הראשונה הוא יורד (כ-94MB) ואחר כך נשמר בדפדפן. בכלי אפשר לתקן במברשת לפני השמירה.</div></div>' +
-
-        (s.colors.length ? '<div><div style="font-size:0.78rem;font-weight:700;margin-bottom:6px;">🎨 תמונה ללא רקע לכל צבע <span style="font-weight:400;color:var(--adm-muted);">— בעמוד "אבזור" לחיצה על צבע מחליפה את הרכב במרכז. צבע בלי תמונה מוצג רק כעיגול.</span></div>' +
-          '<div style="display:flex;flex-wrap:wrap;gap:10px;">' + s.colors.map(function (n, i) {
-            const u = s.colorImages[n];
-            return '<div style="width:170px;border:1px solid var(--adm-border);border-radius:10px;padding:8px;">' +
-              '<div style="font-size:0.74rem;font-weight:700;margin-bottom:6px;" dir="auto">' + escapeHtml(n) + '</div>' +
-              '<div style="height:70px;border-radius:6px;background:repeating-conic-gradient(#e5e7eb 0 25%,#fff 0 50%) 0 0/12px 12px;display:grid;place-items:center;overflow:hidden;margin-bottom:6px;">' +
-                (u ? '<img src="' + escapeAttr(u) + '" alt="" style="max-width:94%;max-height:90%;object-fit:contain;">' : '<span style="font-size:0.66rem;color:#6b7280;">אין תמונה</span>') + '</div>' +
-              '<div style="display:flex;gap:4px;flex-wrap:wrap;">' +
-                '<button type="button" class="tbl-btn" style="font-size:0.66rem;padding:3px 6px;" onclick="pColorTool(' + i + ')">✂️ הסר רקע</button>' +
-                '<label class="tbl-btn" style="font-size:0.66rem;padding:3px 6px;cursor:pointer;"><input type="file" accept="image/*" style="display:none;" onchange="pColorUpload(this,' + i + ')">⬆️ PNG</label>' +
-                (u ? '<button type="button" class="tbl-btn del" style="font-size:0.66rem;padding:3px 6px;" onclick="pColorRemove(' + i + ')">✕</button>' : '') +
-              '</div></div>';
-          }).join('') + '</div></div>' : '') +
-        '<div class="form-row" style="flex-wrap:wrap;">' + fieldsHtml + '</div>' +
-        '<div><div style="font-size:0.78rem;font-weight:700;margin-bottom:4px;">תמונות לפריטי האבזור הבולטים (עמוד "אבזור")</div>' + hlHtml + '</div>' +
-      '</div>' +
-      '<div style="display:flex;gap:8px;justify-content:flex-end;align-items:center;margin-top:12px;flex-wrap:wrap;">' +
-        '<span id="p-msg" style="font-size:0.78rem;color:var(--adm-muted);">' + (msg || '') + '</span>' +
-        '<button type="button" class="btn-primary" id="p-save" onclick="savePersonal()">💾 שמור</button>' +
-      '</div></div>';
+      const area = p.type === 'textarea' || p.type === 'list';
+      const input = area
+        ? '<textarea id="p-f-' + p.key + '" class="pp-in" rows="' + (p.type === 'list' ? 5 : 4) + '"' + (extra || '') + '>' + escapeHtml(val) + '</textarea>'
+        : '<input id="p-f-' + p.key + '" class="pp-in' + (p.key === 'youtube_video_url' ? ' ltr' : '') + '" type="' + (p.type === 'float' ? 'number' : 'text') + '"' +
+          (p.type === 'float' ? ' step="0.1" min="0" max="10"' : p.type === 'number' ? ' inputmode="numeric" placeholder="למשל 189,990"' : p.key === 'youtube_video_url' ? ' dir="ltr" placeholder="https://youtu.be/…"' : '') +
+          ' value="' + escapeAttr(p.type === 'number' && val ? Number(val).toLocaleString('en-US') : val) + '"' + (extra || '') + '>';
+      return '<div class="pp-f' + (area ? ' wide' : '') + '"><label for="p-f-' + p.key + '">' + escapeAttr(p.label) + '</label>' + input + (p.hint ? '<div class="pp-hint">' + escapeAttr(p.hint) + '</div>' : '') + '</div>';
+    };
+    const P = {}; P_TEXT.forEach(function (p) { P[p.key] = p; });
+    const studio = function (u, empty) { return '<div class="pp-studio">' + (u ? '<img src="' + escapeAttr(u) + '" alt="">' : '<span>' + empty + '</span>') + '</div>'; };
+    // ── מקטעים ──
+    const out = [];
+    const nav = [];
+    if (s.ident) {
+      nav.push(['id', 'זיהוי', !!(s.ident.brand && s.ident.model && s.ident.year)]);
+      out.push(sec('id', 'id', 'זיהוי הרכב', 'בדוק במיוחד את שנת הדגם — היא קובעת את הכתובת בעמוד', null,
+        '<div class="pp-grid">' + [['brand', 'יצרן', 'text', 1], ['model', 'דגם', 'text', 0], ['year', 'שנת דגם', 'number', 1], ['slug', 'כתובת בעמוד (slug)', 'text', 1]].map(function (x) {
+          return '<div class="pp-f"><label for="p-id-' + x[0] + '">' + x[1] + '</label><input id="p-id-' + x[0] + '" class="pp-in' + (x[3] ? ' ltr' : '') + '" type="' + x[2] + '" dir="' + (x[3] ? 'ltr' : 'auto') + '" value="' + escapeAttr(s.ident[x[0]]) + '" oninput="pIdentInput(\'' + x[0] + '\')"></div>';
+        }).join('') + '</div><div class="pp-hint" style="margin-top:10px;">הכתובת מתעדכנת לבד לפי יצרן-דגם-שנה, כל עוד לא שינית אותה ידנית.</div>'));
+    }
+    nav.push(['price', 'מחירים', pricesDone]);
+    out.push(sec('price', 'price', s.trims.length ? 'מחיר לכל רמת גימור' : 'מחיר', s.trims.length ? 'הדבק את המחירון כמו שקיבלת אותו — אשבץ כל מחיר לרמה שלו. או מלא ידנית.' : 'ריק = "מחיר טרם פורסם"', pricesDone,
+      (s.trims.length
+        ? '<div id="p-prices"><textarea id="p-price-text" class="pp-in" rows="4" placeholder="הדבק כאן את המחירון, למשל:&#10;' + escapeAttr(s.trims.map(function (t, i) { return t.name + ' – ' + (189990 + i * 15000).toLocaleString('en-US') + ' ₪'; }).join('\n')).replace(/\n/g, '&#10;') + '"></textarea>' +
+          '<div class="pp-row" style="margin:10px 0 16px;align-items:flex-start;"><button type="button" class="pp-b acc" onclick="pParsePrices()">✦ פענח ושבץ לפי רמות</button><div id="p-price-parse"></div></div>' +
+          '<div class="pp-grid">' + s.trims.map(function (t, i) {
+            return '<div class="pp-f"><label for="p-tp-' + i + '" dir="auto">' + escapeHtml(t.name) + '</label><div class="pp-trim"><input id="p-tp-' + i + '" class="pp-in" type="text" inputmode="numeric" placeholder="—" oninput="pTrimPriceInput()" value="' + (t.price != null ? Number(t.price).toLocaleString('en-US') : '') + '"></div></div>';
+          }).join('') + '</div><div class="pp-hint" style="margin-top:10px;">מחיר הבסיס ("החל מ-") ומחיר הרמה העליונה מתעדכנים לבד מהזול והיקר.</div></div>'
+        : '<div class="pp-grid">' + fld(P.price) + fld(P.price_top) + '</div>'),
+      'מתומחר', 'אין מחיר'));
+    nav.push(['photos', 'גלריה', !!s.main]);
+    out.push(sec('photos', 'photos', 'גלריה', 'לחיצה על תמונה קובעת אותה כראשית · ✂️ מסיר לה את הרקע', !!s.main,
+      '<div class="pp-photos">' + s.photos.map(function (u, i) {
+        const on = u === s.main;
+        return '<div class="pp-ph' + (on ? ' is-main' : '') + '"><button type="button" class="pp-ph-img" onclick="pSetMain(' + i + ')" title="קבע כתמונה ראשית"><img src="' + escapeAttr(u) + '" alt="" loading="lazy"></button>' +
+          (on ? '<span class="pp-badge">★ ראשית</span>' : '') +
+          '<div class="pp-ph-act">' + (on ? '' : '<button type="button" title="קבע כראשית" onclick="pSetMain(' + i + ')">★</button>') +
+          '<button type="button" title="הסר רקע מהתמונה הזו" onclick="pCutoutFromPhoto(' + i + ')">✂️</button>' +
+          '<button type="button" class="del" title="הסר מהגלריה" onclick="pRemovePhoto(' + i + ')">✕</button></div></div>';
+      }).join('') +
+      '<label class="pp-add"><input type="file" accept="image/*" multiple onchange="pAddPhotos(this)"><b>+</b>הוסף תמונות</label></div>',
+      s.photos.length + ' תמונות', 'אין תמונה ראשית'));
+    nav.push(['cut', 'ללא רקע', !!s.cutout]);
+    out.push(sec('cut', 'cut', 'הרכב על הבמה', 'התמונה ללא רקע שעומדת במרכז עמוד הדגם', !!s.cutout,
+      '<div class="pp-studio-w">' + studio(s.cutout, '<b>✂️</b>עוד אין תמונה ללא רקע') +
+      '<div class="pp-acts">' +
+        '<button type="button" class="pp-b acc" onclick="pCutoutOpenTool()" title="נפתח הכלי ובוחרים בו את התמונה המקורית ברזולוציה מלאה">✂️ הסר רקע מקובץ במחשב</button>' +
+        (s.main ? '<button type="button" class="pp-b" onclick="pCutoutFromMain()">✂️ הסר רקע מהתמונה הראשית</button>' : '') +
+        '<label class="pp-b"><input type="file" accept="image/*" onchange="pUploadReadyCutout(this)">⬆️ העלה PNG שקוף מוכן</label>' +
+        (s.cutout ? '<button type="button" class="pp-b del" onclick="pRemoveCutout()">✕ הסר</button>' : '') +
+        '<div class="pp-hint">הכלי נפתח בחלון נפרד ורץ במחשב שלך. בפעם הראשונה המודל יורד (כ-94MB) ואחר כך נשמר בדפדפן.</div>' +
+      '</div></div>'));
+    if (s.colors.length) {
+      const nDone = s.colors.filter(function (n) { return s.colorImages[n]; }).length;
+      nav.push(['colors', 'צבעים', hasColorsDone]);
+      out.push(sec('colors', 'color', 'רכב בכל צבע', 'בעמוד "אבזור" לחיצה על צבע מחליפה את הרכב במרכז. צבע בלי תמונה מוצג רק כעיגול.', hasColorsDone,
+        '<div class="pp-colors">' + s.colors.map(function (n, i) {
+          const u = s.colorImages[n];
+          return '<div class="pp-col"><div class="pp-cn" dir="auto"><i' + (u ? ' class="ok"' : '') + '></i>' + escapeHtml(n) + '</div>' + studio(u, 'אין תמונה') +
+            '<div class="pp-row"><button type="button" class="pp-b sm" onclick="pColorTool(' + i + ')">✂️ הסר רקע</button>' +
+            '<label class="pp-b sm"><input type="file" accept="image/*" onchange="pColorUpload(this,' + i + ')">⬆️ PNG</label>' +
+            (u ? '<button type="button" class="pp-b sm del" onclick="pColorRemove(' + i + ')">✕</button>' : '') + '</div></div>';
+        }).join('') + '</div>', nDone + '/' + s.colors.length, nDone + '/' + s.colors.length));
+    }
+    nav.push(['review', 'ביקורת', reviewDone]);
+    const sc = Math.max(0, Math.min(10, Number(f.score) || 0));
+    out.push(sec('review', 'review', 'הביקורת של ספידומטר', 'הציון, התיאור, היתרונות והחסרונות שמופיעים בעמוד הדגם', reviewDone,
+      '<div class="pp-grid" style="margin-bottom:12px;">' +
+        '<div class="pp-f"><label for="p-f-score">' + escapeAttr(P.score.label) + '</label><div class="pp-score"><div class="pp-ring-w"><div class="pp-ring" id="pp-ring" style="--v:' + sc + '"></div><b id="pp-ring-n">' + (f.score != null ? f.score : '–') + '</b></div>' +
+          '<input id="p-f-score" class="pp-in" type="number" step="0.1" min="0" max="10" value="' + escapeAttr(f.score != null ? f.score : '') + '" oninput="ppScore(this)" placeholder="0-10"></div><div class="pp-hint">' + escapeAttr(P.score.hint) + '</div></div>' +
+        fld(P.youtube_video_url) +
+      '</div>' + '<div style="display:grid;gap:12px;">' + fld(P.description) + '<div class="pp-pc">' + fld(P.pros) + fld(P.cons) + '</div></div>',
+      'מלא', 'חסר'));
+    if (s.highlights.length) {
+      const nImg = s.highlights.filter(function (h) { return h.image; }).length;
+      nav.push(['eq', 'אבזור', hlDone]);
+      out.push(sec('eq', 'eq', 'אבזור בולט', 'תמונה לכל פריט — מופיעה בעמוד "אבזור"', hlDone,
+        s.highlights.map(function (h, i) {
+          return '<div class="pp-hl"><div class="pp-hl-img">' + (h.image ? '<img src="' + escapeAttr(h.image) + '" alt="">' : 'אין תמונה') + '</div>' +
+            '<div class="pp-hl-t">' + escapeHtml(h.title) + '</div>' +
+            '<label class="pp-b sm"><input type="file" accept="image/*" onchange="pHighlightImage(this,' + i + ')">' + (h.image ? '↻ החלף' : '⬆️ תמונה') + '</label>' +
+            (h.image ? '<button type="button" class="pp-b sm del" onclick="pHighlightImageRemove(' + i + ')">✕</button>' : '') + '</div>';
+        }).join(''), nImg + '/' + s.highlights.length, nImg + '/' + s.highlights.length));
+    }
+    // ── כותרת: שם הרכב + מד מוכנות ──
+    const nm = s.ident || (_allCarsCache || []).filter(function (c) { return c.id === s.id; })[0] || (_draftsCache[s.id] && _draftsCache[s.id].extracted_data) || {};
+    const ang = -90 + pct * 1.8;
+    const arcLen = 157.08; // חצי היקף של רדיוס 50
+    const ticks = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map(function (i) { const a = Math.PI * (1 - i / 10), r1 = 58, r2 = i % 5 ? 62 : 65; return '<line class="tick" x1="' + (60 + r1 * Math.cos(a)).toFixed(1) + '" y1="' + (62 - r1 * Math.sin(a)).toFixed(1) + '" x2="' + (60 + r2 * Math.cos(a)).toFixed(1) + '" y2="' + (62 - r2 * Math.sin(a)).toFixed(1) + '"/>'; }).join('');
+    const gauge = '<div class="pp-gauge" title="כמה מהפרטים האישיים מולאו"><svg viewBox="0 0 120 70"><defs><linearGradient id="ppGrad" x1="0" x2="1"><stop offset="0" stop-color="#fb7185"/><stop offset=".5" stop-color="#ff9d2e"/><stop offset="1" stop-color="#34d399"/></linearGradient></defs>' +
+      ticks + '<path class="trk" d="M10 62a50 50 0 0 1 100 0"/><path class="val" d="M10 62a50 50 0 0 1 100 0" stroke-dasharray="' + arcLen + '" stroke-dashoffset="' + (first ? arcLen : (arcLen * (1 - pct / 100)).toFixed(1)) + '" data-off="' + (arcLen * (1 - pct / 100)).toFixed(1) + '"/>' +
+      '<g class="ndl" style="transform:rotate(' + (first ? -90 : ang) + 'deg)" data-ang="' + ang + '"><line x1="60" y1="62" x2="60" y2="22"/></g><circle class="hub" cx="60" cy="62" r="4"/></svg>' +
+      '<div class="pp-gauge-n">' + pct + '%<small>מוכנות</small></div></div>';
+    const amb = s.main ? '<div class="pp-amb" style="background-image:url(\'' + escapeAttr(s.main).replace(/'/g, '%27') + '\')"></div>' : '<div class="pp-amb is-aurora"></div>';
+    host.innerHTML = '<div class="pp' + (first ? ' is-in' : '') + '" id="pp-root">' + amb + '<div class="pp-grain"></div>' +
+      '<div class="pp-hero">' +
+        (s.main ? '<div class="pp-thumb"><img src="' + escapeAttr(s.main) + '" alt=""></div>' : '<div></div>') +
+        '<div><div class="pp-kind' + (s.kind === 'draft' ? '' : ' is-live') + '"><i></i>' + (s.kind === 'draft' ? 'טיוטה · לפני פרסום' : 'מפורסם באתר') + '</div>' +
+          '<div class="pp-title" dir="auto"><span>' + escapeHtml(nm.brand || '') + '</span> <b>' + escapeHtml(nm.model || 'רכב') + '</b>' + (nm.year ? '<em>' + escapeHtml(String(nm.year)) + '</em>' : '') + '</div>' +
+          '<div class="pp-tag">✨ פרטים אישיים — כל מה שלא מגיע מגיליון המפרט</div></div>' +
+        gauge + '<button type="button" class="pp-x" title="סגור" onclick="togglePersonalPanel(\'' + s.kind + '\',' + s.id + ')">✕</button></div>' +
+      '<div class="pp-ph-spc" id="pp-nav-spc"></div><div class="pp-nav pp-glass" role="tablist">' + nav.map(function (n, i) { return '<button type="button" data-pp-go="' + n[0] + '"' + (i === 0 ? ' class="on"' : '') + '><i' + (n[2] ? ' class="ok"' : '') + '></i>' + n[1] + '</button>'; }).join('') + '</div>' +
+      '<div class="pp-body">' + out.join('') + '</div>' +
+      '<div class="pp-ph-spc" id="pp-dock-spc"></div><div class="pp-dock pp-glass"><span id="p-msg">' + (msg || '') + '</span><button type="button" id="p-save" onclick="savePersonal()">💾 שמור</button></div>' +
+      '</div>';
+    if (!first && Math.abs(window.scrollY - keepY) > 2) window.scrollTo(0, keepY);
+    ppWire(host, first);
   }
+  let ppIO = null;
+  // ── אינטראקציות: הברקה שעוקבת אחרי העכבר, ניווט מקטעים, מד שמתמלא ──
+  function ppWire(host, first) {
+    const root = host.querySelector('.pp'); if (!root) return;
+    root.addEventListener('pointermove', function (e) {
+      const g = e.target.closest && e.target.closest('.pp-glass'); if (!g) return;
+      const r = g.getBoundingClientRect();
+      g.style.setProperty('--mx', (e.clientX - r.left) + 'px'); g.style.setProperty('--my', (e.clientY - r.top) + 'px');
+    });
+    const nav = root.querySelector('.pp-nav');
+    nav.addEventListener('click', function (e) {
+      const b = e.target.closest('[data-pp-go]'); if (!b) return;
+      const t = document.getElementById('pp-s-' + b.getAttribute('data-pp-go'));
+      if (t) t.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
+    if ('IntersectionObserver' in window) {
+      if (ppIO) ppIO.disconnect();
+      const io = new IntersectionObserver(function (ents) {
+        ents.forEach(function (en) {
+          if (!en.isIntersecting) return;
+          const id = en.target.id.replace('pp-s-', '');
+          nav.querySelectorAll('button').forEach(function (b) { b.classList.toggle('on', b.getAttribute('data-pp-go') === id); });
+          const on = nav.querySelector('button.on'); if (on && nav.scrollWidth > nav.clientWidth) nav.scrollTo({ left: on.offsetLeft - nav.clientWidth / 2 + on.offsetWidth / 2, behavior: 'smooth' });
+        });
+      }, { rootMargin: '-30% 0px -60% 0px' });
+      root.querySelectorAll('.pp-sec').forEach(function (s) { io.observe(s); });
+      ppIO = io;
+    }
+    ppFloat();
+    if (first) requestAnimationFrame(function () { requestAnimationFrame(function () {
+      const v = root.querySelector('.pp-gauge .val'), n = root.querySelector('.pp-gauge .ndl');
+      if (v) v.style.strokeDashoffset = v.getAttribute('data-off');
+      if (n) n.style.transform = 'rotate(' + n.getAttribute('data-ang') + 'deg)';
+    }); });
+  }
+  // ניווט ושמירה צפים כשהפאנל ארוך מהמסך (ב-CSS של האתר יש overflow על body, אז position:sticky לא עובד שם)
+  let ppRaf = 0;
+  function ppFloat() {
+    ppRaf = 0;
+    const root = document.getElementById('pp-root'); if (!root) return;
+    const nav = root.querySelector('.pp-nav'), dock = root.querySelector('.pp-dock');
+    const ns = document.getElementById('pp-nav-spc'), ds = document.getElementById('pp-dock-spc');
+    const r = root.getBoundingClientRect(), vh = window.innerHeight, side = window.innerWidth <= 720 ? 10 : 16;
+    const place = function (el, on) { el.classList.toggle('is-float', on); el.style.left = on ? (r.left + side) + 'px' : ''; el.style.width = on ? (r.width - side * 2) + 'px' : ''; };
+    // ניווט: צף מרגע שראש הניווט עובר את ראש המסך ועד שסוף הפאנל מתקרב
+    const navTop = (ns.classList.contains('on') ? ns : nav).getBoundingClientRect().top;
+    const navOn = navTop < 10 && r.bottom > 220;
+    if (navOn !== nav.classList.contains('is-float')) { ns.style.height = nav.offsetHeight + 'px'; ns.style.margin = '0 16px 14px'; ns.classList.toggle('on', navOn); }
+    place(nav, navOn);
+    // שמירה: צפה בתחתית כל עוד המקום הטבעי שלה מתחת למסך והפאנל עצמו על המסך
+    const dockTop = (ds.classList.contains('on') ? ds : dock).getBoundingClientRect().top;
+    const dockOn = dockTop + dock.offsetHeight > vh - 12 && r.top < vh - 160;
+    if (dockOn !== dock.classList.contains('is-float')) { ds.style.height = dock.offsetHeight + 'px'; ds.style.margin = '16px 16px 12px'; ds.classList.toggle('on', dockOn); }
+    place(dock, dockOn);
+  }
+  const ppSched = function () { if (!ppRaf) ppRaf = requestAnimationFrame(ppFloat); };
+  window.addEventListener('scroll', ppSched, { passive: true });
+  window.addEventListener('resize', ppSched);
+  window.ppScore = function (el) {
+    const v = parseFloat(el.value), ok = !isNaN(v);
+    const r = document.getElementById('pp-ring'), n = document.getElementById('pp-ring-n');
+    if (r) r.style.setProperty('--v', ok ? Math.max(0, Math.min(10, v)) : 0);
+    if (n) n.textContent = ok ? v : '–';
+  };
   function pMsg(t) { const el = document.getElementById('p-msg'); if (el) el.innerHTML = t; }
   window.pSetMain = function (i) { if (!pState) return; pReadInputs(); pState.main = pState.photos[i]; renderPersonal('לא לשכוח לשמור'); };
   window.pRemovePhoto = function (i) {
