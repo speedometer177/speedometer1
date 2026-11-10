@@ -101,15 +101,32 @@
   }
   function merged(c, trim) { return trim ? specOf(c, trim) : c; }
 
+  /* סוג הנעה: מהשדה, ואם ריק — ממה שכתוב במפרט עצמו (אבזור/תיאור/מנוע), למשל "הנעה קדמית", "AWD", "Dual Motor" */
+  function driveOf(m) {
+    if (m.drive_type) return m.drive_type;
+    const t = [m.engine, m.transmission, m.description].concat(m.notable_features || [], m.features || [],
+      ((m.equipment && m.equipment.groups) || []).reduce((a, g) => a.concat(g.items || []), [])).filter(Boolean).join(' | ');
+    if (/הנעה\s*(?:כפולה|4\s*[x×]\s*4|לכל הגלגלים)|\bAWD\b|\b4WD\b|\b4x4\b|Dual[\s-]?Motor|4MOTION|xDrive|quattro|e-?4ORCE|ALL4/i.test(t)) return 'כפולה';
+    if (/הנעה\s*קדמית|\bFWD\b|מנוע (?:חשמלי )?קדמי/i.test(t)) return 'קדמית';
+    if (/הנעה\s*אחורית|\bRWD\b|מנוע (?:חשמלי )?אחורי/i.test(t)) return 'אחורית';
+    return null;
+  }
   /* ── שישה נתונים לפי ההדמיה: הספק · מהירות מרבית · 0-100 · מנוע · סוג הנעה · מומנט ── */
   function sixSpecs(m) {
     const pt = powertrain(m);
+    const drv = driveShort(driveOf(m));
+    /* אין סוג הנעה במפרט: במקום מקף — נתון אחר שכן ידוע (טווח לחשמלי, צריכה לבנזין) */
+    const drvTile = drv ? { k: 'drv', label: 'סוג הנעה', v: drv, u: '' }
+      : num(m.range_ev) != null && (pt === 'ev' || pt === 'erev') ? { k: 'drv', label: 'טווח חשמלי', v: fmt(m.range_ev), u: 'ק״מ' }
+      : m.fuel_consumption ? { k: 'drv', label: 'צריכת דלק', v: String(m.fuel_consumption).replace(/[^\d.,]/g, '') || null, u: 'ל׳/100' }
+      : num(m.range_ev) != null ? { k: 'drv', label: 'טווח חשמלי', v: fmt(m.range_ev), u: 'ק״מ' }
+      : { k: 'drv', label: 'סוג הנעה', v: null, u: '' };
     return [
       { k: 'hp', label: num(m.system_hp) != null ? 'הספק משולב' : 'הספק מרבי', v: fmt(hpOf(m)), u: 'כ״ס' },
       { k: 'vmax', label: 'מהירות מרבית', v: fmt(m.top_speed), u: 'קמ״ש' },
       { k: 'acc', label: 'תאוצה 0-100', v: num(m.acceleration_0_100) != null ? String(num(m.acceleration_0_100)) : null, u: 'שנ׳' },
       { k: 'eng', label: 'מנוע', v: pt ? PT[pt] : (liters(m) || null), u: pt ? (liters(m) || '') : '' },
-      { k: 'drv', label: 'סוג הנעה', v: driveShort(m.drive_type), u: '' },
+      drvTile,
       { k: 'tq', label: num(m.system_nm) != null ? 'מומנט משולב' : 'מומנט מרבי', v: torqueKgm(nmOf(m), m), u: 'קג״מ' }
     ];
   }
@@ -222,6 +239,58 @@
     { id: 'review', label: 'חוות דעת' }
   ];
 
+  /* ── גרסה 2 (10.11.2026): פס דגם צף, כרטיסי גרסה, סרגל תחתון בנייד ── */
+  const NVI = {
+    '': '<path d="M3 14l2-5c.5-1.2 1.6-2 2.9-2h8.2c1.3 0 2.4.8 2.9 2l2 5v4H3z"/><circle cx="7" cy="18" r="1.6"/><circle cx="17" cy="18" r="1.6"/>',
+    specs: '<path d="M4 6h16M4 12h10M4 18h7"/>',
+    gallery: '<rect x="3" y="5" width="18" height="14" rx="3"/><circle cx="9" cy="10" r="1.6"/><path d="M21 16l-5-5-8 8"/>',
+    equipment: '<path d="M12 3v4M12 17v4M3 12h4M17 12h4M5.6 5.6l2.8 2.8M15.6 15.6l2.8 2.8M5.6 18.4l2.8-2.8M15.6 8.4l2.8-2.8"/>',
+    review: '<path d="M12 3l2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1-4.4-4.3 6.1-.9z"/>'
+  };
+  const NV_SHORT = { '': 'דגם', specs: 'מפרט', gallery: 'גלריה', equipment: 'אבזור', review: 'חוות דעת' };
+  const nvIco = id => '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + NVI[id] + '</svg>';
+  function navHTML(url, short) {
+    return [{ id: '', label: 'דגם' }].concat(VIEWS).map(v => '<a href="' + url + (v.id ? '?view=' + v.id : '') + '" data-view="' + v.id + '"' + (v.id ? '' : ' aria-current="page"') + '>' + nvIco(v.id) + '<span>' + esc(short ? NV_SHORT[v.id] : v.label) + '</span></a>').join('');
+  }
+  /* מה מבדיל בין הגרסאות: הנתון הראשון שבאמת שונה ביניהן (טווח, הנעה, הספק, תאוצה, סוללה). אם הכול זהה — הנתון הראשון שקיים. */
+  function trimNotes(c, trims) {
+    const ms = trims.map(t => merged(c, t));
+    const C = [
+      { get: m => num(m.range_ev), txt: v => 'טווח ' + fmt(v) + ' ק״מ', n: 1 },
+      { get: m => driveShort(driveOf(m)), txt: v => 'הנעה ' + v },
+      { get: m => num(hpOf(m)), txt: v => fmt(v) + ' כ״ס', n: 1 },
+      { get: m => num(m.acceleration_0_100), txt: v => '0-100 ב-' + v + ' שנ׳' },
+      { get: m => num(m.battery_capacity_kwh), txt: v => 'סוללה ' + v + ' קוט״ש', n: 1 }
+    ];
+    const vals = C.map(k => ms.map(k.get));
+    let i = vals.findIndex(v => v.every(x => x != null && x !== '') && new Set(v.map(String)).size > 1);
+    if (i < 0) i = vals.findIndex(v => v.every(x => x != null && x !== ''));
+    if (i < 0) return ms.map(() => ({ note: '', frac: null }));
+    const max = C[i].n ? Math.max.apply(null, vals[i]) : 0;
+    return vals[i].map(v => ({ note: C[i].txt(v), frac: max ? Math.round(v / max * 100) : null }));
+  }
+  /* מונה מתגלגל: כל ספרה היא עמודה 0-9 שמחליקה למקומה. הטקסט המלא נשאר לקוראי מסך. */
+  const ODO_COL = '<span>0</span><span>1</span><span>2</span><span>3</span><span>4</span><span>5</span><span>6</span><span>7</span><span>8</span><span>9</span>';
+  function odo(el, txt, RM) {
+    if (!el) return;
+    txt = String(txt == null ? '' : txt);
+    if (el._odo === txt) return;
+    if (RM || !/\d/.test(txt)) { el.textContent = txt; el._odo = txt; el._odoSk = null; return; }
+    const sk = txt.replace(/\d/g, '0');
+    if (el._odoSk === sk) {
+      const cols = el.querySelectorAll('.od-c'); let k = 0;
+      for (const ch of txt) if (ch >= '0' && ch <= '9') cols[k++].style.transform = 'translateY(-' + ch + 'em)';
+      el.querySelector('.cx-sr').textContent = txt;
+    } else {
+      let k = 0;
+      el.innerHTML = '<span class="cx-sr">' + esc(txt) + '</span><span class="odo" aria-hidden="true">' + Array.from(txt).map(ch => ch >= '0' && ch <= '9'
+        ? '<span class="od"><span class="od-c" style="--k:' + (k++) + '" data-d="' + ch + '">' + ODO_COL + '</span></span>' : '<span class="od-s">' + esc(ch) + '</span>').join('') + '</span>';
+      const cols = el.querySelectorAll('.od-c');
+      requestAnimationFrame(() => requestAnimationFrame(() => cols.forEach(cl => { cl.style.transform = 'translateY(-' + cl.getAttribute('data-d') + 'em)'; })));
+    }
+    el._odo = txt; el._odoSk = sk;
+  }
+
   /* ═══ render — HTML טהור לעמוד הדגם ═══ */
   function render(c, opts) {
     opts = opts || {};
@@ -232,24 +301,34 @@
     const p = price(m.price) || price(c.price);
     const url = '/car/' + encodeURIComponent(c.slug || c.id) + '/';
     const tabs = trims.length ? trims : [{ name: c.model, _base: true }];
+    const notes = trims.length > 1 ? trimNotes(c, trims) : [];
+    const base = trims.length ? num(trims[0].price) : null;
 
-    return '<div class="cp" data-slug="' + esc(c.slug || c.id) + '">' +
+    return '<div class="cp" data-slug=""' + esc(c.slug || c.id) + '">' +
       /* פס הדגם: סמל החברה · ארבעה לחצנים · השוואה */
       '<div class="cp-bar"><div class="cx-wrap cp-bar-in">' +
         '<a class="cp-brand" href="/cars-list.html?brand=' + encodeURIComponent(String(c.brand || '').toLowerCase()) + '" aria-label="כל הדגמים של ' + esc(bn) + '">' + brandMark(c.brand) + '</a>' +
-        '<nav class="cp-nav" aria-label="עמודי הדגם"><a href="' + url + '" data-view="" aria-current="page">דגם</a>' + VIEWS.map(v => '<a href="' + url + '?view=' + v.id + '" data-view="' + v.id + '">' + esc(v.label) + '</a>').join('') + '</nav>' +
+        '<div class="cp-id"><b>' + mix(c.model) + '</b>' + ([c.category, c.year].filter(Boolean).length ? '<small>' + esc([c.category, c.year].filter(Boolean).join(' · ')) + '</small>' : '') + '</div>' +
+        '<nav class="cp-nav" aria-label="עמודי הדגם">' + navHTML(url, false) + '</nav>' +
         '<div class="cp-bar-acts">' +
+          '<button type="button" class="cp-favb" data-fav="' + esc(c.slug || c.id) + '" aria-pressed="false" aria-label="שמירה למועדפים: ' + esc(full) + '">' + ICO.heart + '</button>' +
           '<button type="button" class="cp-cta" data-cmp="' + esc(c.slug || c.id) + '" aria-pressed="false">' + ICO.scale + '<span>הוספה להשוואה</span>' + ICO.arrow + '</button>' +
         '</div>' +
       '</div></div>' +
-      /* מובייל: שורת הלשוניות נפרדת ונדבקת לראש המסך בגלילה (בדסקטופ היא בתוך הפס) */
-      '<div class="cp-subnav"><nav class="cp-nav" aria-label="עמודי הדגם"><a href="' + url + '" data-view="" aria-current="page">דגם</a>' + VIEWS.map(v => '<a href="' + url + '?view=' + v.id + '" data-view="' + v.id + '">' + esc(v.label) + '</a>').join('') + '</nav></div>' +
 
       /* במת התצוגה */
       '<section class="cp-show" id="cp-show" aria-label="' + esc(full) + '">' +
         '<div class="cp-trims-wrap"><div class="cp-trims" role="tablist" aria-label="רמות גימור">' +
-          tabs.map((t, i) => '<button type="button" role="tab" class="cp-trim" data-trim="' + i + '" aria-selected="' + (i === ti) + '"' + (tabs.length < 2 ? ' tabindex="-1"' : '') + '>' + mix(t.name) + '</button>').join('') +
-          '<i class="cp-trim-bar" aria-hidden="true"></i></div></div>' +
+          tabs.map((t, i) => { const tp = price(t.price), nt = notes[i] || {};
+            return '<button type="button" role="tab" class="cp-trim" data-trim="' + i + '" aria-selected="' + (i === ti) + '"' + (tabs.length < 2 ? ' tabindex="-1"' : '') + '><i class="cp-trim-ring" aria-hidden="true"></i><span class="cp-trim-in">' +
+              '<span class="cp-trim-n">' + mix(t.name) + '</span>' +
+              (tp || nt.note ? '<span class="cp-trim-m">' + (tp ? '<b class="cx-num">' + tp + '</b>' : '') + (nt.note ? '<em>' + esc(nt.note) + '</em>' : '') + '</span>' : '') +
+              (nt.frac != null ? '<i class="cp-trim-rg" aria-hidden="true"><i style="width:' + nt.frac + '%"></i></i>' : '') +
+            '</span></button>'; }).join('') +
+          '</div></div>' +
+        /* נייד: כפתור אחד שמראה את הגרסה והמחיר ופותח גיליון בחירה */
+        (trims.length > 1 ? '<button type="button" class="cp-trimbtn" data-tsheet-open aria-haspopup="dialog"><span class="cp-trimbtn-t"><small id="cp-trimbtn-pos">גרסה · ' + (ti + 1) + ' מתוך ' + trims.length + '</small><b id="cp-trimbtn-name">' + mix(trims[ti].name) + '</b></span>' +
+          '<span class="cp-trimbtn-p">' + (p ? '<b class="cx-num" id="cp-trimbtn-price">' + p + '</b>' : '') + '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></span></button>' : '') +
         '<div class="cp-stage' + (main && !main.cut ? ' is-photo' : '') + '">' +
           '<h1 class="cp-title"><span class="cx-sr">' + esc(bn) + ' </span><span class="cp-title-in"><span class="cp-title-model">' + mix(c.model) + '</span> <span class="cp-title-trim">' + mix(trims[ti] ? trims[ti].name : (c.year || '')) + '</span></span></h1>' +
           '<div class="cp-car" id="cp-car">' + frame(main, full + (c.year ? ' ' + c.year : ''), true) + '</div>' +
@@ -269,13 +348,20 @@
         '<div class="cp-about-meta">' + [c.category, c.importer ? 'יבואן: ' + c.importer : '', c.country_of_origin ? 'ארץ ייצור: ' + c.country_of_origin : ''].filter(Boolean).map(x => '<span>' + esc(x) + '</span>').join('') + '</div></section>' : '') +
 
       '<div class="cp-view" id="cp-view" hidden></div>' +
-      /* פס פעולות תחתון — מובייל בלבד (08.11.2026): מחיר + שמירה + שיתוף + השוואה, תמיד בהישג האגודל */
-      '<div class="cp-dock" role="group" aria-label="פעולות מהירות">' +
-        '<div class="cp-dock-p"><small>' + mix(full) + '</small>' + (p ? '<b class="cx-num" id="cp-dock-price">' + p + '</b>' : '<b class="cp-dock-np">מחיר טרם פורסם</b>') + '</div>' +
-        '<button type="button" class="cp-dock-b" data-fav="' + esc(c.slug || c.id) + '" aria-pressed="false" aria-label="שמירה למועדפים: ' + esc(full) + '">' + ICO.heart + '</button>' +
-        '<button type="button" class="cp-dock-b" data-share="' + esc(SITE + url) + '" aria-label="שיתוף או העתקת קישור">' + ICO.share + '</button>' +
-        '<button type="button" class="cp-dock-cmp" data-dock-cmp="' + esc(c.slug || c.id) + '" aria-pressed="false">' + ICO.scale + '<span>השוואה</span></button>' +
+      /* סרגל תחתון צף — נייד בלבד: הלשוניות (הפעילה נפתחת עם שם) + השוואה */
+      '<div class="cp-dock" role="group" aria-label="ניווט בעמוד הדגם">' +
+        '<nav class="cp-nav" aria-label="עמודי הדגם">' + navHTML(url, true) + '</nav>' +
+        '<button type="button" class="cp-dock-cmp" data-dock-cmp="' + esc(c.slug || c.id) + '" aria-pressed="false"><svg class="cp-dock-plus" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg><svg class="cp-dock-ok" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12l5 5 9-10"/></svg><span class="cx-sr">השוואה</span></button>' +
       '</div>' +
+      /* גיליון בחירת גרסה — נייד */
+      (trims.length > 1 ? '<div class="cp-tsheet-bk" data-tsheet-close></div><div class="cp-tsheet" role="dialog" aria-modal="true" aria-label="בחירת גרסה" aria-hidden="true">' +
+        '<i class="cp-tsheet-grab" aria-hidden="true"></i>' +
+        '<div class="cp-tsheet-h"><div><b>בחירת גרסה</b><small>' + mix(full) + ' · ' + trims.length + ' גרסאות</small></div><button type="button" data-tsheet-close aria-label="סגירה"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>' +
+        '<div class="cp-tsheet-l">' + trims.map((t, i) => { const tp = price(t.price), d = base != null && num(t.price) != null ? num(t.price) - base : null;
+          return '<button type="button" class="cp-topt" style="--i:' + i + '" data-topt="' + i + '" aria-pressed="' + (i === ti) + '"><i class="cp-topt-r" aria-hidden="true"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5 9-10"/></svg></i>' +
+            '<span class="cp-topt-t"><b>' + mix(t.name) + '</b>' + (notes[i] && notes[i].note ? '<small>' + esc(notes[i].note) + '</small>' : '') + '</span>' +
+            (tp ? '<span class="cp-topt-p"><b class="cx-num">' + tp + '</b>' + (d ? '<small class="cx-num" dir="ltr">+₪' + fmt(d) + '</small>' : d === 0 && i === 0 ? '<small>מחיר בסיס</small>' : '') + '</span>' : '') + '</button>'; }).join('') + '</div>' +
+      '</div>' : '') +
     '</div>';
   }
 
@@ -523,7 +609,13 @@
     const line = pts.map((p, i) => (i ? 'L' : 'M') + X(i).toFixed(1) + ' ' + Y(p.v).toFixed(1)).join(' ');
     const area = line + ' L' + X(pts.length - 1).toFixed(1) + ' ' + (pt + ph) + ' L' + X(0).toFixed(1) + ' ' + (pt + ph) + ' Z';
     const si = Math.max(0, pts.findIndex(p => p.sel));
-    const xl = pts.map((p, i) => { const xp = X(i) / W * 100; return '<span class="sv-xl' + (p.sel ? ' is-sel' : '') + '" style="left:' + xp.toFixed(2) + '%' + (xp < 14 ? ';transform:none' : xp > 86 ? ';transform:translateX(-100%)' : '') + '" title="' + esc(p.l) + '">' + esc(p.l) + '</span>'; }).join('');
+    /* כשהנקודות צפופות — שתי שורות לסירוגין, וכל תווית מוגבלת לרוחב שבין השכנות שלה (אחרת השמות נערמים זה על זה) */
+    const gap = pts.length > 1 ? (pw - 48) / (pts.length - 1) / W * 100 : 60, two = gap < 15;
+    const xl = pts.map((p, i) => { const xp = X(i) / W * 100, half = (two ? gap : gap / 2) - .75; let mw = Math.min(40, 2 * half), pos = 'left:' + xp.toFixed(2) + '%';
+      /* תווית בקצה נצמדת לשוליים, והרוחב שלה עד אמצע הדרך לשכנה באותה שורה */
+      if (xp - mw / 2 < 0) { mw = Math.min(40, xp + half); pos = 'left:0;transform:none'; }
+      else if (xp + mw / 2 > 100) { mw = Math.min(40, 100 - xp + half); pos = 'left:auto;right:0;transform:none'; }
+      return '<span class="sv-xl' + (p.sel ? ' is-sel' : '') + (two && i % 2 ? ' is-lo' : '') + '" style="' + pos + ';max-width:' + mw.toFixed(1) + '%" title="' + esc(p.l) + '">' + esc(p.l) + '</span>'; }).join('');
     const dots = pts.map((p, i) => '<circle cx="' + X(i).toFixed(1) + '" cy="' + Y(p.v).toFixed(1) + '" r="5" class="sv-dot' + (p.sel ? ' is-sel' : '') + '"/>').join('');
     const hits = pts.map((p, i) => '<button type="button" class="sv-hit" data-sv-pt="' + i + '" ' + (se.mode === 'trims' ? 'data-sv-ver="' + se.pts.findIndex(q => q.l === p.l) + '" ' : '') + 'style="left:' + (X(i) / W * 100).toFixed(2) + '%" aria-label="' + esc(p.l + ': ' + f(p.v) + ' ' + mt.u) + '" data-x="' + (X(i) / W * 100).toFixed(2) + '" data-y="' + (Y(p.v) / H * 100).toFixed(2) + '" data-t="' + esc(f(p.v) + ' ' + mt.u) + '"></button>').join('');
     const modeSw = se.modes && se.modes.length > 1 ? '<div class="sv-mode" role="group" aria-label="למה להשוות">' +
@@ -533,7 +625,7 @@
         '<path d="' + area + '" class="sv-area"/><path d="' + line + '" class="sv-line" pathLength="1"/>' +
         '<line class="sv-vline" x1="' + X(si).toFixed(1) + '" x2="' + X(si).toFixed(1) + '" y1="' + (pt - 6) + '" y2="' + (pt + ph) + '"/>' + dots + '</svg>' +
         '<span class="sv-tip cx-num' + (X(si) / W > .6 ? ' is-flip' : '') + '" style="left:' + (X(si) / W * 100).toFixed(2) + '%;top:' + (Y(pts[si].v) / H * 100).toFixed(2) + '%">' + esc(f(pts[si].v) + ' ' + mt.u) + '</span>' + hits +
-        '<div class="sv-xls">' + xl + '</div></div></div>';
+        '<div class="sv-xls' + (two ? ' is-two' : '') + '">' + xl + '</div></div></div>';
   }
   function specsView(c, ctx) {
     const vs = svVersions(c), ti = Math.min(ctx.ti || 0, vs.length - 1), m = specOf(c, vs[ti]);
@@ -867,7 +959,7 @@
       g.rows.map(one).join('') + '</div>').join('');
   }
   const EQ_SLOTS = [ // מיקום כרטיס (אחוזים מהבמה) + נקודת עגינה על הרכב
-    { x: 81, y: 31, ax: 76, ay: 66 }, { x: 5, y: 9, ax: 44, ay: 14 }, { x: 3, y: 57, ax: 18, ay: 64 }, { x: 80, y: 68, ax: 54, ay: 93 }
+    { x: 81, y: 31, ax: 76, ay: 66 }, { x: 5, y: 12, ax: 44, ay: 34 }, { x: 3, y: 57, ax: 18, ay: 64 }, { x: 80, y: 68, ax: 54, ay: 93 }
   ];
   function equipmentView(c, ctx) {
     const bn = brandName(c.brand), full = bn + ' ' + c.model, d = eqData(c), imgs = images(c).slice(0, 5);
@@ -954,6 +1046,7 @@
       el.querySelector('.eq-hero').classList.toggle('is-alt', ii !== 0);
     }
     el.addEventListener('click', e => {
+      const cl = e.target.closest('.eq-call'); if (cl && cl.querySelector('.eq-call-img img')) { openEqGlass(el, +cl.getAttribute('data-call'), RM); return; }
       const s = e.target.closest('[data-eq-img]'); if (s) { setImg(ii + +s.getAttribute('data-eq-img')); clearColor(); return; }
       const t = e.target.closest('[data-eq-th]'); if (t) { setImg(+t.getAttribute('data-eq-th')); clearColor(); return; }
       const cb = e.target.closest('[data-eq-color]');
@@ -979,6 +1072,54 @@
       const bs = $$('[data-eq-tab]'), k = bs.indexOf(doc.activeElement); if (k < 0) return;
       const n = (k + (e.key === 'ArrowLeft' ? 1 : -1) + bs.length) % bs.length; bs[n].focus(); bs[n].click(); e.preventDefault();
     }, O);
+  }
+
+  /* ── פריט אבזור בזכוכית: הכרטיס "עף" מהמקום שלו למרכז, הרקע מיטשטש, אור עובר על הזכוכית, והתמונה נוטה עם העכבר ── */
+  function openEqGlass(root, start, RM) {
+    const doc = root.ownerDocument, win = doc.defaultView;
+    const cards = Array.from(root.querySelectorAll('.eq-call')).filter(c => c.querySelector('.eq-call-img img')).sort((a, b) => a.getAttribute('data-call') - b.getAttribute('data-call'));
+    if (!cards.length) return;
+    let k = Math.max(0, cards.findIndex(c => +c.getAttribute('data-call') === start));
+    const it = i => { const cd = cards[i], im = cd.querySelector('.eq-call-img img'); return { cd, im, src: im.currentSrc || im.src, big: im.getAttribute('src').replace(/([?&])w=\d+/, '$1w=1400'), t: cd.querySelector('figcaption span:last-child').textContent, n: cd.getAttribute('data-call') }; };
+    const ov = doc.createElement('div'); ov.className = 'eqg'; ov.setAttribute('role', 'dialog'); ov.setAttribute('aria-modal', 'true');
+    ov.innerHTML = '<div class="eqg-bk"></div><figure class="eqg-card"><div class="eqg-media"><img alt=""><i class="eqg-scan"></i><i class="eqg-c c1"></i><i class="eqg-c c2"></i><i class="eqg-c c3"></i><i class="eqg-c c4"></i></div>' +
+      '<figcaption><span class="eqg-n cx-num"></span><b></b><small class="cx-num" dir="ltr"></small></figcaption>' +
+      '<button type="button" class="eqg-x" aria-label="סגירה">✕</button>' + (cards.length > 1 ? '<button type="button" class="eqg-nav is-prev" aria-label="הקודם">‹</button><button type="button" class="eqg-nav is-next" aria-label="הבא">›</button>' : '') + '</figure>';
+    doc.body.appendChild(ov);
+    const card = ov.querySelector('.eqg-card'), img = ov.querySelector('.eqg-media img');
+    const fill = (i, anim) => {
+      const x = it(i); img.src = x.src; const hi = new win.Image(); hi.onload = () => { if (k === i) img.src = x.big; }; hi.src = x.big;
+      ov.querySelector('.eqg-n').textContent = +x.n + 1; ov.querySelector('figcaption b').textContent = x.t; ov.querySelector('figcaption small').textContent = (i + 1) + ' / ' + cards.length;
+      if (anim && !RM) { card.classList.remove('is-flip'); void card.offsetWidth; card.classList.add('is-flip'); }
+    };
+    fill(k);
+    const lock = doc.documentElement.style.overflow; doc.documentElement.style.overflow = 'hidden';
+    const flip = (from, rev) => {
+      const a = from.getBoundingClientRect(), b = card.getBoundingClientRect();
+      const tf = 'translate(' + (a.left + a.width / 2 - (b.left + b.width / 2)) + 'px,' + (a.top + a.height / 2 - (b.top + b.height / 2)) + 'px) scale(' + (a.width / b.width) + ')';
+      return card.animate(rev ? [{ transform: 'none', opacity: 1 }, { transform: tf, opacity: .2 }] : [{ transform: tf, opacity: .3 }, { transform: 'none', opacity: 1 }], { duration: rev ? 420 : 640, easing: rev ? 'cubic-bezier(.5,0,.8,.4)' : 'cubic-bezier(.16,1,.3,1)', fill: 'both' });
+    };
+    requestAnimationFrame(() => { ov.classList.add('on'); if (!RM) flip(it(k).im); });
+    const nav = d => { k = (k + d + cards.length) % cards.length; fill(k, true); };
+    let closing = false;
+    const close = () => {
+      if (closing) return; closing = true; ov.classList.remove('on'); doc.removeEventListener('keydown', key, true);
+      const end = () => { ov.remove(); doc.documentElement.style.overflow = lock; try { cards[k].focus && cards[k].focus({ preventScroll: true }); } catch (e) {} };
+      if (RM) end(); else flip(it(k).im, true).onfinish = end;
+    };
+    const key = e => { if (e.key === 'Escape') { e.preventDefault(); close(); } else if (e.key === 'ArrowLeft') nav(1); else if (e.key === 'ArrowRight') nav(-1); };
+    doc.addEventListener('keydown', key, true);
+    ov.addEventListener('click', e => {
+      if (e.target.closest('.eqg-x') || e.target.classList.contains('eqg-bk')) return close();
+      const n = e.target.closest('.eqg-nav'); if (n) nav(n.classList.contains('is-next') ? 1 : -1);
+    });
+    /* הטיה תלת-ממדית עדינה אחרי העכבר + החלקה בנייד */
+    if (!RM) card.addEventListener('pointermove', e => { if (e.pointerType !== 'mouse') return; const r = card.getBoundingClientRect(), x = (e.clientX - r.left) / r.width - .5, y = (e.clientY - r.top) / r.height - .5;
+      card.style.setProperty('--rx', (-y * 6).toFixed(2) + 'deg'); card.style.setProperty('--ry', (x * 8).toFixed(2) + 'deg'); card.style.setProperty('--gx', ((x + .5) * 100).toFixed(1) + '%'); card.style.setProperty('--gy', ((y + .5) * 100).toFixed(1) + '%'); });
+    card.addEventListener('pointerleave', () => { card.style.setProperty('--rx', '0deg'); card.style.setProperty('--ry', '0deg'); });
+    let sx = null; card.addEventListener('pointerdown', e => { sx = e.clientX; });
+    card.addEventListener('pointerup', e => { if (sx == null) return; const dx = e.clientX - sx; sx = null; if (Math.abs(dx) > 50 && cards.length > 1) nav(dx < 0 ? 1 : -1); });
+    setTimeout(() => { const x = ov.querySelector('.eqg-x'); if (x) x.focus({ preventScroll: true }); }, 50);
   }
 
   /* ═══════════════════════════════════════════════════════════════
@@ -1031,7 +1172,15 @@
     const C = 2 * Math.PI * 44;
     const ring = score == null ? '' : '<div class="rv-score" style="--off:' + (C * (1 - score / 10)).toFixed(1) + ';--len:' + C.toFixed(1) + '" aria-label="ציון ספידומטר ' + scTxt(score) + ' מתוך 10"><svg viewBox="0 0 100 100" aria-hidden="true"><circle cx="50" cy="50" r="44" class="rv-score-bg"/><circle cx="50" cy="50" r="44" class="rv-score-arc"/></svg><b class="cx-num" dir="ltr">' + scTxt(score) + '<i>/10</i></b><small>ציון ספידומטר</small></div>';
     const has = !!(r || pros.length || cons.length);
-    if (!has) return '<div class="rv"><div class="rv-empty rv-in">' + rvIco(RVI.flag, 'rv-ei') + '<h2>חוות הדעת של ספידומטר על ה-' + mix(c.model) + ' בדרך</h2><p>בינתיים אפשר לעבור על המפרט המלא, על האבזור ועל התמונות.</p>' +
+    if (!has) return '<div class="rv"><div class="rv-empty rv-road-card rv-in">' +
+      '<div class="rv-road" aria-hidden="true"><div class="rv-road-sky"></div>' +
+        '<div class="rv-road-way"><i class="rv-road-dash"></i><i class="rv-road-prog"></i></div>' +
+        '<span class="rv-road-car">' + LINE_CAR + '</span>' +
+        [['done', 'יצאנו לנסיעת מבחן'], ['now', 'כותבים את חוות הדעת'], ['next', 'חוות הדעת המלאה באתר']].map((x, i) =>
+          '<span class="rv-road-pin is-' + x[0] + '" style="--p:' + [10, 50, 90][i] + '%"><b>' + (x[0] === 'done' ? '✓' : x[0] === 'now' ? '' : '🏁') + '</b><em>' + x[1] + '</em></span>').join('') +
+      '</div>' +
+      '<span class="rv-road-tag"><i></i>בדרך</span>' +
+      '<h2>יצאנו לנסיעת מבחן</h2><p class="rv-road-sub">חוות הדעת של ספידומטר על ה-' + mix(c.model) + ' בדרך</p><p>בינתיים אפשר לעבור על המפרט המלא, על האבזור ועל התמונות.</p>' +
       '<div class="rv-empty-links"><a href="' + url + '?view=specs" data-view="specs">למפרט הטכני המלא</a><a href="' + url + '?view=equipment" data-view="equipment">לאבזור</a><a href="' + url + '?view=gallery" data-view="gallery">לגלריה</a></div></div></div>';
     const li = (arr, k) => arr.map(x => '<li>' + rvIco(k === 'ok' ? RVI.ok : RVI.no, 'rv-li-' + k) + '<span>' + mix(x) + '</span></li>').join('');
     return '<div class="rv" id="rv">' +
@@ -1120,54 +1269,102 @@
     }
     fitTitle(); win.addEventListener('resize', fitTitle);
     if (doc.fonts && doc.fonts.ready) doc.fonts.ready.then(fitTitle);
-    /* פס רמות הגימור: הפעיל במרכז, הקו העליון זז אליו */
-    const track = $('.cp-trims'), bar = $('.cp-trim-bar');
+    /* רמות הגימור: הכרטיס הפעיל נגלל לתוך התצוגה כשיש יותר כרטיסים מרוחב המסך */
+    const track = $('.cp-trims');
     function placeTrims(animate) {
-      const act = $('.cp-trim[aria-selected="true"]'); if (!act) return;
-      const wrap = $('.cp-trims-wrap'), w = wrap.clientWidth;
-      const center = act.offsetLeft + act.offsetWidth / 2;
-      track.style.transition = animate && !RM ? '' : 'none';
-      track.style.transform = 'translateX(' + Math.round(w / 2 - center) + 'px)';
-      bar.style.left = (act.offsetLeft + act.offsetWidth / 2 - bar.offsetWidth / 2) + 'px';
-      if (!animate) { void track.offsetWidth; track.style.transition = ''; }
+      const act = $('.cp-trim[aria-selected="true"]'); if (!act || !track || track.scrollWidth <= track.clientWidth + 2) return;
+      const tr = track.getBoundingClientRect(), ar = act.getBoundingClientRect();
+      track.scrollBy({ left: (ar.left + ar.width / 2) - (tr.left + tr.width / 2), behavior: animate && !RM ? 'smooth' : 'auto' });
     }
     placeTrims(false); win.addEventListener('resize', () => placeTrims(false));
-
-    /* מחיר — ספירה */
-    function countTo(el, to) {
-      if (!el || to == null) return;
-      const from = Number(String(el.textContent).replace(/[^\d]/g, '')) || to;
-      if (RM || from === to) { el.textContent = '₪' + fmt(to); return; }
-      const t0 = performance.now(), D = 700;
-      (function step(t) { const k = Math.min(1, (t - t0) / D), e = 1 - Math.pow(1 - k, 3); el.textContent = '₪' + fmt(Math.round(from + (to - from) * e)); if (k < 1) requestAnimationFrame(step); })(t0);
+    /* אור שמקיף את הכרטיס שנבחר — סיבוב אחד ונעצר */
+    function ringOnce() { const act = $('.cp-trim[aria-selected="true"]'); if (!act || RM || trims.length < 2) return; act.classList.remove('ring'); void act.offsetWidth; act.classList.add('ring'); }
+    setTimeout(ringOnce, 900);
+    /* הכדור שמחליק בין הלשוניות בפס הדגם (מחשב) */
+    function placePill() {
+      const nv = $('.cp-bar .cp-nav'), a = nv && nv.querySelector('[aria-current]'); if (!nv) return;
+      if (!a || !a.offsetWidth) { nv.style.setProperty('--pw', '0px'); return; }
+      nv.style.setProperty('--px', a.offsetLeft + 'px'); nv.style.setProperty('--pw', a.offsetWidth + 'px');
+      if (nv.scrollWidth > nv.clientWidth + 2) { const nr = nv.getBoundingClientRect(), r = a.getBoundingClientRect(); nv.scrollBy({ left: (r.left + r.width / 2) - (nr.left + nr.width / 2), behavior: RM ? 'auto' : 'smooth' }); }
     }
+    placePill(); win.addEventListener('resize', placePill);
+    if (doc.fonts && doc.fonts.ready) doc.fonts.ready.then(placePill);
+    /* מונים מתגלגלים: המחיר וכל ששת הנתונים */
+    const odoAll = () => { odo($('#cp-price'), ($('#cp-price') || {}).textContent, RM); odo($('#cp-trimbtn-price'), ($('#cp-trimbtn-price') || {}).textContent, RM); $$('.cp-spec b.cx-num').forEach(b => odo(b, b.textContent, RM)); };
+    setTimeout(odoAll, RM ? 0 : 1100);
+
     function setTrim(n) {
       if (!trims.length) return;
       n = (n + trims.length) % trims.length; if (n === ti) return;
       const dir = n > ti ? 1 : -1; ti = n;
       $$('.cp-trim').forEach((b, i) => b.setAttribute('aria-selected', i === ti));
-      placeTrims(true);
+      $$('.cp-topt').forEach((b, i) => b.setAttribute('aria-pressed', i === ti));
+      placeTrims(true); ringOnce();
       const m = merged(c, trims[ti]);
+      const tbn = $('#cp-trimbtn-name'); if (tbn) { tbn.innerHTML = mix(trims[ti].name); $('#cp-trimbtn-pos').textContent = 'גרסה · ' + (ti + 1) + ' מתוך ' + trims.length; }
       const tt = $('.cp-title-trim'); tt.classList.remove('swap'); void tt.offsetWidth; tt.innerHTML = '' + mix(trims[ti].name) + ''; tt.classList.add('swap'); fitTitle();
-      const pe = $('#cp-price'); countTo(pe, num(m.price) || num(c.price));
-      const dp = $('#cp-dock-price'); if (dp) dp.textContent = price(m.price) || price(c.price) || dp.textContent;
+      const pTxt = price(m.price) || price(c.price);
+      if (pTxt) { odo($('#cp-price'), pTxt, RM); odo($('#cp-trimbtn-price'), pTxt, RM); }
       /* ששת הנתונים מתגלגלים */
       const next = sixSpecs(m);
       $$('.cp-spec').forEach((el, i) => {
         const s = next[i], v = el.querySelector('.cp-spec-v'), dt = el.querySelector('dt');
         if (dt && dt.textContent !== s.label) dt.textContent = s.label;
         el.classList.toggle('is-long', specLong(s));
-        const html = s.v != null && s.v !== '' ? '<b class="cx-num">' + esc(s.v) + '</b>' + (s.u ? '<i>' + esc(s.u) + '</i>' : '') : '<b class="cp-na">—</b>';
-        if (v.innerHTML === html) return;
+        const has = s.v != null && s.v !== '', b = v.querySelector('b.cx-num'), u = v.querySelector('i');
+        /* מספר שמתחלף במספר — הספרות מתגלגלות במקום; כל שינוי אחר (טקסט, יחידה, ערך חסר) — החלפה עם דהייה */
+        if (has && b && /\d/.test(String(s.v)) && (u ? u.textContent : '') === (s.u || '')) { odo(b, s.v, RM); return; }
+        const html = has ? '<b class="cx-num">' + esc(s.v) + '</b>' + (s.u ? '<i>' + esc(s.u) + '</i>' : '') : '<b class="cp-na">—</b>';
+        const curV = b ? (b._odo != null ? b._odo : b.textContent) : '—', curU = u ? u.textContent : '';
+        if (curV === (has ? String(s.v) : '—') && curU === (has ? (s.u || '') : '')) return;
         el.classList.remove('roll'); void el.offsetWidth; el.style.setProperty('--d', dir); el.classList.add('roll');
-        setTimeout(() => { v.innerHTML = html; }, RM ? 0 : 160 + i * 40);
+        setTimeout(() => { v.innerHTML = html; const nb = v.querySelector('b.cx-num'); if (nb) odo(nb, nb.textContent, RM); }, RM ? 0 : 160 + i * 40);
       });
+      if (!RM && driveFromPeek()) return;
       /* הרכב נוסע קצת לכיוון החדש */
       const car = $('#cp-car'); car.classList.remove('nudge', 'nudge-r'); void car.offsetWidth; car.classList.add(dir > 0 ? 'nudge' : 'nudge-r');
       /* הרכב שבצד מתחלף יחד עם רמת הגימור: יוצא ונכנס מחדש */
       const pk = $('.cp-peek-img'); if (pk && !RM) { pk.classList.remove('swap', 'swap-r'); void pk.offsetWidth; pk.classList.add(dir > 0 ? 'swap' : 'swap-r'); }
     }
+    /* הרכב הקטן שבצד "נוסע" אל מרכז הבמה ותופס את מקומו של הרכב שיוצא — רק כשבמרכז רכב ללא רקע ובמסך רחב */
+    const contentRect = im => { const r = im.getBoundingClientRect(), nw = im.naturalWidth, nh = im.naturalHeight; if (!nw || !nh) return r; const q = Math.min(r.width / nw, r.height / nh), w = nw * q, h = nh * q; return { left: r.left + (r.width - w) / 2, top: r.top + r.height - h, width: w, height: h }; };
+    function driveFromPeek() {
+      const doc = rootEl.ownerDocument, car = $('#cp-car');
+      if (car && car._drive) car._drive();
+      const pk = $('.cp-peek'), wrap = $('.cp-peek-img'), pImg = wrap && wrap.querySelector('img'), cImg = car && car.lastElementChild && car.lastElementChild.querySelector('img');
+      if (!pk || !pImg || !cImg || !imgs[ii] || !imgs[ii].cut || !pImg.complete || !cImg.complete || !pk.offsetParent) return false;
+      const a = contentRect(pImg), b = contentRect(cImg); if (!a.width || !b.width) return false;
+      const g = doc.createElement('img'); g.className = 'cp-ghost'; g.alt = ''; g.src = pImg.currentSrc || pImg.src;
+      Object.assign(g.style, { left: a.left + 'px', top: a.top + 'px', width: a.width + 'px', height: a.height + 'px' });
+      doc.body.appendChild(g);
+      const hideP = wrap.animate([{ opacity: 0 }, { opacity: 0 }], { duration: 10, fill: 'forwards' });
+      const out = car.animate([{ transform: 'none', opacity: 1 }, { transform: 'translateX(42%)', opacity: 0 }], { duration: 560, easing: 'cubic-bezier(.55,0,.8,.3)', fill: 'forwards' });
+      const mv = g.animate([{ transform: 'translate(0,0) scale(1)' }, { transform: 'translate(' + (b.left - a.left).toFixed(1) + 'px,' + (b.top - a.top).toFixed(1) + 'px) scale(' + (b.width / a.width).toFixed(4) + ')' }],
+        { duration: 1000, easing: 'cubic-bezier(.45,.02,.18,1)', fill: 'forwards' });
+      const done = () => {
+        car._drive = null; out.cancel(); g.remove(); hideP.cancel();
+        wrap.animate([{ opacity: 0, transform: 'translateX(-45%)' }, { opacity: 1, transform: 'none' }], { duration: 650, easing: 'cubic-bezier(.2,.8,.2,1)' });
+      };
+      car._drive = () => { mv.cancel(); done(); };
+      mv.onfinish = () => { if (car._drive) done(); };
+      return true;
+    }
     $$('.cp-trim').forEach(b => b.addEventListener('click', () => setTrim(+b.getAttribute('data-trim'))));
+    /* גיליון הגרסאות (נייד) */
+    const sheet = $('.cp-tsheet'), sheetBk = $('.cp-tsheet-bk'), sheetBtn = $('[data-tsheet-open]');
+    if (sheet && sheetBtn) {
+      const html = doc.documentElement; let lock = '';
+      const key = e => { if (e.key === 'Escape') shut(); };
+      const open = () => { lock = html.style.overflow; html.style.overflow = 'hidden'; sheet.classList.add('on'); sheetBk.classList.add('on'); sheet.setAttribute('aria-hidden', 'false'); sheetBtn.setAttribute('aria-expanded', 'true'); doc.addEventListener('keydown', key);
+        setTimeout(() => { const x = sheet.querySelector('[aria-pressed="true"]'); if (x) x.focus({ preventScroll: true }); }, 60); };
+      const shut = () => { if (!sheet.classList.contains('on')) return; html.style.overflow = lock; sheet.classList.remove('on'); sheetBk.classList.remove('on'); sheet.setAttribute('aria-hidden', 'true'); sheetBtn.setAttribute('aria-expanded', 'false'); doc.removeEventListener('keydown', key); sheetBtn.focus({ preventScroll: true }); };
+      sheetBtn.addEventListener('click', open);
+      $$('[data-tsheet-close]').forEach(x => x.addEventListener('click', shut));
+      $$('.cp-topt').forEach(b => b.addEventListener('click', () => { shut(); setTimeout(() => setTrim(+b.getAttribute('data-topt')), RM ? 0 : 220); }));
+      /* גרירה למטה סוגרת */
+      let y0 = null; sheet.addEventListener('pointerdown', e => { y0 = e.target.closest('.cp-tsheet-l') ? null : e.clientY; });
+      sheet.addEventListener('pointerup', e => { if (y0 != null && e.clientY - y0 > 60) shut(); y0 = null; });
+    }
     const nx = $('[data-trim-next]'); if (nx) nx.addEventListener('click', () => setTrim(ti + 1));
     if (track) track.addEventListener('keydown', e => { if (e.key === 'ArrowLeft') { e.preventDefault(); setTrim(ti + 1); $$('.cp-trim')[ti].focus(); } if (e.key === 'ArrowRight') { e.preventDefault(); setTrim(ti - 1); $$('.cp-trim')[ti].focus(); } });
 
@@ -1248,7 +1445,7 @@
       const valid = VIEWS.some(v => v.id === id);
       if (push) { const u = new URL(location.href); if (valid) u.searchParams.set('view', id); else u.searchParams.delete('view'); history.pushState({ view: id }, '', u.pathname + u.search); }
       $$('.cp-nav a').forEach(a => { const on = a.getAttribute('data-view') === (valid ? id : ''); if (on) a.setAttribute('aria-current', 'page'); else a.removeAttribute('aria-current'); });
-      navCenter();
+      navCenter(); placePill();
       rootEl.querySelector('.cp').classList.toggle('is-view', valid);
       if (!valid) { viewEl.hidden = true; viewEl.innerHTML = ''; doc.title = doc.title.replace(/^[^|]+\| /, ''); placeTrims(false); return; }
       const sctx = { ti: ti, cars: opts.cars || [], metric: null, open: null };
