@@ -548,6 +548,9 @@
 
   /* ═══ מובייל (08.11.2026): תפריט עם רקע וסגירה, כותרת שנעלמת בגלילה למטה, לשוניות דביקות ופס פעולות בעמוד הדגם ═══ */
   (function mobileChrome() {
+    /* מד קטן בלוגו — המחוג מזנק בטעינה ובריחוף (10.11.2026) */
+    const lg = document.querySelector('.cx-logo b');
+    if (lg && !lg.querySelector('svg')) lg.insertAdjacentHTML('afterbegin', '<svg class="cx-logo-g" width="28" height="24" viewBox="0 0 28 24" fill="none" aria-hidden="true"><path d="M3 19a11 11 0 0 1 22 0" stroke="#fff" stroke-width="2.2" stroke-linecap="round"/><path d="M6.2 11.2l1.5 1.3M14 6.5v2M21.8 11.2l-1.5 1.3" stroke="#9fb0c3" stroke-width="1.6" stroke-linecap="round"/><g class="cx-logo-n"><path d="M14 17V8.5" stroke="#ff4d5e" stroke-width="2.4" stroke-linecap="round"/></g><circle cx="14" cy="17" r="2.4" fill="#fff"/></svg>');
     const mq = window.matchMedia('(max-width: 900px)');
     const nav = document.getElementById('cx-nav'), btn = document.getElementById('hdr-menu');
     if (nav && btn) {
