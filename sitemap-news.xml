@@ -1,6 +1,28 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:news="http://www.google.com/schemas/sitemap-news/0.9">
   <url>
+    <loc>https://speedometer10.co.il/article/715/</loc>
+    <news:news>
+      <news:publication>
+        <news:name>ספידומטר</news:name>
+        <news:language>he</news:language>
+      </news:publication>
+      <news:publication_date>2026-11-11T12:01:00.000Z</news:publication_date>
+      <news:title>אכיפת צפירות בתל אביב: הקנסות יגיעו עד 1,000 שקלים</news:title>
+    </news:news>
+  </url>
+  <url>
+    <loc>https://speedometer10.co.il/article/713/</loc>
+    <news:news>
+      <news:publication>
+        <news:name>ספידומטר</news:name>
+        <news:language>he</news:language>
+      </news:publication>
+      <news:publication_date>2026-11-11T11:38:00.000Z</news:publication_date>
+      <news:title>ב.מ.וו X5 החדש בישראל: מ-649,900 שקל וגרסה חשמלית iX5</news:title>
+    </news:news>
+  </url>
+  <url>
     <loc>https://speedometer10.co.il/article/711/</loc>
     <news:news>
       <news:publication>
