@@ -1661,3 +1661,10 @@ html.fs-lock{overflow:hidden}
   body.has-dock{--dock-h:86px}
 }
 @media(prefers-reduced-motion:reduce){.cx-logo-n,.cx-header::after,.cp-nav a[aria-current] svg *,.cp-bar .cp-nav::after,.cp-trim.ring .cp-trim-ring,.cp-dock-cmp{animation:none!important}.od-c,.cp-tsheet,.cp-topt,.cp-bar .cp-nav::before{transition:none!important}}
+
+/* ── סמלי מותגים (11.11.2026): קובץ בכל יחס רוחב-גובה יושב בתוך המסגרת בלי להימתח ── */
+/* גובה קבוע ורוחב לפי היחס: קובץ SVG בלי מידות משלו מתכווץ לאפס כשגם הרוחב וגם הגובה אוטומטיים */
+.cx-mq-logo img{height:36px;width:auto;max-width:76px;object-fit:contain}
+.cx-btile .cx-mq-logo img{height:44px;max-width:96px}
+.cx-rhead-mark img{height:40px;width:auto;max-width:58px;object-fit:contain}
+.cp-brand img{max-width:120px;object-fit:contain}

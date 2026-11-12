@@ -80,9 +80,17 @@
   const BRAND_ORDER = ['toyota','hyundai','kia','skoda','byd','chery','jaecoo','mg','mazda','mitsubishi','volkswagen','seat','subaru','xpeng',
     'bmw','mercedes','audi','tesla','nissan','ford','volvo','lexus','jeep','suzuki','peugeot','citroen','renault','dacia','opel','cupra','geely',
     'leapmotor','zeekr','omoda','exeed','lynkco','polestar','genesis','porsche','landrover','mini','honda','alfaromeo','fiat','ds','smart','gwm','kgm'];
-  /* קבצי לוגו רשמיים: שימו קובץ בנתיב /brand-logos/<key>.svg (או png) והוסיפו את ה-key לרשימה.
-     רק מותג שמופיע כאן נטען כתמונה; השאר מוצגים בשם המותג בטיפוגרפיה. */
-  const BRAND_LOGOS = { /* toyota: '/brand-logos/toyota.svg', */ };
+  /* סמלי מותגים (11.11.2026): מועלים מהניהול (רכבים ← סמלי מותגים) ונשמרים בטבלה brand_logos.
+     הרשימה מתמלאת ב-load(); מותג בלי סמל מוצג בשם המותג בטיפוגרפיה. */
+  const BRAND_LOGOS = {};
+  const LOGO_BASE = SB_URL + '/storage/v1/object/public/';
+  function loadLogos() {
+    const req = fetch(SB_URL + '/rest/v1/brand_logos?select=brand_key,url', { headers: { apikey: SB_KEY, Authorization: 'Bearer ' + SB_KEY } })
+      .then(r => r.ok ? r.json() : []).then(rows => { (Array.isArray(rows) ? rows : []).forEach(l => { if (l && l.brand_key && String(l.url || '').indexOf(LOGO_BASE) === 0) BRAND_LOGOS[l.brand_key] = l.url; }); })
+      .catch(() => {});
+    /* סמלים הם תוספת — לא מעכבים את העמוד יותר משתי שניות */
+    return Promise.race([req, new Promise(res => setTimeout(res, 2000))]);
+  }
   function brandMark(key, name) {
     const src = BRAND_LOGOS[key];
     if (src) return '<img src="' + esc(src) + '" alt="" width="44" height="44" loading="lazy" decoding="async">';
@@ -245,6 +253,7 @@
   let _cache = null;
   async function load() {
     if (_cache) return _cache;
+    const logos = loadLogos();
     let rows = null, source = 'supabase';
     try {
       const r = await fetch(SB_URL + '/rest/v1/cars?select=*&deleted=eq.false&order=sales_rank.asc.nullslast', {
@@ -264,6 +273,7 @@
         rows = FALLBACK_CARS.slice(); source = 'embedded';
       }
     }
+    await logos;
     _cache = { cars: rows.map(normalize), source };
     return _cache;
   }

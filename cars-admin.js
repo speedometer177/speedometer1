@@ -238,15 +238,137 @@
   // ═══════════ ניהול טאבים ═══════════
 
   window.carsSubTab = function (tab, el) {
+    ensureLogosTab();
     document.querySelectorAll('.cars-subtab').forEach(function (b) { b.classList.remove('active'); });
     if (el) el.classList.add('active');
     const newPanel = document.getElementById('cars-new-panel');
     const listPanel = document.getElementById('cars-list-panel');
+    const logosPanel = document.getElementById('cars-logos-panel');
     if (newPanel) newPanel.style.display = tab === 'new' ? '' : 'none';
     if (listPanel) listPanel.style.display = tab === 'list' ? '' : 'none';
+    if (logosPanel) logosPanel.style.display = tab === 'logos' ? '' : 'none';
     const formHost = document.getElementById('cars-form-host');
     if (formHost) formHost.innerHTML = ''; // סוגרים טופס פתוח בכל מעבר טאב
-    if (tab === 'new') loadCarDrafts(); else loadExistingCars();
+    if (tab === 'new') loadCarDrafts(); else if (tab === 'logos') loadBrandLogos(); else loadExistingCars();
+  };
+
+  // ═══════════ 🏷️ סמלי מותגים (11.11.2026) ═══════════
+  // לשונית שלישית בטאב "רכבים". הקובץ עולה ל-bucket התמונות (תיקיית logos/) והכתובת נשמרת בטבלה brand_logos.
+  // האתר קורא את הטבלה ומציג את הסמל בכל מקום שבו מופיע המותג; מותג בלי סמל ממשיך להופיע בשם כתוב.
+  const LOGO_TYPES = { 'image/svg+xml': 'svg', 'image/png': 'png', 'image/webp': 'webp' };
+  const LOGO_MAX = 400 * 1024;
+  // אותו מפתח בדיוק כמו brandKey באתר (cars-core.js): אותיות קטנות, בלי רווחים/מקפים/נקודות
+  function logoKey(raw) {
+    const k = String(raw || '').trim().toLowerCase().replace(/[\s\-_.]+/g, '');
+    return k === 'mercedesbenz' ? 'mercedes' : k;
+  }
+  function ensureLogosTab() {
+    if (document.getElementById('cars-logos-panel')) return;
+    const listPanel = document.getElementById('cars-list-panel'), tabs = document.querySelector('.cars-subtab');
+    if (!listPanel || !tabs) return;
+    const b = document.createElement('button'); b.className = 'hp-tab cars-subtab'; b.type = 'button'; b.textContent = '🏷️ סמלי מותגים';
+    b.onclick = function () { window.carsSubTab('logos', b); };
+    tabs.parentNode.appendChild(b);
+    const p = document.createElement('div'); p.id = 'cars-logos-panel'; p.style.display = 'none';
+    listPanel.parentNode.insertBefore(p, listPanel.nextSibling);
+    if (!document.getElementById('bl-css')) {
+      const st = document.createElement('style'); st.id = 'bl-css';
+      st.textContent = '.bl-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:12px}' +
+        '.bl-card{border:1px solid var(--adm-border);background:var(--adm-surface-2);border-radius:16px;padding:12px;display:flex;flex-direction:column;gap:10px}' +
+        '.bl-prev{height:92px;border-radius:12px;background:#fff;display:grid;place-items:center;overflow:hidden}' +
+        '.bl-prev img{max-width:78%;max-height:64px;object-fit:contain}' +
+        '.bl-prev span{font:italic 900 1.2rem var(--font);color:#10263d;direction:ltr}' +
+        '.bl-name{display:flex;align-items:baseline;justify-content:space-between;gap:8px;font-weight:700;font-size:.9rem;color:var(--adm-text)}' +
+        '.bl-name small{font-weight:400;font-size:.7rem;color:var(--adm-muted);direction:ltr}' +
+        '.bl-acts{display:flex;gap:6px}.bl-acts label,.bl-acts button{flex:1;text-align:center;justify-content:center;cursor:pointer;margin:0}' +
+        '.bl-acts input{display:none}.bl-card.is-busy{opacity:.55;pointer-events:none}' +
+        '.bl-st{font-size:.68rem;font-weight:700;padding:2px 8px;border-radius:999px;align-self:flex-start}' +
+        '.bl-st.ok{color:#6ee7b7;background:rgba(52,211,153,.12)}.bl-st.no{color:#fcd34d;background:rgba(245,158,11,.12)}';
+      document.head.appendChild(st);
+    }
+  }
+  let blState = null; // { brands: [{key,name,n}], logos: {key:url} }
+  async function loadBrandLogos(msg) {
+    ensureLogosTab();
+    const host = document.getElementById('cars-logos-panel'); if (!host) return;
+    const client = initCarsClient(); if (!client) { host.innerHTML = '<div class="adm-empty-state">אין חיבור לשרת</div>'; return; }
+    if (!blState) host.innerHTML = '<div class="adm-empty-state">טוען…</div>';
+    const [lr, cr] = await Promise.all([client.from('brand_logos').select('brand_key,url'), client.from('cars').select('brand').eq('deleted', false)]);
+    if (lr.error) {
+      host.innerHTML = '<div class="form-block" style="padding:18px;"><b>הטבלה של סמלי המותגים עוד לא קיימת.</b><div class="form-hint" style="margin-top:6px;">צריך להריץ פעם אחת את הקובץ cars-phase3h-brand-logos.sql ב-SQL Editor של Supabase, ואז לרענן את הדף.<br>(' + escapeHtml(lr.error.message || '') + ')</div></div>';
+      return;
+    }
+    const logos = {}; (lr.data || []).forEach(function (l) { logos[l.brand_key] = l.url; });
+    const by = {};
+    ((cr && cr.data) || []).forEach(function (c) { const k = logoKey(c.brand); if (!k) return; if (!by[k]) by[k] = { key: k, name: String(c.brand).trim(), n: 0 }; by[k].n++; });
+    Object.keys(logos).forEach(function (k) { if (!by[k]) by[k] = { key: k, name: (blState && blState.names && blState.names[k]) || k, n: 0 }; });
+    if (blState && blState.extra) blState.extra.forEach(function (x) { if (!by[x.key]) by[x.key] = { key: x.key, name: x.name, n: 0 }; });
+    blState = { logos: logos, extra: (blState && blState.extra) || [], brands: Object.keys(by).map(function (k) { return by[k]; }).sort(function (a, b) { return (b.n - a.n) || a.name.localeCompare(b.name); }) };
+    renderBrandLogos(msg);
+  }
+  function renderBrandLogos(msg) {
+    const host = document.getElementById('cars-logos-panel'); if (!host || !blState) return;
+    const done = blState.brands.filter(function (b) { return blState.logos[b.key]; }).length;
+    host.innerHTML = '<div class="form-block" style="padding:18px;">' +
+      '<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap;margin-bottom:6px;"><div><div style="font-size:1.05rem;font-weight:800;color:var(--adm-text);">🏷️ סמלי מותגים</div>' +
+        '<div class="form-hint" style="margin-top:4px;">' + done + ' מתוך ' + blState.brands.length + ' מותגים עם סמל. הסמל מופיע באתר בכל מקום שבו מופיע המותג; בלי סמל — שם המותג כתוב.</div></div>' +
+        '<div style="display:flex;gap:6px;align-items:center;"><input type="text" id="bl-new" dir="ltr" placeholder="מותג נוסף, באנגלית (למשל Volvo)" style="width:230px;padding:9px 12px;border-radius:10px;border:1px solid var(--adm-border);background:var(--adm-surface-2);color:var(--adm-text);font-family:var(--font);font-size:.85rem;" onkeydown="if(event.key===\'Enter\')blAddBrand()">' +
+        '<button type="button" class="tbl-btn" onclick="blAddBrand()">＋ הוסף מותג</button></div></div>' +
+      '<div class="form-hint" style="margin-bottom:14px;">קובץ SVG (עדיף), PNG או WebP עם רקע שקוף, עד 400KB. סמל כהה או צבעוני — הוא יושב על רקע בהיר. מקור: מערכת המדיה הרשמית של היצרן או היבואן.</div>' +
+      '<div id="bl-msg" class="form-hint" style="min-height:1.2em;margin-bottom:8px;font-weight:700;">' + (msg || '') + '</div>' +
+      (blState.brands.length ? '<div class="bl-grid">' + blState.brands.map(function (b) {
+        const u = blState.logos[b.key];
+        return '<div class="bl-card" id="bl-' + escapeAttr(b.key) + '">' +
+          '<div class="bl-prev">' + (u ? '<img src="' + escapeAttr(u) + '" alt="">' : '<span>' + escapeHtml(b.name) + '</span>') + '</div>' +
+          '<div class="bl-name"><span dir="auto">' + escapeHtml(b.name) + '</span><small>' + (b.n ? b.n + ' דגמים' : 'אין דגמים עדיין') + '</small></div>' +
+          '<span class="bl-st ' + (u ? 'ok">✓ יש סמל' : 'no">חסר סמל') + '</span>' +
+          '<div class="bl-acts"><label class="tbl-btn"><input type="file" accept=".svg,.png,.webp,image/svg+xml,image/png,image/webp" onchange="blUpload(this,\'' + escapeAttr(b.key) + '\')">' + (u ? '↻ החלף' : '⬆️ העלה סמל') + '</label>' +
+          (u ? '<button type="button" class="tbl-btn del" style="flex:0 0 auto;" title="הסר את הסמל" onclick="blRemove(\'' + escapeAttr(b.key) + '\')">✕</button>' : '') + '</div></div>';
+      }).join('') + '</div>' : '<div class="adm-empty-state">אין עדיין רכבים במאגר. אפשר להוסיף מותג ידנית למעלה.</div>') +
+      '</div>';
+  }
+  const blMsg = function (t, ok) { const m = document.getElementById('bl-msg'); if (m) { m.textContent = t; m.style.color = ok === false ? '#fb7185' : ok ? '#34d399' : ''; } };
+  window.blAddBrand = function () {
+    const inp = document.getElementById('bl-new'), name = inp ? inp.value.trim() : '', key = logoKey(name);
+    if (!key || !/^[a-z0-9]+$/.test(key)) { blMsg('כתוב את שם המותג באנגלית (אותיות וספרות בלבד).', false); return; }
+    if (!blState) return;
+    if (!blState.brands.some(function (b) { return b.key === key; })) { blState.extra.push({ key: key, name: name }); blState.brands.unshift({ key: key, name: name, n: 0 }); }
+    renderBrandLogos('נוסף ״' + escapeHtml(name) + '״ — עכשיו אפשר להעלות לו סמל.');
+    const c = document.getElementById('bl-' + key); if (c && c.scrollIntoView) c.scrollIntoView({ block: 'center', behavior: 'smooth' });
+  };
+  window.blUpload = async function (input, key) {
+    const file = input.files && input.files[0]; input.value = ''; if (!file || !blState) return;
+    const ext = LOGO_TYPES[file.type] || (/\.svg$/i.test(file.name) ? 'svg' : null);
+    if (!ext) { blMsg('סוג קובץ לא נתמך. אפשר SVG, PNG או WebP.', false); return; }
+    if (file.size > LOGO_MAX) { blMsg('הקובץ גדול מדי (' + Math.round(file.size / 1024) + 'KB). עד 400KB — סמל לא צריך יותר.', false); return; }
+    if (!/^[a-z0-9]+$/.test(key)) { blMsg('מפתח מותג לא תקין.', false); return; }
+    const client = initCarsClient(); if (!client) { blMsg('אין חיבור לשרת', false); return; }
+    const card = document.getElementById('bl-' + key); if (card) card.classList.add('is-busy');
+    blMsg('מעלה…');
+    try {
+      // שם קובץ חדש בכל העלאה — כך הדפדפנים לא ממשיכים להציג את הסמל הישן מהמטמון
+      const path = 'logos/' + key + '-' + Date.now() + '.' + ext;
+      const up = await client.storage.from(PHOTOS_BUCKET).upload(path, file, { contentType: ext === 'svg' ? 'image/svg+xml' : file.type, upsert: false });
+      if (up.error) throw up.error;
+      const url = client.storage.from(PHOTOS_BUCKET).getPublicUrl(path).data.publicUrl;
+      const sv = await client.from('brand_logos').upsert({ brand_key: key, url: url, updated_at: new Date().toISOString() }, { onConflict: 'brand_key' });
+      if (sv.error) throw sv.error;
+      blState.logos[key] = url;
+      renderBrandLogos('✓ הסמל נשמר ומופיע באתר.'); blMsg('✓ הסמל נשמר ומופיע באתר.', true);
+    } catch (e) {
+      if (card) card.classList.remove('is-busy');
+      blMsg('ההעלאה נכשלה: ' + (e && e.message ? e.message : e), false);
+    }
+  };
+  window.blRemove = async function (key) {
+    if (!blState || !blState.logos[key]) return;
+    if (!window.confirm('להסיר את הסמל? המותג יחזור להופיע בשם כתוב.')) return;
+    const client = initCarsClient(); if (!client) return;
+    const card = document.getElementById('bl-' + key); if (card) card.classList.add('is-busy');
+    const r = await client.from('brand_logos').delete().eq('brand_key', key);
+    if (r.error) { if (card) card.classList.remove('is-busy'); blMsg('ההסרה נכשלה: ' + r.error.message, false); return; }
+    delete blState.logos[key];
+    renderBrandLogos(); blMsg('הסמל הוסר.', true);
   };
 
   if (typeof window.adminTab === 'function' && !window.__carsAdminTabWrapped) {
@@ -256,7 +378,7 @@
       const panel = document.getElementById('admin-cars');
       if (!panel) return;
       panel.style.display = tab === 'cars' ? '' : 'none';
-      if (tab === 'cars') loadCarDrafts();
+      if (tab === 'cars') { ensureLogosTab(); loadCarDrafts(); }
     };
     window.__carsAdminTabWrapped = true;
   }
