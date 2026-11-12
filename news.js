@@ -1,5 +1,6 @@
 /*
  * news.js — מרכז חדשות רכב אוטומטי — ספידומטר
+ * NEWS-JS-BUILD: 2026-11-10b
  * ---------------------------------------------------------------
  * קובץ עצמאי לחלוטין, לא נוגע ב-app.js או ב-ads.js.
  * להשבתה מלאה: הסר את שורת <script src="/news.js" defer> מ-index.html.
@@ -15,6 +16,15 @@
  *      בדיקת ניסוח/מבנה מיידית + בדיקת עובדות מול כתבת המקור בפועל
  *      דרך Gemini. כתבה שלא עברה בהצלחה חוסמת (עם אישור מפורש לעקוף)
  *      את הכפתור "טען לעריכה ופרסום".
+ *
+ * גרסה 2 (10.11.2026):
+ *   • כתיבה ברקע — "כתוב כתבה" חוזר מיד. הכותרת מסומנת "נכתבת עכשיו",
+ *     ואפשר להמשיך לעבוד ולשלוח עוד כותרות. כשהטיוטה מוכנה (או נכשלה)
+ *     הכרטיס מתעדכן לבד ומופיעה הודעה קטנה. אין יותר חלונות קופצים.
+ *   • כותרות שאינן רכב ותאונות סתמיות מוסתרות; אותה ידיעה מכמה מקורות
+ *     מוצגת פעם אחת עם תג "N מקורות".
+ *   • שורת סטטוס של הרענון האוטומטי, והתראה כשנכנסו כותרות חדשות.
+ *   • אם מבנה הנתונים של גרסה 2 עדיין לא הותקן, הפאנל עובד כמו קודם.
  * ---------------------------------------------------------------
  */
 (function () {
@@ -32,8 +42,28 @@
   // הבדיקה האחרונה שרצה בפועל על התוכן הנוכחי.
   const draftVerifications = {};
 
+  // האם עמודות גרסה 2 קיימות בבסיס הנתונים. מתגלה בטעינה הראשונה: אם
+  // השאילתה החדשה נכשלת על עמודה חסרה, עוברים לשאילתה הישנה.
+  let _v2 = true;
+  // כתיבה שסומנה "נכתבת" לפני יותר מזה נחשבת תקועה (הפונקציה מוגבלת ל-150 שניות).
+  const WRITING_STALE_MS = 4 * 60 * 1000;
+  const HEADLINE_COLS = 'id,source_name,source_url,title,region,status,published_at,fetched_at,' +
+    'importance_score,importance_reason,duplicate_of,hidden_reason,draft_status,draft_error,draft_started_at';
+
+  const _headlineById = {};   // הכותרות שמוצגות כרגע, לפי מזהה
+  let _dupsByPrimary = {};    // מזהה כותרת ראשית → רשימת המקורות הנוספים שלה
+  const _writing = new Set(); // כותרות שנכתבות עכשיו ברקע
+  let _pollTimer = null;
+  let _lastLoadIso = null;    // מתי נטענה הרשימה לאחרונה (לזיהוי כותרות חדשות)
+
   function escapeAttr(s) {
     return String(s || '').replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  }
+
+  function isMissingColumn(error) {
+    if (!error) return false;
+    return error.code === '42703' || error.code === 'PGRST204' || error.code === '42P01' || error.code === 'PGRST205' ||
+      /does not exist|could not find/i.test(error.message || '');
   }
 
   function initNewsClient() {
@@ -55,6 +85,146 @@
     } catch (e) { return null; }
   }
 
+  // ═══════════ תשתית ממשק: הודעות צפות, שורת סטטוס ═══════════
+  // הכול מוזרק מכאן, כך ש-index.html ו-404.html לא משתנים.
+
+  function ensureNewsUi() {
+    if (document.getElementById('news-v2-style')) return;
+    const st = document.createElement('style');
+    st.id = 'news-v2-style';
+    st.textContent =
+      '#news-toast-host{position:fixed;bottom:22px;left:50%;transform:translateX(-50%);z-index:99999;display:flex;flex-direction:column;gap:8px;width:min(92vw,460px);pointer-events:none}' +
+      '.news-toast{pointer-events:auto;background:#12161f;color:#fff;border:1px solid #2a3140;border-right:4px solid #ff9d2e;border-radius:12px;padding:12px 14px;font-size:0.84rem;line-height:1.5;box-shadow:0 10px 30px rgba(0,0,0,.45);direction:rtl;text-align:right;display:flex;gap:10px;align-items:flex-start;cursor:pointer;animation:newsToastIn .22s ease-out}' +
+      '.news-toast.ok{border-right-color:#2ecc71}.news-toast.err{border-right-color:#e8001d}' +
+      '.news-toast-body{flex:1;min-width:0;word-break:break-word}' +
+      '.news-toast-act{background:#ff9d2e;color:#111;border:0;border-radius:8px;padding:6px 10px;font-size:0.76rem;font-weight:800;font-family:inherit;cursor:pointer;white-space:nowrap}' +
+      '@keyframes newsToastIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}' +
+      '.news-spin{display:inline-block;width:11px;height:11px;border:2px solid currentColor;border-top-color:transparent;border-radius:50%;animation:newsSpin .8s linear infinite;vertical-align:-1px;margin-inline-end:5px}' +
+      '@keyframes newsSpin{to{transform:rotate(360deg)}}' +
+      '.news-writing-badge{background:rgba(255,157,46,.16);color:#ff9d2e;font-size:0.62rem;font-weight:800;padding:2px 9px;border-radius:10px;white-space:nowrap}' +
+      '.news-draft-note{width:100%;font-size:0.76rem;line-height:1.5;margin-top:2px;color:#ff6b6b}' +
+      '.news-src-badge{display:inline-flex;align-items:center;gap:4px;background:rgba(122,184,255,.14);color:#7ab8ff;border:1px solid rgba(122,184,255,.35);font-size:0.68rem;font-weight:800;padding:3px 9px;border-radius:12px;cursor:pointer;user-select:none}' +
+      '.news-src-list{display:none;width:100%;margin-top:6px;padding:8px 10px;border-radius:8px;background:var(--adm-surface-2,rgba(255,255,255,.04));font-size:0.76rem;line-height:1.7}' +
+      '.news-src-list a{color:var(--adm-accent,#ff9d2e);text-decoration:none}' +
+      '#news-auto-status{font-size:0.76rem;color:var(--adm-muted);margin-top:12px;line-height:1.6}' +
+      '#news-auto-status details,#news-refresh-result details{margin-top:4px}' +
+      '#news-auto-status summary,#news-refresh-result summary{cursor:pointer}' +
+      '#news-refresh-result{font-size:0.8rem;margin-top:10px;line-height:1.6;display:none;padding:10px 12px;border-radius:10px;background:var(--adm-surface-2,rgba(255,255,255,.04));border:1px solid var(--adm-border,rgba(255,255,255,.08))}' +
+      '#news-refresh-result pre{white-space:pre-wrap;font-family:inherit;font-size:0.74rem;color:var(--adm-muted);margin:6px 0 0;max-height:240px;overflow:auto}' +
+      '#news-new-pill{display:none;width:100%;margin-bottom:12px;padding:10px;border-radius:10px;border:1px solid #2ecc71;background:rgba(46,204,113,.12);color:#2ecc71;font-weight:800;font-size:0.84rem;font-family:inherit;cursor:pointer}';
+    document.head.appendChild(st);
+
+    const refreshBtn = document.getElementById('news-refresh-btn');
+    const block = refreshBtn ? refreshBtn.closest('.form-block') : null;
+    if (block) {
+      const result = document.createElement('div');
+      result.id = 'news-refresh-result';
+      block.appendChild(result);
+      const status = document.createElement('div');
+      status.id = 'news-auto-status';
+      block.appendChild(status);
+    }
+    const list = document.getElementById('news-headlines-list');
+    if (list && list.parentNode) {
+      const pill = document.createElement('button');
+      pill.id = 'news-new-pill';
+      pill.type = 'button';
+      pill.onclick = function () { loadHeadlines(); };
+      list.parentNode.insertBefore(pill, list);
+    }
+    const host = document.createElement('div');
+    host.id = 'news-toast-host';
+    document.body.appendChild(host);
+
+    // בדיקה שקטה כל 3 דקות: האם נכנסו כותרות חדשות, ומה מצב הרענון האוטומטי.
+    setInterval(function () {
+      const panel = document.getElementById('admin-news');
+      if (document.visibilityState !== 'visible' || !panel || panel.offsetParent === null) return;
+      checkNewHeadlines();
+      loadAutoStatus();
+    }, 180000);
+  }
+
+  // הודעה צפה קטנה, במקום alert שחוסם את המסך. kind: 'ok' | 'err' | ''.
+  function newsToast(message, kind, opts) {
+    ensureNewsUi();
+    opts = opts || {};
+    const host = document.getElementById('news-toast-host');
+    if (!host) { console.log('[news.js] ' + message); return; }
+    const el = document.createElement('div');
+    el.className = 'news-toast' + (kind ? ' ' + kind : '');
+    const bodyEl = document.createElement('div');
+    bodyEl.className = 'news-toast-body';
+    bodyEl.textContent = message;
+    el.appendChild(bodyEl);
+    const close = function () { if (el.parentNode) el.parentNode.removeChild(el); };
+    if (opts.actionLabel && typeof opts.onAction === 'function') {
+      const act = document.createElement('button');
+      act.className = 'news-toast-act';
+      act.type = 'button';
+      act.textContent = opts.actionLabel;
+      act.onclick = function (ev) { ev.stopPropagation(); close(); opts.onAction(); };
+      el.appendChild(act);
+    }
+    el.onclick = close;
+    host.appendChild(el);
+    while (host.children.length > 4) host.removeChild(host.firstChild);
+    setTimeout(close, opts.ms || (kind === 'err' ? 14000 : 7000));
+  }
+
+  function minutesAgoLabel(dateStr) {
+    const mins = Math.max(0, Math.round((Date.now() - new Date(dateStr).getTime()) / 60000));
+    if (mins < 1) return 'ממש עכשיו';
+    if (mins < 60) return 'לפני ' + mins + ' דק\'';
+    const hours = Math.floor(mins / 60);
+    if (hours < 24) return 'לפני ' + hours + ' שע\'';
+    return 'לפני ' + Math.floor(hours / 24) + ' ימים';
+  }
+
+  // שורת סטטוס מתחת לכפתורי הרענון: מתי המקורות עודכנו, ואילו מקורות בתקלה.
+  async function loadAutoStatus() {
+    const client = initNewsClient();
+    const box = document.getElementById('news-auto-status');
+    if (!box || !client || !_v2) return;
+    try {
+      const { data, error } = await client.from('news_source_state')
+        .select('source_name,last_run_at,consecutive_failures,last_error');
+      if (error || !data || !data.length) { box.innerHTML = ''; return; }
+      let latest = 0;
+      data.forEach(function (r) { if (r.last_run_at) latest = Math.max(latest, new Date(r.last_run_at).getTime()); });
+      if (!latest) { box.innerHTML = ''; return; }
+      const mins = (Date.now() - latest) / 60000;
+      const failing = data.filter(function (r) { return (r.consecutive_failures || 0) >= 3; });
+      let html = mins <= 25
+        ? '🟢 מתעדכן אוטומטית ברקע · עדכון אחרון ' + minutesAgoLabel(latest)
+        : '🟠 עדכון אחרון של המקורות ' + minutesAgoLabel(latest) + ' · הרענון האוטומטי לא רץ כרגע';
+      html += ' · ' + data.length + ' מקורות';
+      if (failing.length) {
+        html += '<details><summary>⚠️ ' + failing.length + ' מקורות בתקלה מתמשכת</summary>' +
+          failing.map(function (r) {
+            return '<div>❌ ' + escapeAttr(r.source_name) + ' — ' + escapeAttr((r.last_error || 'שגיאה').slice(0, 140)) + '</div>';
+          }).join('') + '</details>';
+      }
+      box.innerHTML = html;
+    } catch (e) { /* שורת סטטוס בלבד — לא מפריעים לשאר הפאנל */ }
+  }
+
+  // כמה כותרות חדשות נכנסו מאז שהרשימה נטענה. שאילתת ספירה בלבד — בלי להוריד נתונים.
+  async function checkNewHeadlines() {
+    const client = initNewsClient();
+    const pill = document.getElementById('news-new-pill');
+    if (!pill || !client || !_v2 || !_lastLoadIso) return;
+    try {
+      let q = client.from('news_headlines').select('id', { count: 'exact', head: true })
+        .gt('fetched_at', _lastLoadIso).is('hidden_reason', null).is('duplicate_of', null).not('ai_checked_at', 'is', null);
+      if (_headlinesFilter === 'il' || _headlinesFilter === 'world') q = q.eq('region', _headlinesFilter);
+      const { count, error } = await q;
+      if (error || !count) return;
+      pill.textContent = '🆕 ' + count + (count === 1 ? ' כותרת חדשה' : ' כותרות חדשות') + ' — לחץ להצגה';
+      pill.style.display = 'block';
+    } catch (e) { /* לא קריטי */ }
+  }
+
   // ═══════════ ניהול טאבים ═══════════
 
   window.newsSubTab = function (tab, el) {
@@ -67,6 +237,11 @@
     if (tab === 'headlines') loadHeadlines(); else loadDrafts();
   };
 
+  function openDraftsTab() {
+    const tabs = document.querySelectorAll('.news-subtab');
+    if (tabs.length > 1) window.newsSubTab('drafts', tabs[1]);
+  }
+
   // עוטפים את adminTab הקיים (שכבר עטוף פעם אחת על ידי ads.js) כדי להוסיף
   // תמיכה בלשונית 'news', באותו דפוס עדין שכבר נוהג באתר.
   if (typeof window.adminTab === 'function' && !window.__newsAdminTabWrapped) {
@@ -76,7 +251,7 @@
       const newsPanel = document.getElementById('admin-news');
       if (!newsPanel) return;
       newsPanel.style.display = tab === 'news' ? '' : 'none';
-      if (tab === 'news') { loadHeadlines(); renderMorningBrief(); }
+      if (tab === 'news') { ensureNewsUi(); loadHeadlines(); renderMorningBrief(); }
     };
     window.__newsAdminTabWrapped = true;
   }
@@ -96,10 +271,19 @@
       sinceCutoff.setHours(18, 0, 0, 0);
       const sinceIso = sinceCutoff.toISOString();
 
-      const [{ data: freshHeadlines }, { data: pendingDrafts }] = await Promise.all([
-        client.from('news_headlines').select('id,importance_score').gte('fetched_at', sinceIso),
+      // בגרסה 2 הספירה כוללת רק כותרות שמוצגות בפועל (בלי מוסתרות וכפילויות).
+      const freshQuery = function (v2) {
+        let q = client.from('news_headlines').select('id,importance_score').gte('fetched_at', sinceIso);
+        if (v2) q = q.is('hidden_reason', null).is('duplicate_of', null);
+        return q;
+      };
+      const [freshFirst, { data: pendingDrafts }] = await Promise.all([
+        freshQuery(_v2),
         client.from('news_drafts').select('id').eq('status', 'pending'),
       ]);
+      let freshRes = freshFirst;
+      if (freshRes.error && isMissingColumn(freshRes.error)) freshRes = await freshQuery(false);
+      const freshHeadlines = freshRes.data;
       const totalFresh = freshHeadlines ? freshHeadlines.length : 0;
       const hotCount = (freshHeadlines || []).filter(function (h) { return (h.importance_score || 0) >= 4; }).length;
       const draftCount = pendingDrafts ? pendingDrafts.length : 0;
@@ -131,11 +315,47 @@
 
   // ═══════════ כותרות (RSS) ═══════════
 
+  // מציג את תוצאות הרענון בתוך הדף (מתחת לכפתורים) במקום חלון קופץ.
+  function renderRefreshResult(json) {
+    const box = document.getElementById('news-refresh-result');
+    const results = Array.isArray(json.results) ? json.results : [];
+    const okCount = results.filter(function (r) { return r.ok; }).length;
+    const failCount = results.length - okCount;
+    const newCount = typeof json.totalNew === 'number' ? json.totalNew : json.totalProcessed;
+
+    const parts = [];
+    if (typeof newCount === 'number') parts.push(newCount + (typeof json.totalNew === 'number' ? ' כותרות חדשות' : ' כותרות נשמרו'));
+    if (json.hiddenNotCar) parts.push(json.hiddenNotCar + ' סוננו (לא רכב)');
+    if (json.hiddenAccident) parts.push(json.hiddenAccident + ' תאונות סוננו');
+    if (json.duplicatesMerged) parts.push(json.duplicatesMerged + ' כפילויות אוחדו');
+    if (json.pendingAnalysis) parts.push(json.pendingAnalysis + ' ימשיכו להתנתח ברקע');
+    if (json.skippedRecent) parts.push(json.skippedRecent + ' מקורות דולגו (עודכנו ברקע לפני רגע)');
+    const summary = results.map(function (r) {
+      return (r.ok ? '✅ ' : '❌ ') + r.source + (r.ok ? ' (' + r.count + ')' : ' — ' + (r.error || 'שגיאה'));
+    }).join('\n');
+    console.log('[news.js] תוצאות רענון לפי מקור:\n' + summary);
+
+    let html = '<div style="font-weight:800;">✅ הרענון הסתיים' + (parts.length ? ' · ' + escapeAttr(parts.join(' · ')) : '') + '</div>';
+    if (json.saveErrors && json.saveErrors.length) {
+      html += '<div style="color:#ff6b6b;margin-top:4px;">⚠️ השמירה נכשלה: ' + escapeAttr(json.saveErrors.join(' | ')) + '</div>';
+    }
+    if (json.creditDepleted && json.error) {
+      html += '<div style="color:#ff6b6b;margin-top:4px;">⚠️ ' + escapeAttr(json.error) + '</div>';
+    }
+    if (results.length) {
+      html += '<details><summary>פירוט לפי מקור · ' + okCount + ' תקינים' + (failCount ? ' · ' + failCount + ' נכשלו' : '') + '</summary>' +
+        '<pre>' + escapeAttr(summary) + '</pre></details>';
+    }
+    if (box) { box.innerHTML = html; box.style.display = 'block'; }
+    else newsToast('הרענון הסתיים' + (parts.length ? ' · ' + parts.join(' · ') : ''), 'ok');
+  }
+
   window.refreshCarNews = async function (btn, region) {
+    ensureNewsUi();
     const client = initNewsClient();
-    if (!client) { alert('אין חיבור לשרת — נסה לרענן את הדף.'); return; }
+    if (!client) { newsToast('אין חיבור לשרת — נסה לרענן את הדף.', 'err'); return; }
     const token = await getAuthToken();
-    if (!token) { alert('יש להתחבר לניהול קודם.'); return; }
+    if (!token) { newsToast('יש להתחבר לניהול קודם.', 'err'); return; }
     const originalText = btn ? btn.textContent : null;
     if (btn) { btn.disabled = true; btn.textContent = 'מרענן...'; }
     try {
@@ -149,35 +369,16 @@
       try { json = JSON.parse(rawText); } catch (e) { /* התשובה לא הייתה JSON תקני — נטפל בזה למטה */ }
       if (!res.ok) {
         const detail = (json && json.error) ? json.error : ('קוד ' + res.status + ': ' + rawText.slice(0, 300));
-        alert('שגיאה ברענון החדשות:\n' + detail);
+        newsToast('שגיאה ברענון החדשות: ' + detail, 'err');
         console.error('[news.js] fetch-car-news נכשל:', res.status, rawText);
         return;
       }
       if (!json) {
-        alert('שגיאה: התקבלה תשובה לא תקינה מהשרת (לא JSON):\n' + rawText.slice(0, 300));
+        newsToast('שגיאה: התקבלה תשובה לא תקינה מהשרת: ' + rawText.slice(0, 200), 'err');
         console.error('[news.js] fetch-car-news החזיר תשובה שאינה JSON:', rawText);
         return;
       }
-      // מציגים בדיוק מה הצליח ומה נכשל בכל מקור — כדי לא להישאר בניחוש
-      if (json.results && Array.isArray(json.results)) {
-        const summary = json.results.map(function (r) {
-          return (r.ok ? '✅ ' : '❌ ') + r.source + (r.ok ? ' (' + r.count + ')' : ' — ' + (r.error || 'שגיאה'));
-        }).join('\n');
-        // שורת סיכום אמיתית: כמה נקראו מול כמה באמת נשמרו ב-DB. בלי זה
-        // אפשר לראות רשימה מלאה של ✅ ירוקים בזמן ששום שורה לא נשמרה.
-        var head = '';
-        if (typeof json.totalProcessed === 'number') {
-          head = '📥 נשמרו בפועל: ' + json.totalProcessed;
-          if (typeof json.totalFetched === 'number') head += ' מתוך ' + json.totalFetched + ' שנקראו';
-          if (json.duplicatesDropped) head += ' (' + json.duplicatesDropped + ' כפילויות סוננו)';
-          head += '\n\n';
-        }
-        if (json.saveErrors && json.saveErrors.length) {
-          head = '⚠️ השמירה ל-DB נכשלה:\n' + json.saveErrors.join('\n') + '\n\n' + head;
-        }
-        console.log('[news.js] תוצאות רענון לפי מקור:\n' + summary);
-        alert('רענון הסתיים:\n\n' + head + summary);
-      }
+      renderRefreshResult(json);
       // מסנכרנים את תצוגת הרשימה לאזור שרעננו בפועל — אחרת נשארים על "הכל"
       // ורואים כותרות ישנות מאזור אחר, כאילו הרענון "הביא" משהו לא קשור.
       if (region === 'il' || region === 'world') {
@@ -187,7 +388,7 @@
         loadHeadlines();
       }
     } catch (e) {
-      alert('שגיאה ברענון החדשות. ודא שה-Edge Function פרוסה כראוי.');
+      newsToast('שגיאה ברענון החדשות (שגיאת רשת). אם זה חוזר, ודא שה-Edge Function פרוסה.', 'err');
       console.error('[news.js] fetch-car-news חריגה:', e);
     } finally {
       if (btn) { btn.disabled = false; btn.textContent = originalText; }
@@ -224,12 +425,6 @@
     if (diffDays === 1) return 'אתמול';
     if (diffDays > 1 && diffDays <= 6) return d.toLocaleDateString('he-IL', { weekday: 'long' });
     return d.toLocaleDateString('he-IL', { day: 'numeric', month: 'short', year: 'numeric' });
-  }
-
-  function formatTime(dateStr) {
-    const d = new Date(dateStr);
-    if (isNaN(d.getTime())) return '';
-    return d.toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' });
   }
 
   // תאריך ושעה מלאים של הכתבה המקורית (לא רק "היום/אתמול" היחסי) —
@@ -270,32 +465,63 @@
     return '<span class="adm-cat-pill" style="background:' + s.bg + ';color:#fff;" title="' + title + '">' + s.label + '</span>';
   }
 
+  function buildHeadlinesQuery(client, v2) {
+    // גרסה 2: רק העמודות שמוצגות (בלי התקציר), ורק כותרות ראשיות שלא הוסתרו.
+    let query = client.from('news_headlines').select(v2 ? HEADLINE_COLS : '*');
+    if (v2) query = query.is('hidden_reason', null).is('duplicate_of', null);
+    // מיון לפי המצב הנבחר: "הכי חם" (importance_score קודם, ואז תאריך
+    // כשובר שוויון) או "הכי חדש" (תאריך פרסום קודם). כתבות בלי ציון/תאריך
+    // (nulls) יורדות לסוף הרשימה במקום לבלבל את הסדר.
+    if (_headlinesSort === 'hot') {
+      query = query
+        .order('importance_score', { ascending: false, nullsFirst: false })
+        .order('published_at', { ascending: false, nullsFirst: false });
+    } else {
+      query = query
+        .order('published_at', { ascending: false, nullsFirst: false })
+        .order('fetched_at', { ascending: false });
+    }
+    query = query.limit(150);
+    if (_headlinesFilter === 'il' || _headlinesFilter === 'world') query = query.eq('region', _headlinesFilter);
+    return query;
+  }
+
   async function loadHeadlines() {
+    ensureNewsUi();
     const client = initNewsClient();
     const list = document.getElementById('news-headlines-list');
     if (!list || !client) return;
     list.innerHTML = '<div class="adm-empty-state">טוען...</div>';
+    const pill = document.getElementById('news-new-pill');
+    if (pill) pill.style.display = 'none';
     try {
-      // מיון לפי תאריך הפרסום המקורי (הכי חדש קודם); כתבות בלי published_at
-      // (עדיין לא נתמך מהמקור) יורדות לסוף הרשימה במקום לבלבל את הסדר.
-      // מיון לפי המצב הנבחר: "הכי חם" (importance_score קודם, ואז תאריך
-      // כשובר שוויון) או "הכי חדש" (תאריך פרסום קודם). כתבות בלי ציון/תאריך
-      // (nulls) יורדות לסוף הרשימה במקום לבלבל את הסדר.
-      let query = client.from('news_headlines').select('*');
-      if (_headlinesSort === 'hot') {
-        query = query
-          .order('importance_score', { ascending: false, nullsFirst: false })
-          .order('published_at', { ascending: false, nullsFirst: false });
-      } else {
-        query = query
-          .order('published_at', { ascending: false, nullsFirst: false })
-          .order('fetched_at', { ascending: false });
+      const loadStartedIso = new Date().toISOString();
+      let res = await buildHeadlinesQuery(client, _v2);
+      if (res.error && _v2 && isMissingColumn(res.error)) {
+        console.warn('[news.js] מבנה הנתונים של גרסה 2 חסר — עובדים במצב הישן.');
+        _v2 = false;
+        res = await buildHeadlinesQuery(client, false);
       }
-      query = query.limit(150);
-      if (_headlinesFilter === 'il' || _headlinesFilter === 'world') query = query.eq('region', _headlinesFilter);
-      const { data, error } = await query;
+      const data = res.data, error = res.error;
       if (error) { list.innerHTML = '<div class="adm-empty-state">שגיאה בטעינת הכותרות: ' + escapeAttr(error.message) + '</div>'; console.error('[news.js] טעינת כותרות נכשלה:', error); return; }
-      if (!data || !data.length) { list.innerHTML = '<div class="adm-empty-state">אין כותרות עדיין ' + (_headlinesFilter !== 'all' ? 'באזור הזה ' : '') + '— לחץ על אחד מכפתורי הרענון למעלה.</div>'; return; }
+      _lastLoadIso = loadStartedIso;
+      if (!data || !data.length) { list.innerHTML = '<div class="adm-empty-state">אין כותרות עדיין ' + (_headlinesFilter !== 'all' ? 'באזור הזה ' : '') + '— לחץ על אחד מכפתורי הרענון למעלה.</div>'; loadAutoStatus(); return; }
+
+      Object.keys(_headlineById).forEach(function (k) { delete _headlineById[k]; });
+      data.forEach(function (h) { _headlineById[h.id] = h; });
+
+      // המקורות הנוספים של כל ידיעה (אותה ידיעה שהגיעה מכמה אתרים).
+      _dupsByPrimary = {};
+      if (_v2) {
+        try {
+          const dupRes = await client.from('news_headlines')
+            .select('id,duplicate_of,source_name,source_url')
+            .in('duplicate_of', data.map(function (h) { return h.id; }));
+          (dupRes.data || []).forEach(function (d) {
+            (_dupsByPrimary[d.duplicate_of] = _dupsByPrimary[d.duplicate_of] || []).push(d);
+          });
+        } catch (e) { /* בלי תג מקורות — לא קריטי */ }
+      }
 
       // "לוח מומלצים" — 5 הכותרות הכי חמות+טריות שעדיין לא טופלו (לא נכתבה
       // עליהן טיוטה ולא נדחו), תמיד למעלה בלי קשר למיון/סינון הנבחר. המטרה:
@@ -313,9 +539,12 @@
         const ageHours = (Date.now() - new Date(sortDate).getTime()) / 3600000;
         return ageHours <= TOP_PICKS_MAX_AGE_HOURS;
       });
+      // ידיעה שדווחה בכמה מקורות מקבלת עדיפות בין כותרות עם אותו ציון.
+      const sourceCount = function (h) { return 1 + ((_dupsByPrimary[h.id] || []).length); };
       const topPicks = openItems.slice().sort(function (a, b) {
         const scoreA = a.importance_score || 0, scoreB = b.importance_score || 0;
         if (scoreB !== scoreA) return scoreB - scoreA;
+        if (sourceCount(b) !== sourceCount(a)) return sourceCount(b) - sourceCount(a);
         const dateA = new Date(a.published_at || a.fetched_at || 0).getTime();
         const dateB = new Date(b.published_at || b.fetched_at || 0).getTime();
         return dateB - dateA;
@@ -345,10 +574,25 @@
         html += renderHeadlineRow(h, false);
       });
       list.innerHTML = html;
+
+      // כותרות שנכתבות כרגע ברקע (למשל אחרי טעינה מחדש של הדף) — ממשיכים לעקוב.
+      data.forEach(function (h) { if (draftState(h) === 'writing') trackWriting(h.id); });
+      loadAutoStatus();
     } catch (e) {
       list.innerHTML = '<div class="adm-empty-state">שגיאה בטעינת הכותרות.</div>';
       console.error('[news.js] loadHeadlines חריגה:', e);
     }
+  }
+
+  // מצב הכתיבה של כותרת: 'drafted' | 'writing' | 'stuck' | 'failed' | 'idle'.
+  function draftState(h) {
+    if (h.status === 'drafted') return 'drafted';
+    if (h.draft_status === 'writing') {
+      const started = h.draft_started_at ? new Date(h.draft_started_at).getTime() : 0;
+      return (Date.now() - started < WRITING_STALE_MS) ? 'writing' : 'stuck';
+    }
+    if (h.draft_status === 'failed') return 'failed';
+    return 'idle';
   }
 
   // בונה שורת HTML לכותרת אחת. highlighted=true מוסיף מסגרת בולטת — משמש
@@ -357,18 +601,38 @@
     const regionPill = regionGlowPill(h.region);
     const badge = importanceBadge(h.importance_score, h.importance_reason);
     const timeLabel = h.published_at ? '<span>🕐 ' + formatFullDateTime(h.published_at) + '</span>' : '<span style="color:var(--adm-muted);">תאריך לא ידוע</span>';
+    const state = draftState(h);
+
     let statusBadge = '';
-    if (h.status === 'drafted') statusBadge = '<span class="adm-badge-active">נכתבה טיוטה</span>';
+    if (state === 'drafted') statusBadge = '<span class="adm-badge-active">נכתבה טיוטה</span>';
+    else if (state === 'writing') statusBadge = '<span class="news-writing-badge"><span class="news-spin"></span>נכתבת עכשיו</span>';
     else if (h.status === 'dismissed') statusBadge = '<span class="adm-badge-inactive">נדחה</span>';
-    const writeBtn = h.status === 'drafted'
-      ? ''
-      : '<button class="tbl-btn" onclick="writeNewsDraft(' + h.id + ',this)">✍️ כתוב כתבה</button>';
+
+    let writeBtn = '';
+    if (state === 'writing') writeBtn = '<button class="tbl-btn" disabled><span class="news-spin"></span>כותב...</button>';
+    else if (state === 'failed' || state === 'stuck') writeBtn = '<button class="tbl-btn" onclick="writeNewsDraft(' + h.id + ',this)">🔁 נסה שוב</button>';
+    else if (state === 'idle') writeBtn = '<button class="tbl-btn" onclick="writeNewsDraft(' + h.id + ',this)">✍️ כתוב כתבה</button>';
+
+    let note = '';
+    if (state === 'failed') note = '<div class="news-draft-note">⚠️ הכתיבה נכשלה: ' + escapeAttr(h.draft_error || 'שגיאה לא ידועה') + '</div>';
+    else if (state === 'stuck') note = '<div class="news-draft-note">⚠️ הכתיבה נקטעה באמצע. אפשר לנסות שוב.</div>';
+
+    // תג "N מקורות": אותה ידיעה הגיעה מכמה אתרים. לחיצה פותחת את הרשימה.
+    const dups = _dupsByPrimary[h.id] || [];
+    let srcBadge = '', srcList = '';
+    if (dups.length) {
+      srcBadge = '<span class="news-src-badge" onclick="toggleNewsSources(this)" title="אותה ידיעה דווחה גם במקורות נוספים">📰 ' + (dups.length + 1) + ' מקורות</span>';
+      srcList = '<div class="news-src-list">דווח גם ב: ' + dups.map(function (d) {
+        return '<a href="' + escapeAttr(d.source_url) + '" target="_blank" rel="noopener">' + escapeAttr(d.source_name) + ' ↗</a>';
+      }).join(' · ') + '</div>';
+    }
+
     const rowStyle = highlighted ? ' style="border:1.5px solid var(--adm-accent,#ff9d2e);border-radius:8px;margin-bottom:8px;"' : '';
-    return '<div class="adm-row"' + rowStyle + '>' +
+    return '<div class="adm-row" data-hid="' + h.id + '" data-hl="' + (highlighted ? '1' : '0') + '"' + rowStyle + '>' +
       '<div class="adm-row-top">' +
         '<div class="adm-row-info">' +
           '<div class="adm-row-title">' + escapeAttr(h.title) + ' ' + statusBadge + '</div>' +
-          '<div class="adm-row-meta">' + regionPill + badge + '<span>' + escapeAttr(h.source_name) + '</span>' + timeLabel + '</div>' +
+          '<div class="adm-row-meta">' + regionPill + badge + srcBadge + '<span>' + escapeAttr(h.source_name) + '</span>' + timeLabel + '</div>' +
         '</div>' +
       '</div>' +
       '<div class="adm-row-bottom">' +
@@ -376,44 +640,115 @@
         '<div class="tbl-actions">' + writeBtn +
           '<button class="tbl-btn del" onclick="dismissHeadline(' + h.id + ')">✕ דחה</button>' +
         '</div>' +
+        note + srcList +
       '</div>' +
     '</div>';
   }
 
+  window.toggleNewsSources = function (el) {
+    const row = el && el.closest ? el.closest('.adm-row') : null;
+    const box = row ? row.querySelector('.news-src-list') : null;
+    if (box) box.style.display = box.style.display === 'block' ? 'none' : 'block';
+  };
+
+  // מצייר מחדש רק את הכרטיס של כותרת אחת (היא יכולה להופיע פעמיים: גם
+  // ב"מומלץ לכתיבה" וגם ברשימה), בלי לטעון מחדש את כל הרשימה.
+  function rerenderHeadline(id) {
+    const h = _headlineById[id];
+    if (!h) return;
+    document.querySelectorAll('.adm-row[data-hid="' + id + '"]').forEach(function (el) {
+      el.outerHTML = renderHeadlineRow(h, el.getAttribute('data-hl') === '1');
+    });
+  }
+
+  function trackWriting(id) {
+    _writing.add(id);
+    if (!_pollTimer) _pollTimer = setInterval(pollWriting, 4000);
+  }
+
+  // בודק כל 4 שניות את הכותרות שנכתבות ברקע, ומעדכן את הכרטיס כשהסתיימו.
+  async function pollWriting() {
+    if (!_writing.size) { clearInterval(_pollTimer); _pollTimer = null; return; }
+    const client = initNewsClient();
+    if (!client) return;
+    try {
+      const { data, error } = await client.from('news_headlines')
+        .select('id,title,status,draft_status,draft_error,draft_started_at')
+        .in('id', Array.from(_writing));
+      if (error || !data) return;
+      data.forEach(function (row) {
+        const h = _headlineById[row.id] || (_headlineById[row.id] = { id: row.id });
+        Object.assign(h, row);
+        const state = draftState(h);
+        if (state === 'writing') return;
+        _writing.delete(row.id);
+        const shortTitle = (h.title || '').length > 60 ? h.title.slice(0, 60) + '…' : (h.title || '');
+        if (state === 'drafted') {
+          newsToast('✅ הטיוטה מוכנה: ' + shortTitle, 'ok', { actionLabel: 'לכתבות מוכנות', onAction: openDraftsTab, ms: 12000 });
+        } else if (state === 'failed') {
+          newsToast('הכתיבה נכשלה: ' + shortTitle + ' — ' + (h.draft_error || 'שגיאה לא ידועה'), 'err');
+        } else {
+          newsToast('הכתיבה נקטעה באמצע: ' + shortTitle + '. אפשר לנסות שוב.', 'err');
+        }
+        rerenderHeadline(row.id);
+      });
+    } catch (e) { /* ננסה שוב בסיבוב הבא */ }
+  }
+
+  function markHeadline(id, fields) {
+    const h = _headlineById[id];
+    if (!h) return;
+    Object.assign(h, fields);
+    rerenderHeadline(id);
+  }
+
+  // "כתוב כתבה": הכתיבה רצה ברקע בשרת. הפונקציה חוזרת מיד, והכרטיס מתעדכן
+  // לבד כשהטיוטה מוכנה. אפשר ללחוץ על כמה כותרות ברצף בלי לחכות.
   window.writeNewsDraft = async function (headlineId, btn) {
+    ensureNewsUi();
     const client = initNewsClient();
     if (!client) return;
     const token = await getAuthToken();
-    if (!token) { alert('יש להתחבר לניהול קודם.'); return; }
-    const originalText = btn ? btn.textContent : null;
-    if (btn) { btn.disabled = true; btn.textContent = 'כותב...'; }
+    if (!token) { newsToast('יש להתחבר לניהול קודם.', 'err'); return; }
+    if (_writing.has(headlineId)) return;
+
+    if (_headlineById[headlineId]) {
+      markHeadline(headlineId, { draft_status: 'writing', draft_error: null, draft_started_at: new Date().toISOString() });
+    } else if (btn) {
+      btn.disabled = true; btn.textContent = 'כותב...';
+    }
     try {
       const res = await fetch(EDGE_BASE + '/draft-news-article', {
         method: 'POST',
         headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
-        body: JSON.stringify({ headline_id: headlineId }),
+        body: JSON.stringify({ headline_id: headlineId, background: true }),
       });
       const rawText = await res.text();
       let json = null;
       try { json = JSON.parse(rawText); } catch (e) { /* התשובה לא הייתה JSON תקני — נטפל בזה למטה */ }
-      if (!res.ok) {
-        const detail = (json && json.error) ? json.error : ('קוד ' + res.status + ': ' + rawText.slice(0, 300));
-        alert('שגיאה בכתיבת הכתבה:\n' + detail);
-        console.error('[news.js] draft-news-article נכשל:', res.status, rawText);
+
+      // הפונקציה התחילה לכתוב ברקע — עוקבים עד שתסיים.
+      if (res.status === 202 && json && json.started) { trackWriting(headlineId); return; }
+
+      // הפונקציה כתבה וחיכתה (גרסה ישנה, או כשכתיבה ברקע לא זמינה).
+      if (res.ok && json && json.success) {
+        markHeadline(headlineId, { status: 'drafted', draft_status: null, draft_error: null });
+        newsToast('✅ הטיוטה מוכנה.', 'ok', { actionLabel: 'לכתבות מוכנות', onAction: openDraftsTab, ms: 12000 });
+        if (!_headlineById[headlineId]) loadHeadlines();
         return;
       }
-      if (!json) {
-        alert('שגיאה: התקבלה תשובה לא תקינה מהשרת (לא JSON):\n' + rawText.slice(0, 300));
-        console.error('[news.js] draft-news-article החזיר תשובה שאינה JSON:', rawText);
-        return;
-      }
-      alert('הטיוטה נכתבה בהצלחה! עבור ללשונית "כתבות מוכנות" כדי לבדוק ולפרסם.');
-      loadHeadlines();
+
+      const detail = (json && json.error) ? json.error : ('קוד ' + res.status + ': ' + rawText.slice(0, 300));
+      console.error('[news.js] draft-news-article נכשל:', res.status, rawText);
+      markHeadline(headlineId, { draft_status: 'failed', draft_error: detail });
+      newsToast('הכתיבה נכשלה: ' + detail, 'err');
+      if (!_headlineById[headlineId] && btn) { btn.disabled = false; btn.textContent = '🔁 נסה שוב'; }
     } catch (e) {
-      alert('שגיאה בכתיבת הכתבה (שגיאת רשת/JS):\n' + (e && e.message ? e.message : String(e)));
+      const msg = 'שגיאת רשת: ' + (e && e.message ? e.message : String(e));
       console.error('[news.js] writeNewsDraft חריגה:', e);
-    } finally {
-      if (btn) { btn.disabled = false; btn.textContent = originalText; }
+      markHeadline(headlineId, { draft_status: 'failed', draft_error: msg });
+      newsToast('הכתיבה נכשלה. ' + msg, 'err');
+      if (!_headlineById[headlineId] && btn) { btn.disabled = false; btn.textContent = '🔁 נסה שוב'; }
     }
   };
 
@@ -421,9 +756,10 @@
     const client = initNewsClient();
     if (!client) return;
     try {
-      await client.from('news_headlines').update({ status: 'dismissed' }).eq('id', headlineId);
+      const { error } = await client.from('news_headlines').update({ status: 'dismissed' }).eq('id', headlineId);
+      if (error) throw error;
       loadHeadlines();
-    } catch (e) { alert('שגיאה בדחיית הכותרת.'); console.error('[news.js] dismissHeadline נכשל:', e); }
+    } catch (e) { newsToast('שגיאה בדחיית הכותרת.', 'err'); console.error('[news.js] dismissHeadline נכשל:', e); }
   };
 
   // ═══════════ כתבות מוכנות (טיוטות) ═══════════
