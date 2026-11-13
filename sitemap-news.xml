@@ -22,15 +22,4 @@
       <news:title>אכיפת צפירות בתל אביב: הקנסות יגיעו עד 1,000 שקלים</news:title>
     </news:news>
   </url>
-  <url>
-    <loc>https://speedometer10.co.il/article/713/</loc>
-    <news:news>
-      <news:publication>
-        <news:name>ספידומטר</news:name>
-        <news:language>he</news:language>
-      </news:publication>
-      <news:publication_date>2026-11-11T11:38:00.000Z</news:publication_date>
-      <news:title>ב.מ.וו X5 החדש בישראל: מ-649,900 שקל וגרסה חשמלית iX5</news:title>
-    </news:news>
-  </url>
 </urlset>
