@@ -196,7 +196,8 @@
     const showTag = TAG_SLOTS.indexOf(slot) !== -1;
     const showClose = DISMISSIBLE_SLOTS.indexOf(slot) !== -1;
     const linkHtml =
-      '<a href="' + escapeAttr(ad.link_url) + '" target="_blank" rel="noopener sponsored" data-ad-id="' + ad.id + '">' +
+      // רק קישור http/https רגיל מגיע ל-href. כל דבר אחר (javascript:, data:) מוחלף ב-"#".
+      '<a href="' + escapeAttr(/^https?:\/\//i.test(String(ad.link_url || '').trim()) ? String(ad.link_url).trim() : '#') + '" target="_blank" rel="noopener sponsored" data-ad-id="' + ad.id + '">' +
       mediaTagHtml(ad) +
       (showTag ? '<span class="ad-tag"><svg viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="9"/></svg>מודעה</span>' : '') +
       '</a>' +
