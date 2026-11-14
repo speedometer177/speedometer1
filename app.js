@@ -86,7 +86,7 @@ async function getAuthToken(){try{if(window.__initSb)window.__initSb();if(sbClie
 const dateEl=document.getElementById('top-date');if(dateEl){const now=new Date();dateEl.textContent=now.toLocaleDateString('he-IL',{weekday:'long',year:'numeric',month:'long',day:'numeric'});}
 /* ממיר תאריך עברי "ד.ח.שששש" → ISO 8601 "שששש-חח-דד" עבור סכמת Rich Results של גוגל */
 function spISODate(d){try{if(!d)return new Date().toISOString().split('T')[0];if(/^\d{4}-\d{2}-\d{2}/.test(d))return d.split('T')[0];const m=String(d).match(/(\d{1,2})[.\/](\d{1,2})[.\/](\d{2,4})/);if(m){let yy=m[3];if(yy.length===2)yy='20'+yy;const mm=('0'+m[2]).slice(-2);const dd=('0'+m[1]).slice(-2);return yy+'-'+mm+'-'+dd;}const t=new Date(d);if(!isNaN(t))return t.toISOString().split('T')[0];}catch(e){}return new Date().toISOString().split('T')[0];}
-function buildBreakingTicker(){const track=document.getElementById('breaking-track');if(!track)return;const items=articles.filter(a=>a.cat!=='quick').slice(0,12);if(!items.length)return;const unit=items.map(a=>`<span class="breaking-item" onclick="openArticle(${a.id})" role="button" tabindex="0">${a.title}</span>`).join('');
+function buildBreakingTicker(){const track=document.getElementById('breaking-track');if(!track)return;const items=articles.filter(a=>a.cat!=='quick').slice(0,12);if(!items.length)return;const unit=items.map(a=>`<span class="breaking-item" onclick="openArticle(${a.id})" role="button" tabindex="0">${escapeHtml(a.title)}</span>`).join('');
 // מילוי הרצועה כך שעותק בודד תמיד רחב לפחות כרוחב המסך — מבטיח גלילה רציפה ללא רווחים גם כשיש מעט כותרות
 let seq=unit;try{track.style.animation='none';track.innerHTML=seq;const host=track.closest('.breaking-ticker');const need=((host&&host.clientWidth)||window.innerWidth||360)*1.4;let guard=0;while(track.scrollWidth>0&&track.scrollWidth<need&&guard<10){seq+=unit;track.innerHTML=seq;guard++;}}catch(e){}
 // שני עותקים זהים → לולאה אינסופית חלקה (‎-50%‎)
@@ -95,7 +95,7 @@ track.innerHTML=seq+seq;
 try{const oneW=track.scrollWidth/2;const dur=Math.min(120,Math.max(18,Math.round(oneW/70)));track.style.setProperty('--sp-bt-dur',dur+'s');}catch(e){}
 // rAF מנוע: לא CSS animation — ביטול מוחלט כדי שלא יתנגשו
 track.style.animation='none';track.style.transition='none';track.style.willChange='transform';track.style.transform='translateX(0)';if(window._spTickRaf)cancelAnimationFrame(window._spTickRaf);var _half=0,_pos=0,_last=performance.now();function _spTick(now){var dt=Math.min(100,now-_last);_last=now;if(!_half||!track.isConnected){_half=track.scrollWidth/2;}if(_half>0&&!document.hidden){_pos+=0.06*dt;if(_pos>=_half)_pos-=_half;track.style.transform='translateX('+(-_pos)+'px)';}window._spTickRaf=requestAnimationFrame(_spTick);}window._spTickRaf=requestAnimationFrame(_spTick);}
-function buildTicker(){const track=document.getElementById('ticker-track');if(!track||!articles.length)return;const content=articles.slice(0,10).map(a=>`<span class="ticker-item" onclick="openArticle(${a.id})">${a.title}</span>`).join('');track.innerHTML=content+content;}
+function buildTicker(){const track=document.getElementById('ticker-track');if(!track||!articles.length)return;const content=articles.slice(0,10).map(a=>`<span class="ticker-item" onclick="openArticle(${a.id})">${escapeHtml(a.title)}</span>`).join('');track.innerHTML=content+content;}
 function buildMobileLatestStrip(articles){if(window.innerWidth>680)return;const strip=document.getElementById('mobile-latest-strip');const dotsEl=document.getElementById('mobile-latest-dots');const badge=document.getElementById('latest-count-badge');if(!strip)return;const items=articles.slice(0,10);if(badge)badge.textContent=items.length;const allItems=[...items,...items.slice(0,2)];strip.innerHTML=allItems.map((a,i)=>cardHTML(a,i<2)).join('');if(dotsEl){dotsEl.innerHTML=items.map((_,i)=>`<div class="mc-dot${i===0?' active':''}" data-idx="${i}"></div>`).join('');dotsEl.querySelectorAll('.mc-dot').forEach(dot=>{dot.addEventListener('click',()=>{const idx=parseInt(dot.dataset.idx);scrollToCard(strip,idx);});});}
 let isScrolling=false;let _cardW=0;const getCardW=()=>{if(!_cardW)_cardW=strip.querySelector('.card')?.offsetWidth||strip.offsetWidth;return _cardW;};window.addEventListener('resize',()=>{_cardW=0;},{passive:true});strip.addEventListener('scroll',()=>{if(isScrolling)return;isScrolling=true;requestAnimationFrame(()=>{updateMobileDots(strip,dotsEl,items.length,getCardW());const gap=14;const step=getCardW()+gap;const maxReal=step*items.length;if(strip.scrollLeft>=maxReal){strip.scrollLeft=strip.scrollLeft-maxReal;}
 isScrolling=false;});},{passive:true});}
@@ -104,13 +104,13 @@ function updateMobileDots(strip,dotsEl,count,cardW){if(!dotsEl)return;if(!cardW)
 function buildHero(){const area=document.getElementById('hero-area');if(!area)return;const pool=currentFilter==='all'?articles.filter(a=>a.cat!=='quick'):articles.filter(a=>a.cat===currentFilter);const rest=pool.filter(a=>!a.heroPosition);const main=pool.find(a=>a.heroPosition===1)||rest[0];const side1=pool.find(a=>a.heroPosition===2)||rest.filter(a=>a!==main)[0];const side2=pool.find(a=>a.heroPosition===3)||rest.filter(a=>a!==main&&a!==side1)[0];if(!main){area.innerHTML='';return;}
 area.innerHTML=`
     <div class="hero-grid">
-      <div class="hero-main" onclick="openArticle(${main.id})" role="button" tabindex="0" aria-label="${main.title}" onkeydown="if(event.key==='Enter')openArticle(${main.id})">
-        <img src="${heroSrc(main.img||CAT_IMAGES[main.cat])}" srcset="${heroSrcset(main.img||CAT_IMAGES[main.cat])}" sizes="(max-width:980px) 100vw, 1000px" alt="${main.title}" loading="eager" fetchpriority="high" decoding="async" width="800" height="450">
+      <div class="hero-main" onclick="openArticle(${main.id})" role="button" tabindex="0" aria-label="${escapeHtml(main.title)}" onkeydown="if(event.key==='Enter')openArticle(${main.id})">
+        <img src="${heroSrc(main.img||CAT_IMAGES[main.cat])}" srcset="${heroSrcset(main.img||CAT_IMAGES[main.cat])}" sizes="(max-width:980px) 100vw, 1000px" alt="${escapeHtml(main.title)}" loading="eager" fetchpriority="high" decoding="async" width="800" height="450">
         <div class="hero-main-content">
           <span class="hero-cat-badge">${CAT_LABELS[main.cat]}</span>
-          <h2 class="hero-main-title">${main.title}</h2>
+          <h2 class="hero-main-title">${escapeHtml(main.title)}</h2>
           <div class="hero-meta">
-            <span class="hero-author">${main.author}</span>
+            <span class="hero-author">${escapeHtml(main.author)}</span>
             <span class="hero-date">${main.date}</span>
             ${main.readTime?`<span class="hero-read-time">${main.readTime}</span>`:''}
             ${main.time?`<span class="hero-read-time">${main.time}</span>`:''}
@@ -118,8 +118,8 @@ area.innerHTML=`
         </div>
       </div>
       <div class="hero-side">
-        ${side1?`<div class="hero-side-card"onclick="openArticle(${side1.id})"role="button"tabindex="0"aria-label="${side1.title}"onkeydown="if(event.key==='Enter')openArticle(${side1.id})"><img src="${cardThumb(side1.img||CAT_IMAGES[side1.cat])}"${responsiveAttrs(side1.img||CAT_IMAGES[side1.cat],'(max-width:980px) 50vw, 480px')}alt="${side1.title}"loading="lazy"width="340"height="210"decoding="async"><div class="hero-side-content"><div class="hero-side-cat">${CAT_LABELS[side1.cat]}</div><div class="hero-side-title">${side1.title}</div></div></div>`:''}
-        ${side2?`<div class="hero-side-card"onclick="openArticle(${side2.id})"role="button"tabindex="0"aria-label="${side2.title}"onkeydown="if(event.key==='Enter')openArticle(${side2.id})"><img src="${cardThumb(side2.img||CAT_IMAGES[side2.cat])}"${responsiveAttrs(side2.img||CAT_IMAGES[side2.cat],'(max-width:980px) 50vw, 480px')}alt="${side2.title}"loading="lazy"width="340"height="210"decoding="async"><div class="hero-side-content"><div class="hero-side-cat">${CAT_LABELS[side2.cat]}</div><div class="hero-side-title">${side2.title}</div></div></div>`:''}
+        ${side1?`<div class="hero-side-card"onclick="openArticle(${side1.id})"role="button"tabindex="0"aria-label="${escapeHtml(side1.title)}"onkeydown="if(event.key==='Enter')openArticle(${side1.id})"><img src="${cardThumb(side1.img||CAT_IMAGES[side1.cat])}"${responsiveAttrs(side1.img||CAT_IMAGES[side1.cat],'(max-width:980px) 50vw, 480px')}alt="${escapeHtml(side1.title)}"loading="lazy"width="340"height="210"decoding="async"><div class="hero-side-content"><div class="hero-side-cat">${CAT_LABELS[side1.cat]}</div><div class="hero-side-title">${escapeHtml(side1.title)}</div></div></div>`:''}
+        ${side2?`<div class="hero-side-card"onclick="openArticle(${side2.id})"role="button"tabindex="0"aria-label="${escapeHtml(side2.title)}"onkeydown="if(event.key==='Enter')openArticle(${side2.id})"><img src="${cardThumb(side2.img||CAT_IMAGES[side2.cat])}"${responsiveAttrs(side2.img||CAT_IMAGES[side2.cat],'(max-width:980px) 50vw, 480px')}alt="${escapeHtml(side2.title)}"loading="lazy"width="340"height="210"decoding="async"><div class="hero-side-content"><div class="hero-side-cat">${CAT_LABELS[side2.cat]}</div><div class="hero-side-title">${escapeHtml(side2.title)}</div></div></div>`:''}
       </div>
     </div>`;}
 function wsrvW(url,w){return 'https://wsrv.nl/?url='+encodeURIComponent(url)+'&w='+w+'&fit=cover&output=webp&q=82';}
@@ -139,16 +139,16 @@ function responsiveAttrs(url,sizesAttr){if(typeof url!=='string')return'';
   if(url.indexOf('images.unsplash.com')!==-1){const widths=[240,320,500,800,1200];const srcset=widths.map(w=>url.replace(/([?&])w=\d+/,'$1w='+w)+' '+w+'w').join(', ');return` srcset="${srcset}" sizes="${sizesAttr}"`;}
   if(isProxyable(url)){const widths=[240,400,640,800,1200];const srcset=widths.map(w=>wsrvW(url,w)+' '+w+'w').join(', ');return` srcset="${srcset}" sizes="${sizesAttr}"`;}
   return'';}
-function cardHTML(a,eager){const score=a.score?`<div class="review-score ${parseFloat(a.score)>=8?'high':parseFloat(a.score)>=6?'mid':''}">${a.score}</div>`:'';return`<a href="/article/${a.id}/" class="card" onclick="openArticle(${a.id});return false;" aria-label="${a.title}">
+function cardHTML(a,eager){const score=a.score?`<div class="review-score ${parseFloat(a.score)>=8?'high':parseFloat(a.score)>=6?'mid':''}">${a.score}</div>`:'';return`<a href="/article/${a.id}/" class="card" onclick="openArticle(${a.id});return false;" aria-label="${escapeHtml(a.title)}">
     <div class="card-img">
-      <img src="${cardThumb(a.img||CAT_IMAGES[a.cat])}"${responsiveAttrs(a.img||CAT_IMAGES[a.cat], '(max-width:680px) 45vw, 400px')} alt="${a.title}" loading="${eager?'eager':'lazy'}" width="400" height="225" decoding="async" onload="this.classList.add('loaded')" onerror="this.classList.add('loaded')">
+      <img src="${cardThumb(a.img||CAT_IMAGES[a.cat])}"${responsiveAttrs(a.img||CAT_IMAGES[a.cat], '(max-width:680px) 45vw, 400px')} alt="${escapeHtml(a.title)}" loading="${eager?'eager':'lazy'}" width="400" height="225" decoding="async" onload="this.classList.add('loaded')" onerror="this.classList.add('loaded')">
       ${score}<span class="card-cat">${CAT_LABELS[a.cat]}</span>
     </div>
     <div class="card-body">
-      <div class="card-title">${a.title}</div>
+      <div class="card-title">${escapeHtml(a.title)}</div>
       <!-- sub hidden in grid, shown only in article -->
       <div class="card-foot">
-        <span class="card-author">${a.author}</span>
+        <span class="card-author">${escapeHtml(a.author)}</span>
         <span class="card-date">${a.date}${a.time?' · '+a.time:''}</span>
         ${a.readTime?`<span class="card-readtime">${a.readTime}</span>`:''}
       </div>
@@ -182,11 +182,11 @@ function resetGridExpand(stateKey){
   if(grid)grid.scrollIntoView({behavior:'smooth',block:'start'});
 }
 function toggleGridExpand(stateKey){expandGridMore(stateKey);}
-function latestItemHTML(a,num){return`<div class="latest-item" onclick="openArticle(${a.id})" role="button" tabindex="0" aria-label="${a.title}" onkeydown="if(event.key==='Enter')openArticle(${a.id})">
+function latestItemHTML(a,num){return`<div class="latest-item" onclick="openArticle(${a.id})" role="button" tabindex="0" aria-label="${escapeHtml(a.title)}" onkeydown="if(event.key==='Enter')openArticle(${a.id})">
     <span class="latest-num">${num<10?'0'+num:num}</span>
     <div class="latest-body">
       <div class="latest-cat">${CAT_LABELS[a.cat]}</div>
-      <div class="latest-title">${a.title}</div>
+      <div class="latest-title">${escapeHtml(a.title)}</div>
       <div class="latest-date">${a.date}${a.time?' · '+a.time:''}</div>
     </div>
   </div>`;}
@@ -196,7 +196,7 @@ function flashHTML(a){const timeStr=a.time?a.time:'';const txt=(a.body||a.sub||'
   <div class="sp-chat-bubble" onclick="openArticle(${openId})" role="article" tabindex="0" aria-label="${safeTitle}" onkeydown="if(event.key==='Enter')openArticle(${openId})">
     <div class="sp-chat-head"><span class="sp-chat-author">${author}</span><span class="sp-chat-badge">מבזק</span></div>
     ${a.img?`<div class="sp-chat-img"><img src="${cardThumb(a.img)}" alt="${safeTitle}" loading="lazy" decoding="async" onload="this.classList.add('loaded')" onerror="this.classList.add('loaded')"></div>`:''}
-    <div class="sp-chat-title">${a.title}</div>
+    <div class="sp-chat-title">${escapeHtml(a.title)}</div>
     ${txt?`<div class="sp-chat-text">${txt}</div>`:''}
     <a class="sp-chat-link" href="/article/${openId}/" onclick="event.stopPropagation();openArticle(${openId});return false;">הכתבה המלאה <span aria-hidden="true">‹‹‹</span></a>
     <div class="sp-chat-time">${a.date||''}${timeStr?' · '+timeStr:''}</div>
@@ -644,7 +644,7 @@ function viewArticle(id){showHome();openArticle(id);}
 function clearForm(){['a-title','a-sub','a-author','a-img','a-img-cap','a-score','a-body','a-flash-title','a-flash-text','a-read-time','a-tags','a-scheduled','yt-url-1','yt-url-2','yt-url-3','yt-url-4','body-img-1','body-img-cap-1','body-img-2','body-img-cap-2','body-img-3','body-img-cap-3','body-img-4','body-img-cap-4','body-img-5','body-img-cap-5','body-img-6','body-img-cap-6','body-img-7','body-img-cap-7','body-img-8','body-img-cap-8','body-img-9','body-img-cap-9','body-img-10','body-img-cap-10','spec-power','spec-torque','spec-zero','spec-range','spec-price','spec-model','spec-year','spec-country','spec-trims','spec-topspeed','spec-trunk','spec-consumption','spec-pros','spec-cons','score-driving','score-design','score-tech','score-comfort','score-value','faq-q-1','faq-a-1','faq-q-2','faq-a-2','faq-q-3','faq-a-3','faq-q-4','faq-a-4'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});const specSec=document.getElementById('specs-section');if(specSec)specSec.style.display='none';const faqSec=document.getElementById('faq-section');if(faqSec)faqSec.style.display='none';delete document.getElementById('a-title').dataset.editId;delete document.getElementById('a-title').dataset.srcUid;try{spFlashWordCount();}catch(e){}document.getElementById('a-cat').value='local';document.querySelectorAll('input[name="extra-cat"]').forEach(cb=>{cb.checked=false;const lbl=cb.closest('label');if(lbl){lbl.classList.remove('active');lbl.style.background='';lbl.style.color='';lbl.style.borderColor='var(--border)';}});['spec-segment','spec-engine','spec-gearbox','spec-emission'].forEach(function(id){var el=document.getElementById(id);if(el&&el.tagName==='SELECT')el.selectedIndex=0;});try{toggleRangeField((document.getElementById('spec-engine')||{}).value);}catch(e){}galleryImages=[];renderGalleryPreview();const us=document.getElementById('upload-status');if(us)us.textContent='';const tabBtn=document.querySelectorAll('.admin-tab')[0];if(tabBtn)tabBtn.textContent='+ כתבה חדשה';}
 function doSearch(q){const res=document.getElementById('search-results');if(!res)return;if(!q||q.length<2){res.innerHTML='';return;}
 const qq=q.trim().toLowerCase();const matches=articles.filter(a=>((a.title||'').toLowerCase().includes(qq)||(a.sub||'').toLowerCase().includes(qq)||(a.author||'').toLowerCase().includes(qq)||(a.tags||[]).some(t=>typeof t==='string'&&!t.startsWith('uid:')&&!t.startsWith('src:')&&t.toLowerCase().includes(qq)))).slice(0,8);if(!matches.length){res.innerHTML='<p style="color:var(--muted);font-size:0.85rem;padding:8px 0;">לא נמצאו תוצאות</p>';return;}
-res.innerHTML=matches.map(a=>`<div onclick="document.getElementById('search-overlay').style.display='none';openArticle(${a.id})" role="option" tabindex="0" style="display:flex;gap:12px;padding:10px;border-radius:6px;cursor:pointer;align-items:center;" onmouseover="this.style.background='#f7f7f5'" onmouseout="this.style.background='none'" onkeydown="if(event.key==='Enter'){document.getElementById('search-overlay').style.display='none';openArticle(${a.id});}"><img src="${a.img||CAT_IMAGES[a.cat]}" style="width:56px;height:40px;object-fit:cover;border-radius:4px;" loading="lazy" alt="${a.title}"><div><div style="font-size:0.88rem;font-weight:600;margin-bottom:2px;">${a.title}</div><div style="font-size:0.72rem;color:var(--muted);">${CAT_LABELS[a.cat]||a.cat} · ${a.date}</div></div></div>`).join('');}
+res.innerHTML=matches.map(a=>`<div onclick="document.getElementById('search-overlay').style.display='none';openArticle(${a.id})" role="option" tabindex="0" style="display:flex;gap:12px;padding:10px;border-radius:6px;cursor:pointer;align-items:center;" onmouseover="this.style.background='#f7f7f5'" onmouseout="this.style.background='none'" onkeydown="if(event.key==='Enter'){document.getElementById('search-overlay').style.display='none';openArticle(${a.id});}"><img src="${a.img||CAT_IMAGES[a.cat]}" style="width:56px;height:40px;object-fit:cover;border-radius:4px;" loading="lazy" alt="${escapeHtml(a.title)}"><div><div style="font-size:0.88rem;font-weight:600;margin-bottom:2px;">${escapeHtml(a.title)}</div><div style="font-size:0.72rem;color:var(--muted);">${CAT_LABELS[a.cat]||a.cat} · ${a.date}</div></div></div>`).join('');}
 function toggleAccess(){const ov=document.getElementById('access-overlay');ov.classList.toggle('open');if(ov.classList.contains('open'))ov.querySelector('.acc-pill,button')?.focus();}
 function accTogglePill(id){const btn=document.getElementById(id);if(btn)btn.classList.toggle('active');}
 function setFontSize(size){document.body.classList.remove('large-text','larger-text','small-text');['fs-small','fs-normal','fs-large','fs-larger'].forEach(id=>{const b=document.getElementById(id);if(b){b.classList.remove('active');}});const map={small:'small-text',large:'large-text',larger:'larger-text'};if(map[size])document.body.classList.add(map[size]);const scales={small:'13px',normal:'16px',large:'18.5px',larger:'21px'};document.documentElement.style.fontSize=scales[size]||'16px';const bid={small:'fs-small',normal:'fs-normal',large:'fs-large',larger:'fs-larger'}[size];if(bid){const b=document.getElementById(bid);if(b)b.classList.add('active');}

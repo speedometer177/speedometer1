@@ -1,5 +1,9 @@
 User-agent: *
 Allow: /
+# כתובות שאינן דפים: גוגל חילץ אותן מתוך קוד ה-JavaScript וניסה לסרוק אותן (404).
+Disallow: /rest/
+Disallow: /functions/
+Disallow: /cdn-cgi/
 
 Sitemap: https://speedometer10.co.il/sitemap.xml
 Sitemap: https://speedometer10.co.il/sitemap-news.xml
