@@ -48,7 +48,7 @@
 /* כשהפאנל פתוח: ראש האתר, הניווט התחתון וכפתורי הנגישות/חזרה למעלה של האתר הציבורי מוסתרים,
    כדי שלא יכסו את הניווט של הפאנל. ברגע שחוזרים לאתר הם חוזרים. */
 body.sp-admin-open header[role=banner],body.sp-admin-open .bottom-nav,body.sp-admin-open .back-top,
-body.sp-admin-open .reading-progress,body.sp-admin-open .access-btn,body.sp-admin-open .sp-speedo-fab,body.sp-admin-open .bnav-speedo-wrap,body.sp-admin-open #cat-bar,body.sp-admin-open .cat-bar{display:none!important}
+body.sp-admin-open .reading-progress,body.sp-admin-open .access-btn,body.sp-admin-open .sp-speedo-fab,body.sp-admin-open .bnav-speedo-wrap,body.sp-admin-open #cat-bar,body.sp-admin-open .cat-bar,body.sp-admin-open .breaking-ticker{display:none!important}
 /* כפתור ייבוא מ-Word (docx-import.js) בשפת הזכוכית */
 .admin-page.sp-glass #sp-docx-btn{background:#12141a!important;color:#fff!important;border-radius:14px!important;min-height:44px;padding:0 18px!important;display:inline-flex;align-items:center;gap:6px;box-shadow:0 8px 20px rgba(18,20,26,.18)}
 

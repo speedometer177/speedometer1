@@ -238,14 +238,14 @@
   // מקבץ מקורות שנכשלו לפי סיבה, כדי שלא תוצג רשימה ארוכה של אותה שגיאה.
   function errorKind(err, via) {
     const e = String(err || '');
-    if (/503/.test(e) && (via === 'google' || /גיבוי/.test(e) || /Google/.test(e))) return 'google';
+    if (/בהשהיה/.test(e) || (/503|429/.test(e) && (via === 'google' || via === 'bing' || /גיבוי|Google|Bing/.test(e)))) return 'google';
     if (/503/.test(e)) return 'http503';
     if (/timed out|Timeout/i.test(e)) return 'timeout';
     if (/40[34]/.test(e)) return 'blocked';
     return 'other';
   }
   const ERROR_KIND_LABEL = {
-    google: 'Google News חוסם את השרת (שגיאה 503)',
+    google: 'מנוע החיפוש חוסם את השרת (Google / Bing)',
     http503: 'האתר החזיר שגיאה 503',
     timeout: 'האתר לא ענה בזמן',
     blocked: 'האתר חוסם גישה (403/404)',
