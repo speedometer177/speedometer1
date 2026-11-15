@@ -138,6 +138,22 @@
       '.news-col-count{font-size:0.72rem;font-weight:700;color:var(--adm-muted);font-variant-numeric:tabular-nums}' +
       '.news-col .adm-row-bottom{flex-wrap:wrap;gap:8px}' +
       '.news-col .tbl-actions{flex-wrap:wrap}' +
+      '.news-seg{display:flex;gap:4px;padding:4px;margin:0 0 14px;border-radius:14px;background:var(--adm-surface-2,rgba(255,255,255,.06))}' +
+      '.news-seg button{flex:1;min-height:40px;border:0;border-radius:11px;background:transparent;font:inherit;font-size:0.9rem;font-weight:700;color:var(--adm-muted,#8993a3);cursor:pointer}' +
+      '.news-seg button.active{background:var(--adm-text,#e8eaf0);color:var(--adm-bg,#12141a)}' +
+      '.news-stat-line{display:flex;flex-wrap:wrap;align-items:center;gap:6px 8px;font-size:0.82rem;color:var(--adm-muted)}' +
+      '.news-dot{width:8px;height:8px;border-radius:50%;background:#9aa1ad;flex:none}.news-dot.ok{background:#0fa968}.news-dot.warn{background:#ffb020}' +
+      '.news-stat-chip{font-size:0.74rem;font-weight:700;padding:3px 9px;border-radius:99px;background:var(--adm-surface-2,rgba(255,255,255,.06))}' +
+      '.news-stat-chip.ok{color:var(--adm-good,#2ecc71)}.news-stat-chip.bad{color:var(--adm-bad,#ff6b6b);background:rgba(232,0,29,.08)}' +
+      '.news-drawer{margin-top:10px;border-radius:12px;background:var(--adm-surface-2,rgba(255,255,255,.04));padding:0 12px}' +
+      '.news-drawer>summary{list-style:none;cursor:pointer;min-height:42px;display:flex;align-items:center;font-size:0.84rem;font-weight:700;color:var(--adm-text,#e8eaf0)}' +
+      '.news-drawer>summary::-webkit-details-marker{display:none}' +
+      '.news-drawer>summary::after{content:"";margin-inline-start:auto;width:8px;height:8px;border:solid currentColor;border-width:0 0 2px 2px;transform:rotate(-45deg);transition:transform .2s}' +
+      '.news-drawer[open]>summary::after{transform:rotate(135deg)}' +
+      '.news-fail-group{padding:8px 0;border-top:1px solid var(--adm-border,rgba(255,255,255,.08))}' +
+      '.news-fail-head{display:flex;align-items:baseline;gap:8px;font-size:0.84rem;color:var(--adm-text,#e8eaf0)}.news-fail-head b{color:var(--adm-bad,#ff6b6b);font-variant-numeric:tabular-nums}' +
+      '.news-fail-names{display:flex;flex-wrap:wrap;gap:4px;margin-top:6px}.news-fail-names span{font-size:0.74rem;padding:2px 8px;border-radius:8px;background:var(--adm-bg,rgba(0,0,0,.2));color:var(--adm-muted)}' +
+      '.news-res-head{display:flex;flex-wrap:wrap;align-items:center;gap:6px 8px;font-size:0.84rem}.news-res-head span:last-child{color:var(--adm-muted);font-size:0.8rem}' +
       '#news-new-pill{display:none;width:100%;margin-bottom:12px;padding:10px;border-radius:10px;border:1px solid #2ecc71;background:rgba(46,204,113,.12);color:var(--adm-good,#2ecc71);font-weight:800;font-size:0.84rem;font-family:inherit;cursor:pointer}';
     document.head.appendChild(st);
 
@@ -150,6 +166,17 @@
       const status = document.createElement('div');
       status.id = 'news-auto-status';
       block.appendChild(status);
+    }
+    const subtabs = document.querySelector('#admin-news .hp-tabs');
+    if (subtabs && !document.getElementById('news-region-seg')) {
+      const seg = document.createElement('div');
+      seg.id = 'news-region-seg'; seg.className = 'news-seg'; seg.setAttribute('role', 'tablist'); seg.setAttribute('aria-label', 'אזור');
+      seg.innerHTML = '<button type="button" role="tab" class="news-region-tab" data-region="il">ישראל</button>' +
+        '<button type="button" role="tab" class="news-region-tab" data-region="world">עולם</button>' +
+        '<button type="button" role="tab" class="news-region-tab" data-region="all">הכל</button>';
+      seg.addEventListener('click', function (e) { const b = e.target.closest('.news-region-tab'); if (b) window.setHeadlinesFilter(b.getAttribute('data-region'), b); });
+      subtabs.parentNode.insertBefore(seg, subtabs.nextSibling);
+      paintRegionSeg();
     }
     const list = document.getElementById('news-headlines-list');
     if (list && list.parentNode) {
@@ -208,6 +235,39 @@
     return 'לפני ' + Math.floor(hours / 24) + ' ימים';
   }
 
+  // מקבץ מקורות שנכשלו לפי סיבה, כדי שלא תוצג רשימה ארוכה של אותה שגיאה.
+  function errorKind(err, via) {
+    const e = String(err || '');
+    if (/503/.test(e) && (via === 'google' || /גיבוי/.test(e) || /Google/.test(e))) return 'google';
+    if (/503/.test(e)) return 'http503';
+    if (/timed out|Timeout/i.test(e)) return 'timeout';
+    if (/40[34]/.test(e)) return 'blocked';
+    return 'other';
+  }
+  const ERROR_KIND_LABEL = {
+    google: 'Google News חוסם את השרת (שגיאה 503)',
+    http503: 'האתר החזיר שגיאה 503',
+    timeout: 'האתר לא ענה בזמן',
+    blocked: 'האתר חוסם גישה (403/404)',
+    other: 'שגיאה אחרת'
+  };
+  function groupedFailures(rows) {
+    // rows: [{name, error, via}]
+    const groups = {};
+    rows.forEach(function (r) { const k = errorKind(r.error, r.via); (groups[k] = groups[k] || []).push(r); });
+    return Object.keys(groups).sort(function (a, b) { return groups[b].length - groups[a].length; }).map(function (k) {
+      const list = groups[k];
+      return '<div class="news-fail-group"><div class="news-fail-head"><b>' + list.length + '</b><span>' + ERROR_KIND_LABEL[k] + '</span></div>' +
+        '<div class="news-fail-names">' + list.map(function (r) { return '<span title="' + escapeAttr(String(r.error || '').slice(0, 140)) + '">' + escapeAttr(r.name) + '</span>'; }).join('') + '</div></div>';
+    }).join('');
+  }
+  function claudeBtn(ctx) {
+    if (typeof window.spAskClaude !== 'function') return '';
+    const id = 'c' + Math.random().toString(36).slice(2, 8);
+    (window.__spClaudeCtx = window.__spClaudeCtx || {})[id] = ctx;
+    return '<button type="button" class="sp-claude-btn" onclick="spAskClaude(window.__spClaudeCtx[\'' + id + '\'])">שלח לקלוד לתיקון</button>';
+  }
+
   // שורת סטטוס מתחת לכפתורי הרענון: מתי המקורות עודכנו, ואילו מקורות בתקלה.
   async function loadAutoStatus() {
     const client = initNewsClient();
@@ -215,22 +275,26 @@
     if (!box || !client || !_v2) return;
     try {
       const { data, error } = await client.from('news_source_state')
-        .select('source_name,last_run_at,consecutive_failures,last_error');
+        .select('source_name,last_run_at,consecutive_failures,last_error,via,last_ok_at');
       if (error || !data || !data.length) { box.innerHTML = ''; return; }
       let latest = 0;
       data.forEach(function (r) { if (r.last_run_at) latest = Math.max(latest, new Date(r.last_run_at).getTime()); });
       if (!latest) { box.innerHTML = ''; return; }
       const mins = (Date.now() - latest) / 60000;
       const failing = data.filter(function (r) { return (r.consecutive_failures || 0) >= 3; });
-      let html = mins <= 25
-        ? '🟢 מתעדכן אוטומטית ברקע · עדכון אחרון ' + minutesAgoLabel(latest)
-        : '🟠 עדכון אחרון של המקורות ' + minutesAgoLabel(latest) + ' · הרענון האוטומטי לא רץ כרגע';
-      html += ' · ' + data.length + ' מקורות';
+      const okNow = data.length - failing.length;
+      let html = '<div class="news-stat-line"><span class="news-dot ' + (mins <= 25 ? 'ok' : 'warn') + '"></span>' +
+        '<span>' + (mins <= 25 ? 'מתעדכן אוטומטית · ' : 'הרענון האוטומטי לא רץ · ') + 'עדכון אחרון ' + minutesAgoLabel(latest) + '</span>' +
+        '<span class="news-stat-chip ok">' + okNow + ' עובדים</span>' +
+        (failing.length ? '<span class="news-stat-chip bad">' + failing.length + ' בתקלה</span>' : '') + '</div>';
       if (failing.length) {
-        html += '<details><summary>⚠️ ' + failing.length + ' מקורות בתקלה מתמשכת</summary>' +
-          failing.map(function (r) {
-            return '<div>❌ ' + escapeAttr(r.source_name) + ' — ' + escapeAttr((r.last_error || 'שגיאה').slice(0, 140)) + '</div>';
-          }).join('') + '</details>';
+        const rows = failing.map(function (r) { return { name: r.source_name, error: r.last_error, via: r.via, since: r.last_ok_at }; });
+        const firstOk = rows.reduce(function (m, r) { const t = r.since ? Date.parse(r.since) : 0; return t && (!m || t < m) ? t : m; }, 0);
+        html += '<details class="news-drawer"><summary>פירוט המקורות בתקלה</summary>' + groupedFailures(rows) +
+          claudeBtn({ area: 'מקורות החדשות (fetch-car-news)', title: failing.length + ' מתוך ' + data.length + ' מקורות נכשלים ברצף',
+            details: rows.slice(0, 40).map(function (r) { return r.name + ' [' + (r.via || '?') + ']: ' + String(r.error || '').slice(0, 60) + ' · עבד לאחרונה ' + (r.since ? new Date(r.since).toLocaleString('he-IL') : 'אף פעם'); }).join('\n'),
+            hint: firstOk ? 'הכשלונות התחילו בערך ב-' + new Date(firstOk).toLocaleString('he-IL') : '' }) +
+          '</details>';
       }
       box.innerHTML = html;
     } catch (e) { /* שורת סטטוס בלבד — לא מפריעים לשאר הפאנל */ }
@@ -357,12 +421,13 @@
     if (json.duplicatesMerged) parts.push(json.duplicatesMerged + ' כפילויות אוחדו');
     if (json.pendingAnalysis) parts.push(json.pendingAnalysis + ' ימשיכו להתנתח ברקע');
     if (json.skippedRecent) parts.push(json.skippedRecent + ' מקורות דולגו (עודכנו ברקע לפני רגע)');
+    const failedRows = results.filter(function (r) { return !r.ok; }).map(function (r) { return { name: r.source, error: r.error, via: /גיבוי|Google/.test(String(r.error || '') + r.source) ? 'google' : '' }; });
     const summary = results.map(function (r) {
       return (r.ok ? '✅ ' : '❌ ') + r.source + (r.ok ? ' (' + r.count + ')' : ' — ' + (r.error || 'שגיאה'));
     }).join('\n');
     console.log('[news.js] תוצאות רענון לפי מקור:\n' + summary);
 
-    let html = '<div style="font-weight:800;">✅ הרענון הסתיים' + (parts.length ? ' · ' + escapeAttr(parts.join(' · ')) : '') + '</div>';
+    let html = '<div class="news-res-head"><span class="news-dot ' + (failCount > okCount ? 'warn' : 'ok') + '"></span><b>הרענון הסתיים</b>' + (parts.length ? '<span>' + escapeAttr(parts.join(' · ')) + '</span>' : '') + '</div>';
     if (json.saveErrors && json.saveErrors.length) {
       html += '<div style="color:var(--adm-bad,#ff6b6b);margin-top:4px;">⚠️ השמירה נכשלה: ' + escapeAttr(json.saveErrors.join(' | ')) + '</div>';
     }
@@ -370,8 +435,9 @@
       html += '<div style="color:var(--adm-bad,#ff6b6b);margin-top:4px;">⚠️ ' + escapeAttr(json.error) + '</div>';
     }
     if (results.length) {
-      html += '<details><summary>פירוט לפי מקור · ' + okCount + ' תקינים' + (failCount ? ' · ' + failCount + ' נכשלו' : '') + '</summary>' +
-        '<pre>' + escapeAttr(summary) + '</pre></details>';
+      html += '<div class="news-stat-line"><span class="news-stat-chip ok">' + okCount + ' תקינים</span>' + (failCount ? '<span class="news-stat-chip bad">' + failCount + ' נכשלו</span>' : '') + '</div>';
+      if (failCount) html += '<details class="news-drawer"><summary>למה נכשלו</summary>' + groupedFailures(failedRows) +
+        claudeBtn({ area: 'רענון חדשות ידני (fetch-car-news)', title: failCount + ' מתוך ' + results.length + ' מקורות נכשלו ברענון', details: summary.slice(0, 1500) }) + '</details>';
     }
     if (box) { box.innerHTML = html; box.style.display = 'block'; }
     else newsToast('הרענון הסתיים' + (parts.length ? ' · ' + parts.join(' · ') : ''), 'ok');
@@ -409,8 +475,7 @@
       // מסנכרנים את תצוגת הרשימה לאזור שרעננו בפועל — אחרת נשארים על "הכל"
       // ורואים כותרות ישנות מאזור אחר, כאילו הרענון "הביא" משהו לא קשור.
       if (region === 'il' || region === 'world') {
-        const matchingTab = document.querySelector('.news-region-tab[onclick*="\'' + region + '\'"]');
-        window.setHeadlinesFilter(region, matchingTab);
+        window.setHeadlinesFilter(region);
       } else {
         loadHeadlines();
       }
@@ -422,15 +487,22 @@
     }
   };
 
-  let _headlinesFilter = 'all';
+  let _headlinesFilter = (function () { try { const v = localStorage.getItem('sp-news-region'); return (v === 'il' || v === 'world' || v === 'all') ? v : 'il'; } catch (e) { return 'il'; } })();
   let _headlinesSort = 'new'; // ברירת מחדל: הכי חדש קודם (לא "הכי חם") — כדי שרענון תמיד יראה מיד את הכי טרי
 
   window.setHeadlinesFilter = function (region, el) {
     _headlinesFilter = region;
-    document.querySelectorAll('.news-region-tab').forEach(function (b) { b.classList.remove('active'); });
-    if (el) el.classList.add('active');
-    loadHeadlines();
+    try { localStorage.setItem('sp-news-region', region); } catch (e) { /* גלישה פרטית */ }
+    paintRegionSeg();
+    const dp = document.getElementById('news-drafts-panel');
+    if (dp && dp.style.display !== 'none') loadDrafts(); else loadHeadlines();
   };
+  function paintRegionSeg() {
+    document.querySelectorAll('.news-region-tab').forEach(function (b) {
+      const on = b.getAttribute('data-region') === _headlinesFilter;
+      b.classList.toggle('active', on); b.setAttribute('aria-selected', on ? 'true' : 'false');
+    });
+  }
 
   window.setHeadlinesSort = function (mode, el) {
     _headlinesSort = mode;
@@ -863,8 +935,8 @@
           '</div>' +
         '</div>';
       };
-      const regions = ['il', 'world'];
-      list.innerHTML = '<div class="news-cols">' + regions.map(function (r) {
+      const regions = visibleRegions();
+      list.innerHTML = '<div class="news-cols' + (regions.length === 1 ? ' single' : '') + '">' + regions.map(function (r) {
         const rows = data.filter(function (d) { return (d.region === 'world' ? 'world' : 'il') === r; });
         return '<section class="news-col" id="news-drafts-col-' + r + '">' +
           '<div class="news-col-head ' + r + '"><span>' + COL_LABELS[r] + '</span>' +

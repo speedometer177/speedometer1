@@ -1,4 +1,4 @@
-/* admin-glass.js — SPEEDOMETER-GLASS 2026-11-15c
+/* admin-glass.js — SPEEDOMETER-GLASS 2026-11-15d
    שכבת הממשק "זכוכית יום" לפאנל הניהול. לא מחליפה שום לוגיקה קיימת:
    היא עוטפת את מה שכבר קיים (לשוניות, כפתורים, העלאות, קריאות לפונקציות)
    ומוסיפה מעליו: מסך כניסה, לוגו, ניווט תחתון, פאנל צף, "אי חי" עם אחוזי
@@ -72,7 +72,7 @@
   (function loadCss() {
     if (document.getElementById('sp-glass-css')) return;
     var l = document.createElement('link');
-    l.id = 'sp-glass-css'; l.rel = 'stylesheet'; l.href = '/admin-glass.css?v=20261115c';
+    l.id = 'sp-glass-css'; l.rel = 'stylesheet'; l.href = '/admin-glass.css?v=20261115d';
     l.onload = function () { cssReady = true; page.classList.add('sp-glass'); onShow(); };
     l.onerror = function () { console.warn('[sp-glass] admin-glass.css לא נטען — נשארים בעיצוב הקודם'); };
     document.head.appendChild(l);
@@ -130,7 +130,29 @@
     if (pending.length && !queued) { queued = true; requestAnimationFrame(flush); }
   }).observe(page, { childList: true, subtree: true, characterData: true });
 
+  // ═══ שלח לקלוד ═══
+  var GLASS_VER = 'SPEEDOMETER-GLASS 2026-11-15d';
+  function askClaude(ctx) {
+    ctx = ctx || {};
+    var ua = navigator.userAgent, dev = /Android/.test(ua) ? 'אנדרואיד' : /iPhone|iPad/.test(ua) ? 'אייפון' : 'מחשב';
+    var text = 'תקלה בפאנל הניהול של ספידומטר (speedometer10.co.il)\n' +
+      'אזור: ' + (ctx.area || 'לא ידוע') + '\n' +
+      'מה קרה: ' + (ctx.title || '') + '\n' +
+      (ctx.hint ? ctx.hint + '\n' : '') +
+      (ctx.details ? 'פרטים:\n' + String(ctx.details).slice(0, 1400) + '\n' : '') +
+      'זמן: ' + new Date().toLocaleString('he-IL') + '\n' +
+      'גרסת פאנל: ' + GLASS_VER + ' · ' + dev + ' · רוחב מסך ' + window.innerWidth + '\n\n' +
+      'אבחן את שורש הבעיה (ב-Supabase קריאה בלבד: SELECT, לוגים וקוד הפונקציות), הסבר בקצרה מה קרה, והכן תיקון מלא לפי הכללים הקבועים שלי.';
+    try { if (navigator.clipboard) navigator.clipboard.writeText(text).catch(function () {}); } catch (e) { /* לא חשוב */ }
+    var w = window.open('https://claude.ai/new?q=' + encodeURIComponent(text), '_blank', 'noopener');
+    var o = opStart({ label: 'דוח תקלה לקלוד', icon: 'spark', loud: true });
+    opEnd(o, true, w ? 'נפתח צ\'אט חדש — הדוח גם הועתק, אפשר להדביק' : 'הדוח הועתק — פתח את קלוד והדבק');
+    return text;
+  }
+  window.spAskClaude = askClaude;
+
   // ═══ האי החי: כל פעולה שרצה ═══
+  var fails = [];
   var ops = [], seq = 0, island = null, lastBtn = null, lastBtnAt = 0, lastFile = null, lastFileAt = 0;
   document.addEventListener('click', function (e) {
     var b = e.target && e.target.closest ? e.target.closest('button,.btn-primary,.btn-secondary,.tbl-btn') : null;
@@ -158,6 +180,12 @@
     island.innerHTML = html;
     var labs = island.querySelectorAll('.sp-op-lab'), subs = island.querySelectorAll('.sp-op-sub');
     live.slice(0, 3).forEach(function (o, i) { labs[i].textContent = o.label; subs[i].textContent = o.sub || ''; });
+    island.querySelectorAll('.sp-op.fail').forEach(function (row, i) {
+      var o = live.filter(function (x) { return x.state === 'fail'; })[i]; if (!o) return;
+      var b = el('button', 'sp-claude-mini', 'שלח לקלוד'); b.type = 'button';
+      b.addEventListener('click', function (e) { e.stopPropagation(); askClaude({ area: o.label, title: o.sub || 'הפעולה נכשלה', details: 'הפעולה התחילה ' + new Date(o.t0).toLocaleTimeString('he-IL') + ' והגיעה ל-' + Math.round(o.pct) + '%.' }); });
+      row.querySelector('.sp-op-top').appendChild(b);
+    });
   }
   function paintBtn(o) {
     // הפס שמתחת לשדה הקובץ מתעדכן תמיד, גם כשאין כפתור (בחירת קובץ אינה לחיצה על כפתור)
@@ -212,7 +240,8 @@
     if (o.barWrap) { o.barWrap.querySelector('i').style.width = o.pct + '%'; o.barWrap.querySelector('b').textContent = ok ? '100%' : 'נכשל'; setTimeout(function () { if (o.barWrap) o.barWrap.remove(); }, 2200); }
     renderIsland();
     o.quiet = false;
-    setTimeout(function () { o.gone = true; ops = ops.filter(function (x) { return !x.gone; }); renderIsland(); }, ok ? 1800 : 4500);
+    if (!ok) { fails.unshift({ label: o.label, sub: o.sub, at: Date.now(), pct: Math.round(o.pct) }); fails = fails.slice(0, 8); }
+    setTimeout(function () { o.gone = true; ops = ops.filter(function (x) { return !x.gone; }); renderIsland(); }, ok ? 1800 : 9000);
   }
   window.spProgress = { start: opStart, set: opSet, end: opEnd };
 
@@ -622,7 +651,8 @@
         return;
       }
       var h = r.data || {}, rows = healthRows(h), bad = rows.filter(function (x) { return x.s === 'bad'; }).length;
-      box.innerHTML = rows.map(function (x) { return '<div class="sp-hrow ' + x.s + '"><i></i><span><b>' + esc(x.t) + '</b><small>' + esc(x.d) + '</small>' + (x.x ? '<em>' + esc(x.x) + '</em>' : '') + '</span></div>'; }).join('') +
+      box.__rows = rows;
+      box.innerHTML = rows.map(function (x, i) { return '<div class="sp-hrow ' + x.s + '"><i></i><span><b>' + esc(x.t) + '</b><small>' + esc(x.d) + '</small>' + (x.x ? '<em>' + esc(x.x) + '</em>' : '') + '</span>' + (x.s === 'bad' ? '<button type="button" class="sp-claude-mini sp-act-c" data-act="claude-h" data-i="' + i + '">שלח לקלוד</button>' : '') + '</div>'; }).join('') +
         '<div class="sp-hfoot">נבדק ' + new Date().toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' }) + '<button type="button" class="sp-act" data-act="health">' + svg('refresh') + 'בדוק שוב</button></div>';
       var dot = page.querySelector('.sp-head .sp-dot'); if (dot && bad) dot.classList.add('bad');
     }, function () { box.innerHTML = '<div class="sp-hrow bad"><i></i><span><b>אין חיבור</b><small>נסה שוב בעוד רגע</small></span></div>'; });
@@ -730,17 +760,22 @@
   function enhanceSheet() {
     if (!sheet || sheet.__spPlus) return; sheet.__spPlus = true;
     sheet.addEventListener('click', function (e) {
-      var b = e.target.closest('.sp-act'); if (!b || b.disabled) return;
+      var b = e.target.closest('.sp-act,.sp-act-c'); if (!b || b.disabled) return;
       e.stopPropagation();
       var a = b.getAttribute('data-act');
       if (a === 'health') loadHealth(sheet.querySelector('[data-health]'));
+      else if (a === 'claude-h') { var hb = sheet.querySelector('[data-health]'), x = hb && hb.__rows && hb.__rows[+b.getAttribute('data-i')]; if (x) askClaude({ area: 'בריאות המערכת · ' + x.t, title: x.d, details: x.x || '' }); }
+      else if (a === 'claude-f') { var f = fails[+b.getAttribute('data-i')]; if (f) askClaude({ area: f.label, title: f.sub || 'נכשל', details: 'קרה ב-' + new Date(f.at).toLocaleTimeString('he-IL') + ', בהתקדמות ' + f.pct + '%.' }); }
       else if (a === 'pub-now') publishNow(b.getAttribute('data-id')).then(function (ok) { if (ok) drawQueueList(); });
       else if (a === 'push-on') pushOn(); else if (a === 'push-off') pushOff(); else if (a === 'push-test') pushTest();
     }, true);
     sheet.addEventListener('change', function (e) { if (e.target && e.target.hasAttribute('data-pref')) savePref(e.target); });
   }
   function sheetExtrasHtml() {
-    return '<div class="sp-sec">בריאות המערכת</div><div class="sp-health" data-health="1"></div>' +
+    return (fails.length ? '<div class="sp-sec">תקלות אחרונות</div><div class="sp-health">' + fails.map(function (f, i) {
+        return '<div class="sp-hrow bad"><i></i><span><b>' + esc(f.label) + '</b><small>' + esc((f.sub || 'נכשל') + ' · ' + new Date(f.at).toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' })) + '</small></span><button type="button" class="sp-claude-mini sp-act-c" data-act="claude-f" data-i="' + i + '">שלח לקלוד</button></div>';
+      }).join('') + '</div>' : '') +
+      '<div class="sp-sec">בריאות המערכת</div><div class="sp-health" data-health="1"></div>' +
       '<div class="sp-sec">תור פרסום</div><div class="sp-queue" data-queue="1"></div>' +
       '<div class="sp-sec">התראות לטלפון</div><div class="sp-push" data-push="1"></div>';
   }
@@ -751,13 +786,57 @@
     drawPush();
   }
 
+  // ═══ מגירת פעולות בשורות (טלפון) ═══
+  // שורה עם יותר משלושה כפתורים: בטלפון רואים את שני העיקריים ו"עוד"; הלחיצה פותחת את כל השאר.
+  // במחשב הכל מוצג כרגיל (ה-CSS מסתיר את "עוד"). לא משנה שום פעולה — רק מה גלוי.
+  var PRIMARY_RE = /ערוך|עריכה|כתוב|טען|פרסם|בדוק|אישיים/;
+  function enhanceActions() {
+    if (!cssReady || !isOpen()) return;
+    page.querySelectorAll('.adm-row .tbl-actions').forEach(function (box) {
+      if (box.__spDrawer) return;
+      var kids = Array.prototype.filter.call(box.children, function (k) { return !k.classList.contains('sp-more-act'); });
+      if (kids.length <= 3) return;
+      box.__spDrawer = true;
+      var ranked = kids.filter(function (k) { return !k.classList.contains('del') && PRIMARY_RE.test(k.textContent); });
+      kids.forEach(function (k) { if (ranked.indexOf(k) < 0 && !k.classList.contains('del')) ranked.push(k); });
+      var keep = ranked.slice(0, 2);
+      kids.forEach(function (k) { if (keep.indexOf(k) < 0) k.classList.add('sp-extra'); });
+      box.classList.add('sp-has-drawer', 'sp-collapsed');
+      var more = el('button', 'tbl-btn sp-more-act', svg('more') + '<span>עוד ' + (kids.length - keep.length) + '</span>'); more.type = 'button';
+      more.setAttribute('aria-expanded', 'false');
+      more.addEventListener('click', function (e) {
+        e.preventDefault(); e.stopPropagation();
+        var open = box.classList.toggle('sp-collapsed') === false;
+        more.setAttribute('aria-expanded', open ? 'true' : 'false');
+        more.querySelector('span').textContent = open ? 'פחות' : 'עוד ' + (kids.length - keep.length);
+      });
+      box.appendChild(more);
+    });
+  }
+  new MutationObserver(function () { clearTimeout(enhanceActions._t); enhanceActions._t = setTimeout(enhanceActions, 120); })
+    .observe(page, { childList: true, subtree: true });
+
   // ═══ מבנה: ראש עמוד, אי, ניווט, פאנל צף ═══
   function tabBtn(key) {
     var all = page.querySelectorAll('.admin-tab');
     for (var i = 0; i < all.length; i++) if ((all[i].getAttribute('onclick') || '').indexOf("'" + key + "'") > -1) return all[i];
     return null;
   }
-  function goTab(key) { var b = tabBtn(key); if (b) b.click(); syncNav(); window.scrollTo({ top: 0, behavior: reduce ? 'auto' : 'smooth' }); }
+  // האתר מגדיר גלילה חלקה לכל הדף; כאן היא חייבת להיות מיידית, אחרת הגלילה נקטעת באמצע
+  // והמסך נשאר על הלשונית הקודמת עד שגוללים ידנית.
+  function jump(y) { try { window.scrollTo({ top: y, left: 0, behavior: 'instant' }); } catch (e) { window.scrollTo(0, y); } }
+  function repaint() {
+    var html = document.documentElement, prev = html.style.scrollBehavior;
+    html.style.scrollBehavior = 'auto';
+    jump(0);
+    requestAnimationFrame(function () {
+      jump(1); jump(0);
+      html.style.scrollBehavior = prev;
+      page.style.transform = 'translateZ(0)';
+      requestAnimationFrame(function () { page.style.transform = ''; });
+    });
+  }
+  function goTab(key) { var b = tabBtn(key); if (b) b.click(); syncNav(); repaint(); setTimeout(enhanceActions, 60); }
   var nav = null;
   function syncNav() {
     if (!nav) return;
@@ -794,7 +873,7 @@
       var b = e.target.closest('button'); if (!b) return;
       if (b.getAttribute('data-act') === 'more') openSheet(); else goTab(b.getAttribute('data-tab'));
     });
-    page.querySelectorAll('.admin-tab').forEach(function (b) { b.addEventListener('click', function () { setTimeout(syncNav, 0); }); });
+    page.querySelectorAll('.admin-tab').forEach(function (b) { b.addEventListener('click', function () { setTimeout(function () { syncNav(); enhanceActions(); if (scrollY > 200) repaint(); }, 0); }); });
     syncNav();
     swapIn(page);
     loadStatus();

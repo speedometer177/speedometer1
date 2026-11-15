@@ -1,4 +1,4 @@
-/* admin-glass.css — SPEEDOMETER-GLASS 2026-11-15c
+/* admin-glass.css — SPEEDOMETER-GLASS 2026-11-15d
    שכבת העיצוב "זכוכית יום" לפאנל הניהול. נטענת רק כשנכנסים לניהול.
    הכול תחום ל-.admin-page.sp-glass ולרכיבים שהקובץ admin-glass.js יוצר (קידומת sp-),
    כך שהאתר הציבורי לא מושפע. אם הקובץ לא נטען, הפאנל נשאר בעיצוב הקודם. */
@@ -321,3 +321,67 @@ body.sp-admin-open .news-toast-act{background:#e8001d!important;color:#fff!impor
 }
 /* בטופס יש שני כפתורי "תצוגה מקדימה" זהים (אותה פעולה) — מוצג אחד */
 .admin-page.sp-glass div:has(> button[onclick^="publishArticle"])>button[onclick^="previewArticle"]:has(+ button[onclick^="previewArticle"]){display:none}
+
+/* ═══ 15.11.2026 (ד): קריאוּת, מגירות, תיקוני מובייל ═══
+   השראה: הגדרות של iOS ו-Linear — משטחים כמעט אטומים, היררכיה ברורה, טקסט משני אפור,
+   ופעולות משניות במגירה. הזכוכית נשארת רק בשכבות הצפות (ניווט, אי, פאנל צף). */
+
+/* משטחי תוכן: כמעט אטומים, בלי טשטוש — קריא יותר, ובכרום באנדרואיד המסך מתעדכן מיד במעבר לשונית */
+.admin-page.sp-glass .form-block,.admin-page.sp-glass .adm-row,.admin-page.sp-glass .adm-stat-card,.admin-page.sp-glass .adm-gauge-card{
+  background:rgba(255,255,255,.94)!important;-webkit-backdrop-filter:none!important;backdrop-filter:none!important;
+  border:1px solid rgba(18,20,26,.07)!important;box-shadow:0 1px 2px rgba(18,20,26,.04),0 8px 24px rgba(24,32,60,.06)!important}
+.admin-page.sp-glass::before{opacity:.55}
+.admin-page.sp-glass .adm-row{padding:14px 16px}
+.admin-page.sp-glass .adm-row-title{font-size:15.5px;line-height:1.45;font-weight:700}
+.admin-page.sp-glass .adm-row-meta{font-size:12.5px;gap:6px 10px}
+.admin-page.sp-glass .form-block h3{font-size:17px;letter-spacing:-.01em}
+.admin-page.sp-glass .form-block>p{font-size:13.5px;line-height:1.55;color:#4d5464}
+
+/* במובייל הניווט התחתון מחליף את פס הלשוניות העליון (שהיה כפול וגם "נדבק" למעלה) */
+@media (max-width:760px){
+  .admin-page.sp-glass .admin-tabs{display:none}
+  .admin-page.sp-glass .form-block{border-radius:22px;padding:18px 16px}
+}
+
+/* שורות עם הרבה כפתורים: לעולם לא גלילה הצידה בתוך הכרטיס */
+.admin-page.sp-glass .adm-row{overflow:hidden;min-width:0}
+.admin-page.sp-glass .adm-row-top,.admin-page.sp-glass .adm-row-info{min-width:0}
+.admin-page.sp-glass .tbl-actions{display:flex;flex-wrap:wrap;white-space:normal;gap:8px;overflow:visible;max-width:100%}
+.admin-page.sp-glass .adm-row-bottom .tbl-actions{flex:1 1 100%}
+.admin-page.sp-glass .tbl-actions>.tbl-btn,.admin-page.sp-glass .tbl-actions>a.tbl-btn,.admin-page.sp-glass .tbl-actions>label.tbl-btn{white-space:nowrap}
+.sp-more-act{display:none!important}
+.sp-more-act svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:2}
+@media (max-width:760px){
+  .admin-page.sp-glass .tbl-actions>*{flex:1 1 calc(50% - 4px);justify-content:center;text-align:center}
+  .tbl-actions.sp-has-drawer>.sp-more-act{display:inline-flex!important;flex:1 1 100%;color:#4d5464;background:transparent!important;box-shadow:none!important;border-style:dashed!important}
+  .tbl-actions.sp-collapsed>.sp-extra{display:none!important}
+  .tbl-actions.sp-has-drawer:not(.sp-collapsed)>.sp-extra{animation:spDrop .22s ease both}
+}
+@keyframes spDrop{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:none}}
+
+/* לשונית החדשות: מתג אזור + מגירות */
+.admin-page.sp-glass .news-seg{background:rgba(18,20,26,.06)!important;border-radius:16px}
+.admin-page.sp-glass .news-seg button{color:#4d5464}
+.admin-page.sp-glass .news-seg button.active{background:#fff;color:#12141a;box-shadow:0 1px 3px rgba(18,20,26,.12),0 4px 12px rgba(18,20,26,.06)}
+.admin-page.sp-glass .news-drawer{background:rgba(18,20,26,.04)!important}
+.admin-page.sp-glass .news-drawer>summary{color:#12141a}
+.admin-page.sp-glass .news-fail-names span{background:#fff!important;color:#4d5464;border:1px solid rgba(18,20,26,.08)}
+.admin-page.sp-glass .news-fail-head{color:#12141a}
+.admin-page.sp-glass .news-fail-group{border-color:rgba(18,20,26,.08)!important}
+.admin-page.sp-glass #news-refresh-result{background:rgba(18,20,26,.04)!important;border:0!important;border-radius:16px!important}
+.admin-page.sp-glass .news-col-head{background:transparent!important;border:0!important;box-shadow:none!important;padding:4px 2px!important;color:#12141a}
+.admin-page.sp-glass .news-cols.single .news-col-head{display:none}
+.admin-page.sp-glass .news-region-drawer{margin-top:10px}
+.admin-page.sp-glass .news-region-drawer .tbl-btn{flex:1}
+
+/* "שלח לקלוד" */
+.sp-claude-btn,.sp-claude-mini{all:unset;box-sizing:border-box;cursor:pointer;display:inline-flex;align-items:center;gap:6px;font-family:'Rubik',var(--font);font-weight:700;color:#fff;background:#d97757;border-radius:99px;white-space:nowrap}
+.sp-claude-btn{min-height:40px;padding:0 16px;font-size:13.5px;margin:10px 0 12px}
+.sp-claude-mini{min-height:30px;padding:0 11px;font-size:12px;margin-inline-start:auto;flex:none}
+.sp-claude-btn::before,.sp-claude-mini::before{content:'';width:12px;height:12px;flex:none;background:currentColor;
+  -webkit-mask:radial-gradient(circle,#000 28%,transparent 30%),conic-gradient(from 0deg,#000 0 6%,transparent 6% 12.5%,#000 12.5% 18.5%,transparent 18.5% 25%,#000 25% 31%,transparent 31% 37.5%,#000 37.5% 43.5%,transparent 43.5% 50%,#000 50% 56%,transparent 56% 62.5%,#000 62.5% 68.5%,transparent 68.5% 75%,#000 75% 81%,transparent 81% 87.5%,#000 87.5% 93.5%,transparent 93.5%);
+  mask:radial-gradient(circle,#000 28%,transparent 30%),conic-gradient(from 0deg,#000 0 6%,transparent 6% 12.5%,#000 12.5% 18.5%,transparent 18.5% 25%,#000 25% 31%,transparent 31% 37.5%,#000 37.5% 43.5%,transparent 43.5% 50%,#000 50% 56%,transparent 56% 62.5%,#000 62.5% 68.5%,transparent 68.5% 75%,#000 75% 81%,transparent 81% 87.5%,#000 87.5% 93.5%,transparent 93.5%);border-radius:50%}
+.sp-claude-btn:focus-visible,.sp-claude-mini:focus-visible{outline:2px solid #1d4ed8;outline-offset:2px}
+.sp-hrow{align-items:center}
+.sp-hrow>i{align-self:flex-start}
+.sp-op-top .sp-claude-mini{min-height:28px}
