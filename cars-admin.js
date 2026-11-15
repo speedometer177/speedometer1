@@ -259,7 +259,7 @@
   const LOGO_MAX = 400 * 1024;
   // אותו מפתח בדיוק כמו brandKey באתר (cars-core.js): אותיות קטנות, בלי רווחים/מקפים/נקודות
   function logoKey(raw) {
-    const k = String(raw || '').trim().toLowerCase().replace(/[\s\-_.]+/g, '');
+    const k = String(raw || '').trim().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/&/g, 'and').replace(/[^a-z0-9\u0590-\u05ff]+/g, '');
     return k === 'mercedesbenz' ? 'mercedes' : k;
   }
   function ensureLogosTab() {
@@ -283,9 +283,118 @@
         '.bl-acts{display:flex;gap:6px}.bl-acts label,.bl-acts button{flex:1;text-align:center;justify-content:center;cursor:pointer;margin:0}' +
         '.bl-acts input{display:none}.bl-card.is-busy{opacity:.55;pointer-events:none}' +
         '.bl-st{font-size:.68rem;font-weight:700;padding:2px 8px;border-radius:999px;align-self:flex-start}' +
-        '.bl-st.ok{color:#6ee7b7;background:rgba(52,211,153,.12)}.bl-st.no{color:#fcd34d;background:rgba(245,158,11,.12)}';
+        '.bl-st.ok{color:var(--adm-good,#6ee7b7);background:rgba(52,211,153,.12)}.bl-st.no{color:var(--adm-warn,#fcd34d);background:rgba(245,158,11,.12)}' +
+        '.bl-st.run{color:var(--adm-info,#93c5fd);background:rgba(59,130,246,.14)}' +
+        '.bl-card.is-new{border-color:rgba(52,211,153,.55);box-shadow:0 0 0 1px rgba(52,211,153,.25)}' +
+        '.bl-card.is-busy .bl-prev{background:linear-gradient(90deg,#fff 30%,#eef2f6 50%,#fff 70%) 0 0/300% 100%;animation:blShim 1.1s linear infinite}' +
+        '@keyframes blShim{to{background-position:-300% 0}}' +
+        '.bl-imp{border:1px solid var(--adm-border);border-radius:14px;padding:14px;background:rgba(255,157,46,.05)}' +
+        '.bl-imp-h{display:flex;flex-wrap:wrap;gap:4px 12px;align-items:baseline;margin-bottom:10px}.bl-imp-h b{color:var(--adm-text);font-size:.95rem}.bl-imp-h span{font-size:.78rem;color:var(--adm-muted)}' +
+        '.bl-imp-row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:12px;align-items:stretch}' +
+        '.bl-imp textarea{width:100%;box-sizing:border-box;padding:10px 12px;border-radius:10px;border:1px solid var(--adm-border);background:var(--adm-surface-2);color:var(--adm-text);font-family:var(--font);font-size:.88rem;resize:vertical;min-height:84px}' +
+        '.bl-imp-acts{display:flex;flex-direction:column;gap:6px;min-width:250px}.bl-imp-acts label,.bl-imp-acts button{margin:0;text-align:center;justify-content:center;cursor:pointer}.bl-imp-acts input{display:none}' +
+        '.pp-go{border:0;border-radius:10px;padding:11px 14px;font:800 .88rem var(--font);color:var(--adm-on-accent,#1a1206);background:linear-gradient(180deg,#ffc173,#ff9d2e);cursor:pointer}' +
+        '.pp-go:disabled{opacity:.55;cursor:default}' +
+        '.bl-prog{position:relative;height:28px;margin-top:10px;border-radius:8px;background:var(--adm-surface-2);overflow:hidden;border:1px solid var(--adm-border)}' +
+        '.bl-prog i{position:absolute;inset:0 auto 0 0;width:0;background:linear-gradient(90deg,#34d399,#10b981);transition:width .3s}' +
+        '.bl-prog span{position:relative;display:block;text-align:center;line-height:28px;font-size:.78rem;font-weight:700;color:var(--adm-text)}' +
+        '@media (max-width:640px){.bl-imp-row{grid-template-columns:1fr}.bl-imp-acts{min-width:0}}' +
+        '.admin-page.sp-glass .bl-imp{border:1px solid rgba(255,255,255,.95);border-radius:24px;padding:18px;background:rgba(255,255,255,.62);box-shadow:inset 0 1px 0 rgba(255,255,255,.9),0 14px 40px rgba(24,32,60,.11);-webkit-backdrop-filter:blur(26px) saturate(170%);backdrop-filter:blur(26px) saturate(170%)}' +
+        '.admin-page.sp-glass .bl-imp-h b{font-size:1.05rem;font-weight:800}' +
+        '.admin-page.sp-glass .bl-imp textarea{border-radius:16px;min-height:96px}' +
+        '.admin-page.sp-glass .pp-go{background:#e8001d;color:#fff;border-radius:16px;min-height:48px;font-weight:700;box-shadow:0 10px 24px rgba(232,0,29,.28);transition:transform .15s}' +
+        '.admin-page.sp-glass .pp-go:active{transform:scale(.97)}' +
+        '.admin-page.sp-glass .bl-prog{height:34px;border-radius:99px;border:0;background:rgba(18,20,26,.08)}' +
+        '.admin-page.sp-glass .bl-prog i{border-radius:99px;background:#e8001d}' +
+        '.admin-page.sp-glass .bl-prog span{line-height:34px;font-variant-numeric:tabular-nums}' +
+        '.admin-page.sp-glass .bl-grid{gap:14px}' +
+        '.admin-page.sp-glass .bl-card{border:1px solid rgba(255,255,255,.95);background:rgba(255,255,255,.62);border-radius:22px;padding:12px;box-shadow:inset 0 1px 0 rgba(255,255,255,.9),0 10px 28px rgba(24,32,60,.09);-webkit-backdrop-filter:blur(20px) saturate(170%);backdrop-filter:blur(20px) saturate(170%);transition:transform .2s cubic-bezier(.2,.8,.2,1),box-shadow .2s}' +
+        '.admin-page.sp-glass .bl-card:hover{transform:translateY(-2px);box-shadow:inset 0 1px 0 #fff,0 16px 36px rgba(24,32,60,.14)}' +
+        '.admin-page.sp-glass .bl-prev{border-radius:16px;background:#fff;box-shadow:inset 0 0 0 1px rgba(18,20,26,.06)}' +
+        '.admin-page.sp-glass .bl-prev span{color:#12141a}' +
+        '.admin-page.sp-glass .bl-card.is-new{border-color:rgba(10,122,75,.45);box-shadow:0 0 0 2px rgba(10,122,75,.18),0 10px 28px rgba(24,32,60,.09)}' +
+        '.admin-page.sp-glass .bl-st.ok{background:rgba(10,122,75,.12)}' +
+        '.admin-page.sp-glass .bl-st.no{background:rgba(138,82,0,.12)}' +
+        '.admin-page.sp-glass .bl-st.run{background:rgba(29,78,216,.10)}' +
+        '.admin-page.sp-glass .bl-acts .tbl-btn{min-height:38px;border-radius:12px;font-size:12.5px;padding:0 8px}' +
+        '@media (max-width:640px){.admin-page.sp-glass .bl-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.admin-page.sp-glass .bl-card{padding:9px;border-radius:18px;gap:8px}.admin-page.sp-glass .bl-prev{height:72px}.admin-page.sp-glass .bl-prev img{max-height:50px}.admin-page.sp-glass .bl-prev span{font-size:.92rem;padding:0 6px;text-align:center;overflow-wrap:anywhere;line-height:1.1}.admin-page.sp-glass .bl-name{flex-direction:column;gap:0;font-size:.85rem}.admin-page.sp-glass .bl-acts .tbl-btn{min-height:36px;font-size:12px;padding:0 6px}}' +
+        '@media (prefers-reduced-motion:reduce){.bl-card,.bl-prog i{transition:none}.bl-card.is-busy .bl-prev{animation:none}}';
       document.head.appendChild(st);
     }
+  }
+  // ── ייבוא אוטומטי (15.11.2026) ──
+  // הסמלים נטענים כתמונה (CSP של הניהול מתיר תמונות מכל https, לא fetch), נחתכים מהשוליים השקופים,
+  // מוקטנים ל-512 פיקסלים ונשמרים כ-WebP באחסון שלנו — האתר לא תלוי ב-GitHub אחרי הייבוא.
+  // מקור: car-logos-dataset, נעול לגרסה אחת כדי שהתוצאה לא תשתנה מתחת לרגליים.
+  const LOGO_SRC = [
+    'https://raw.githubusercontent.com/filippofilip95/car-logos-dataset/e334a4d2e8742108ba164c629dff5636576d3808/logos/optimized/',
+    'https://cdn.jsdelivr.net/gh/filippofilip95/car-logos-dataset@e334a4d2e8742108ba164c629dff5636576d3808/logos/optimized/'
+  ];
+  // שם הקובץ במאגר כשהוא שונה מהשם שלנו
+  const LOGO_ALIAS = { mercedes: 'mercedes-benz', landrover: 'land-rover', rangerover: 'land-rover', alfaromeo: 'alfa-romeo', astonmartin: 'aston-martin',
+    rollsroyce: 'rolls-royce', greatwall: 'great-wall', gwm: 'great-wall', vw: 'volkswagen', lynkandco: 'lynk-and-co', lynkco: 'lynk-and-co',
+    mercedesamg: 'mercedes-amg', dsautomobiles: 'ds', mgmotor: 'mg', chevy: 'chevrolet', landrovers: 'land-rover' };
+  // מותגים בעברית → אנגלית, כדי שאפשר יהיה להדביק רשימה בעברית
+  const HE_BRAND = { 'טויוטה': 'Toyota', 'טיוטה': 'Toyota', 'יונדאי': 'Hyundai', 'קיה': 'Kia', 'סקודה': 'Skoda', "צ'רי": 'Chery', 'צרי': 'Chery', 'ג׳אקו': 'Jaecoo', "ג'אקו": 'Jaecoo',
+    'מיצובישי': 'Mitsubishi', 'מאזדה': 'Mazda', 'מזדה': 'Mazda', 'סובארו': 'Subaru', 'סיאט': 'SEAT', 'פולקסווגן': 'Volkswagen', 'קופרה': 'Cupra', 'טסלה': 'Tesla',
+    'ב.מ.וו': 'BMW', 'במוו': 'BMW', 'מרצדס': 'Mercedes-Benz', 'ניסאן': 'Nissan', 'פיג׳ו': 'Peugeot', "פיג'ו": 'Peugeot', 'רנו': 'Renault', "ג'ילי": 'Geely', 'ג׳ילי': 'Geely',
+    'אאודי': 'Audi', 'לקסוס': 'Lexus', 'וולוו': 'Volvo', 'פורד': 'Ford', "ג'יפ": 'Jeep', 'ג׳יפ': 'Jeep', 'סוזוקי': 'Suzuki', 'הונדה': 'Honda', 'סיטרואן': 'Citroen',
+    'אופל': 'Opel', 'פיאט': 'Fiat', 'אלפא רומיאו': 'Alfa Romeo', 'לנד רובר': 'Land Rover', 'ריינג׳ רובר': 'Land Rover', 'פורשה': 'Porsche', 'מיני': 'Mini',
+    'דאצ׳יה': 'Dacia', "דאצ'יה": 'Dacia', 'שברולט': 'Chevrolet', 'קרייזלר': 'Chrysler', 'דודג׳': 'Dodge', 'ראם': 'RAM', 'קאדילק': 'Cadillac', 'ג׳נסיס': 'Genesis', "ג'נסיס": 'Genesis',
+    'אינפיניטי': 'Infiniti', 'ג׳יגואר': 'Jaguar', "ג'יגואר": 'Jaguar', 'מזראטי': 'Maserati', 'פרארי': 'Ferrari', 'למבורגיני': 'Lamborghini', 'בנטלי': 'Bentley',
+    'סמארט': 'Smart', 'פולסטאר': 'Polestar', 'זיקר': 'Zeekr', 'לינק אנד קו': 'Lynk & Co', 'ליפמוטור': 'Leapmotor', 'אומודה': 'Omoda', 'אקסיד': 'Exeed', 'אקספנג': 'XPENG',
+    'ניו': 'NIO', 'די אס': 'DS', 'איסוזו': 'Isuzu', "ג'ק": 'JAC', 'גרייט וול': 'Great Wall', 'מקסוס': 'Maxus', 'סאנגיונג': 'SsangYong', 'קיגיי': 'KGM' };
+  const blNorm = (s) => String(s || '').trim().replace(/[׳']/g, "'");
+  function blEnglish(name) { const n = blNorm(name); return HE_BRAND[n] || HE_BRAND[n.replace(/'/g, '׳')] || n; }
+  function logoCands(name, key) {
+    const kebab = String(name || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/&/g, ' and ').replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+    return [LOGO_ALIAS[key], kebab, key].filter(function (c, i, a) { return c && /^[a-z0-9-]+$/.test(c) && a.indexOf(c) === i; });
+  }
+  function blLoadImg(url) {
+    return new Promise(function (res, rej) {
+      const im = new Image(); im.crossOrigin = 'anonymous'; im.decoding = 'async';
+      const t = setTimeout(function () { im.src = ''; rej(new Error('timeout')); }, 15000);
+      im.onload = function () { clearTimeout(t); res(im); }; im.onerror = function () { clearTimeout(t); rej(new Error('missing')); };
+      im.src = url;
+    });
+  }
+  async function blFindLogo(name, key) {
+    const cands = logoCands(name, key);
+    for (const c of cands) for (const base of LOGO_SRC) { try { return await blLoadImg(base + c + '.png'); } catch (e) { /* הבא בתור */ } }
+    return null;
+  }
+  // חיתוך שוליים שקופים + הקטנה + WebP (או PNG בדפדפן שלא מקודד WebP)
+  function blToBlob(im) {
+    return new Promise(function (res, rej) {
+      const w = im.naturalWidth, h = im.naturalHeight;
+      if (!w || !h) return rej(new Error('תמונה ריקה'));
+      const c = document.createElement('canvas'); c.width = w; c.height = h;
+      const g = c.getContext('2d', { willReadFrequently: true }); g.drawImage(im, 0, 0);
+      const px = g.getImageData(0, 0, w, h).data;
+      let x0 = w, y0 = h, x1 = -1, y1 = -1;
+      for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) if (px[(y * w + x) * 4 + 3] > 8) { if (x < x0) x0 = x; if (x > x1) x1 = x; if (y < y0) y0 = y; if (y > y1) y1 = y; }
+      if (x1 < 0) { x0 = 0; y0 = 0; x1 = w - 1; y1 = h - 1; }
+      const cw = x1 - x0 + 1, ch = y1 - y0 + 1, pad = Math.round(Math.max(cw, ch) * 0.03);
+      const sc = Math.min(1, 512 / (Math.max(cw, ch) + pad * 2));
+      const o = document.createElement('canvas'); o.width = Math.max(1, Math.round((cw + pad * 2) * sc)); o.height = Math.max(1, Math.round((ch + pad * 2) * sc));
+      const og = o.getContext('2d'); og.imageSmoothingQuality = 'high';
+      og.drawImage(c, x0, y0, cw, ch, pad * sc, pad * sc, cw * sc, ch * sc);
+      o.toBlob(function (b) { b ? res(b) : rej(new Error('המרה נכשלה')); }, 'image/webp', 0.92);
+    });
+  }
+  async function blSave(key, blob, ext) {
+    const client = initCarsClient(); if (!client) throw new Error('אין חיבור לשרת');
+    if (!/^[a-z0-9\u0590-\u05ff]+$/.test(key)) throw new Error('מפתח מותג לא תקין');
+    if (blob.size > LOGO_MAX) throw new Error('הקובץ גדול מ-400KB');
+    // שם קובץ חדש בכל העלאה — כך הדפדפנים לא ממשיכים להציג את הסמל הישן מהמטמון
+    const path = 'logos/' + encodeURIComponent(key).replace(/%/g, '') + '-' + Date.now() + '.' + ext;
+    const up = await client.storage.from(PHOTOS_BUCKET).upload(path, blob, { contentType: ext === 'svg' ? 'image/svg+xml' : blob.type || ('image/' + ext), upsert: false });
+    if (up.error) throw up.error;
+    const url = client.storage.from(PHOTOS_BUCKET).getPublicUrl(path).data.publicUrl;
+    const sv = await client.from('brand_logos').upsert({ brand_key: key, url: url, updated_at: new Date().toISOString() }, { onConflict: 'brand_key' });
+    if (sv.error) throw sv.error;
+    blState.logos[key] = url;
+    return url;
   }
   let blState = null; // { brands: [{key,name,n}], logos: {key:url} }
   async function loadBrandLogos(msg) {
@@ -303,62 +412,127 @@
     ((cr && cr.data) || []).forEach(function (c) { const k = logoKey(c.brand); if (!k) return; if (!by[k]) by[k] = { key: k, name: String(c.brand).trim(), n: 0 }; by[k].n++; });
     Object.keys(logos).forEach(function (k) { if (!by[k]) by[k] = { key: k, name: (blState && blState.names && blState.names[k]) || k, n: 0 }; });
     if (blState && blState.extra) blState.extra.forEach(function (x) { if (!by[x.key]) by[x.key] = { key: x.key, name: x.name, n: 0 }; });
-    blState = { logos: logos, extra: (blState && blState.extra) || [], brands: Object.keys(by).map(function (k) { return by[k]; }).sort(function (a, b) { return (b.n - a.n) || a.name.localeCompare(b.name); }) };
+    blState = { logos: logos, st: (blState && blState.st) || {}, busy: blState && blState.busy, extra: (blState && blState.extra) || [], brands: Object.keys(by).map(function (k) { return by[k]; }).sort(function (a, b) { return (b.n - a.n) || a.name.localeCompare(b.name); }) };
     renderBrandLogos(msg);
+  }
+  function blCardHTML(b) {
+    const u = blState.logos[b.key], st = blState.st[b.key] || '';
+    const badge = st === 'busy' ? '<span class="bl-st run">מייבא…</span>' : st === 'miss' ? '<span class="bl-st no">לא נמצא במאגר</span>' : st === 'err' ? '<span class="bl-st no">נכשל — נסה שוב</span>'
+      : '<span class="bl-st ' + (u ? 'ok">✓ יש סמל' : 'no">חסר סמל') + '</span>';
+    return '<div class="bl-card' + (st === 'busy' ? ' is-busy' : '') + (st === 'ok' ? ' is-new' : '') + '" id="bl-' + escapeAttr(b.key) + '">' +
+      '<div class="bl-prev">' + (u ? '<img src="' + escapeAttr(u) + '" alt="">' : '<span>' + escapeHtml(b.name) + '</span>') + '</div>' +
+      '<div class="bl-name"><span dir="auto">' + escapeHtml(b.name) + '</span><small>' + (b.n ? b.n + ' דגמים' : 'אין דגמים עדיין') + '</small></div>' + badge +
+      '<div class="bl-acts">' +
+        (u ? '' : '<button type="button" class="tbl-btn" title="ייבוא אוטומטי מהמאגר" onclick="blImport([\'' + escapeAttr(b.key) + '\'])">⚡ ייבוא</button>') +
+        '<label class="tbl-btn"><input type="file" accept=".svg,.png,.webp,image/svg+xml,image/png,image/webp" onchange="blUpload(this,\'' + escapeAttr(b.key) + '\')">' + (u ? '↻ החלף' : '⬆️ קובץ') + '</label>' +
+        (u ? '<button type="button" class="tbl-btn del" style="flex:0 0 auto;" title="הסר את הסמל" onclick="blRemove(\'' + escapeAttr(b.key) + '\')">✕</button>' : '') +
+      '</div></div>';
+  }
+  function blRefreshCard(key) {
+    const b = blState.brands.find(function (x) { return x.key === key; }), el = document.getElementById('bl-' + key);
+    if (b && el) el.outerHTML = blCardHTML(b);
+    const missing = blState.brands.filter(function (x) { return !blState.logos[x.key]; }).length, btn = document.getElementById('bl-all');
+    if (btn && !blState.busy) { btn.disabled = !missing; btn.textContent = missing ? '⚡ ייבא את כל הסמלים החסרים (' + missing + ')' : '✓ לכל המותגים יש סמל'; }
+    const done = document.getElementById('bl-done'); if (done) done.textContent = (blState.brands.length - missing) + ' מתוך ' + blState.brands.length;
   }
   function renderBrandLogos(msg) {
     const host = document.getElementById('cars-logos-panel'); if (!host || !blState) return;
-    const done = blState.brands.filter(function (b) { return blState.logos[b.key]; }).length;
+    const missing = blState.brands.filter(function (b) { return !blState.logos[b.key]; }).length;
     host.innerHTML = '<div class="form-block" style="padding:18px;">' +
-      '<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap;margin-bottom:6px;"><div><div style="font-size:1.05rem;font-weight:800;color:var(--adm-text);">🏷️ סמלי מותגים</div>' +
-        '<div class="form-hint" style="margin-top:4px;">' + done + ' מתוך ' + blState.brands.length + ' מותגים עם סמל. הסמל מופיע באתר בכל מקום שבו מופיע המותג; בלי סמל — שם המותג כתוב.</div></div>' +
-        '<div style="display:flex;gap:6px;align-items:center;"><input type="text" id="bl-new" dir="ltr" placeholder="מותג נוסף, באנגלית (למשל Volvo)" style="width:230px;padding:9px 12px;border-radius:10px;border:1px solid var(--adm-border);background:var(--adm-surface-2);color:var(--adm-text);font-family:var(--font);font-size:.85rem;" onkeydown="if(event.key===\'Enter\')blAddBrand()">' +
-        '<button type="button" class="tbl-btn" onclick="blAddBrand()">＋ הוסף מותג</button></div></div>' +
-      '<div class="form-hint" style="margin-bottom:14px;">קובץ SVG (עדיף), PNG או WebP עם רקע שקוף, עד 400KB. סמל כהה או צבעוני — הוא יושב על רקע בהיר. מקור: מערכת המדיה הרשמית של היצרן או היבואן.</div>' +
-      '<div id="bl-msg" class="form-hint" style="min-height:1.2em;margin-bottom:8px;font-weight:700;">' + (msg || '') + '</div>' +
-      (blState.brands.length ? '<div class="bl-grid">' + blState.brands.map(function (b) {
-        const u = blState.logos[b.key];
-        return '<div class="bl-card" id="bl-' + escapeAttr(b.key) + '">' +
-          '<div class="bl-prev">' + (u ? '<img src="' + escapeAttr(u) + '" alt="">' : '<span>' + escapeHtml(b.name) + '</span>') + '</div>' +
-          '<div class="bl-name"><span dir="auto">' + escapeHtml(b.name) + '</span><small>' + (b.n ? b.n + ' דגמים' : 'אין דגמים עדיין') + '</small></div>' +
-          '<span class="bl-st ' + (u ? 'ok">✓ יש סמל' : 'no">חסר סמל') + '</span>' +
-          '<div class="bl-acts"><label class="tbl-btn"><input type="file" accept=".svg,.png,.webp,image/svg+xml,image/png,image/webp" onchange="blUpload(this,\'' + escapeAttr(b.key) + '\')">' + (u ? '↻ החלף' : '⬆️ העלה סמל') + '</label>' +
-          (u ? '<button type="button" class="tbl-btn del" style="flex:0 0 auto;" title="הסר את הסמל" onclick="blRemove(\'' + escapeAttr(b.key) + '\')">✕</button>' : '') + '</div></div>';
-      }).join('') + '</div>' : '<div class="adm-empty-state">אין עדיין רכבים במאגר. אפשר להוסיף מותג ידנית למעלה.</div>') +
+      '<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap;margin-bottom:14px;"><div><div style="font-size:1.05rem;font-weight:800;color:var(--adm-text);">🏷️ סמלי מותגים</div>' +
+        '<div class="form-hint" style="margin-top:4px;"><b id="bl-done">' + (blState.brands.length - missing) + ' מתוך ' + blState.brands.length + '</b> מותגים עם סמל. הסמל מופיע באתר בכל מקום שבו מופיע המותג; בלי סמל — שם המותג כתוב.</div></div></div>' +
+      /* ── ייבוא אוטומטי ── */
+      '<div class="bl-imp">' +
+        '<div class="bl-imp-h"><b>⚡ ייבוא אוטומטי</b><span>הסמל נשלף ממאגר סמלים פתוח, נחתך מהשוליים, מוקטן ונשמר אצלנו. סמל קיים לא נדרס.</span></div>' +
+        '<div class="bl-imp-row">' +
+          '<textarea id="bl-list" rows="3" dir="auto" placeholder="הדבק כאן רשימת מותגים — שורה לכל מותג, או מופרדים בפסיק. אפשר בעברית או באנגלית.&#10;למשל: Volvo, Land Rover, פורשה, Lynk &amp; Co"></textarea>' +
+          '<div class="bl-imp-acts">' +
+            '<button type="button" class="tbl-btn" onclick="blAddList()">＋ הוסף לרשימה</button>' +
+            '<button type="button" class="pp-go" id="bl-all" onclick="blImportMissing()"' + (missing ? '' : ' disabled') + '>' + (missing ? '⚡ ייבא את כל הסמלים החסרים (' + missing + ')' : '✓ לכל המותגים יש סמל') + '</button>' +
+            '<label class="tbl-btn" title="קבצים בשם המותג, למשל volvo.png או land-rover.svg"><input type="file" multiple accept=".svg,.png,.webp,image/svg+xml,image/png,image/webp" onchange="blUploadMany(this)">📁 העלאה מרובה מהמחשב</label>' +
+          '</div></div>' +
+        '<div class="bl-prog" id="bl-prog" hidden><i id="bl-prog-bar"></i><span id="bl-prog-t"></span></div>' +
+        '<div class="form-hint" style="margin-top:8px;">מקור הייבוא: car-logos-dataset (נאסף מ-carlogos.org). הסמלים הם סימנים מסחריים של היצרנים — משמשים לזיהוי המותג בלבד, בלי לשנות אותם.</div>' +
+      '</div>' +
+      '<div id="bl-msg" class="form-hint" style="min-height:1.2em;margin:12px 0 8px;font-weight:700;white-space:pre-line;">' + (msg || '') + '</div>' +
+      (blState.brands.length ? '<div class="bl-grid">' + blState.brands.map(blCardHTML).join('') + '</div>' : '<div class="adm-empty-state">אין עדיין רכבים במאגר. אפשר להדביק רשימת מותגים למעלה.</div>') +
       '</div>';
   }
-  const blMsg = function (t, ok) { const m = document.getElementById('bl-msg'); if (m) { m.textContent = t; m.style.color = ok === false ? '#fb7185' : ok ? '#34d399' : ''; } };
-  window.blAddBrand = function () {
-    const inp = document.getElementById('bl-new'), name = inp ? inp.value.trim() : '', key = logoKey(name);
-    if (!key || !/^[a-z0-9]+$/.test(key)) { blMsg('כתוב את שם המותג באנגלית (אותיות וספרות בלבד).', false); return; }
-    if (!blState) return;
-    if (!blState.brands.some(function (b) { return b.key === key; })) { blState.extra.push({ key: key, name: name }); blState.brands.unshift({ key: key, name: name, n: 0 }); }
-    renderBrandLogos('נוסף ״' + escapeHtml(name) + '״ — עכשיו אפשר להעלות לו סמל.');
-    const c = document.getElementById('bl-' + key); if (c && c.scrollIntoView) c.scrollIntoView({ block: 'center', behavior: 'smooth' });
+  const blMsg = function (t, ok) { const m = document.getElementById('bl-msg'); if (m) { m.textContent = t; m.style.color = ok === false ? 'var(--adm-bad,#fb7185)' : ok ? 'var(--adm-good,#34d399)' : ''; } };
+  function blAdd(name) {
+    const en = blEnglish(name), key = logoKey(en);
+    if (!key || !/^[a-z0-9]+$/.test(key)) return null;
+    if (!blState.brands.some(function (b) { return b.key === key; })) { blState.extra.push({ key: key, name: en }); blState.brands.unshift({ key: key, name: en, n: 0 }); }
+    return key;
+  }
+  window.blAddList = function () {
+    const ta = document.getElementById('bl-list'); if (!ta || !blState) return;
+    const names = ta.value.split(/[\n,;]+/).map(function (x) { return x.trim(); }).filter(Boolean);
+    if (!names.length) { blMsg('הדבק קודם רשימת מותגים.', false); return; }
+    const bad = [], added = [];
+    names.forEach(function (n) { const k = blAdd(n); if (k) added.push(k); else bad.push(n); });
+    ta.value = '';
+    renderBrandLogos();
+    blMsg('נוספו ' + added.length + ' מותגים לרשימה.' + (bad.length ? '\nלא זוהו (כתוב אותם באנגלית): ' + bad.join(', ') : '') + (added.length ? '\nעכשיו אפשר ללחוץ ״ייבא את כל הסמלים החסרים״.' : ''), bad.length ? false : true);
+  };
+  window.blAddBrand = window.blAddList;
+  async function blImportOne(key) {
+    const b = blState.brands.find(function (x) { return x.key === key; }); if (!b || blState.logos[key]) return 'skip';
+    blState.st[key] = 'busy'; blRefreshCard(key);
+    try {
+      const im = await blFindLogo(b.name, key);
+      if (!im) { blState.st[key] = 'miss'; return 'miss'; }
+      const blob = await blToBlob(im);
+      await blSave(key, blob, blob.type === 'image/webp' ? 'webp' : 'png');
+      blState.st[key] = 'ok'; return 'ok';
+    } catch (e) { blState.st[key] = 'err'; console.error('[logos]', key, e); return 'err'; }
+    finally { blRefreshCard(key); }
+  }
+  window.blImport = async function (keys) {
+    if (!blState || blState.busy) return;
+    keys = keys.filter(function (k) { return !blState.logos[k]; });
+    if (!keys.length) return;
+    blState.busy = true;
+    const btn = document.getElementById('bl-all'); if (btn) btn.disabled = true;
+    const prog = document.getElementById('bl-prog'), bar = document.getElementById('bl-prog-bar'), pt = document.getElementById('bl-prog-t');
+    if (prog) prog.hidden = keys.length < 2;
+    const res = { ok: [], miss: [], err: [] }, total = keys.length; let done = 0;
+    const q = keys.slice();
+    const tick = function () { if (bar) bar.style.width = Math.round(done / total * 100) + '%'; if (pt) pt.textContent = done + ' / ' + total + ' · נמצאו ' + res.ok.length; };
+    tick(); blMsg('מייבא…');
+    async function worker() { while (q.length) { const k = q.shift(), r = await blImportOne(k); if (res[r]) res[r].push(k); done++; tick(); } }
+    await Promise.all([worker(), worker(), worker()]);
+    blState.busy = false; blRefreshCard('');
+    const nm = function (ks) { return ks.map(function (k) { const b = blState.brands.find(function (x) { return x.key === k; }); return b ? b.name : k; }).join(', '); };
+    blMsg((res.ok.length ? '✓ יובאו ' + res.ok.length + ' סמלים ומופיעים באתר.' : 'לא יובא אף סמל.') +
+      (res.miss.length ? '\nלא נמצאו במאגר (' + res.miss.length + '): ' + nm(res.miss) + ' — אפשר להעלות להם קובץ ידנית.' : '') +
+      (res.err.length ? '\nנכשלו (' + res.err.length + '): ' + nm(res.err) + ' — נסה שוב.' : ''), res.ok.length && !res.err.length ? true : res.ok.length ? null : false);
+  };
+  window.blImportMissing = function () { if (blState) window.blImport(blState.brands.filter(function (b) { return !blState.logos[b.key]; }).map(function (b) { return b.key; })); };
+  // העלאה מרובה: כל קובץ משויך למותג לפי שמו (volvo.png, land-rover.svg)
+  window.blUploadMany = async function (input) {
+    const files = Array.prototype.slice.call(input.files || []); input.value = '';
+    if (!files.length || !blState || blState.busy) return;
+    blState.busy = true;
+    const ok = [], bad = [];
+    for (const f of files) {
+      const base = f.name.replace(/\.[^.]+$/, ''), ext = LOGO_TYPES[f.type] || (/\.svg$/i.test(f.name) ? 'svg' : null), key = blAdd(base);
+      if (!key || !ext) { bad.push(f.name + (ext ? ' (שם לא מזוהה)' : ' (סוג קובץ)')); continue; }
+      if (f.size > LOGO_MAX) { bad.push(f.name + ' (גדול מ-400KB)'); continue; }
+      try { await blSave(key, f, ext); blState.st[key] = 'ok'; ok.push(key); } catch (e) { bad.push(f.name + ' (' + (e.message || e) + ')'); }
+    }
+    blState.busy = false;
+    renderBrandLogos();
+    blMsg((ok.length ? '✓ הועלו ' + ok.length + ' סמלים.' : '') + (bad.length ? '\nלא הועלו: ' + bad.join(', ') : ''), bad.length ? (ok.length ? null : false) : true);
   };
   window.blUpload = async function (input, key) {
     const file = input.files && input.files[0]; input.value = ''; if (!file || !blState) return;
     const ext = LOGO_TYPES[file.type] || (/\.svg$/i.test(file.name) ? 'svg' : null);
     if (!ext) { blMsg('סוג קובץ לא נתמך. אפשר SVG, PNG או WebP.', false); return; }
     if (file.size > LOGO_MAX) { blMsg('הקובץ גדול מדי (' + Math.round(file.size / 1024) + 'KB). עד 400KB — סמל לא צריך יותר.', false); return; }
-    if (!/^[a-z0-9]+$/.test(key)) { blMsg('מפתח מותג לא תקין.', false); return; }
-    const client = initCarsClient(); if (!client) { blMsg('אין חיבור לשרת', false); return; }
-    const card = document.getElementById('bl-' + key); if (card) card.classList.add('is-busy');
-    blMsg('מעלה…');
-    try {
-      // שם קובץ חדש בכל העלאה — כך הדפדפנים לא ממשיכים להציג את הסמל הישן מהמטמון
-      const path = 'logos/' + key + '-' + Date.now() + '.' + ext;
-      const up = await client.storage.from(PHOTOS_BUCKET).upload(path, file, { contentType: ext === 'svg' ? 'image/svg+xml' : file.type, upsert: false });
-      if (up.error) throw up.error;
-      const url = client.storage.from(PHOTOS_BUCKET).getPublicUrl(path).data.publicUrl;
-      const sv = await client.from('brand_logos').upsert({ brand_key: key, url: url, updated_at: new Date().toISOString() }, { onConflict: 'brand_key' });
-      if (sv.error) throw sv.error;
-      blState.logos[key] = url;
-      renderBrandLogos('✓ הסמל נשמר ומופיע באתר.'); blMsg('✓ הסמל נשמר ומופיע באתר.', true);
-    } catch (e) {
-      if (card) card.classList.remove('is-busy');
-      blMsg('ההעלאה נכשלה: ' + (e && e.message ? e.message : e), false);
-    }
+    blState.st[key] = 'busy'; blRefreshCard(key); blMsg('מעלה…');
+    try { await blSave(key, file, ext); blState.st[key] = 'ok'; blRefreshCard(key); blMsg('✓ הסמל נשמר ומופיע באתר.', true); }
+    catch (e) { blState.st[key] = 'err'; blRefreshCard(key); blMsg('ההעלאה נכשלה: ' + (e && e.message ? e.message : e), false); }
   };
   window.blRemove = async function (key) {
     if (!blState || !blState.logos[key]) return;
@@ -367,7 +541,7 @@
     const card = document.getElementById('bl-' + key); if (card) card.classList.add('is-busy');
     const r = await client.from('brand_logos').delete().eq('brand_key', key);
     if (r.error) { if (card) card.classList.remove('is-busy'); blMsg('ההסרה נכשלה: ' + r.error.message, false); return; }
-    delete blState.logos[key];
+    delete blState.logos[key]; delete blState.st[key];
     renderBrandLogos(); blMsg('הסמל הוסר.', true);
   };
 
@@ -506,14 +680,14 @@
     const menuItem = 'display:block;width:100%;text-align:right;margin:2px 0;';
     const extractBtn = ex
       ? '<button class="tbl-btn" style="' + menuItem + '" id="extract-btn-' + d.id + '" onclick="extractDraftSpec(' + d.id + ',this)" title="קורא שוב את קובץ המפרט ומחליף את הנתונים הטכניים (הפרטים האישיים נשמרים)">🔎 חלץ מחדש מהמפרט</button>'
-      : '<button class="tbl-btn" style="background:var(--adm-accent,#ff9d2e);color:#0a0e14;font-weight:700;" id="extract-btn-' + d.id + '" onclick="extractDraftSpec(' + d.id + ',this)">🔎 חלץ נתונים מהמפרט</button>';
+      : '<button class="tbl-btn" style="background:var(--adm-accent,#ff9d2e);color:var(--adm-on-accent,#0a0e14);font-weight:700;" id="extract-btn-' + d.id + '" onclick="extractDraftSpec(' + d.id + ',this)">🔎 חלץ נתונים מהמפרט</button>';
     const verifyBtn = ex ? '<button class="tbl-btn" style="' + menuItem + '" id="verify-btn-' + d.id + '" onclick="verifyDraftSpec(' + d.id + ',this)" title="משווה שוב כל נתון לקובץ המקור">🔍 בדוק שוב מול המפרט</button>' : '';
     const editBtn = ex ? '<button class="tbl-btn" onclick="openDraftForm(' + d.id + ')" title="כל השדות הטכניים, הגרסאות והאבזור">' + (d.published_car_id ? '🔄 השוואה ועדכון הרכב' : '📝 עריכה מלאה') + '</button>' : '';
     const isNew = ex && !d.published_car_id;
     const personalBtn = isNew ? '<button class="tbl-btn" style="border-color:var(--adm-accent,#ff9d2e);font-weight:700;" onclick="togglePersonalPanel(\'draft\',' + d.id + ')" title="תמונות, ללא רקע, מחירים, ציון, תיאור, יתרונות/חסרונות">✨ השלם פרטים</button>' : '';
-    const publishBtn = isNew ? '<button class="tbl-btn" id="publish-btn-' + d.id + '" style="background:var(--adm-accent,#ff9d2e);color:#0a0e14;font-weight:700;" onclick="publishDraftDirect(' + d.id + ',this)">🚀 פרסם</button>' : '';
+    const publishBtn = isNew ? '<button class="tbl-btn" id="publish-btn-' + d.id + '" style="background:var(--adm-accent,#ff9d2e);color:var(--adm-on-accent,#0a0e14);font-weight:700;" onclick="publishDraftDirect(' + d.id + ',this)">🚀 פרסם</button>' : '';
     const moreMenu = '<details class="adm-more" style="position:relative;display:inline-block;"><summary class="tbl-btn" style="list-style:none;cursor:pointer;">⋯ עוד</summary>' +
-      '<div style="position:absolute;inset-inline-start:0;top:calc(100% + 4px);z-index:20;min-width:210px;padding:6px;border-radius:10px;background:var(--adm-surface,#12171f);border:1px solid var(--adm-border);box-shadow:0 8px 24px rgba(0,0,0,.35);">' +
+      '<div style="position:absolute;inset-inline-start:0;top:calc(100% + 4px);z-index:20;min-width:210px;padding:6px;border-radius:10px;background:#12171f;border:1px solid var(--adm-border);box-shadow:0 8px 24px rgba(0,0,0,.35);">' +
         (ex ? extractBtn : '') + verifyBtn +
         '<button class="tbl-btn del" style="' + menuItem + '" onclick="discardCarDraft(' + d.id + ')">✕ מחק טיוטה</button>' +
       '</div></details>';
@@ -736,7 +910,7 @@
     Object.keys(r.map).forEach(function (i) { const el = document.getElementById('p-tp-' + i); if (el) { el.value = Number(r.map[i]).toLocaleString('en-US'); el.style.borderColor = '#2ecc71'; n++; } });
     window.pTrimPriceInput();
     const out = document.getElementById('p-price-parse');
-    if (out) out.innerHTML = (n ? '<span style="color:#2ecc71;font-weight:700;">✓ שובצו ' + n + ' מתוך ' + pState.trims.length + ' מחירים — בדוק ולחץ "שמור"</span>' : '<span style="color:#e74c3c;font-weight:700;">לא שובץ אף מחיר</span>') +
+    if (out) out.innerHTML = (n ? '<span style="color:var(--adm-good,#2ecc71);font-weight:700;">✓ שובצו ' + n + ' מתוך ' + pState.trims.length + ' מחירים — בדוק ולחץ "שמור"</span>' : '<span style="color:var(--adm-bad,#e74c3c);font-weight:700;">לא שובץ אף מחיר</span>') +
       (r.notes.length ? '<br>' + r.notes.map(function (x) { return '• ' + escapeHtml(x); }).join('<br>') : '');
   };
   window.pIdentInput = function (k) {
@@ -833,8 +1007,8 @@
 .pp-ic svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
 .pp-sh .pp-h{margin:0;font-size:1rem;font-weight:800;color:var(--g-txt);letter-spacing:-.01em}
 .pp-sh .pp-p{margin:2px 0 0;font-size:.76rem;color:var(--g-sub);line-height:1.45}
-.pp-st{margin-inline-start:auto;flex:none;font-size:.7rem;font-weight:700;padding:4px 10px;border-radius:999px;border:1px solid rgba(245,158,11,.4);color:#fcd34d;background:rgba(245,158,11,.1)}
-.pp-st.ok{border-color:rgba(52,211,153,.4);color:#6ee7b7;background:rgba(52,211,153,.1)}
+.pp-st{margin-inline-start:auto;flex:none;font-size:.7rem;font-weight:700;padding:4px 10px;border-radius:999px;border:1px solid rgba(245,158,11,.4);color:var(--adm-warn,#fcd34d);background:rgba(245,158,11,.1)}
+.pp-st.ok{border-color:rgba(52,211,153,.4);color:var(--adm-good,#6ee7b7);background:rgba(52,211,153,.1)}
 .pp-num{position:absolute;top:10px;inset-inline-end:18px;font-family:var(--adm-num);font-size:2.6rem;font-weight:700;line-height:1;color:transparent;-webkit-text-stroke:1px rgba(255,255,255,.13);pointer-events:none}
 .pp-sec .pp-st{margin-inline-end:66px}
 /* ── שדות ── */
@@ -855,13 +1029,13 @@
   background:linear-gradient(180deg,rgba(255,255,255,.14),rgba(255,255,255,.05));border:1px solid var(--g-line);box-shadow:inset 0 1px 0 var(--g-hi),0 6px 16px -8px rgba(0,0,0,.6);transition:transform .15s,background .2s,border-color .2s;white-space:nowrap}
 .pp-b:hover{border-color:rgba(255,255,255,.32);background:linear-gradient(180deg,rgba(255,255,255,.2),rgba(255,255,255,.08))}
 .pp-b:active{transform:scale(.97)}
-.pp-b.acc{color:#1a1206;background:linear-gradient(180deg,#ffc173,#ff9d2e);border-color:rgba(255,200,140,.8);box-shadow:inset 0 1px 0 rgba(255,255,255,.55),0 8px 22px -8px rgba(255,157,46,.8)}
+.pp-b.acc{color:var(--adm-on-accent,#1a1206);background:linear-gradient(180deg,#ffc173,#ff9d2e);border-color:rgba(255,200,140,.8);box-shadow:inset 0 1px 0 rgba(255,255,255,.55),0 8px 22px -8px rgba(255,157,46,.8)}
 .pp-b.acc:hover{background:linear-gradient(180deg,#ffcd8a,#ffa94a)}
 .pp-b.del:hover{border-color:rgba(251,113,133,.6);color:#fecdd3}
 .pp-b.sm{padding:6px 10px;font-size:.72rem;border-radius:10px}
 .pp-b input{display:none}
 .admin-page .pp label.pp-b,.admin-page .pp label.pp-add{margin:0;font-weight:700}
-.admin-page .pp label.pp-b{color:var(--g-txt)}.admin-page .pp label.pp-b.acc{color:#1a1206}
+.admin-page .pp label.pp-b{color:var(--g-txt)}.admin-page .pp label.pp-b.acc{color:var(--adm-on-accent,#1a1206)}
 .pp-row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
 /* ── מחירים ── */
 .pp-trim{position:relative}
@@ -876,7 +1050,7 @@
 .pp-ph img{width:100%;height:100%;object-fit:cover;display:block;transition:transform .5s}
 .pp-ph:hover img{transform:scale(1.05)}
 .pp-ph.is-main{border-color:rgba(255,157,46,.9);box-shadow:0 0 0 2px rgba(255,157,46,.35),0 12px 30px -10px rgba(255,157,46,.45)}
-.pp-badge{position:absolute;top:8px;inset-inline-start:8px;font-size:.66rem;font-weight:800;color:#1a1206;background:linear-gradient(180deg,#ffd29b,#ff9d2e);padding:3px 9px;border-radius:999px;box-shadow:0 4px 12px rgba(0,0,0,.4)}
+.pp-badge{position:absolute;top:8px;inset-inline-start:8px;font-size:.66rem;font-weight:800;color:var(--adm-on-accent,#1a1206);background:linear-gradient(180deg,#ffd29b,#ff9d2e);padding:3px 9px;border-radius:999px;box-shadow:0 4px 12px rgba(0,0,0,.4)}
 .pp-ph-act{position:absolute;inset-inline:6px;bottom:6px;display:flex;gap:4px;justify-content:center;padding:4px;border-radius:12px;background:rgba(10,13,19,.55);-webkit-backdrop-filter:blur(14px) saturate(160%);backdrop-filter:blur(14px) saturate(160%);border:1px solid rgba(255,255,255,.14);
   opacity:0;transform:translateY(6px);transition:opacity .2s,transform .2s}
 .pp-ph:hover .pp-ph-act,.pp-ph:focus-within .pp-ph-act{opacity:1;transform:none}
@@ -928,7 +1102,7 @@
 .pp-dock{position:relative;z-index:6;margin:16px 16px 12px;padding:10px 10px 10px 16px;border-radius:20px;display:flex;align-items:center;gap:12px}
 #p-msg{flex:1;font-size:.8rem;color:var(--g-sub);min-height:1em;line-height:1.45}
 #p-msg:empty::before{content:'השינויים נשמרים רק בלחיצה על שמור';color:var(--g-dim)}
-.admin-page .pp #p-save{position:relative;overflow:hidden;border:0;cursor:pointer;font:800 .92rem var(--font);color:#1a1206;padding:12px 26px;border-radius:14px;
+.admin-page .pp #p-save{position:relative;overflow:hidden;border:0;cursor:pointer;font:800 .92rem var(--font);color:var(--adm-on-accent,#1a1206);padding:12px 26px;border-radius:14px;
   background:linear-gradient(180deg,#ffc173,#ff9d2e);box-shadow:inset 0 1px 0 rgba(255,255,255,.6),0 10px 26px -8px rgba(255,157,46,.85)}
 .admin-page .pp #p-save::after{content:'';position:absolute;top:0;bottom:0;width:40%;left:-60%;background:linear-gradient(100deg,transparent,rgba(255,255,255,.55),transparent);transform:skewX(-20deg);animation:ppShine 3.6s ease-in-out infinite}
 .admin-page .pp #p-save:disabled{filter:saturate(.4) brightness(.8);cursor:wait}
@@ -1246,7 +1420,7 @@
       if (!url) throw new Error('ההעלאה לא החזירה כתובת');
       if (colorName) st.colorImages[colorName] = url; else st.cutout = url;
       renderPersonal('✓ ' + (colorName ? 'התמונה בצבע ' + escapeHtml(colorName) : 'התמונה ללא רקע') + ' עלתה — לחץ "שמור"');
-    } catch (e) { pMsg('<span style="color:#e74c3c;">✕ ' + escapeAttr(e && e.message ? e.message : e) + '</span>'); }
+    } catch (e) { pMsg('<span style="color:var(--adm-bad,#e74c3c);">✕ ' + escapeAttr(e && e.message ? e.message : e) + '</span>'); }
   }
   window.pCutoutFromFile = function (input) { const f = input.files && input.files[0]; input.value = ''; if (f) pRunCutout({ blob: f, name: f.name }); };
   // פותח את הכלי מיד בלחיצה (אחרת הדפדפן חוסם את החלון) — בוחרים את התמונה בתוך הכלי עצמו
@@ -1259,7 +1433,7 @@
     try {
       const u = await cutoutFromUpload(file, function (src) { pRunCutout(src, name); }, pMsg);
       if (u) { pState.colorImages[name] = u; renderPersonal('✓ התמונה בצבע ' + escapeHtml(name) + ' עלתה — לחץ "שמור"'); }
-    } catch (e) { pMsg('<span style="color:#e74c3c;">✕ ' + escapeAttr(e.message) + '</span>'); }
+    } catch (e) { pMsg('<span style="color:var(--adm-bad,#e74c3c);">✕ ' + escapeAttr(e.message) + '</span>'); }
   };
   window.pColorRemove = function (i) { if (!pState || !pState.colors[i]) return; pReadInputs(); delete pState.colorImages[pState.colors[i]]; renderPersonal('לא לשכוח לשמור'); };
   // הסרת רקע מכל תמונה בגלריה (לא רק מהראשית) — אותו מסלול כמו מהתמונה הראשית
@@ -1268,7 +1442,7 @@
   window.pUploadReadyCutout = async function (input) {
     const file = input.files && input.files[0]; input.value = ''; if (!file || !pState) return;
     pReadInputs(); pMsg('מעלה…');
-    try { const u = await cutoutFromUpload(file, pRunCutout, pMsg); if (u) { pState.cutout = u; renderPersonal('✓ עלה — לחץ "שמור"'); } } catch (e) { pMsg('<span style="color:#e74c3c;">✕ ' + escapeAttr(e.message) + '</span>'); }
+    try { const u = await cutoutFromUpload(file, pRunCutout, pMsg); if (u) { pState.cutout = u; renderPersonal('✓ עלה — לחץ "שמור"'); } } catch (e) { pMsg('<span style="color:var(--adm-bad,#e74c3c);">✕ ' + escapeAttr(e.message) + '</span>'); }
   };
   window.pRemoveCutout = function () { if (!pState) return; pReadInputs(); pState.cutout = null; renderPersonal('לא לשכוח לשמור'); };
   window.pHighlightImage = async function (input, i) {
@@ -1276,7 +1450,7 @@
     pReadInputs(); pMsg('מעלה תמונה…');
     const u = await uploadCarPhoto(file);
     if (u && pState.highlights[i]) pState.highlights[i].image = u;
-    renderPersonal(u ? 'התמונה עלתה — לא לשכוח לשמור' : '<span style="color:#e74c3c;">ההעלאה נכשלה</span>');
+    renderPersonal(u ? 'התמונה עלתה — לא לשכוח לשמור' : '<span style="color:var(--adm-bad,#e74c3c);">ההעלאה נכשלה</span>');
   };
   window.pHighlightImageRemove = function (i) { if (!pState || !pState.highlights[i]) return; pReadInputs(); pState.highlights[i].image = null; renderPersonal('לא לשכוח לשמור'); };
 
@@ -1284,7 +1458,7 @@
     if (!pState) return;
     pReadInputs();
     const s = pState, client = initCarsClient(); if (!client) return;
-    if (s.f.score != null && (s.f.score < 0 || s.f.score > 10)) { pMsg('<span style="color:#e74c3c;">הציון חייב להיות בין 0 ל-10</span>'); return; }
+    if (s.f.score != null && (s.f.score < 0 || s.f.score > 10)) { pMsg('<span style="color:var(--adm-bad,#e74c3c);">הציון חייב להיות בין 0 ל-10</span>'); return; }
     const ci = {}; Object.keys(s.colorImages || {}).forEach(function (k) { if (s.colorImages[k] && (s.colors || []).indexOf(k) !== -1) ci[k] = s.colorImages[k]; });
     const patch = noZeroPrice(Object.assign({}, s.f, { image_main: s.main || null, image_cutout: s.cutout || null, highlights: s.highlights, color_images: ci }));
     if (s.trims.length) patch.trims = s.trims;
@@ -1338,9 +1512,9 @@
         const tEl = document.getElementById('draft-title-' + s.id); if (tEl && ex.brand) tEl.textContent = ex.brand + ' ' + (ex.model || '') + (ex.year ? ' ' + ex.year : '');
         const chk = document.getElementById('draft-check-' + s.id); if (chk) chk.innerHTML = personalChecklist(ex, photos, 'draft');
       }
-      renderPersonal('<span style="color:#2ecc71;font-weight:700;">✓ נשמר</span>');
+      renderPersonal('<span style="color:var(--adm-good,#2ecc71);font-weight:700;">✓ נשמר</span>');
     } catch (e) {
-      pMsg('<span style="color:#e74c3c;">✕ השמירה נכשלה: ' + escapeAttr(e && e.message ? e.message : e) + '</span>');
+      pMsg('<span style="color:var(--adm-bad,#e74c3c);">✕ השמירה נכשלה: ' + escapeAttr(e && e.message ? e.message : e) + '</span>');
     } finally { const b = document.getElementById('p-save'); if (b) { b.disabled = false; b.textContent = '💾 שמור'; } }
   };
 
@@ -1390,7 +1564,7 @@
       const inputType = pf.def.type === 'number' || pf.def.type === 'float' ? 'number' : 'text';
       fix = '<div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-top:6px;">' +
         '<span style="font-size:0.72rem;color:var(--adm-muted);">עכשיו: <b>' + escapeHtml(showVal(cur)) + '</b></span>' +
-        (sugg !== undefined ? '<button type="button" class="tbl-btn" style="border-color:#2ecc71;color:#2ecc71;" onclick="fixDraftIssue(' + draftId + ',\'' + it.id + '\',\'suggest\',this)">✓ אמץ: ' + escapeHtml(showVal(sugg)) + '</button>' : '') +
+        (sugg !== undefined ? '<button type="button" class="tbl-btn" style="border-color:#2ecc71;color:var(--adm-good,#2ecc71);" onclick="fixDraftIssue(' + draftId + ',\'' + it.id + '\',\'suggest\',this)">✓ אמץ: ' + escapeHtml(showVal(sugg)) + '</button>' : '') +
         (pf.def.type === 'list' || pf.def.type === 'textarea'
           ? '<textarea id="fix-' + draftId + '-' + it.id + '" rows="2" style="flex:1;min-width:180px;padding:6px 8px;border-radius:7px;border:1px solid var(--adm-border);background:var(--adm-surface-2);color:var(--adm-text);font-family:var(--font);font-size:0.8rem;">' + escapeHtml(pre) + '</textarea>'
           : '<input id="fix-' + draftId + '-' + it.id + '" type="' + inputType + '"' + (pf.def.type === 'float' ? ' step="any"' : '') + ' value="' + escapeAttr(pre) + '" aria-label="ערך מתוקן" style="width:150px;padding:6px 8px;border-radius:7px;border:1px solid var(--adm-border);background:var(--adm-surface-2);color:var(--adm-text);font-family:var(--font);font-size:0.8rem;">') +
@@ -1415,8 +1589,8 @@
     const blocking = result.blockingIssues || [], warns = result.warnings || [];
     const when = result.checkedAt ? ' <span style="font-weight:400;color:var(--adm-muted);">(' + new Date(result.checkedAt).toLocaleString('he-IL', { dateStyle: 'short', timeStyle: 'short' }) + ')</span>' : '';
     let html = blocking.length
-      ? '<div style="font-size:0.8rem;color:#e74c3c;margin-top:8px;font-weight:700;">✕ ' + blocking.length + ' בעיות לתיקון' + when + ' — אפשר לתקן כאן ישירות</div>'
-      : '<div style="font-size:0.8rem;color:#2ecc71;margin-top:8px;font-weight:700;">✓ ' + (result.sourceChecked ? 'עברה בדיקה מול קובץ המקור' : 'אין בעיות פתוחות') + when + '</div>';
+      ? '<div style="font-size:0.8rem;color:var(--adm-bad,#e74c3c);margin-top:8px;font-weight:700;">✕ ' + blocking.length + ' בעיות לתיקון' + when + ' — אפשר לתקן כאן ישירות</div>'
+      : '<div style="font-size:0.8rem;color:var(--adm-good,#2ecc71);margin-top:8px;font-weight:700;">✓ ' + (result.sourceChecked ? 'עברה בדיקה מול קובץ המקור' : 'אין בעיות פתוחות') + when + '</div>';
     if (blocking.length) html += '<ul style="margin:0;padding:0;">' + blocking.map(function (it) { return issueCardHtml(draftId, it, 'b', ex, it.field ? sug[it.field] : undefined); }).join('') + '</ul>';
     if (warns.length) html += '<details style="margin-top:6px;"' + (blocking.length ? '' : ' open') + '><summary style="font-size:0.76rem;color:var(--adm-muted);cursor:pointer;">הערות לא חוסמות (' + warns.length + ')</summary><ul style="margin:0;padding:0;">' +
       warns.map(function (it) { return issueCardHtml(draftId, it, 'w', ex, it.field ? sug[it.field] : undefined); }).join('') + '</ul></details>';
@@ -1550,7 +1724,7 @@
     let issueHtml = '';
     if (issue) {
       const suggestion = issue.suggestion;
-      issueHtml = '<div style="font-size:0.72rem;color:#e74c3c;margin-top:4px;">⚠️ ' + escapeAttr(issue.text) + '</div>';
+      issueHtml = '<div style="font-size:0.72rem;color:var(--adm-bad,#e74c3c);margin-top:4px;">⚠️ ' + escapeAttr(issue.text) + '</div>';
       if (suggestion !== undefined) {
         const suggStr = Array.isArray(suggestion) ? suggestion.join(', ') : String(suggestion);
         issueHtml += '<div style="font-size:0.72rem;color:var(--adm-muted);margin-top:2px;">הצעה: ' + escapeAttr(suggStr) +
@@ -1657,7 +1831,7 @@
     const iss = trimIssue(trim, f.key);
     let issHtml = '';
     if (iss) {
-      issHtml = '<div style="font-size:0.7rem;color:#e74c3c;margin-top:3px;">⚠️ ' + escapeAttr(iss.text) + '</div>';
+      issHtml = '<div style="font-size:0.7rem;color:var(--adm-bad,#e74c3c);margin-top:3px;">⚠️ ' + escapeAttr(iss.text) + '</div>';
       if (iss.suggestion !== undefined) issHtml += '<div style="font-size:0.7rem;color:var(--adm-muted);margin-top:2px;">הצעה: ' + escapeAttr(iss.suggestion === null ? '(ריק — לא במסמך)' : String(iss.suggestion)) +
         ' <button type="button" class="tbl-btn" style="padding:2px 8px;font-size:0.66rem;" onclick="applyTrimSuggestion(' + idx + ',\'' + f.key + '\')">אמץ</button></div>';
     }
@@ -2075,7 +2249,7 @@
     const host = document.getElementById('cars-form-host');
     if (!host) return;
     host.innerHTML = '<div class="form-block"><h3>' + (mode === 'edit' ? '✏️ עריכת רכב' : mode === 'update' ? '🔄 עדכון רכב קיים מהמפרט' : '📝 סקירת נתונים ופרסום') + '</h3>' +
-      (verification && !verification.ok ? '<p style="color:#e74c3c;font-size:0.85rem;">⚠️ נמצאו בעיות בבדיקת האימות — מסומנות ליד השדות הרלוונטיים. תקן או אמץ את ההצעות לפני הפרסום.</p>' : '') +
+      (verification && !verification.ok ? '<p style="color:var(--adm-bad,#e74c3c);font-size:0.85rem;">⚠️ נמצאו בעיות בבדיקת האימות — מסומנות ליד השדות הרלוונטיים. תקן או אמץ את ההצעות לפני הפרסום.</p>' : '') +
     '</div>' + buildFormHtml(mode, data, verification);
     host.scrollIntoView({ behavior: 'smooth', block: 'start' });
   }
@@ -2286,7 +2460,7 @@
       '<div class="form-block" style="display:flex;gap:10px;justify-content:flex-end;flex-wrap:wrap;">' +
         '<button class="btn-secondary" onclick="closeCarForm()">סגור</button>' +
         '<a class="btn-secondary" href="/car/' + encodeURIComponent(car.slug) + '/?view=review" target="_blank" style="text-decoration:none;">צפה בעמוד ↗</a>' +
-        (r && r.published ? '<button class="btn-secondary" onclick="saveCarReview(\'unpublish\')" style="color:#e74c3c;">הסר פרסום</button>' : '') +
+        (r && r.published ? '<button class="btn-secondary" onclick="saveCarReview(\'unpublish\')" style="color:var(--adm-bad,#e74c3c);">הסר פרסום</button>' : '') +
         '<button class="btn-secondary" id="rv-save-btn" onclick="saveCarReview(\'draft\')">💾 שמור טיוטה</button>' +
         '<button class="btn-primary" id="rv-pub-btn" onclick="saveCarReview(\'publish\')">✓ פרסם</button></div>';
   }
@@ -2307,7 +2481,7 @@
     host.innerHTML = '<div class="form-block"><div class="adm-empty-state">טוען…</div></div>';
     const [{ data: car }, rvRes] = await Promise.all([client.from('cars').select('*').eq('id', carId).single(), client.from('car_reviews').select('*').eq('car_id', carId).maybeSingle()]);
     if (!car) { host.innerHTML = ''; alert('הרכב לא נמצא.'); return; }
-    if (rvRes && rvRes.error) { host.innerHTML = '<div class="form-block"><div class="adm-empty-state" style="color:#e74c3c;">טבלת חוות הדעת לא זמינה: ' + escapeAttr(rvRes.error.message) + '<br>יש להריץ קודם את cars-phase3d-reviews.sql ב-SQL Editor.</div></div>'; return; }
+    if (rvRes && rvRes.error) { host.innerHTML = '<div class="form-block"><div class="adm-empty-state" style="color:var(--adm-bad,#e74c3c);">טבלת חוות הדעת לא זמינה: ' + escapeAttr(rvRes.error.message) + '<br>יש להריץ קודם את cars-phase3d-reviews.sql ב-SQL Editor.</div></div>'; return; }
     const row = rvRes && rvRes.data;
     if (row) _reviewsByCar[carId] = row;
     // טיוטה ראשונה: מתחילים מהיתרונות/חסרונות והציון שכבר קיימים ברכב

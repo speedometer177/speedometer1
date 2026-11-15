@@ -98,7 +98,8 @@
     return '<span class="cx-wordmark' + (t.length > 7 ? ' is-long' : '') + '" aria-hidden="true">' + esc(t) + '</span>';
   }
   function brandKey(raw) {
-    const k = String(raw || '').trim().toLowerCase().replace(/[\s\-_.]+/g, '');
+    /* 15.11.2026: גם & ואותיות עם סימנים (Lynk & Co, Citroën) — זהה ל-logoKey בניהול */
+    const k = String(raw || '').trim().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/&/g, 'and').replace(/[^a-z0-9\u0590-\u05ff]+/g, '');
     if (BRANDS[k]) return k;
     if (k === 'mercedesbenz') return 'mercedes';
     return k;

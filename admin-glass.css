@@ -1,0 +1,323 @@
+/* admin-glass.css — SPEEDOMETER-GLASS 2026-11-15c
+   שכבת העיצוב "זכוכית יום" לפאנל הניהול. נטענת רק כשנכנסים לניהול.
+   הכול תחום ל-.admin-page.sp-glass ולרכיבים שהקובץ admin-glass.js יוצר (קידומת sp-),
+   כך שהאתר הציבורי לא מושפע. אם הקובץ לא נטען, הפאנל נשאר בעיצוב הקודם. */
+
+.admin-page.sp-glass{
+  --adm-bg:#e9ecf2; --adm-surface:rgba(255,255,255,.62); --adm-surface-2:rgba(18,20,26,.06);
+  --adm-border:rgba(18,20,26,.13); --adm-text:#12141a; --adm-muted:#4d5464;
+  --adm-accent:#c70018; --adm-accent-hi:#e8001d; --adm-on-accent:#fff; --adm-accent-dim:rgba(232,0,29,.10);
+  --adm-red:#c70018; --adm-good:#0a7a4b; --adm-good-dim:rgba(10,122,75,.12);
+  --adm-bad:#b3261e; --adm-warn:#8a5200; --adm-info:#1d4ed8; --adm-num:'Rubik',var(--font);
+  --dm-bg:#e9ecf2; --dm-surface:rgba(255,255,255,.62); --dm-border:rgba(18,20,26,.13); --dm-text:#12141a; --dm-muted:#4d5464;
+  --border:rgba(18,20,26,.13); --muted:#4d5464; --mid:#4d5464; --ink:#12141a; --black:#12141a; --red:#c70018;
+  --sp-glass-bg:rgba(255,255,255,.60); --sp-glass-line:rgba(255,255,255,.95);
+  --sp-glass-shadow:inset 0 1px 0 rgba(255,255,255,.9),0 14px 40px rgba(24,32,60,.11);
+  background:#e9ecf2!important; color:#12141a; font-family:'Rubik',var(--font);
+  position:relative; isolation:isolate; min-height:100vh; padding-bottom:130px!important;
+}
+.admin-page.sp-glass::before{content:'';position:fixed;inset:0;z-index:-1;pointer-events:none;
+  background:radial-gradient(560px 560px at 100% 0%,rgba(232,0,29,.13),transparent 70%),radial-gradient(680px 680px at 0% 100%,rgba(70,120,255,.17),transparent 70%),#e9ecf2}
+.admin-page.sp-glass .admin-inner{max-width:1180px;margin:0 auto;padding-top:14px}
+.admin-page.sp-glass .admin-header{display:none}
+.admin-page.sp-glass h1,.admin-page.sp-glass h2,.admin-page.sp-glass h3,.admin-page.sp-glass h4,.admin-page.sp-glass label{color:#12141a}
+
+/* ── זכוכית ── */
+.admin-page.sp-glass .form-block,.admin-page.sp-glass .adm-stat-card,.admin-page.sp-glass .adm-gauge-card,
+.admin-page.sp-glass .adm-row,.admin-page.sp-glass .hp-tabs,.sp-head-pill{
+  background:var(--sp-glass-bg)!important;border:1px solid var(--sp-glass-line)!important;box-shadow:var(--sp-glass-shadow)!important;
+  -webkit-backdrop-filter:blur(26px) saturate(170%);backdrop-filter:blur(26px) saturate(170%)}
+.admin-page.sp-glass .form-block{border-radius:26px;padding:22px}
+.admin-page.sp-glass .form-block h3::before{background:#e8001d}
+.admin-page.sp-glass .adm-row{border-radius:20px}
+.admin-page.sp-glass .adm-row-title{color:#12141a}
+.admin-page.sp-glass .adm-row-meta,.admin-page.sp-glass .form-hint,.admin-page.sp-glass .admin-subtitle{color:#4d5464}
+
+/* ── ראש העמוד: לוגו + מצב ── */
+.sp-head{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:6px 0 16px}
+.sp-head .sp-logo{order:1}
+.sp-head [data-act=pal]{order:2;margin-inline-start:auto}
+.sp-head [data-act=more]{order:3}
+.sp-head .sp-head-status{order:4;flex-basis:100%;margin:0}
+@media (min-width:761px){
+  .sp-head .sp-head-status{order:2;flex-basis:auto;margin-inline-start:auto}
+  .sp-head [data-act=pal]{order:3;margin-inline-start:0}
+  .sp-head [data-act=more]{order:4}
+}
+
+/* כשהפאנל פתוח: ראש האתר, הניווט התחתון וכפתורי הנגישות/חזרה למעלה של האתר הציבורי מוסתרים,
+   כדי שלא יכסו את הניווט של הפאנל. ברגע שחוזרים לאתר הם חוזרים. */
+body.sp-admin-open header[role=banner],body.sp-admin-open .bottom-nav,body.sp-admin-open .back-top,
+body.sp-admin-open .reading-progress,body.sp-admin-open .access-btn,body.sp-admin-open .sp-speedo-fab,body.sp-admin-open .bnav-speedo-wrap,body.sp-admin-open #cat-bar,body.sp-admin-open .cat-bar{display:none!important}
+/* כפתור ייבוא מ-Word (docx-import.js) בשפת הזכוכית */
+.admin-page.sp-glass #sp-docx-btn{background:#12141a!important;color:#fff!important;border-radius:14px!important;min-height:44px;padding:0 18px!important;display:inline-flex;align-items:center;gap:6px;box-shadow:0 8px 20px rgba(18,20,26,.18)}
+
+/* הודעות קופצות של לשונית החדשות, בשפת הזכוכית */
+body.sp-admin-open .news-toast{background:rgba(255,255,255,.88)!important;color:#12141a!important;border:1px solid #fff!important;border-right:4px solid #e8001d!important;
+  border-radius:18px!important;box-shadow:0 14px 40px rgba(24,32,60,.18)!important;-webkit-backdrop-filter:blur(24px) saturate(170%);backdrop-filter:blur(24px) saturate(170%)}
+@media (max-width:760px){body.sp-admin-open #news-toast-host{bottom:calc(96px + env(safe-area-inset-bottom,0px))!important}}
+body.sp-admin-open .news-toast-act{background:#e8001d!important;color:#fff!important;border-radius:12px!important;min-height:36px}
+.sp-logo{display:flex;align-items:center;gap:10px;text-decoration:none;color:#12141a;background:none;border:0;padding:0;cursor:pointer;font-family:'Rubik',var(--font)}
+.sp-logo-img{width:44px;height:44px;border-radius:50%;flex:none;box-shadow:0 6px 18px rgba(24,32,60,.16)}
+.sp-logo-word{font-size:26px;font-weight:800;letter-spacing:-.01em;line-height:1}
+.sp-logo-word b{color:#e8001d;font-weight:800}
+.sp-logo-sub{font-size:14px;font-weight:400;color:#4d5464}
+.sp-head-status{display:flex;align-items:center;gap:7px;font-size:12.5px;color:#4d5464;margin-inline-start:auto}
+.sp-dot{width:8px;height:8px;border-radius:50%;background:#0a7a4b;flex:none}
+.sp-dot.bad{background:#b3261e}
+.sp-head-btn{min-width:46px;min-height:46px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;color:#12141a;cursor:pointer}
+.sp-head-btn.sp-head-pill{padding:0}
+
+/* ── נתונים עליונים: מספר ענק במקום מד ── */
+.admin-page.sp-glass .adm-analytics{gap:14px;background:transparent!important;border:0!important;padding:0!important;overflow:visible}
+@media (min-width:761px){.admin-page.sp-glass .adm-analytics{grid-template-columns:minmax(300px,1fr) 2fr}}
+.admin-page.sp-glass .adm-gauge-card{border-radius:28px;padding:22px 24px;justify-content:flex-start}
+.admin-page.sp-glass .adm-gauge{width:auto;height:auto}
+.admin-page.sp-glass .adm-gauge-svg{display:none}
+.admin-page.sp-glass .adm-gauge-center{position:static;align-items:flex-start;text-align:start;gap:8px}
+.admin-page.sp-glass .adm-gauge-value{font-size:clamp(48px,13vw,74px);white-space:nowrap;font-weight:800;letter-spacing:-.02em;line-height:.95;color:#12141a}
+.admin-page.sp-glass .adm-gauge-label,.admin-page.sp-glass .adm-stat-label{color:#4d5464;font-size:13px}
+.admin-page.sp-glass .adm-stat-card{border-radius:24px}
+.admin-page.sp-glass .adm-stat-value{color:#12141a;font-weight:800}
+.admin-page.sp-glass .adm-stat-top-title{color:#12141a}
+.admin-page.sp-glass .adm-stat-top-views{color:#c70018}
+.admin-page.sp-glass .adm-stat-icon{color:#c70018;position:static!important;inset:auto!important;transform:none!important;display:flex;margin-bottom:6px;font-size:18px}
+@media (max-width:400px){.sp-logo-sub{display:none}.sp-logo-word{font-size:22px}.sp-logo-img{width:40px;height:40px}}
+
+/* ── כפתורים ── */
+.admin-page.sp-glass button,.sp-sheet button,.sp-nav button,.sp-pal button{font-family:'Rubik',var(--font);-webkit-tap-highlight-color:transparent}
+.admin-page.sp-glass button:focus-visible,.sp-sheet button:focus-visible,.sp-nav button:focus-visible,.sp-pal input:focus-visible{outline:2px solid #c70018;outline-offset:2px}
+.admin-page.sp-glass .btn-primary,.admin-page.sp-glass .adm-hero-btn{
+  background:#e8001d!important;color:#fff!important;border:0!important;border-radius:16px!important;min-height:48px;padding:0 24px;font-weight:700;font-size:15px;
+  box-shadow:0 10px 24px rgba(232,0,29,.28);display:inline-flex;align-items:center;justify-content:center;gap:8px;transition:transform .15s ease,box-shadow .15s ease}
+.admin-page.sp-glass .adm-hero-btn{width:100%}
+.admin-page.sp-glass .btn-secondary,.admin-page.sp-glass .tbl-btn{
+  background:rgba(255,255,255,.72);border:1px solid rgba(18,20,26,.14);color:#12141a;border-radius:14px;min-height:42px;padding:0 14px;font-weight:500;font-size:13.5px;
+  display:inline-flex;align-items:center;justify-content:center;gap:6px;box-shadow:inset 0 1px 0 rgba(255,255,255,.9),0 4px 14px rgba(24,32,60,.07);transition:transform .15s ease,background .15s ease}
+.admin-page.sp-glass .btn-secondary:hover,.admin-page.sp-glass .tbl-btn:hover{background:#fff;border-color:rgba(18,20,26,.28);color:#12141a}
+.admin-page.sp-glass .btn-primary:active,.admin-page.sp-glass .btn-secondary:active,.admin-page.sp-glass .tbl-btn:active,.admin-page.sp-glass .adm-hero-btn:active{transform:scale(.97)}
+
+/* התקדמות על הכפתור עצמו */
+.sp-busy{position:relative!important;overflow:hidden!important;pointer-events:none}
+.sp-busy::before{content:'';position:absolute;top:0;bottom:0;right:0;width:calc(var(--sp-p,0) * 1%);background:rgba(232,0,29,.16);transition:width .2s linear;z-index:0}
+.btn-primary.sp-busy::before,.adm-hero-btn.sp-busy::before,.sp-nav-fab.sp-busy::before{background:rgba(255,255,255,.30)}
+.sp-busy>*{position:relative;z-index:1}
+.sp-pct{font-weight:800;font-variant-numeric:tabular-nums;margin-inline-start:8px;font-size:.95em}
+.sp-done{box-shadow:0 0 0 2px #0a7a4b!important}
+.sp-fail{box-shadow:0 0 0 2px #b3261e!important}
+
+/* ── טפסים ── */
+.admin-page.sp-glass input:not([type=checkbox]):not([type=radio]):not([type=file]):not([type=range]):not([type=color]),
+.admin-page.sp-glass select,.admin-page.sp-glass textarea{
+  background:rgba(255,255,255,.82)!important;color:#12141a!important;border:1px solid rgba(18,20,26,.16)!important;border-radius:14px!important;min-height:46px;font-family:'Rubik',var(--font)}
+.admin-page.sp-glass input::placeholder,.admin-page.sp-glass textarea::placeholder{color:#6b7280}
+.admin-page.sp-glass input:focus,.admin-page.sp-glass select:focus,.admin-page.sp-glass textarea:focus{border-color:#c70018!important;box-shadow:0 0 0 3px rgba(232,0,29,.14)}
+.admin-page.sp-glass .hp-tabs{border-radius:99px;padding:5px}
+.admin-page.sp-glass .hp-tab{color:#12141a;border-radius:99px;min-height:42px}
+.admin-page.sp-glass .hp-tab.active{background:#12141a!important;color:#fff!important}
+.sp-upbar{margin-top:8px;display:flex;align-items:center;gap:10px;font-size:13px;color:#12141a}
+.sp-upbar .sp-liq{flex:1}
+
+/* ── לשוניות: גלולה צפה בדסקטופ ── */
+.admin-page.sp-glass .admin-tabs{display:flex;gap:2px;padding:5px;border-radius:99px;width:fit-content;max-width:100%;margin:0 auto 22px;border:1px solid var(--sp-glass-line);
+  background:var(--sp-glass-bg);box-shadow:var(--sp-glass-shadow);-webkit-backdrop-filter:blur(26px) saturate(170%);backdrop-filter:blur(26px) saturate(170%);position:sticky;top:10px;z-index:30;overflow-x:auto}
+.admin-page.sp-glass .admin-tab{border:0;background:transparent;color:#12141a;border-radius:99px;min-height:44px;padding:0 16px;font-weight:500;font-size:14px;display:inline-flex;align-items:center;gap:8px;white-space:nowrap}
+.admin-page.sp-glass .admin-tab.active{background:#12141a;color:#fff}
+
+/* אייקונים שמחליפים אימוג'ים */
+.sp-ic{display:inline-flex;vertical-align:-.18em;width:1.15em;height:1.15em;margin-inline:.1em .25em}
+.sp-ic svg{width:100%;height:100%;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.sp-chip-il{display:inline-block;font-size:.72em;font-weight:800;border:1.5px solid currentColor;border-radius:5px;padding:0 .3em;margin-inline-end:.35em;vertical-align:.08em;letter-spacing:.03em}
+
+/* ── האי החי: כל מה שרץ עכשיו ── */
+.sp-island{position:sticky;top:8px;z-index:40;background:#12141a;color:#fff;border-radius:28px;padding:14px 16px;margin:0 0 16px;box-shadow:0 16px 40px rgba(0,0,0,.26);display:none;flex-direction:column;gap:12px}
+.sp-island.on{display:flex}
+.sp-op{display:flex;flex-direction:column;gap:7px}
+.sp-op-top{display:flex;align-items:center;gap:10px}
+.sp-op-ico{width:36px;height:36px;border-radius:50%;background:#e8001d;color:#fff;display:flex;align-items:center;justify-content:center;flex:none}
+.sp-op-ico svg{width:19px;height:19px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.sp-op-txt{flex:1;min-width:0;display:flex;flex-direction:column}
+.sp-op-lab{font-size:14.5px;font-weight:700;line-height:1.3}
+.sp-op-sub{font-size:12.5px;color:#c3c8d4}
+.sp-op-pct{font-size:22px;font-weight:800;font-variant-numeric:tabular-nums;flex:none}
+.sp-liq{height:9px;border-radius:99px;background:rgba(255,255,255,.18);overflow:hidden}
+.sp-upbar .sp-liq{background:rgba(18,20,26,.12)}
+.sp-liq i{display:block;height:100%;width:0;border-radius:99px;background:#ff2d46;transition:width .2s linear;margin-inline-start:0}
+.sp-op.ok .sp-liq i{background:#3ddc97}.sp-op.fail .sp-liq i{background:#ffb020}
+.sp-island-more{font-size:12.5px;color:#c3c8d4}
+
+/* ── ניווט תחתון במובייל ── */
+.sp-nav{display:none}
+@media (max-width:760px){
+  .admin-page.sp-glass .admin-tabs{display:none}
+  .sp-nav{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));align-items:center;justify-items:center;position:fixed;z-index:900;
+    left:12px;right:12px;bottom:calc(12px + env(safe-area-inset-bottom,0px));height:68px;border-radius:34px;padding:0 4px;
+    background:rgba(255,255,255,.72);border:1px solid rgba(255,255,255,.95);box-shadow:inset 0 1px 0 rgba(255,255,255,.9),0 14px 40px rgba(24,32,60,.18);
+    -webkit-backdrop-filter:blur(26px) saturate(170%);backdrop-filter:blur(26px) saturate(170%)}
+  .sp-nav button{border:0;background:transparent;color:#4d5464;width:100%;min-height:52px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;font-size:11px;font-weight:500;white-space:nowrap;cursor:pointer}
+  .sp-nav button svg{width:23px;height:23px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+  .sp-nav button.on{color:#c70018}
+  .sp-nav button.sp-nav-fab{width:58px;height:58px;min-height:58px;border-radius:50%;background:#e8001d;color:#fff;margin-top:-24px;box-shadow:0 10px 26px rgba(232,0,29,.42)}
+  .sp-nav button.sp-nav-fab svg{width:27px;height:27px}
+  .admin-page.sp-glass .adm-gauge-card{padding:18px}
+  .admin-page.sp-glass .form-block{padding:16px;border-radius:22px}
+}
+
+/* ── הפאנל הצף ── */
+.sp-sheet{position:fixed;inset:0;z-index:9000;display:none;align-items:center;justify-content:center;background:rgba(18,20,26,.30);-webkit-backdrop-filter:blur(5px);backdrop-filter:blur(5px);font-family:'Rubik',var(--font);direction:rtl}
+.sp-sheet.on{display:flex}
+.sp-sheet-card{width:min(600px,calc(100% - 24px));max-height:min(82vh,760px);overflow:auto;border-radius:30px;padding:20px;color:#12141a;
+  background:rgba(255,255,255,.80);border:1px solid rgba(255,255,255,.95);
+  box-shadow:inset 0 1px 0 #fff,0 0 0 1px rgba(232,0,29,.10),0 0 60px rgba(232,0,29,.22),0 24px 70px rgba(20,30,60,.26);
+  -webkit-backdrop-filter:blur(34px) saturate(180%);backdrop-filter:blur(34px) saturate(180%)}
+.sp-sheet-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
+.sp-sheet-head h2{margin:0;font-size:18px;font-weight:800;color:#12141a}
+.sp-x{min-width:44px;min-height:44px;border-radius:50%;border:1px solid rgba(18,20,26,.14);background:rgba(255,255,255,.7);color:#12141a;display:inline-flex;align-items:center;justify-content:center;cursor:pointer}
+.sp-x svg,.sp-tile svg,.sp-head-btn svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.sp-tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px;margin-bottom:16px}
+.sp-tile{min-height:76px;border-radius:20px;border:1px solid rgba(18,20,26,.12);background:rgba(255,255,255,.75);color:#12141a;display:flex;flex-direction:column;align-items:flex-start;justify-content:space-between;gap:8px;padding:12px;font-size:13.5px;font-weight:500;text-align:start;cursor:pointer}
+.sp-tile.danger{color:#b3261e}
+.sp-sec{font-size:13px;font-weight:700;color:#4d5464;margin:14px 0 8px}
+.sp-kv{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px}
+.sp-kv div{border-radius:18px;background:rgba(18,20,26,.05);padding:12px;display:flex;flex-direction:column;gap:2px}
+.sp-kv b{font-size:24px;font-weight:800;font-variant-numeric:tabular-nums;line-height:1.1}
+.sp-kv span{font-size:12.5px;color:#4d5464}
+.sp-card-in{border-radius:18px;background:rgba(18,20,26,.05);padding:12px 12px 10px}
+.sp-spark{display:block;width:100%;height:64px}
+.sp-spark-cap{display:flex;justify-content:space-between;font-size:11.5px;color:#4d5464;margin-top:4px}
+.sp-trend{font-size:13px;margin-top:8px;color:#12141a}
+.sp-trend.up{color:#0a7a4b}.sp-trend.down{color:#8a5200}
+.sp-cats{display:flex;flex-direction:column;gap:8px}
+.sp-cat{display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:center;gap:10px;font-size:13px}
+.sp-cat-n{min-width:74px}
+.sp-cat-t{height:9px;border-radius:99px;background:rgba(18,20,26,.08);overflow:hidden}
+.sp-cat-t i{display:block;height:100%;border-radius:99px;background:#e8001d}
+.sp-cat b{font-variant-numeric:tabular-nums;font-weight:800}
+.sp-list{display:flex;flex-direction:column;gap:6px;font-size:13px}
+.sp-list div{display:flex;align-items:center;gap:8px;padding:9px 12px;border-radius:14px;background:rgba(18,20,26,.05)}
+.sp-list small{color:#4d5464;margin-inline-start:auto;text-align:end;max-width:55%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+@media (max-width:760px){
+  .sp-sheet{align-items:flex-end}
+  .sp-sheet-card{width:100%;border-radius:30px 30px 0 0;max-height:86vh;padding-bottom:calc(22px + env(safe-area-inset-bottom,0px))}
+}
+
+/* ── חיפוש פעולה ── */
+.sp-pal{position:fixed;inset:0;z-index:9100;display:none;align-items:flex-start;justify-content:center;padding-top:12vh;background:rgba(18,20,26,.30);-webkit-backdrop-filter:blur(5px);backdrop-filter:blur(5px);font-family:'Rubik',var(--font);direction:rtl}
+.sp-pal.on{display:flex}
+.sp-pal-card{width:min(560px,calc(100% - 24px));border-radius:26px;padding:12px;background:rgba(255,255,255,.88);border:1px solid #fff;box-shadow:0 0 60px rgba(232,0,29,.20),0 24px 70px rgba(20,30,60,.26);-webkit-backdrop-filter:blur(34px);backdrop-filter:blur(34px)}
+.sp-pal input{width:100%;box-sizing:border-box;min-height:50px;border-radius:16px;border:1px solid rgba(18,20,26,.16);background:#fff;color:#12141a;font-size:16px;padding:0 16px;font-family:inherit}
+.sp-pal-list{max-height:46vh;overflow:auto;margin-top:8px;display:flex;flex-direction:column;gap:4px}
+.sp-pal-list button{min-height:46px;border:0;border-radius:14px;background:transparent;color:#12141a;text-align:start;padding:0 14px;font-size:14.5px;cursor:pointer}
+.sp-pal-list button.cur,.sp-pal-list button:hover{background:rgba(232,0,29,.10);color:#c70018}
+
+/* ── מסך כניסה ── */
+.sp-splash{position:fixed;inset:0;z-index:10000;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;direction:rtl;font-family:'Rubik',var(--font);
+  background:radial-gradient(520px 520px at 80% 10%,rgba(232,0,29,.18),transparent 70%),radial-gradient(620px 620px at 15% 90%,rgba(70,120,255,.20),transparent 70%),#e9ecf2;transition:opacity .45s ease,visibility .45s}
+.sp-splash.out{opacity:0;visibility:hidden}
+.sp-splash-mark{position:relative;width:200px;height:200px;display:flex;align-items:center;justify-content:center}
+.sp-splash-ring{position:absolute;inset:0;width:200px;height:200px;transform:rotate(-90deg)}
+.sp-splash .trk{fill:none;stroke:rgba(18,20,26,.10);stroke-width:5}
+.sp-splash .arc{fill:none;stroke:#e8001d;stroke-width:5;stroke-linecap:round;stroke-dasharray:578;stroke-dashoffset:578}
+.sp-splash-logo{position:relative;width:150px;height:150px;border-radius:50%;box-shadow:0 18px 50px rgba(24,32,60,.22);opacity:0;transform:scale(.6) rotate(-25deg)}
+.sp-splash-flare{position:absolute;inset:25px;border-radius:50%;pointer-events:none;opacity:0;background:linear-gradient(115deg,transparent 35%,rgba(255,255,255,.85) 50%,transparent 65%);background-size:250% 100%;background-position:120% 0}
+.sp-splash-word{display:flex;direction:rtl;font-size:44px;font-weight:800;color:#12141a;letter-spacing:-.01em;line-height:1}
+.sp-splash-word span{display:inline-block;opacity:0;transform:translateY(18px)}
+@media (prefers-reduced-motion:reduce){.sp-splash-logo,.sp-splash-word span,.sp-splash-sub{opacity:1!important;transform:none!important}.sp-splash .arc{stroke-dashoffset:0}}
+.sp-splash-word span.v{color:#e8001d}
+.sp-splash-sub{font-size:14px;color:#4d5464;opacity:0}
+@keyframes spArc{to{stroke-dashoffset:0}}
+@keyframes spLogoIn{0%{opacity:0;transform:scale(.6) rotate(-25deg)}60%{opacity:1;transform:scale(1.06) rotate(4deg)}100%{opacity:1;transform:none}}
+@keyframes spFlare{0%{opacity:1;background-position:120% 0}100%{opacity:1;background-position:-120% 0}}
+@keyframes spRise{to{opacity:1;transform:none}}
+@keyframes spGlow{0%,100%{filter:drop-shadow(0 0 0 rgba(232,0,29,0))}50%{filter:drop-shadow(0 0 18px rgba(232,0,29,.55))}}
+@keyframes spSpin{to{transform:rotate(360deg)}}
+@keyframes spShine{0%{background-position:-120px 0}100%{background-position:260px 0}}
+@keyframes spSheetIn{from{opacity:0;transform:translateY(26px) scale(.98)}to{opacity:1;transform:none}}
+@keyframes spPulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.45;transform:scale(.8)}}
+.sp-splash.still .arc{stroke-dashoffset:0}
+.sp-splash.still .sp-splash-logo{opacity:1;transform:none}
+.sp-splash.still .sp-splash-word span,.sp-splash.still .sp-splash-sub{opacity:1;transform:none}
+@media (prefers-reduced-motion:no-preference){
+  .sp-splash.go .arc{animation:spArc 1.15s cubic-bezier(.2,.8,.2,1) .1s forwards}
+  .sp-splash.go .sp-splash-logo{animation:spLogoIn .8s cubic-bezier(.2,.8,.2,1) .05s forwards,spGlow 1.4s ease-in-out .7s}
+  .sp-splash.go .sp-splash-flare{animation:spFlare .9s ease-in-out .85s forwards}
+  .sp-splash.go .sp-splash-word span{animation:spRise .5s cubic-bezier(.2,.8,.2,1) forwards;animation-delay:calc(.45s + var(--i) * .06s)}
+  .sp-splash.go .sp-splash-sub{animation:spRise .5s ease 1.05s forwards}
+  .sp-op.run .sp-liq i,.sp-upbar .sp-liq i{background-image:linear-gradient(100deg,transparent 0,rgba(255,255,255,.5) 40px,transparent 80px);background-repeat:no-repeat;animation:spShine 1.6s linear infinite}
+  .sp-op.run .sp-spin{animation:spSpin 1.5s linear infinite;transform-origin:50% 50%}
+  .sp-sheet.on .sp-sheet-card,.sp-pal.on .sp-pal-card{animation:spSheetIn .28s cubic-bezier(.2,.8,.2,1)}
+  .sp-dot.live{animation:spPulse 1.8s ease-in-out infinite}
+}
+
+/* ═══ 15.11.2026 (ג): בדיקה לפני פרסום, משבצות תזמון, בריאות, תור, התראות ═══ */
+.admin-page.sp-glass .sp-seo{margin:4px 0 14px;border-radius:22px;background:rgba(255,255,255,.72);border:1px solid rgba(255,255,255,.95);box-shadow:inset 0 1px 0 rgba(255,255,255,.9),0 10px 28px rgba(24,32,60,.09);overflow:hidden}
+.sp-seo-head{all:unset;box-sizing:border-box;width:100%;display:flex;align-items:center;gap:12px;padding:12px 14px;cursor:pointer;position:relative}
+.sp-seo-head:focus-visible{outline:2px solid #1d4ed8;outline-offset:-2px;border-radius:22px}
+.sp-ring{width:44px;height:44px;flex:none;transform:rotate(-90deg)}
+.sp-ring circle{fill:none;stroke:rgba(18,20,26,.1);stroke-width:4.5}
+.sp-ring circle.v{stroke:#ffb020;stroke-linecap:round;transition:stroke-dasharray .45s cubic-bezier(.2,.8,.2,1)}
+.sp-seo.all-ok .sp-ring circle.v{stroke:#0fa968}.sp-seo.has-bad .sp-ring circle.v{stroke:#e8001d}
+.sp-seo-n{position:absolute;inset-inline-start:14px;width:44px;text-align:center;font-size:12px;font-weight:800;font-variant-numeric:tabular-nums;color:#12141a}
+.sp-seo-t{display:flex;flex-direction:column;gap:1px;min-width:0;flex:1}
+.sp-seo-t b{font-size:14.5px;color:#12141a}.sp-seo-t small{font-size:12.5px;color:#4d5464}
+.sp-seo-more{width:20px;height:20px;fill:none;stroke:#4d5464;stroke-width:2;transition:transform .25s}
+.sp-seo.open .sp-seo-more{transform:rotate(90deg)}
+.sp-seo-list{list-style:none;margin:0;padding:0 14px 12px;display:none;flex-direction:column;gap:6px}
+.sp-seo.open .sp-seo-list{display:flex}
+.sp-seo-list li{display:flex;align-items:flex-start;gap:8px;font-size:13px;color:#12141a;line-height:1.45;padding:7px 10px;border-radius:12px;background:rgba(18,20,26,.04)}
+.sp-seo-list li svg{width:16px;height:16px;flex:none;margin-top:1px;fill:none;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
+.sp-seo-list li.ok svg{stroke:#0a7a4b}.sp-seo-list li.warn svg{stroke:#8a5200}.sp-seo-list li.bad svg{stroke:#b3261e}
+.sp-seo-list li.bad{background:rgba(232,0,29,.07)}
+
+.admin-page.sp-glass .sp-chips{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin-top:9px}
+.sp-chips-lab{display:inline-flex;align-items:center;gap:5px;font-size:12.5px;color:#4d5464}
+.sp-chips-lab svg{width:15px;height:15px;fill:none;stroke:currentColor;stroke-width:2}
+.admin-page.sp-glass .sp-chips button{all:unset;box-sizing:border-box;cursor:pointer;min-height:34px;padding:0 13px;display:inline-flex;align-items:center;border-radius:99px;font-size:13px;font-weight:600;color:#12141a;background:rgba(255,255,255,.8);border:1px solid rgba(18,20,26,.14);transition:background .15s,transform .15s;white-space:nowrap}
+.admin-page.sp-glass .sp-chips button:hover{background:#fff}
+.admin-page.sp-glass .sp-chips button:active{transform:scale(.96)}
+.admin-page.sp-glass .sp-chips button.on{background:#12141a;color:#fff;border-color:#12141a}
+.admin-page.sp-glass .sp-chips button:focus-visible{outline:2px solid #1d4ed8;outline-offset:2px}
+.sp-chips-q{flex-basis:100%;font-size:12px;color:#4d5464}
+
+.sp-health,.sp-queue,.sp-push{display:flex;flex-direction:column;gap:6px}
+.sp-hrow{display:flex;align-items:flex-start;gap:10px;padding:10px 12px;border-radius:14px;background:rgba(18,20,26,.05)}
+.sp-hrow>i{width:10px;height:10px;border-radius:50%;flex:none;margin-top:5px;background:#9aa1ad}
+.sp-hrow.ok>i{background:#0fa968;box-shadow:0 0 0 4px rgba(15,169,104,.15)}
+.sp-hrow.warn>i{background:#ffb020;box-shadow:0 0 0 4px rgba(255,176,32,.18)}
+.sp-hrow.bad>i{background:#e8001d;box-shadow:0 0 0 4px rgba(232,0,29,.15)}
+.sp-hrow.run>i{background:#1d4ed8;animation:spPulse 1.2s ease-in-out infinite}
+.sp-hrow.bad{background:rgba(232,0,29,.06)}
+.sp-hrow>span{display:flex;flex-direction:column;gap:1px;min-width:0}
+.sp-hrow b{font-size:13.5px;color:#12141a}
+.sp-hrow small{font-size:12.5px;color:#4d5464;line-height:1.45}
+.sp-hrow em{font-style:normal;font-size:12px;color:#8a1c16;margin-top:3px;line-height:1.4;overflow-wrap:anywhere}
+@keyframes spPulse{50%{opacity:.35}}
+.sp-hfoot{display:flex;align-items:center;justify-content:space-between;gap:8px;font-size:12px;color:#4d5464;padding:2px 2px 0}
+.sp-act{all:unset;box-sizing:border-box;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:6px;min-height:38px;padding:0 14px;border-radius:99px;font-size:13px;font-weight:600;color:#12141a;background:rgba(255,255,255,.85);border:1px solid rgba(18,20,26,.14);white-space:nowrap;position:relative;overflow:hidden}
+.sp-act svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.sp-act.primary{background:#c70018;color:#fff;border-color:#c70018}
+.sp-act[disabled]{opacity:.45;cursor:not-allowed}
+.sp-act:focus-visible{outline:2px solid #1d4ed8;outline-offset:2px}
+.sp-acts{display:flex;flex-wrap:wrap;gap:8px;margin-top:2px}
+.sp-qrow{display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:10px;padding:9px 10px 9px 12px;border-radius:14px;background:rgba(18,20,26,.05)}
+.sp-qrow.late{background:rgba(255,176,32,.14)}
+.sp-qwhen{display:flex;flex-direction:column;font-size:12.5px;font-weight:700;color:#12141a;white-space:nowrap;font-variant-numeric:tabular-nums}
+.sp-qwhen small{font-weight:600;color:#8a5200;font-size:11.5px}
+.sp-qt{font-size:13px;color:#12141a;overflow:hidden;text-overflow:ellipsis;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;line-height:1.4}
+.sp-prefs{display:flex;flex-direction:column;gap:2px;padding:4px 2px}
+.sp-prefs label{display:flex;align-items:center;gap:10px;min-height:40px;font-size:13.5px;color:#12141a;cursor:pointer}
+.sp-prefs input{width:20px;height:20px;accent-color:#c70018;flex:none;margin:0}
+@media (max-width:420px){
+  .sp-qrow{grid-template-columns:auto 1fr}
+  .sp-qrow .sp-act{grid-column:1/-1;justify-self:start}
+  .sp-acts .sp-act{flex:1 1 100%}
+}
+@media (prefers-reduced-motion:reduce){.sp-ring circle.v{transition:none}.sp-hrow.run>i{animation:none}}
+/* שורת כפתורי הטופס: במובייל נשברת לשתי שורות במקום להיחתך בצד */
+.admin-page.sp-glass div:has(> button[onclick^="publishArticle"]){flex-wrap:wrap}
+@media (max-width:760px){
+  .admin-page.sp-glass div:has(> button[onclick^="publishArticle"])>button{flex:1 1 calc(50% - 6px);white-space:nowrap;justify-content:center}
+  .admin-page.sp-glass div:has(> button[onclick^="publishArticle"])>button[onclick^="publishArticle"]{flex-basis:100%;order:-1;min-height:52px;font-size:16px}
+}
+/* בטופס יש שני כפתורי "תצוגה מקדימה" זהים (אותה פעולה) — מוצג אחד */
+.admin-page.sp-glass div:has(> button[onclick^="publishArticle"])>button[onclick^="previewArticle"]:has(+ button[onclick^="previewArticle"]){display:none}

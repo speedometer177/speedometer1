@@ -111,13 +111,16 @@
       '.news-toast{pointer-events:auto;background:#12161f;color:#fff;border:1px solid #2a3140;border-right:4px solid #ff9d2e;border-radius:12px;padding:12px 14px;font-size:0.84rem;line-height:1.5;box-shadow:0 10px 30px rgba(0,0,0,.45);direction:rtl;text-align:right;display:flex;gap:10px;align-items:flex-start;cursor:pointer;animation:newsToastIn .22s ease-out}' +
       '.news-toast.ok{border-right-color:#2ecc71}.news-toast.err{border-right-color:#e8001d}' +
       '.news-toast-body{flex:1;min-width:0;word-break:break-word}' +
-      '.news-toast-act{background:#ff9d2e;color:#111;border:0;border-radius:8px;padding:6px 10px;font-size:0.76rem;font-weight:800;font-family:inherit;cursor:pointer;white-space:nowrap}' +
+      '.news-toast-act{background:var(--adm-accent-hi,#ff9d2e);color:#111;border:0;border-radius:8px;padding:6px 10px;font-size:0.76rem;font-weight:800;font-family:inherit;cursor:pointer;white-space:nowrap}' +
       '@keyframes newsToastIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}' +
       '.news-spin{display:inline-block;width:11px;height:11px;border:2px solid currentColor;border-top-color:transparent;border-radius:50%;animation:newsSpin .8s linear infinite;vertical-align:-1px;margin-inline-end:5px}' +
       '@keyframes newsSpin{to{transform:rotate(360deg)}}' +
-      '.news-writing-badge{background:rgba(255,157,46,.16);color:#ff9d2e;font-size:0.62rem;font-weight:800;padding:2px 9px;border-radius:10px;white-space:nowrap}' +
-      '.news-draft-note{width:100%;font-size:0.76rem;line-height:1.5;margin-top:2px;color:#ff6b6b}' +
-      '.news-src-badge{display:inline-flex;align-items:center;gap:4px;background:rgba(122,184,255,.14);color:#7ab8ff;border:1px solid rgba(122,184,255,.35);font-size:0.68rem;font-weight:800;padding:3px 9px;border-radius:12px;cursor:pointer;user-select:none}' +
+      '.news-writing-badge{background:rgba(255,157,46,.16);color:var(--adm-accent,#ff9d2e);font-size:0.62rem;font-weight:800;padding:2px 9px;border-radius:10px;white-space:nowrap}' +
+      '.news-draft-note{width:100%;font-size:0.76rem;line-height:1.5;margin-top:2px;color:var(--adm-bad,#ff6b6b)}' +
+      '.news-src-badge{display:inline-flex;align-items:center;gap:4px;background:rgba(122,184,255,.14);color:var(--adm-info,#7ab8ff);border:1px solid rgba(122,184,255,.35);font-size:0.68rem;font-weight:800;padding:3px 9px;border-radius:12px;cursor:pointer;user-select:none}' +
+      '.news-thumb{flex:none;width:76px;height:57px;border-radius:12px;overflow:hidden;background:var(--adm-surface-2,rgba(255,255,255,.06));display:flex;align-items:center;justify-content:center;font-weight:800;font-size:20px;color:var(--adm-muted,#8993a3)}' +
+      '.news-thumb img{width:100%;height:100%;object-fit:cover;display:block}' +
+      '@media (min-width:761px){.news-thumb{width:96px;height:72px}}' +
       '.news-src-list{display:none;width:100%;margin-top:6px;padding:8px 10px;border-radius:8px;background:var(--adm-surface-2,rgba(255,255,255,.04));font-size:0.76rem;line-height:1.7}' +
       '.news-src-list a{color:var(--adm-accent,#ff9d2e);text-decoration:none}' +
       '#news-auto-status{font-size:0.76rem;color:var(--adm-muted);margin-top:12px;line-height:1.6}' +
@@ -135,7 +138,7 @@
       '.news-col-count{font-size:0.72rem;font-weight:700;color:var(--adm-muted);font-variant-numeric:tabular-nums}' +
       '.news-col .adm-row-bottom{flex-wrap:wrap;gap:8px}' +
       '.news-col .tbl-actions{flex-wrap:wrap}' +
-      '#news-new-pill{display:none;width:100%;margin-bottom:12px;padding:10px;border-radius:10px;border:1px solid #2ecc71;background:rgba(46,204,113,.12);color:#2ecc71;font-weight:800;font-size:0.84rem;font-family:inherit;cursor:pointer}';
+      '#news-new-pill{display:none;width:100%;margin-bottom:12px;padding:10px;border-radius:10px;border:1px solid #2ecc71;background:rgba(46,204,113,.12);color:var(--adm-good,#2ecc71);font-weight:800;font-size:0.84rem;font-family:inherit;cursor:pointer}';
     document.head.appendChild(st);
 
     const refreshBtn = document.getElementById('news-refresh-btn');
@@ -361,10 +364,10 @@
 
     let html = '<div style="font-weight:800;">✅ הרענון הסתיים' + (parts.length ? ' · ' + escapeAttr(parts.join(' · ')) : '') + '</div>';
     if (json.saveErrors && json.saveErrors.length) {
-      html += '<div style="color:#ff6b6b;margin-top:4px;">⚠️ השמירה נכשלה: ' + escapeAttr(json.saveErrors.join(' | ')) + '</div>';
+      html += '<div style="color:var(--adm-bad,#ff6b6b);margin-top:4px;">⚠️ השמירה נכשלה: ' + escapeAttr(json.saveErrors.join(' | ')) + '</div>';
     }
     if (json.creditDepleted && json.error) {
-      html += '<div style="color:#ff6b6b;margin-top:4px;">⚠️ ' + escapeAttr(json.error) + '</div>';
+      html += '<div style="color:var(--adm-bad,#ff6b6b);margin-top:4px;">⚠️ ' + escapeAttr(json.error) + '</div>';
     }
     if (results.length) {
       html += '<details><summary>פירוט לפי מקור · ' + okCount + ' תקינים' + (failCount ? ' · ' + failCount + ' נכשלו' : '') + '</summary>' +
@@ -467,7 +470,7 @@
   // תתפוס מיד לאיזה שוק הכתבה שייכת, עוד לפני קריאת הכותרת עצמה.
   function regionGlowPill(region) {
     if (region === 'il') {
-      return '<span style="display:inline-flex;align-items:center;gap:4px;background:#0a1a4d;color:#7ab8ff;font-size:0.68rem;font-weight:800;padding:3px 10px;border-radius:12px;border:1px solid #2a5fd4;box-shadow:0 0 8px rgba(42,95,212,0.6),inset 0 0 6px rgba(122,184,255,0.15);letter-spacing:0.03em;">🇮🇱 מקומי</span>';
+      return '<span style="display:inline-flex;align-items:center;gap:4px;background:#0a1a4d;color:var(--adm-info,#7ab8ff);font-size:0.68rem;font-weight:800;padding:3px 10px;border-radius:12px;border:1px solid #2a5fd4;box-shadow:0 0 8px rgba(42,95,212,0.6),inset 0 0 6px rgba(122,184,255,0.15);letter-spacing:0.03em;">🇮🇱 מקומי</span>';
     }
     return '<span style="display:inline-flex;align-items:center;gap:4px;background:#fdfdfd;color:#333;font-size:0.68rem;font-weight:800;padding:3px 10px;border-radius:12px;border:1px solid #fff;box-shadow:0 0 10px rgba(255,255,255,0.85),0 0 3px rgba(255,255,255,0.9);letter-spacing:0.03em;">🌍 עולמי</span>';
   }
@@ -491,11 +494,13 @@
 
   const COL_LABELS = { il: '🇮🇱 ישראל', world: '🌍 עולם' };
 
+  // image_url (15.11.2026): עמודה חדשה. אם עוד לא הורץ ה-SQL שמוסיף אותה, מוותרים רק עליה.
+  let _imgCol = true;
   function buildHeadlinesQuery(client, v2, region) {
     // גרסה 2: רק העמודות שמוצגות (בלי התקציר), ורק כותרות ראשיות שלא הוסתרו
     // ושכבר תורגמו ונותחו — כותרת עולמית לא מופיעה באנגלית בשניות שבין
     // הכניסה שלה לתרגום.
-    let query = client.from('news_headlines').select(v2 ? HEADLINE_COLS : '*');
+    let query = client.from('news_headlines').select(v2 ? HEADLINE_COLS + (_imgCol ? ',image_url' : '') : '*');
     if (v2) query = query.is('hidden_reason', null).is('duplicate_of', null).not('ai_checked_at', 'is', null);
     // מיון לפי המצב הנבחר: "הכי חם" (importance_score קודם, ואז תאריך
     // כשובר שוויון) או "הכי חדש" (תאריך פרסום קודם). כתבות בלי ציון/תאריך
@@ -519,6 +524,11 @@
 
   async function fetchRegionHeadlines(client, region) {
     let res = await buildHeadlinesQuery(client, _v2, region);
+    if (res.error && _v2 && _imgCol && isMissingColumn(res.error) && /image_url/.test(res.error.message || '')) {
+      console.warn('[news.js] עמודת image_url חסרה — מציגים כותרות בלי תמונה.');
+      _imgCol = false;
+      res = await buildHeadlinesQuery(client, _v2, region);
+    }
     if (res.error && _v2 && isMissingColumn(res.error)) {
       console.warn('[news.js] מבנה הנתונים של גרסה 2 חסר — עובדים במצב הישן.');
       _v2 = false;
@@ -638,6 +648,17 @@
 
   // בונה שורת HTML לכותרת אחת. highlighted=true מוסיף מסגרת בולטת — משמש
   // ללוח ה"מומלצים" כדי להבדיל אותו ויזואלית מהרשימה הרגילה למטה.
+  // תמונה מכתבת המקור (15.11.2026). מוגשת דרך wsrv.nl בגודל קטן, כמו שאר תמונות האתר.
+  // אין תמונה, או שהיא לא נטענת: מוצג ריבוע עם האות הראשונה של המקור, כדי שהשורות יישארו מיושרות.
+  function headlineThumb(h) {
+    const src = String(h.image_url || '');
+    const initial = escapeAttr(String(h.source_name || '·').trim().charAt(0) || '·');
+    if (!/^https?:\/\//i.test(src)) return '<span class="news-thumb news-thumb-ph" aria-hidden="true">' + initial + '</span>';
+    const prox = 'https://wsrv.nl/?url=' + encodeURIComponent(src) + '&w=240&h=180&fit=cover&a=attention&output=webp&q=78';
+    return '<span class="news-thumb" data-ph="' + initial + '"><img src="' + escapeAttr(prox) + '" alt="" loading="lazy" decoding="async" referrerpolicy="no-referrer" ' +
+      'onerror="var s=this.parentNode;s.classList.add(\'news-thumb-ph\');s.textContent=s.getAttribute(\'data-ph\');"></span>';
+  }
+
   function renderHeadlineRow(h, highlighted) {
     const regionPill = regionGlowPill(h.region);
     const badge = importanceBadge(h.importance_score, h.importance_reason);
@@ -670,7 +691,7 @@
 
     const rowStyle = highlighted ? ' style="border:1.5px solid var(--adm-accent,#ff9d2e);border-radius:8px;margin-bottom:8px;"' : '';
     return '<div class="adm-row" data-hid="' + h.id + '" data-hl="' + (highlighted ? '1' : '0') + '"' + rowStyle + '>' +
-      '<div class="adm-row-top">' +
+      '<div class="adm-row-top">' + headlineThumb(h) +
         '<div class="adm-row-info">' +
           '<div class="adm-row-title">' + escapeAttr(h.title) + ' ' + statusBadge + '</div>' +
           '<div class="adm-row-meta">' + regionPill + badge + srcBadge + '<span>' + escapeAttr(h.source_name) + '</span>' + timeLabel + '</div>' +
@@ -996,11 +1017,11 @@
     if (!resultEl) return;
     const state = verifyState(draftId);
     if (state === 'checking') {
-      resultEl.innerHTML = '<div style="font-size:0.78rem;color:#ff9d2e;margin-top:6px;font-weight:600;"><span class="news-spin"></span>נבדקת עכשיו: ניסוח, מבנה ועובדות מול כתבת המקור. זה לוקח עד כדקה, והתוצאה תופיע כאן לבד.</div>';
+      resultEl.innerHTML = '<div style="font-size:0.78rem;color:var(--adm-accent,#ff9d2e);margin-top:6px;font-weight:600;"><span class="news-spin"></span>נבדקת עכשיו: ניסוח, מבנה ועובדות מול כתבת המקור. זה לוקח עד כדקה, והתוצאה תופיע כאן לבד.</div>';
       return;
     }
     if (state === 'stuck') {
-      resultEl.innerHTML = '<div style="font-size:0.78rem;color:#e74c3c;margin-top:6px;font-weight:600;">⚠️ הבדיקה נקטעה באמצע. לחץ "🔍 בדוק תקינות" כדי להריץ אותה שוב.</div>';
+      resultEl.innerHTML = '<div style="font-size:0.78rem;color:var(--adm-bad,#e74c3c);margin-top:6px;font-weight:600;">⚠️ הבדיקה נקטעה באמצע. לחץ "🔍 בדוק תקינות" כדי להריץ אותה שוב.</div>';
       return;
     }
     const result = draftVerifications[draftId];
@@ -1009,7 +1030,7 @@
       return;
     }
     if (result.ok) {
-      let html = '<div style="font-size:0.78rem;color:#2ecc71;margin-top:6px;font-weight:600;">✓ עברה בדיקה — לא נמצאו בעיות אמינות מול המקור' +
+      let html = '<div style="font-size:0.78rem;color:var(--adm-good,#2ecc71);margin-top:6px;font-weight:600;">✓ עברה בדיקה — לא נמצאו בעיות אמינות מול המקור' +
         '<span style="font-weight:400;color:var(--adm-muted);">' + escapeAttr(verifiedAgo(result)) + '</span></div>';
       if (result.warnings && result.warnings.length) {
         html += '<div style="font-size:0.74rem;color:var(--adm-muted);margin-top:3px;">אזהרות סגנון (לא חוסמות פרסום): ' +
@@ -1020,7 +1041,7 @@
       const issues = (result.blockingIssues || []).map(function (i) {
         return '<li>' + escapeAttr(i.category) + ': ' + escapeAttr(i.text) + '</li>';
       }).join('');
-      let html = '<div style="font-size:0.78rem;color:#e74c3c;margin-top:6px;font-weight:600;">✕ נמצאו בעיות — פרסום חסום עד אישור מפורש' +
+      let html = '<div style="font-size:0.78rem;color:var(--adm-bad,#e74c3c);margin-top:6px;font-weight:600;">✕ נמצאו בעיות — פרסום חסום עד אישור מפורש' +
         '<span style="font-weight:400;color:var(--adm-muted);">' + escapeAttr(verifiedAgo(result)) + '</span></div>' +
         '<ul style="font-size:0.74rem;color:var(--adm-muted);margin:4px 0 0;padding-inline-start:16px;">' + issues + '</ul>';
 
