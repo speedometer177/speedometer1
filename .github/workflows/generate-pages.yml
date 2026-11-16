@@ -52,11 +52,21 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add article/* sitemap.xml sitemap-news.xml index.html 404.html
-          # car/{slug}/ נוסף ב-18.9.2026 (רינדור סטטי לעמודי רכב) - הבדיקה ל-[ -d car ]
-          # מונעת "pathspec did not match any files" במקרה הנדיר שבו יצירת הרכבים
-          # נכשלה כולה (למשל הפרעה זמנית בחיבור לסופרבייס) ותיקיית car/ לא נוצרה כלל.
-          if [ -d car ]; then git add car/*; fi
+          echo "BEFORE_SHA=$(git rev-parse HEAD)" >> "$GITHUB_ENV"
+          # תיקון 16.11.2026: "git add article/*" לא רושם מחיקות, ולכן עמודים של כתבות ורכבים
+          # שנמחקו נשארו באתר לתמיד (11 עמודים כאלה נמצאו). "git add -A" רושם גם מחיקות.
+          # [ -d ... ] מגן מפני המקרה שבו התיקייה לא נוצרה כלל (תקלה זמנית מול סופרבייס).
+          git add sitemap.xml sitemap-news.xml index.html 404.html
+          if [ -d article ]; then git add -A article; fi
+          if [ -d car ]; then git add -A car; fi
+          # בלם בטיחות: מחיקה של יותר מ-40 עמודים בריצה אחת היא כמעט בוודאות תקלה
+          # (תשובה חלקית מהמאגר) ולא מחיקה אמיתית. במקרה כזה לא מפרסמים כלום.
+          DELETED=$(git diff --cached --name-only --diff-filter=D | wc -l)
+          if [ "$DELETED" -gt 40 ]; then
+            echo "❌ $DELETED עמודים מסומנים למחיקה בריצה אחת - עוצרים בלי לפרסם."
+            git diff --cached --name-only --diff-filter=D | head -50
+            exit 1
+          fi
           if git diff --cached --quiet; then
             echo "No changes to commit."
             exit 0
@@ -77,8 +87,14 @@ jobs:
             git fetch origin ${{ github.ref_name }}
             git reset --hard origin/${{ github.ref_name }}
             npm run generate
-            git add article/* sitemap.xml sitemap-news.xml index.html 404.html
-            if [ -d car ]; then git add car/*; fi
+            git add sitemap.xml sitemap-news.xml index.html 404.html
+            if [ -d article ]; then git add -A article; fi
+            if [ -d car ]; then git add -A car; fi
+            DELETED=$(git diff --cached --name-only --diff-filter=D | wc -l)
+            if [ "$DELETED" -gt 40 ]; then
+              echo "❌ $DELETED עמודים מסומנים למחיקה בריצה אחת - עוצרים בלי לפרסם."
+              exit 1
+            fi
             if git diff --cached --quiet; then
               echo "✅ Origin already up to date after regeneration — nothing to push."
               exit 0
@@ -91,11 +107,33 @@ jobs:
 
       - name: Notify IndexNow (push instant Google/Bing indexing)
         run: |
-          # שולף את כל ה-URLs מה-sitemap שכן עודכן, ושולח פינג אחד ל-IndexNow —
-          # זה מודיע לבינג (מיידית) ולגוגל (בהדרגה, שותפים בפרוטוקול) שהתוכן
-          # השתנה, במקום לחכות שיגלו לבד בסריקה הבאה. לא דורש חשבון/הרשמה —
-          # המפתח מאומת דרך קובץ ה-txt הציבורי שכבר יושב בשורש האתר.
-          URLS=$(grep -oP '(?<=<loc>)[^<]+' sitemap.xml | python3 -c "import sys, json; print(json.dumps([l.strip() for l in sys.stdin if l.strip()]))")
+          # תיקון 16.11.2026: עד היום נשלחו כל כתובות האתר (מעל 300) בכל ריצה, כל 4 שעות.
+          # שליחה חוזרת של כתובות שלא השתנו גורמת למנועי החיפוש להתעלם מהאות.
+          # עכשיו נשלחות רק כתובות שעודכנו ביומיים האחרונים (לפי lastmod) וכתובות של עמודים שנמחקו.
+          URLS=$(python3 - <<'PYEOF'
+          import re, json, os, subprocess, datetime
+          cut = (datetime.date.today() - datetime.timedelta(days=1)).isoformat()
+          xml = open('sitemap.xml', encoding='utf-8').read()
+          urls = [loc for loc, mod in re.findall(r'<loc>([^<]+)</loc><lastmod>([^<]+)</lastmod>', xml)
+                  if mod[:10] >= cut and ('/article/' in loc or '/car/' in loc)]
+          before = os.environ.get('BEFORE_SHA', '')
+          if before:
+              try:
+                  out = subprocess.run(['git', 'diff', '--name-only', '--diff-filter=D', before, 'HEAD', '--', 'article', 'car'],
+                                       capture_output=True, text=True).stdout
+                  for f in out.splitlines():
+                      if f.endswith('/index.html'):
+                          urls.append('https://speedometer10.co.il/' + f[:-len('index.html')])
+              except Exception:
+                  pass
+          print(json.dumps(sorted(set(urls))))
+          PYEOF
+          )
+          if [ "$URLS" = "[]" ] || [ -z "$URLS" ]; then
+            echo "אין כתובות חדשות לשליחה."
+            exit 0
+          fi
+          echo "שולח ל-IndexNow: $URLS" | cut -c1-600
           curl -s -X POST "https://api.indexnow.org/indexnow" \
             -H "Content-Type: application/json; charset=utf-8" \
             -d "{\"host\":\"speedometer10.co.il\",\"key\":\"ebb52cb45b3d9cad4278400cfb17e026\",\"keyLocation\":\"https://speedometer10.co.il/ebb52cb45b3d9cad4278400cfb17e026.txt\",\"urlList\":${URLS}}" \
