@@ -304,7 +304,7 @@
     const notes = trims.length > 1 ? trimNotes(c, trims) : [];
     const base = trims.length ? num(trims[0].price) : null;
 
-    return '<div class="cp" data-slug=""' + esc(c.slug || c.id) + '">' +
+    return '<div class="cp" data-slug="' + esc(c.slug || c.id) + '">' +
       /* פס הדגם: סמל החברה · ארבעה לחצנים · השוואה */
       '<div class="cp-bar"><div class="cx-wrap cp-bar-in">' +
         '<a class="cp-brand" href="/cars-list.html?brand=' + encodeURIComponent(String(c.brand || '').toLowerCase()) + '" aria-label="כל הדגמים של ' + esc(bn) + '">' + brandMark(c.brand) + '</a>' +
