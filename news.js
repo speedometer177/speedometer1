@@ -154,6 +154,12 @@
       '.news-fail-head{display:flex;align-items:baseline;gap:8px;font-size:0.84rem;color:var(--adm-text,#e8eaf0)}.news-fail-head b{color:var(--adm-bad,#ff6b6b);font-variant-numeric:tabular-nums}' +
       '.news-fail-names{display:flex;flex-wrap:wrap;gap:4px;margin-top:6px}.news-fail-names span{font-size:0.74rem;padding:2px 8px;border-radius:8px;background:var(--adm-bg,rgba(0,0,0,.2));color:var(--adm-muted)}' +
       '.news-res-head{display:flex;flex-wrap:wrap;align-items:center;gap:6px 8px;font-size:0.84rem}.news-res-head span:last-child{color:var(--adm-muted);font-size:0.8rem}' +
+      '.news-vchip{display:inline-flex;align-items:center;gap:5px;font-size:0.7rem;font-weight:800;padding:2px 9px;border-radius:99px;white-space:nowrap;background:var(--adm-surface-2,rgba(255,255,255,.06));color:var(--adm-muted,#8993a3)}' +
+      '.news-vchip::before{content:"";width:7px;height:7px;border-radius:50%;background:currentColor}' +
+      '.news-vchip.ok{color:#0a7a4b;background:rgba(15,169,104,.12)}.news-vchip.bad{color:#b3261e;background:rgba(232,0,29,.09)}' +
+      '.news-vchip.src{color:#8a5200;background:rgba(255,176,32,.16)}.news-vchip.run{color:#1d4ed8;background:rgba(29,78,216,.1)}' +
+      '#news-drafts-summary{margin:0 0 12px}' +
+      '.news-vfilter{border:0;font:inherit;cursor:pointer}.news-vfilter.on{outline:2px solid currentColor;outline-offset:1px}' +
       '#news-new-pill{display:none;width:100%;margin-bottom:12px;padding:10px;border-radius:10px;border:1px solid #2ecc71;background:rgba(46,204,113,.12);color:var(--adm-good,#2ecc71);font-weight:800;font-size:0.84rem;font-family:inherit;cursor:pointer}';
     document.head.appendChild(st);
 
@@ -917,7 +923,7 @@
           '<div class="adm-row-top">' +
             '<div class="adm-row-info">' +
               '<div class="adm-row-title">' + escapeAttr(d.headline) + '</div>' +
-              '<div class="adm-row-meta">' + regionPill + '<span>' + escapeAttr(d.source_name || '') + '</span></div>' +
+              '<div class="adm-row-meta">' + regionPill + '<span class="news-vchip" id="draft-vchip-' + d.id + '"></span><span>' + escapeAttr(d.source_name || '') + '</span></div>' +
             '</div>' +
           '</div>' +
           '<div class="adm-row-bottom">' +
@@ -936,7 +942,8 @@
         '</div>';
       };
       const regions = visibleRegions();
-      list.innerHTML = '<div class="news-cols' + (regions.length === 1 ? ' single' : '') + '">' + regions.map(function (r) {
+      _draftIds = data.map(function (d) { return d.id; });
+      list.innerHTML = '<div id="news-drafts-summary" class="news-stat-line"></div><div class="news-cols' + (regions.length === 1 ? ' single' : '') + '">' + regions.map(function (r) {
         const rows = data.filter(function (d) { return (d.region === 'world' ? 'world' : 'il') === r; });
         return '<section class="news-col" id="news-drafts-col-' + r + '">' +
           '<div class="news-col-head ' + r + '"><span>' + COL_LABELS[r] + '</span>' +
@@ -1005,6 +1012,51 @@
       return (Date.now() - started < VERIFY_STALE_MS) ? 'checking' : 'stuck';
     }
     return draftVerifications[draftId] ? 'done' : 'none';
+  }
+
+  // מצב הבדיקה של טיוטה, לתווית שבשורה ולסיכום שמעל הרשימה.
+  //   ok  — עברה · bad — נמצאו בעיות בתוכן · src — הבדיקה רצה אבל לא הצליחה להגיע למקור
+  //   run — נבדקת עכשיו · none — לא נבדקה אף פעם
+  const NO_SOURCE_CATEGORIES = ['בדיקת עובדות לא הושלמה', 'אין מקור', 'בדיקה לא זמינה', 'שגיאה בבדיקה'];
+  function verifyKind(draftId) {
+    const state = verifyState(draftId);
+    if (state === 'checking') return { k: 'run', label: 'נבדקת עכשיו' };
+    if (state === 'stuck') return { k: 'src', label: 'הבדיקה נקטעה' };
+    const r = draftVerifications[draftId];
+    if (!r) return { k: 'none', label: 'לא נבדקה' };
+    if (r.ok) return { k: 'ok', label: 'עברה בדיקה' };
+    const issues = r.blockingIssues || [];
+    const content = issues.filter(function (i) { return NO_SOURCE_CATEGORIES.indexOf(i.category) === -1; });
+    if (!content.length && r.sourceAccessible !== true) return { k: 'src', label: 'לא נבדקה מול המקור' };
+    return { k: 'bad', label: issues.length === 1 ? 'בעיה אחת' : issues.length + ' בעיות' };
+  }
+  let _draftIds = [];
+  let _verifyFilter = '';
+  function paintVerifyChip(draftId) {
+    const chip = document.getElementById('draft-vchip-' + draftId);
+    const kind = verifyKind(draftId);
+    if (chip) { chip.className = 'news-vchip ' + kind.k; chip.textContent = kind.label; }
+    const row = chip ? chip.closest('.adm-row') : null;
+    if (row) { row.setAttribute('data-vkind', kind.k); row.style.display = (!_verifyFilter || _verifyFilter === kind.k) ? '' : 'none'; }
+    paintDraftsSummary();
+  }
+  function paintDraftsSummary() {
+    const box = document.getElementById('news-drafts-summary');
+    if (!box) return;
+    const counts = { ok: 0, bad: 0, src: 0, run: 0, none: 0 };
+    _draftIds.forEach(function (id) { if (document.getElementById('draft-vchip-' + id)) counts[verifyKind(id).k]++; });
+    const labels = { ok: 'עברו בדיקה', bad: 'עם בעיות', src: 'לא נבדקו מול המקור', run: 'נבדקות עכשיו', none: 'לא נבדקו' };
+    box.innerHTML = ['ok', 'bad', 'src', 'run', 'none'].filter(function (k) { return counts[k]; }).map(function (k) {
+      return '<button type="button" class="news-vchip news-vfilter ' + k + (_verifyFilter === k ? ' on' : '') + '" data-vf="' + k + '">' + counts[k] + ' ' + labels[k] + '</button>';
+    }).join('') + (_verifyFilter ? '<button type="button" class="news-vchip news-vfilter" data-vf="">הצג הכל</button>' : '');
+    if (!box.__bound) {
+      box.__bound = true;
+      box.addEventListener('click', function (e) {
+        const b = e.target.closest('[data-vf]'); if (!b) return;
+        _verifyFilter = b.getAttribute('data-vf') === _verifyFilter ? '' : b.getAttribute('data-vf');
+        _draftIds.forEach(function (id) { paintVerifyChip(id); });
+      });
+    }
   }
 
   function setVerifyButton(draftId, busy) {
@@ -1087,6 +1139,7 @@
   function renderVerifyResult(draftId) {
     const resultEl = document.getElementById('draft-verify-' + draftId);
     if (!resultEl) return;
+    paintVerifyChip(draftId);
     const state = verifyState(draftId);
     if (state === 'checking') {
       resultEl.innerHTML = '<div style="font-size:0.78rem;color:var(--adm-accent,#ff9d2e);margin-top:6px;font-weight:600;"><span class="news-spin"></span>נבדקת עכשיו: ניסוח, מבנה ועובדות מול כתבת המקור. זה לוקח עד כדקה, והתוצאה תופיע כאן לבד.</div>';
@@ -1113,7 +1166,9 @@
       const issues = (result.blockingIssues || []).map(function (i) {
         return '<li>' + escapeAttr(i.category) + ': ' + escapeAttr(i.text) + '</li>';
       }).join('');
-      let html = '<div style="font-size:0.78rem;color:var(--adm-bad,#e74c3c);margin-top:6px;font-weight:600;">✕ נמצאו בעיות — פרסום חסום עד אישור מפורש' +
+      const noSource = verifyKind(draftId).k === 'src';
+      let html = '<div style="font-size:0.78rem;color:' + (noSource ? '#8a5200' : 'var(--adm-bad,#e74c3c)') + ';margin-top:6px;font-weight:600;">' +
+        (noSource ? '⚠️ לא נבדקה מול המקור — הבדיקה לא הצליחה לקרוא את כתבת המקור. העובדות בטיוטה לא אומתו' : '✕ נמצאו בעיות — פרסום חסום עד אישור מפורש') +
         '<span style="font-weight:400;color:var(--adm-muted);">' + escapeAttr(verifiedAgo(result)) + '</span></div>' +
         '<ul style="font-size:0.74rem;color:var(--adm-muted);margin:4px 0 0;padding-inline-start:16px;">' + issues + '</ul>';
 
