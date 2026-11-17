@@ -69,7 +69,7 @@
       { key: 'model', label: 'דגם *', type: 'text', required: true },
       { key: 'year', label: 'שנה *', type: 'number', required: true },
       { key: 'category', label: 'קטגוריה/סגמנט', type: 'text', placeholder: "לדוגמה: קרוסאובר קומפקטי" },
-      { key: 'slug', label: 'כתובת URL (slug) *', type: 'text', required: true, placeholder: 'brand-model-2025', hint: 'אותיות אנגליות קטנות ומקפים בלבד' },
+      { key: 'slug', label: 'כתובת URL (slug) *', type: 'text', required: true, placeholder: 'brand-model', hint: 'אותיות אנגליות קטנות ומקפים בלבד' },
     ]},
     { title: 'מחיר ומקור', fields: [
       { key: 'price', label: 'מחיר בסיס (₪)', type: 'number', hint: 'ריק = יוצג "מחיר טרם פורסם"' },
@@ -226,7 +226,8 @@
   }
 
   function slugify(brand, model, year) {
-    const base = (String(brand || '') + '-' + String(model || '') + '-' + String(year || ''))
+    /* 16.11.2026: כתובת בלי שנה (/car/toyota-chr/) — אותה כתובת נשארת כשהדגם מתעדכן לשנתון הבא */
+    const base = (String(brand || '') + '-' + String(model || ''))
       .toLowerCase()
       .replace(/[^a-z0-9\s-]/g, '')
       .trim()

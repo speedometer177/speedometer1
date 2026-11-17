@@ -510,6 +510,11 @@ body.is-results .cx-results{display:block}
 .cp-peek:hover .cp-peek-btn{background:var(--ink);color:#fff}
 
 .cp-price{text-align:center;margin-top:14px;font-size:.92rem;color:var(--ink)}
+/* 16.11.2026: כותרת ראשית בעברית מתחת לבמה (שם הדגם הגדול מאחורי הרכב הוא עיצוב בלבד) */
+.cp-h1{text-align:center;margin:14px 0 0;font-size:clamp(1.05rem,2.2vw,1.35rem);font-weight:800;line-height:1.3;color:var(--ink);letter-spacing:-.01em}
+.cp-h1+.cp-price{margin-top:4px}
+.cp.is-in .cp-h1{animation:cpFadeUp .9s var(--e-out) .9s both}
+.cx-js .cp:not(.is-in) .cp-h1{opacity:0}
 .cp-price small{font-size:.8rem;color:var(--mute);margin-inline-end:6px}
 .cp-price b{font-size:1.15rem;font-weight:600}
 .cp-specs{font-family:var(--f);display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:12px;max-width:900px;margin:26px auto 0;padding:0 24px}

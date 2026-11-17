@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<meta name="robots" content="index, follow">
+<meta name="robots" content="noindex, follow">
 <!-- SEO tags filled dynamically by JS (ובעמודים סטטיים - נאפים מראש ב-generate-static-pages.mjs) -->
 <title>טוען...</title>
 <meta name="description" content="">
@@ -27,7 +27,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Rubik:wght@300;400;500;600;700;800;900&display=swap">
-<link rel="stylesheet" href="/cars-ui.css?v=17">
+<link rel="stylesheet" href="/cars-ui.css?v=18">
 <script>document.documentElement.classList.add('cx-js')</script>
 <style>
 .car-page-loading{min-height:60vh;display:grid;place-items:center;align-content:center;gap:14px;color:var(--mute)}
@@ -46,9 +46,9 @@
     <nav class="cx-nav" id="cx-nav" aria-label="ניווט ראשי">
       <a href="/cars-list.html?view=brands">מותגים</a>
       <a href="/cars-list.html" aria-current="page">דגמים</a>
-      <a href="/?cat=buying">מדריכים</a>
+      <a href="/buying/">מדריכים</a>
       <a href="/">חדשות</a>
-      <a href="/?cat=review">מבחני רכב</a>
+      <a href="/review/">מבחני רכב</a>
       <button type="button" data-open-compare>השוואות</button>
     </nav>
     <div class="cx-header-tools">
@@ -78,8 +78,8 @@
   </div>
 </footer>
 
-<script src="/cars-core.js?v=13"></script>
-<script src="/car-page.js?v=14"></script>
+<script src="/cars-core.js?v=14"></script>
+<script src="/car-page.js?v=15"></script>
 <script>
 /* ═══ ספידומטר — עמוד הדגם (car.html v2, 29.10.2026) ═══
    הנתיב הקנוני: /car/{slug}/ (עמוד סטטי שנבנה ב-generate-static-pages.mjs מאותו car-page.js).
@@ -102,6 +102,7 @@
     const set = (sel, attr, val) => { const el = document.querySelector(sel); if (el && !el.getAttribute(attr)) el.setAttribute(attr, val); };
     set('meta[name="description"]', 'content', c.meta_description || (c.description || '').slice(0, 155));
     set('link[rel="canonical"]', 'href', location.origin + '/car/' + c.slug + '/');
+    set('meta[name="robots"]', 'content', 'index, follow, max-image-preview:large');
     set('meta[property="og:title"]', 'content', document.title);
     set('meta[property="og:url"]', 'content', location.origin + '/car/' + c.slug + '/');
     set('meta[property="og:image"]', 'content', c.image_main || '');
@@ -127,7 +128,12 @@
   S.load().then(res => {
     S.setCars(res.cars);
     const c = res.cars.find(x => String(x.slug || x.id) === slug);
-    if (!c) { showError('הדגם לא נמצא במאגר'); return; }
+    if (!c) {
+      /* כתובת ישנה (עם שנה) שעוד אין לה עמוד הפניה סטטי — עוברים לכתובת החדשה */
+      const moved = res.cars.find(x => Array.isArray(x.old_slugs) && x.old_slugs.indexOf(slug) !== -1);
+      if (moved) { location.replace('/car/' + encodeURIComponent(moved.slug) + '/' + location.search + location.hash); return; }
+      showError('הדגם לא נמצא במאגר'); return;
+    }
     setMeta(c);
     rootEl.innerHTML = P.render(c);
     P.mount(rootEl, c, { cars: res.cars, loadReview: loadReview });

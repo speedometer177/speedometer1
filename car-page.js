@@ -79,6 +79,18 @@
     const legacyNm = m && m._trim && m._trim.tu !== 'kgm' && n >= 100;
     return String(legacyNm ? Math.round(n / 9.80665 * 10) / 10 : n);
   }
+  /* עמוד מותג: /cars/{key}/ — אותו מפתח בדיוק כמו SPCars.brandKey וכמו המחולל */
+  function brandKeyOf(raw) {
+    var k = String(raw || '').trim().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/&/g, 'and').replace(/[^a-z0-9\u0590-\u05ff]+/g, '');
+    return k === 'mercedesbenz' ? 'mercedes' : k;
+  }
+  function brandHref(c) { return '/cars/' + encodeURIComponent(brandKeyOf(c && c.brand)) + '/'; }
+  /* הכותרת הראשית (h1) כוללת גם את השם העברי — לקוראי מסך ולגוגל, בלי שינוי בעיצוב.
+     המקור: החלק הראשון של meta_title ("טויוטה C-HR 2025 | ..."), כפי שהוזן במאגר. */
+  function heTitle(c, bn) {
+    var he = String((c && c.meta_title) || '').split('|')[0].replace(/\b20\d\d\b/g, '').replace(/\s+/g, ' ').trim();
+    return he || (bn + ' ' + (c.model || '')).trim();
+  }
   function brandName(raw) {
     const k = String(raw || '').trim();
     if (root.SPCars && root.SPCars.brandInfo) return root.SPCars.brandInfo(k).name || k;
@@ -307,7 +319,7 @@
     return '<div class="cp" data-slug="' + esc(c.slug || c.id) + '">' +
       /* פס הדגם: סמל החברה · ארבעה לחצנים · השוואה */
       '<div class="cp-bar"><div class="cx-wrap cp-bar-in">' +
-        '<a class="cp-brand" href="/cars-list.html?brand=' + encodeURIComponent(String(c.brand || '').toLowerCase()) + '" aria-label="כל הדגמים של ' + esc(bn) + '">' + brandMark(c.brand) + '</a>' +
+        '<a class="cp-brand" href="' + brandHref(c) + '" aria-label="כל הדגמים של ' + esc(bn) + '">' + brandMark(c.brand) + '</a>' +
         '<div class="cp-id"><b>' + mix(c.model) + '</b>' + ([c.category, c.year].filter(Boolean).length ? '<small>' + esc([c.category, c.year].filter(Boolean).join(' · ')) + '</small>' : '') + '</div>' +
         '<nav class="cp-nav" aria-label="עמודי הדגם">' + navHTML(url, false) + '</nav>' +
         '<div class="cp-bar-acts">' +
@@ -330,11 +342,13 @@
         (trims.length > 1 ? '<button type="button" class="cp-trimbtn" data-tsheet-open aria-haspopup="dialog"><span class="cp-trimbtn-t"><small id="cp-trimbtn-pos">גרסה · ' + (ti + 1) + ' מתוך ' + trims.length + '</small><b id="cp-trimbtn-name">' + mix(trims[ti].name) + '</b></span>' +
           '<span class="cp-trimbtn-p">' + (p ? '<b class="cx-num" id="cp-trimbtn-price">' + p + '</b>' : '') + '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></span></button>' : '') +
         '<div class="cp-stage' + (main && !main.cut ? ' is-photo' : '') + '">' +
-          '<h1 class="cp-title"><span class="cx-sr">' + esc(bn) + ' </span><span class="cp-title-in"><span class="cp-title-model">' + mix(c.model) + '</span> <span class="cp-title-trim">' + mix(trims[ti] ? trims[ti].name : (c.year || '')) + '</span></span></h1>' +
+          /* שם הדגם הגדול מאחורי הרכב הוא עיצוב בלבד; הכותרת הראשית (h1) היא השם בעברית, גלויה מתחת לבמה */
+          '<div class="cp-title" aria-hidden="true"><span class="cp-title-in"><span class="cp-title-model">' + mix(c.model) + '</span> <span class="cp-title-trim">' + mix(trims[ti] ? trims[ti].name : (c.year || '')) + '</span></span></div>' +
           '<div class="cp-car" id="cp-car">' + frame(main, full + (c.year ? ' ' + c.year : ''), true) + '</div>' +
           scoreBadge(c, url) +
           (trims.length > 1 ? '<button type="button" class="cp-peek" data-trim-next aria-label="לרמת הגימור הבאה">' + (main ? '<span class="cp-peek-img">' + frame(main, '', false) + '</span>' : '') + '<span class="cp-peek-btn">' + ICO.next + '</span></button>' : '') +
         '</div>' +
+        '<h1 class="cp-h1">' + esc(heTitle(c, bn)) + (c.year ? ' <span class="cx-num">' + esc(c.year) + '</span>' : '') + '</h1>' +
         '<div class="cp-price">' + (p ? '<small>החל מ-</small><b class="cx-num" id="cp-price">' + p + '</b>' : '<small>מחיר טרם פורסם</small>') + '</div>' +
         '<dl class="cp-specs" id="cp-specs">' + specsHTML(m) + '</dl>' +
         sharePanel(c, full) +
@@ -638,7 +652,7 @@
     return '<div class="sv" id="sv">' +
       '<div class="sv-top">' +
         '<div class="sv-gal">' +
-          '<nav class="sv-crumb" aria-label="מיקום"><a href="/cars-list.html" aria-label="מאגר הרכבים">' + SVI.home + '</a><span>/</span><a href="/cars-list.html?brand=' + encodeURIComponent(String(c.brand || '').toLowerCase()) + '">' + esc(bn) + '</a><span>/</span><a href="' + url + '" data-view="">' + mix(c.model) + '</a>' + (vs[ti] ? '<span>/</span><b id="sv-pill">' + mix(vs[ti].name) + '</b>' : '') + '</nav>' +
+          '<nav class="sv-crumb" aria-label="מיקום"><a href="/cars-list.html" aria-label="מאגר הרכבים">' + SVI.home + '</a><span>/</span><a href="' + brandHref(c) + '">' + esc(bn) + '</a><span>/</span><a href="' + url + '" data-view="">' + mix(c.model) + '</a>' + (vs[ti] ? '<span>/</span><b id="sv-pill">' + mix(vs[ti].name) + '</b>' : '') + '</nav>' +
           '<div class="sv-media is-init" id="sv-media">' + frame(imgs[0] || null, bn + ' ' + c.model, true) + '</div>' +
           '<ul class="sv-facts" id="sv-facts">' + svFacts(m) + '</ul>' +
           (imgs.length > 1 ? '<div class="sv-thumbs" role="list" aria-label="תמונות">' + imgs.slice(0, 6).map((im, i) => '<button type="button" role="listitem" class="sv-th' + (im.cut ? ' is-cut' : '') + '" data-sv-img="' + i + '" aria-pressed="' + (i === 0) + '" aria-label="תמונה ' + (i + 1) + '"><img src="' + esc(thumb(im.src, 200)) + '" alt="" loading="lazy"></button>').join('') + '</div>' : '') +
@@ -806,7 +820,7 @@
       (o.list.length ? '<section class="gv-more gv-rv" aria-label="דגמים נוספים">' +
         '<div class="gv-more-head"><h2>' + (o.kind === 'brand' ? 'דגמים נוספים של ' + mix(bn) + '' : 'דגמים נוספים מאותה קטגוריה') + '</h2>' +
           '<p>' + (o.kind === 'brand' ? 'כל הדגמים של ' + esc(bn) + ' במאגר ספידומטר — עם מפרט, מחירים ותמונות.' : 'דגמים נוספים מקטגוריית ' + esc(c.category) + ' במאגר ספידומטר.') + '</p>' +
-          '<a class="gv-all" href="' + (o.kind === 'brand' ? '/cars-list.html?brand=' + encodeURIComponent(String(c.brand || '').toLowerCase()) : '/cars-list.html?view=all') + '">' + (o.kind === 'brand' ? 'לכל הדגמים' : 'לכל הרכבים') + '<span aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg></span></a></div>' +
+          '<a class="gv-all" href="' + (o.kind === 'brand' ? brandHref(c) : '/cars-list.html?view=all') + '">' + (o.kind === 'brand' ? 'לכל הדגמים' : 'לכל הרכבים') + '<span aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg></span></a></div>' +
         (pts.length > 1 ? '<div class="gv-tabs" role="tablist" aria-label="סינון לפי סוג הנעה"><button type="button" role="tab" data-gv-pt="" aria-selected="true">הכל</button>' + pts.map(p => '<button type="button" role="tab" data-gv-pt="' + p + '" aria-selected="false">' + esc(PT[p]) + '</button>').join('') + '</div>' : '') +
         '<div class="gv-stage">' + o.list.map(gvSlideHTML).join('') +
           (o.list.length > 1 ? '<button type="button" class="gv-sarr gv-sarr-prev" data-gv-car-step="-1" aria-label="הדגם הקודם"><svg viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg></button><button type="button" class="gv-sarr gv-sarr-next" data-gv-car-step="1" aria-label="הדגם הבא"><svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg></button>' : '') +

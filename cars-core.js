@@ -422,7 +422,14 @@
   };
 
   let carsBySlug = {};
-  function setCars(cars) { carsBySlug = {}; cars.forEach(c => { carsBySlug[c._slug] = c; }); Compare.list = Compare.list.filter(s => carsBySlug[s]); writeStore(Compare.list); }
+  function setCars(cars) {
+    carsBySlug = {}; cars.forEach(c => { carsBySlug[c._slug] = c; });
+    /* כתובת בלי שנה (16.11.2026): מועדפים והשוואות שנשמרו במכשיר עם ה-slug הישן מומרים לחדש */
+    const alias = {}; cars.forEach(c => { (Array.isArray(c.old_slugs) ? c.old_slugs : []).forEach(o => { if (o && !carsBySlug[o]) alias[o] = c._slug; }); });
+    const remap = a => Array.from(new Set(a.map(s => alias[s] || s)));
+    try { const f = remap(Fav.list); if (f.join('|') !== Fav.list.join('|')) { Fav.list = f; localStorage.setItem(FAV_KEY, JSON.stringify(f)); } } catch (e) {}
+    Compare.list = remap(Compare.list).filter(s => carsBySlug[s]); writeStore(Compare.list);
+  }
 
   let trayEl = null, cmpEl = null, toastEl = null, toastT = 0;
   function toast(msg) {

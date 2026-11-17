@@ -22,8 +22,9 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Rubik:wght@400;500;600;700;800;900&display=swap">
-<link rel="stylesheet" href="/cars-ui.css?v=17">
+<link rel="stylesheet" href="/cars-ui.css?v=18">
 <script>document.documentElement.classList.add('cx-js')</script>
+<!-- BUILD:CARS_ITEMLIST:START --><!-- BUILD:CARS_ITEMLIST:END -->
 <script type="application/ld+json">
 {"@context":"https://schema.org","@type":"CollectionPage","name":"מאגר הרכבים של ספידומטר","url":"https://speedometer10.co.il/cars-list.html","inLanguage":"he-IL","isPartOf":{"@type":"WebSite","name":"ספידומטר","url":"https://speedometer10.co.il/"},
 "breadcrumb":{"@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"בית","item":"https://speedometer10.co.il/"},{"@type":"ListItem","position":2,"name":"מאגר הרכבים","item":"https://speedometer10.co.il/cars-list.html"}]}}
@@ -36,11 +37,11 @@
   <div class="cx-wrap cx-header-in">
     <a href="/" class="cx-logo" aria-label="ספידומטר — לעמוד הבית"><b>ספידו<span>מטר</span></b><small>כל מה שצריך לדעת על רכב</small></a>
     <nav class="cx-nav" id="cx-nav" aria-label="ניווט ראשי">
-      <a href="?view=brands" data-route="view=brands" id="nav-brands">מותגים</a>
+      <a href="/cars-list.html?view=brands" data-route="view=brands" id="nav-brands">מותגים</a>
       <a href="/cars-list.html" data-route="" id="nav-models" aria-current="page">דגמים</a>
-      <a href="/?cat=buying">מדריכים</a>
+      <a href="/buying/">מדריכים</a>
       <a href="/">חדשות</a>
-      <a href="/?cat=review">מבחני רכב</a>
+      <a href="/review/">מבחני רכב</a>
       <button type="button" data-open-compare>השוואות</button>
     </nav>
     <div class="cx-header-tools">
@@ -124,7 +125,7 @@
   <section class="cx-brandbar" aria-label="מותגים">
     <div class="cx-wrap cx-brandbar-in">
       <div class="cx-marquee" id="marquee"><div class="cx-marquee-track" id="mq-track"></div></div>
-      <a class="cx-link cx-brandbar-all" href="?view=brands" data-route="view=brands" aria-label="צפייה בכל המותגים"><span>צפייה בכל המותגים</span> <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M15 18l-6-6 6-6"/></svg></a>
+      <a class="cx-link cx-brandbar-all" href="/cars-list.html?view=brands" data-route="view=brands" aria-label="צפייה בכל המותגים"><span>צפייה בכל המותגים</span> <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M15 18l-6-6 6-6"/></svg></a>
     </div>
   </section>
 
@@ -135,7 +136,7 @@
     <div class="cx-wrap">
       <div class="cx-sec-head" data-reveal>
         <div><h2 class="cx-sec-title" id="pop-title">הרכבים הפופולריים</h2><p class="cx-sec-sub">הדגמים המובילים בישראל – עם כל המידע במקום אחד</p></div>
-        <a class="cx-link" href="?view=all" data-route="view=all">הצג את כל הדגמים <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M15 18l-6-6 6-6"/></svg></a>
+        <a class="cx-link" href="/cars-list.html?view=all" data-route="view=all">הצג את כל הדגמים <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M15 18l-6-6 6-6"/></svg></a>
       </div>
       <div class="cx-grid" id="pop-grid"></div>
     </div>
@@ -147,17 +148,17 @@
       <div class="cx-value" data-reveal style="--i:0">
         <svg class="cx-value-ico" width="26" height="26" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.8l2.8 5.8 6.3.9-4.6 4.4 1.1 6.3L12 17.2l-5.6 3 1.1-6.3L2.9 9.5l6.3-.9z"/></svg>
         <b>דירוגים והמלצות</b><p>ציון לכל דגם שנבחן אצלנו, לפי קטגוריות ועם ניתוח.</p>
-        <a class="cx-link" href="/?cat=review">לכל הדירוגים <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M15 18l-6-6 6-6"/></svg></a>
+        <a class="cx-link" href="/review/">לכל הדירוגים <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M15 18l-6-6 6-6"/></svg></a>
       </div>
       <div class="cx-value" data-reveal style="--i:1">
         <svg class="cx-value-ico" width="26" height="26" viewBox="0 0 24 24" fill="currentColor"><path d="M6 2h9l5 5v13a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2zm8 1.5V8h4.5zM8 11v1.6h8V11zm0 3.4V16h8v-1.6zm0 3.4v1.6h5.5v-1.6z"/></svg>
         <b>מפרטים טכניים מלאים</b><p>מנועים, ביצועים, מידות, צריכת דלק ועוד.</p>
-        <a class="cx-link" href="?view=all" data-route="view=all">לכל המפרטים <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M15 18l-6-6 6-6"/></svg></a>
+        <a class="cx-link" href="/cars-list.html?view=all" data-route="view=all">לכל המפרטים <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M15 18l-6-6 6-6"/></svg></a>
       </div>
       <div class="cx-value" data-reveal style="--i:2">
         <svg class="cx-value-ico" width="26" height="26" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l8 3v6c0 5.2-3.4 9.6-8 11-4.6-1.4-8-5.8-8-11V5zm0 2.2L6 6.4V11c0 4 2.4 7.5 6 8.8z"/></svg>
         <b>מבחני רכב מקצועיים</b><p>צפייה במבחני דרך, סרטונים והתרשמויות.</p>
-        <a class="cx-link" href="/?cat=review">לכל המבחנים <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M15 18l-6-6 6-6"/></svg></a>
+        <a class="cx-link" href="/review/">לכל המבחנים <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M15 18l-6-6 6-6"/></svg></a>
       </div>
       <div class="cx-value" data-reveal style="--i:3">
         <svg class="cx-value-ico" width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v18M8 21h8M5 7h14M5 7l-3 7a3 3 0 0 0 6 0zM19 7l-3 7a3 3 0 0 0 6 0z"/><circle cx="12" cy="4" r="1.2" fill="currentColor"/></svg>
@@ -166,6 +167,7 @@
       </div>
     </div>
   </section>
+<!-- BUILD:CARS_INDEX:START --><!-- BUILD:CARS_INDEX:END -->
 </div>
 
 <!-- ════════════════ עמוד מותג / תוצאות / כל המותגים ════════════════ -->
@@ -177,6 +179,7 @@
         <div class="cx-crumbs"><a href="/cars-list.html" data-route="">מאגר הרכבים</a> › <span id="r-crumb"></span></div>
         <h1 id="r-title"></h1>
         <p id="r-sub"></p>
+<!-- BUILD:BRAND_STATIC:START --><!-- BUILD:BRAND_STATIC:END -->
       </div>
     </div>
   </div>
@@ -238,7 +241,7 @@
   </div>
 </section>
 
-<script src="/cars-core.js?v=13"></script>
+<script src="/cars-core.js?v=14"></script>
 <script>
 /* ═══ ספידומטר — מאגר הרכבים, דף הבית (v4, 29.10.2026) ═══ */
 (function () {
@@ -261,9 +264,14 @@
   const list = v => (v || '').split(',').map(x => x.trim()).filter(Boolean);
 
   /* ═══ ניתוב: ?brand= / ?q= / ?pt= / ?view=brands|all / ?fav=1 ═══ */
+  /* עמודי מותג (16.11.2026): לכל מותג כתובת אמיתית /cars/{key}/ שנבנית גם כעמוד סטטי במחולל.
+     הכתובת הישנה ?brand=X ממשיכה לעבוד ומנורמלת לחדשה. */
+  const HUB = '/cars-list.html';
+  function pathBrand() { const m = location.pathname.match(/^\/cars\/([^/]+)\/?$/); return m && !location.search ? S.brandKey(decodeURIComponent(m[1])) : ''; }
+  function brandUrl(key) { return '/cars/' + encodeURIComponent(key) + '/'; }
   function readQ() {
-    const p = new URLSearchParams(location.search);
-    return { view: p.get('view') || '', brand: list(p.get('brand')).map(S.brandKey), q: p.get('q') || '', pt: list(p.get('pt')), tag: list(p.get('tag')), drive: list(p.get('drive')),
+    const p = new URLSearchParams(location.search), pb = pathBrand();
+    return { view: p.get('view') || '', brand: pb ? [pb] : list(p.get('brand')).map(S.brandKey), q: p.get('q') || '', pt: list(p.get('pt')), tag: list(p.get('tag')), drive: list(p.get('drive')),
       pmin: +p.get('pmin') || null, pmax: +p.get('pmax') || null, year: p.get('year') || '', sort: p.get('sort') || 'rank', fav: p.get('fav') === '1' };
   }
   function toQS(o) {
@@ -272,10 +280,16 @@
     ['brand', 'pt', 'tag', 'drive'].forEach(k => { if (o[k] && o[k].length) p.set(k, o[k].join(',')); });
     if (o.q) p.set('q', o.q); if (o.pmin) p.set('pmin', o.pmin); if (o.pmax) p.set('pmax', o.pmax);
     if (o.year) p.set('year', o.year); if (o.sort && o.sort !== 'rank') p.set('sort', o.sort); if (o.fav) p.set('fav', '1');
-    const s = p.toString(); return s ? '?' + s : location.pathname;
+    const s = p.toString();
+    if (o.brand && o.brand.length === 1 && Array.from(p.keys()).length === 1) return brandUrl(o.brand[0]);
+    return s ? HUB + '?' + s : HUB;
   }
   function nav(o, replace) {
-    const url = typeof o === 'string' ? (o ? '?' + o : location.pathname) : toQS(o);
+    let url;
+    if (typeof o === 'string') {
+      const sp = new URLSearchParams(o), ks = Array.from(sp.keys());
+      url = !o ? HUB : (ks.length === 1 && ks[0] === 'brand' && sp.get('brand').indexOf(',') === -1) ? brandUrl(S.brandKey(sp.get('brand'))) : HUB + '?' + o;
+    } else url = toQS(o);
     history[replace ? 'replaceState' : 'pushState'](null, '', url);
     route(); if (!replace) window.scrollTo({ top: 0, behavior: 'auto' });
   }
@@ -287,7 +301,7 @@
     $('nav-brands')[br ? 'setAttribute' : 'removeAttribute']('aria-current', 'page');
     $('nav-models')[br ? 'removeAttribute' : 'setAttribute']('aria-current', 'page');
     if (!CARS.length) return;
-    if (res) renderResults(q); else document.title = 'מאגר הרכבים | כל הרכבים במקום אחד | ספידומטר';
+    if (res) renderResults(q); else { document.title = 'מאגר הרכבים | כל הרכבים במקום אחד | ספידומטר'; setCanon(location.origin + HUB); }
   }
 
   /* ═══ סינון ═══ */
@@ -319,7 +333,7 @@
     return BRANDS_CACHE;
   }
   function mqItem(b) {
-    return '<a class="cx-mq-item" href="?brand=' + encodeURIComponent(b.key) + '" data-brand="' + esc(b.key) + '" title="' + esc(b.name + (b.n ? ' · ' + b.n + ' דגמים' : ' · בקרוב')) + '"><span class="cx-mq-logo">' + S.brandMark(b.key, b.name) + '</span><span class="cx-mq-name">' + esc(S.BRAND_LOGOS[b.key] ? b.name : (b.he && b.he !== b.name ? b.he : b.name)) + '</span></a>';
+    return '<a class="cx-mq-item" href="/cars/' + encodeURIComponent(b.key) + '/" data-brand="' + esc(b.key) + '" title="' + esc(b.name + (b.n ? ' · ' + b.n + ' דגמים' : ' · בקרוב')) + '"><span class="cx-mq-logo">' + S.brandMark(b.key, b.name) + '</span><span class="cx-mq-name">' + esc(S.BRAND_LOGOS[b.key] ? b.name : (b.he && b.he !== b.name ? b.he : b.name)) + '</span></a>';
   }
   function initMarquee() {
     const track = $('mq-track'), items = allBrands().map(mqItem).join('');
@@ -367,7 +381,7 @@
       ['pmax=200000', QI.cash, 'עד 200 אלף', CARS.filter(c => pr(c) && pr(c) <= 200000).length],
       ['sort=hp-desc&view=all', QI.flag, 'החזקים במאגר', null]
     ].filter(x => x[3] == null || x[3] > 0);
-    $('quick').innerHTML = Q.map(x => '<a class="cx-q" href="?' + x[0] + '" data-route="' + x[0] + '"><i aria-hidden="true">' + x[1] + '</i><span>' + x[2] + '</span>' + (x[3] != null ? '<em class="cx-num">' + x[3] + '</em>' : '') + '</a>').join('');
+    $('quick').innerHTML = Q.map(x => '<a class="cx-q" href="/cars-list.html?' + x[0] + '" data-route="' + x[0] + '"><i aria-hidden="true">' + x[1] + '</i><span>' + x[2] + '</span>' + (x[3] != null ? '<em class="cx-num">' + x[3] + '</em>' : '') + '</a>').join('');
   }
 
   /* ═══ תיבת החיפוש ═══ */
@@ -429,26 +443,30 @@
   }
 
   /* ═══ עמוד מותג / תוצאות / כל המותגים ═══ */
+  function setCanon(u) { const c = document.querySelector('link[rel="canonical"]'); if (c) c.href = u; }
   function renderResults(q) {
     const mark = $('r-mark');
     if (q.view === 'brands') {
       $('r-list').hidden = true; $('r-brands').hidden = false; mark.hidden = true;
       $('r-crumb').textContent = 'מותגים'; $('r-title').textContent = 'כל המותגים';
       const all = allBrands(); $('r-sub').textContent = all.length + ' מותגים שנמכרים בישראל';
-      $('r-brands').innerHTML = all.map(b => '<a class="cx-btile' + (b.n ? '' : ' is-soon') + '" href="?brand=' + encodeURIComponent(b.key) + '" data-brand="' + esc(b.key) + '"><span class="cx-mq-logo">' + S.brandMark(b.key, b.name) + '</span><b>' + esc(S.BRAND_LOGOS[b.key] ? b.name : (b.he && b.he !== b.name ? b.he : b.name)) + '</b><small>' + (b.n ? b.n + (b.n === 1 ? ' דגם' : ' דגמים') : 'דגמים יתווספו בקרוב') + '</small></a>').join('');
+      $('r-brands').innerHTML = all.map(b => '<a class="cx-btile' + (b.n ? '' : ' is-soon') + '" href="/cars/' + encodeURIComponent(b.key) + '/" data-brand="' + esc(b.key) + '"><span class="cx-mq-logo">' + S.brandMark(b.key, b.name) + '</span><b>' + esc(S.BRAND_LOGOS[b.key] ? b.name : (b.he && b.he !== b.name ? b.he : b.name)) + '</b><small>' + (b.n ? b.n + (b.n === 1 ? ' דגם' : ' דגמים') : 'דגמים יתווספו בקרוב') + '</small></a>').join('');
       document.title = 'כל המותגים | מאגר הרכבים | ספידומטר';
+      setCanon(location.origin + HUB);
       return;
     }
     $('r-list').hidden = false; $('r-brands').hidden = true;
+    { const st = $('sp-brand-static'); if (st) st.remove(); }
     const single = q.brand.length === 1 && !q.q && !q.pt.length && !q.tag.length && !q.drive.length && !q.pmin && !q.pmax && !q.fav;
     const view = CARS.filter(c => matches(c, q)).sort(SORTS[q.sort] || SORTS.rank);
     if (single) {
       const b = allBrands().find(x => x.key === q.brand[0]) || { key: q.brand[0], name: S.brandInfo(q.brand[0]).name, he: '' };
       mark.hidden = false; mark.innerHTML = S.brandMark(b.key, b.name);
-      $('r-crumb').innerHTML = '<a href="?view=brands" data-route="view=brands">מותגים</a> › ' + esc(b.name);
+      $('r-crumb').innerHTML = '<a href="/cars-list.html?view=brands" data-route="view=brands">מותגים</a> › ' + esc(b.name);
       $('r-title').innerHTML = '<bdi>' + esc(b.name) + '</bdi>' + (b.he && b.he !== b.name ? ' · ' + esc(b.he) : '');
       $('r-sub').textContent = 'כל הדגמים החדשים בישראל ' + (q.year && q.year !== 'all' ? q.year : '2025\u20112026');
-      document.title = b.name + ' — כל הדגמים בישראל | ספידומטר';
+      document.title = (b.he && b.he !== b.name ? b.he + ' (' + b.name + ')' : b.name) + ' — כל הדגמים בישראל, מחירים ומפרטים | ספידומטר';
+      setCanon(location.origin + brandUrl(b.key));
     } else {
       mark.hidden = true;
       const t = q.fav ? 'הרכבים ששמרתי' : q.view === 'all' ? 'כל הדגמים' : q.q ? 'תוצאות עבור "' + q.q + '"' : 'תוצאות חיפוש';
@@ -456,6 +474,7 @@
       $('r-title').textContent = t;
       $('r-sub').textContent = q.view === 'all' ? 'מפרטים טכניים מלאים לכל הדגמים במאגר' : '';
       document.title = t + ' | מאגר הרכבים | ספידומטר';
+      setCanon(location.origin + HUB);
     }
     const yrs = Array.from(new Set(CARS.filter(c => !q.brand.length || q.brand.indexOf(c._brand.key) !== -1).map(c => S.num(c.year)).filter(y => y >= NEW_FROM))).sort();
     $('r-years').innerHTML = single && yrs.length > 1 ? [''].concat(yrs.map(String)).map(y => '<button type="button" class="cx-pick" style="height:38px" data-year="' + y + '" aria-pressed="' + ((q.year || '') === y) + '">' + (y || yrs[0] + '-' + yrs[yrs.length - 1]) + '</button>').join('') : '';
