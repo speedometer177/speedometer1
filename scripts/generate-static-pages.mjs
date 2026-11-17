@@ -358,7 +358,7 @@ function hydrateTemplateForArticle(template, a) {
       '@context': 'https://schema.org', '@type': 'BreadcrumbList',
       itemListElement: [
         { '@type': 'ListItem', position: 1, name: 'ספידומטר', item: `${SITE}/` },
-        { '@type': 'ListItem', position: 2, name: catLabel, item: `${SITE}/?cat=${a.cat}` },
+        { '@type': 'ListItem', position: 2, name: catLabel, item: CAT_PAGES.includes(a.cat) ? `${SITE}/${a.cat}/` : `${SITE}/?cat=${a.cat}` },
         { '@type': 'ListItem', position: 3, name: a.title },
       ],
     };
@@ -483,17 +483,19 @@ function hydrateTemplateForArticle(template, a) {
 // הייתה נמחקת אוטומטית תוך 4 שעות ע"י ה-GitHub Action).
 const STATIC_PAGES = [
   { path: '/cars-list.html', changefreq: 'daily', priority: '0.9' },
+  ...['local', 'world', 'review', 'electric', 'tech', 'buying', 'sport', 'luxury'].map(c => ({ path: `/${c}/`, changefreq: 'daily', priority: '0.8', cat: c })),
   { path: '/about/', changefreq: 'monthly', priority: '0.4' },
   { path: '/contact/', changefreq: 'yearly', priority: '0.3' },
   { path: '/terms/', changefreq: 'yearly', priority: '0.2' },
-  { path: '/usage-value-calculator.html', changefreq: 'monthly', priority: '0.7' },
+  { path: '/usage-value-calculator.html', changefreq: 'weekly', priority: '0.9' },
 ];
 
+const carMod = c => String(c.updated_at || c.created_at || '').slice(0, 10);
 function buildSitemap(articles, cars = []) {
   const today = new Date().toISOString().split('T')[0];
   const urls = [
     `<url><loc>${SITE}/</loc><lastmod>${today}</lastmod><changefreq>hourly</changefreq><priority>1.0</priority></url>`,
-    ...STATIC_PAGES.map(p =>
+    ...STATIC_PAGES.filter(p => !p.cat || articles.some(a => a.cat === p.cat)).map(p =>
       `<url><loc>${SITE}${p.path}</loc><lastmod>${today}</lastmod><changefreq>${p.changefreq}</changefreq><priority>${p.priority}</priority></url>`
     ),
     ...articles
@@ -506,9 +508,13 @@ function buildSitemap(articles, cars = []) {
           : '';
         return `<url><loc>${SITE}/article/${a.id}/</loc><lastmod>${lastmod}</lastmod><changefreq>weekly</changefreq><priority>0.8</priority>${imgTag}</url>`;
       }),
+    ...groupByBrand(cars).filter(g => /^[a-z0-9\u0590-\u05ff]+$/.test(g.info.key)).map(g =>
+      `<url><loc>${SITE}/cars/${encodeURIComponent(g.info.key)}/</loc><lastmod>${g.cars.map(carMod).sort().pop() || today}</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>`),
+    ...COMPARE_PAIRS.map(p =>
+      `<url><loc>${SITE}/compare/${p.key}/</loc><lastmod>${[p.a, p.b].map(carMod).sort().pop() || today}</lastmod><changefreq>monthly</changefreq><priority>0.6</priority></url>`),
     ...cars.map(c =>
       /* lastmod = מתי הרכב באמת השתנה (updated_at), לא "היום" בכל ריצה — אחרת גוגל לומד להתעלם מהתאריך */
-      `<url><loc>${SITE}/car/${c.slug}/</loc><lastmod>${String(c.updated_at || c.created_at || '').slice(0, 10) || today}</lastmod><changefreq>weekly</changefreq><priority>0.9</priority>${/^https?:\/\//.test(String(c.image_main || '')) ? `<image:image><image:loc>${esc(c.image_main)}</image:loc></image:image>` : ''}</url>`
+      `<url><loc>${SITE}/car/${c.slug}/</loc><lastmod>${String(c.updated_at || c.created_at || '').slice(0, 10) || today}</lastmod><changefreq>weekly</changefreq><priority>0.9</priority>${realImages(c).length ? `<image:image><image:loc>${esc(realImages(c)[0])}</image:loc></image:image>` : ''}</url>`
     )
   ].join('\n  ');
   return `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">\n  ${urls}\n</urlset>\n`;
@@ -705,15 +711,48 @@ function carHeName(c) {
   const fromMeta = String(c.meta_title || '').split('|')[0].replace(/\b20\d\d\b/g, '').replace(/\s+/g, ' ').trim();
   return fromMeta || `${c.brand} ${c.model}`;
 }
+/* שמות המותגים בעברית וכתיבים חלופיים ("מזדה", "שקודה") נקראים מ-cars-core.js, המקור היחיד שלהם באתר.
+   הקובץ עצמו דורש דפדפן, ולכן רק טבלת BRANDS נשלפת ממנו כטקסט. אם השליפה נכשלת — ממשיכים בלי. */
+const BRAND_MAP = (() => {
+  const map = new Map();
+  try {
+    const src = readFileSync(new URL('../cars-core.js', import.meta.url), 'utf-8');
+    const re = /^\s*['"]?([a-z0-9_-]+)['"]?\s*:\s*\{\s*name\s*:\s*'([^']+)'\s*,\s*he\s*:\s*'([^']+)'(?:\s*,\s*alt\s*:\s*\[([^\]]*)\])?/gm;
+    let m;
+    while ((m = re.exec(src))) {
+      const alt = (m[4] || '').split(',').map(x => x.trim().replace(/^'|'$/g, '')).filter(Boolean);
+      map.set(m[2].toLowerCase(), { key: m[1], name: m[2], he: m[3], alt });
+    }
+  } catch (e) { console.warn('⚠️ טבלת המותגים לא נקראה מ-cars-core.js:', e.message); }
+  return map;
+})();
+const BRAND_BY_KEY = new Map(Array.from(BRAND_MAP.values()).map(b => [b.key, b]));
+/* זהה ל-brandKey ב-cars-core.js וב-car-page.js — המפתח הוא שם התיקייה של עמוד המותג (/cars/{key}/) */
+function brandKeyOf(raw) {
+  const k = String(raw || '').trim().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/&/g, 'and').replace(/[^a-z0-9\u0590-\u05ff]+/g, '');
+  if (BRAND_BY_KEY.has(k)) return k;
+  return k === 'mercedesbenz' ? 'mercedes' : k;
+}
+function brandInfo(c) {
+  const key = brandKeyOf(c.brand);
+  const b = BRAND_BY_KEY.get(key);
+  if (b) return { key, name: b.name || String(c.brand || ''), he: b.he, alt: b.alt };
+  return { key, name: String(c.brand || '').trim(), he: carHeName(c).split(' ')[0] || String(c.brand || ''), alt: [] };
+}
 const MODEL_NOISE_RE = /\b(hybrid|phev|plug-?in|electric|ev)\b|היברידי(?:ת)?|חשמלי(?:ת)?|פלאג[- ]?אין|החדש(?:ה)?/gi;
 function carMatchKeys(c) {
+  const info = brandInfo(c);
   const brandEn = String(c.brand || '').toLowerCase().trim();
   const he = carHeName(c).toLowerCase();
-  const heWords = he.split(' ').filter(Boolean);
-  const brandHe = heWords[0] || '';
+  /* שם הדגם בעברית = השם המלא פחות המותג (גם כשהמותג הוא שתי מילים, "מרצדס בנץ") */
+  const prefixes = [info.he, ...info.alt, brandEn].map(x => String(x).toLowerCase()).sort((a, b) => b.length - a.length);
+  const pre = prefixes.find(x => x && he.startsWith(x + ' '));
+  const rest = pre ? he.slice(pre.length + 1) : he.split(' ').slice(1).join(' ');
+  const brandHe = pre || he.split(' ')[0] || '';
   const modelEn = String(c.model || '').toLowerCase().replace(MODEL_NOISE_RE, ' ').replace(/\s+/g, ' ').trim();
-  const modelHe = heWords.slice(1).join(' ').replace(MODEL_NOISE_RE, ' ').replace(/\s+/g, ' ').trim();
-  return { brandEn, brandHe, modelEn, modelHe };
+  const modelHe = rest.replace(MODEL_NOISE_RE, ' ').replace(/\s+/g, ' ').trim();
+  const brands = Array.from(new Set([brandHe, brandEn, String(info.he).toLowerCase(), ...info.alt.map(x => x.toLowerCase())].filter(b => b && b.length >= 2)));
+  return { brandEn, brandHe, modelEn, modelHe, brands };
 }
 function escRe(x) { return x.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); }
 /* ביטוי שלם בלבד (לא חלק ממילה). לפני מילה עברית מותרות אותיות שימוש: "בטויוטה", "והקורולה". */
@@ -729,7 +768,7 @@ function phraseRe(phrase) {
 /* כתיב עברי מקובל של שמות דגמים לועזיים, שלא ניתן לגזור מהשם שבמאגר */
 const MODEL_HE_SPELLINGS = { 'rav4': ['ראב 4', 'ראב4'] };
 function matchCarInText(box, k) {
-  const brands = [k.brandHe, k.brandEn].filter(b => b && b.length >= 2);
+  const brands = k.brands;
   const models = Array.from(new Set([k.modelHe, k.modelEn, ...(MODEL_HE_SPELLINGS[k.modelEn] || [])].filter(m => m && m.length >= 2)));
   if (!brands.length || !models.length) return false;
   let hit = false;
@@ -794,6 +833,14 @@ function buildRelatedHTML(a) {
    גם כטקסט רגיל בתחתית העמוד, במגירות סגורות, כדי שגוגל יקרא את כולם מהכתובת הראשית. */
 const POWERTRAIN_FUEL = { ev: 'Electricity', phev: 'Plug-in hybrid', hev: 'Hybrid', hybrid: 'Hybrid', mhev: 'Mild hybrid', ice: 'Gasoline', petrol: 'Gasoline', diesel: 'Diesel' };
 const hasText = v => v != null && !/^(none|null|undefined|-|—)?$/i.test(String(v).trim());
+/* שווי שימוש 2026 — אותה נוסחה בדיוק כמו במחשבון (usage-calc.js): 2.48% עד תקרה 596,860, מעוגל ל-10, פחות הפחתה */
+const USAGE = { ceiling: 596860, rate: 0.0248, ded: { petrol: 0, diesel: 0, hev: 580, phev: 1150, ev: 1380 } };
+const PT_HE = { petrol: 'בנזין', diesel: 'דיזל', hev: 'היברידי', phev: 'היברידי נטען', ev: 'חשמלי', mhev: 'היברידי קל', erev: 'חשמלי עם מאריך טווח' };
+function usageValue(price, pt) {
+  if (!(Number(price) > 0) || !(pt in USAGE.ded)) return null;
+  const gross = Math.round(Math.min(Number(price), USAGE.ceiling) * USAGE.rate / 10) * 10;
+  return { gross, ded: USAGE.ded[pt], value: Math.max(0, gross - USAGE.ded[pt]) };
+}
 function carFaq(c) {
   const name = `${carHeName(c)} ${c.year}`, out = [];
   const num = v => (v == null || v === '' || !isFinite(Number(v)) || Number(v) <= 0) ? null : Number(v);
@@ -804,6 +851,8 @@ function carFaq(c) {
   if (num(c.fuel_consumption) && c.powertrain !== 'ev') out.push({ q: `מה צריכת הדלק של ${name}?`, a: `צריכת הדלק הממוצעת המוצהרת של ${name} היא ${num(c.fuel_consumption)} ליטר ל-100 ק"מ.` });
   if (num(c.trunk_volume)) out.push({ q: `מה נפח תא המטען של ${name}?`, a: `נפח תא המטען של ${name} הוא ${num(c.trunk_volume)} ליטר.` });
   if (hasText(c.safety_rating)) out.push({ q: `מה רמת הבטיחות של ${name}?`, a: `${name}: ${String(c.safety_rating)}.` });
+  { const u = usageValue(num(c.price), String(c.powertrain || '').toLowerCase());
+    if (u) out.push({ q: `מה שווי השימוש של ${name} ב-2026?`, a: `לפי מחיר המחירון ההתחלתי (${formatPriceILS(num(c.price))}), שווי השימוש החודשי של ${name} הוא ${formatPriceILS(u.value)}: 2.48% מהמחיר, מעוגל ל-10 ₪` + (u.ded ? `, פחות הפחתה של ${formatPriceILS(u.ded)} לרכב ${PT_HE[String(c.powertrain).toLowerCase()]}` : '') + '.' }); }
   if (hasText(c.importer)) out.push({ q: `מי היבואן של ${name} בישראל?`, a: `היבואן הרשמי של ${name} בישראל הוא ${String(c.importer)}.` });
   return out;
 }
@@ -901,19 +950,331 @@ function buildCarSeoBlock(c, allCars) {
   const brandMates = (allCars || []).filter(x => x.slug !== c.slug && x.brand === c.brand && !similar.includes(x)).slice(0, 6);
   const pill = x => `<li><a href="/car/${esc(x.slug)}/">${esc(carHeName(x))} ${esc(x.year)}</a></li>`;
   const simHTML = (similar.length ? `<h4>דגמים דומים</h4><ul class="sp-cs-sim">${similar.map(pill).join('')}</ul>` : '') +
-    (brandMates.length ? `<h4>עוד דגמים של ${esc(carHeName(c).split(' ')[0])}</h4><ul class="sp-cs-sim">${brandMates.map(pill).join('')}</ul>` : '');
+    (brandMates.length ? `<h4>עוד דגמים של ${esc(brandInfo(c).he)}</h4><ul class="sp-cs-sim">${brandMates.map(pill).join('')}</ul>` : '') +
+    `<ul class="sp-cs-sim"><li><a href="/cars/${encodeURIComponent(brandInfo(c).key)}/">כל הדגמים של ${esc(brandInfo(c).he)}</a></li></ul>`;
+  const cmps = (PAIRS_BY_CAR.get(c.slug) || []).slice(0, 4);
+  const cmpHTML = cmps.length ? `<ul class="sp-cs-links">${cmps.map(p => { const o = p.a === c ? p.b : p.a; return `<li><a href="/compare/${esc(p.key)}/">${esc(carHeName(c))} מול ${esc(carHeName(o))}</a></li>`; }).join('')}</ul>` : '';
 
+  const uv = usageValue(num(c.price), String(c.powertrain || '').toLowerCase());
+  const usageHTML = uv ? `<p>שווי שימוש חודשי לפי המחיר ההתחלתי: <b>${formatPriceILS(uv.value)}</b>${uv.ded ? ` (אחרי הפחתה של ${formatPriceILS(uv.ded)})` : ''}. <a href="/usage-value-calculator.html?car=${encodeURIComponent(c.slug)}">כמה זה עולה לכם נטו מהמשכורת ›</a></p>` : '';
   const inner = sec('מפרט טכני מלא', specs) + sec('גרסאות ומחירים', trimsHTML) + sec('אבזור ובטיחות', equipHTML) +
-    sec('יתרונות וחסרונות', prosCons) + sec('צבעים', colors) + sec('שאלות נפוצות', faqHTML) + sec('תמונות', imgsHTML) + sec(`כתבות על ${carHeName(c)}`, artsHTML);
+    sec('יתרונות וחסרונות', prosCons) + sec('צבעים', colors) + sec('שאלות נפוצות', faqHTML) + sec('תמונות', imgsHTML) + sec('השוואות מול מתחרים', cmpHTML) + sec('שווי שימוש (רכב צמוד)', usageHTML) + sec(`כתבות על ${carHeName(c)}`, artsHTML);
   if (!inner && !simHTML) return '';
   return `${CARSEO_CSS}<section class="sp-carseo" aria-label="כל המידע על ${esc(name)}"><h2>כל המידע על ${esc(name)}</h2>${lead}${inner}${simHTML}</section>`;
+}
+
+/* ─── עמודי מדור (/review/, /local/ ...) ───
+   עד 16.11.2026 קישור למדור הוביל ל-/?cat=X: אותו HTML של דף הבית, אותה כותרת, canonical לדף הבית.
+   גוגל לא יכול היה לאנדקס מדור, והגולש ראה "דף הבית". עכשיו לכל מדור עמוד סטטי משלו. */
+/* שמות המדורים כפי שהם מופיעים בתפריט האתר (זהה ל-SP_CATS ב-app.js) */
+const CAT_PAGE_LABELS = { local: 'חדשות מקומיות', world: 'חדשות עולמיות', review: 'מבחני רכב', electric: 'רכב חשמלי', tech: 'טכנולוגיה', buying: 'קניית רכב', sport: 'ספורט', luxury: 'רכב יוקרה' };
+const CAT_PAGES = ['local', 'world', 'review', 'electric', 'tech', 'buying', 'sport', 'luxury'];
+function hydrateTemplateForCategory(rootHtml, cat, catRows) {
+  const label = CAT_PAGE_LABELS[cat] || CAT_LABELS[cat], url = `${SITE}/${cat}/`, title = `${label} | ספידומטר`;
+  const desc = `${label} בספידומטר: ${catRows.length} כתבות, מהחדשה לישנה.`;
+  let html = rootHtml
+    .replace(/<title>[^<]*<\/title>/, () => `<title>${esc(title)}</title>`)
+    .replace(/<meta name="description" content="[^"]*">/, () => `<meta name="description" content="${esc(desc)}">`)
+    .replace(/<link rel="canonical" href="[^"]*">/, () => `<link rel="canonical" href="${url}">`)
+    .replace(/<meta property="og:title" content="[^"]*">/, () => `<meta property="og:title" content="${esc(title)}">`)
+    .replace(/<meta property="og:description" content="[^"]*">/, () => `<meta property="og:description" content="${esc(desc)}">`)
+    .replace(/<meta property="og:url" content="[^"]*">/, () => `<meta property="og:url" content="${url}">`)
+    .replace(/<meta name="twitter:title" content="[^"]*">/, () => `<meta name="twitter:title" content="${esc(title)}">`)
+    .replace(/<meta name="twitter:description" content="[^"]*">/, () => `<meta name="twitter:description" content="${esc(desc)}">`);
+  /* הנתונים המוטמעים והשקופית הראשונה — של המדור עצמו, כדי שהעמוד ייפתח נכון עוד לפני שה-JS מסנן */
+  html = injectBetween(html, 'DATA_SNAPSHOT', buildSnapshotTag(catRows));
+  html = injectBetween(html, 'HERO_PRELOAD', buildHeroPreloadTag(catRows) || '');
+  html = injectBetween(html, 'HERO_SLIDE', buildStaticHeroSlide(catRows) || '');
+  /* רשימת כל כתבות המדור כקישורים רגילים. האפליקציה מסירה אותה כשהיא בונה את הרשת המעוצבת. */
+  const list = catRows.map(r => `<li><a href="/article/${r.id}/">${esc(r.title)}<small>${esc(r.date || '')}</small></a></li>`).join('');
+  html = injectBetween(html, 'HOME_H1', `<h1 id="sp-home-h1" class="sp-h1">${esc(label)}</h1><ul id="sp-cat-static" class="sp-catlist">${list}</ul>`);
+  const ld = [
+    { '@context': 'https://schema.org', '@type': 'CollectionPage', name: title, url, description: desc, inLanguage: 'he',
+      mainEntity: { '@type': 'ItemList', numberOfItems: catRows.length, itemListElement: catRows.slice(0, 50).map((r, i) => ({ '@type': 'ListItem', position: i + 1, url: `${SITE}/article/${r.id}/`, name: r.title })) } },
+    { '@context': 'https://schema.org', '@type': 'BreadcrumbList', itemListElement: [
+      { '@type': 'ListItem', position: 1, name: 'ספידומטר', item: `${SITE}/` }, { '@type': 'ListItem', position: 2, name: label } ] },
+  ].map(o => `<script type="application/ld+json">${JSON.stringify(o).replace(/</g, '\\u003c')}</script>`).join('\n');
+  return html.replace('</head>', () => `${ld}\n</head>`);
+}
+async function writeCategoryPages(rootHtml, lightRows) {
+  let n = 0;
+  for (const cat of CAT_PAGES) {
+    const rows = lightRows.filter(r => r.cat === cat);
+    const dir = path.join(SITE_DIR, cat);
+    if (!rows.length) { await rm(dir, { recursive: true, force: true }); continue; }
+    await mkdir(dir, { recursive: true });
+    await writeFile(path.join(dir, 'index.html'), hydrateTemplateForCategory(rootHtml, cat, rows), 'utf-8');
+    n++;
+  }
+  console.log(`🗂️  נכתבו ${n} עמודי מדור (${CAT_PAGES.filter(c => lightRows.some(r => r.cat === c)).map(c => '/' + c + '/').join(' ')}).`);
+}
+
+/* ─── כתובת רכב בלי שנה: הפניה מהכתובת הישנה ───
+   GitHub Pages לא תומך בהפניית 301, ולכן בכתובת הישנה נכתב עמוד זעיר שמפנה מיד לחדשה
+   (meta refresh 0 + canonical — גוגל מתייחס לצירוף הזה כהפניה קבועה) ושומר על ?view= וכו'. */
+function carRedirectStub(c, oldSlug) {
+  const to = `/car/${c.slug}/`, name = `${carHeName(c)} ${c.year}`;
+  return `<!DOCTYPE html><html lang="he" dir="rtl"><head><meta charset="utf-8"><title>${esc(name)} | ספידומטר</title>` +
+    `<link rel="canonical" href="${SITE}${to}"><meta http-equiv="refresh" content="0; url=${to}">` +
+    `<script>location.replace(${JSON.stringify(to)}+location.search+location.hash)</script></head>` +
+    `<body><p>העמוד עבר לכתובת חדשה: <a href="${to}">${esc(name)}</a></p></body></html>`;
+}
+async function writeCarRedirects(cars) {
+  const live = new Set(cars.map(c => c.slug));
+  let n = 0;
+  for (const c of cars) {
+    for (const old of (Array.isArray(c.old_slugs) ? c.old_slugs : [])) {
+      if (!old || live.has(old) || !/^[a-z0-9]+(-[a-z0-9]+)*$/.test(String(old))) continue;
+      const dir = path.join(CAR_OUT_DIR, String(old));
+      await mkdir(dir, { recursive: true });
+      await writeFile(path.join(dir, 'index.html'), carRedirectStub(c, old), 'utf-8');
+      n++;
+    }
+  }
+  if (n) console.log(`↪️  נכתבו ${n} הפניות מכתובות רכב ישנות.`);
+}
+
+/* ═══════════════════ עמודי מותג: /cars/{key}/ ═══════════════════
+   עד 16.11.2026 "עמוד מותג" היה ?brand=X על עמוד המאגר — אותו HTML, canonical למאגר, לא ניתן לאינדוקס.
+   עכשיו לכל מותג שיש לו דגמים נבנה עמוד סטטי מאותה תבנית, עם כותרת, רשימת דגמים ומחירים משלו. */
+const BRANDS_OUT_DIR = path.join(SITE_DIR, 'cars');
+const COMPARE_OUT_DIR = path.join(SITE_DIR, 'compare');
+const numOf = v => (v == null || v === '' || !isFinite(Number(v)) || Number(v) <= 0) ? null : Number(v);
+function groupByBrand(cars) {
+  const groups = new Map();
+  for (const c of cars) { const info = brandInfo(c); if (!info.key) continue; if (!groups.has(info.key)) groups.set(info.key, { info, cars: [] }); groups.get(info.key).cars.push(c); }
+  return Array.from(groups.values());
+}
+const BRAND_STATIC_CSS = '<style id="sp-bstat-css">.sp-bstat{list-style:none;margin:18px 0 0;padding:0;display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:12px}.sp-bstat a{display:block;padding:16px;border:1px solid rgba(16,38,61,.14);border-radius:16px;background:#fff;color:#10263D;text-decoration:none}.sp-bstat b{display:block;font-size:1.05rem}.sp-bstat span{display:block;opacity:.7;font-size:.88rem;margin-top:4px}</style>';
+function hydrateBrandPage(hubHtml, g) {
+  const { info, cars } = g, url = `${SITE}/cars/${encodeURIComponent(info.key)}/`;
+  const heDiff = info.he && info.he !== info.name;
+  const title = `${heDiff ? `${info.he} (${info.name})` : info.name} — כל הדגמים בישראל, מחירים ומפרטים | ספידומטר`;
+  const prices = cars.map(c => numOf(c.price)).filter(Boolean);
+  const desc = `כל דגמי ${info.he || info.name} במאגר הרכבים של ספידומטר: ${cars.length === 1 ? 'דגם אחד' : cars.length + ' דגמים'}` +
+    (prices.length ? `, מחיר החל מ-${formatPriceILS(Math.min(...prices))}` : '') + ', מפרט טכני ואבזור.';
+  /* הנתונים המובנים של עמוד המאגר עצמו לא שייכים לעמוד המותג */
+  let html = hubHtml.replace(/<script type="application\/ld\+json">[\s\S]*?<\/script>\s*/g, '')
+    .replace(/<title>[^<]*<\/title>/, () => `<title>${esc(title)}</title>`)
+    .replace(/<meta name="description" content="[^"]*">/, () => `<meta name="description" content="${esc(desc)}">`)
+    .replace(/<link rel="canonical" href="[^"]*">/, () => `<link rel="canonical" href="${url}">`)
+    .replace(/<meta property="og:title" content="[^"]*">/, () => `<meta property="og:title" content="${esc(title)}">`)
+    .replace(/<meta property="og:description" content="[^"]*">/, () => `<meta property="og:description" content="${esc(desc)}">`)
+    .replace(/<meta property="og:url" content="[^"]*">/, () => `<meta property="og:url" content="${url}">`)
+    .replace('<body class="cx">', '<body class="cx is-results">')
+    .replace('<h1 id="r-title"></h1>', () => `<h1 id="r-title"><bdi>${esc(info.name)}</bdi>${heDiff ? ' · ' + esc(info.he) : ''}</h1>`)
+    .replace('<span id="r-crumb"></span>', () => `<span id="r-crumb"><a href="/cars-list.html?view=brands" data-route="view=brands">מותגים</a> › ${esc(info.name)}</span>`)
+    .replace('<p id="r-sub"></p>', () => `<p id="r-sub">${cars.length === 1 ? 'דגם אחד' : cars.length + ' דגמים'} במאגר, עם מחיר, מפרט טכני ואבזור</p>`);
+  const list = cars.map(c => `<li><a href="/car/${esc(c.slug)}/"><b>${esc(carHeName(c))} ${esc(c.year)}</b>` +
+    `<span>${[hasText(c.category) ? esc(String(c.category)) : '', numOf(c.price) ? 'החל מ-' + formatPriceILS(numOf(c.price)) : ''].filter(Boolean).join(' · ')}</span></a></li>`).join('');
+  html = injectBetween(html, 'BRAND_STATIC', `${BRAND_STATIC_CSS}<ul id="sp-brand-static" class="sp-bstat">${list}</ul>`);
+  html = injectBetween(html, 'CARS_INDEX', '');
+  const ld = [
+    { '@context': 'https://schema.org', '@type': 'CollectionPage', name: title, url, description: desc, inLanguage: 'he',
+      mainEntity: { '@type': 'ItemList', numberOfItems: cars.length, itemListElement: cars.map((c, i) => ({ '@type': 'ListItem', position: i + 1, url: `${SITE}/car/${c.slug}/`, name: `${carHeName(c)} ${c.year}` })) } },
+    { '@context': 'https://schema.org', '@type': 'BreadcrumbList', itemListElement: [
+      { '@type': 'ListItem', position: 1, name: 'ספידומטר', item: `${SITE}/` },
+      { '@type': 'ListItem', position: 2, name: 'מאגר רכבים', item: `${SITE}/cars-list.html` },
+      { '@type': 'ListItem', position: 3, name: info.he || info.name } ] },
+  ].map(o => `<script type="application/ld+json">${JSON.stringify(o).replace(/</g, '\\u003c')}</script>`).join('\n');
+  return injectBetween(html, 'CARS_ITEMLIST', ld);
+}
+async function writeBrandPages(cars) {
+  const hub = await readFile(path.join(SITE_DIR, 'cars-list.html'), 'utf-8');
+  await rm(BRANDS_OUT_DIR, { recursive: true, force: true });
+  if (!hub.includes('<!-- BUILD:BRAND_STATIC:START -->')) { console.warn('⚠️ cars-list.html בלי סמן BRAND_STATIC — מדלגים על עמודי המותג.'); return []; }
+  const groups = groupByBrand(cars).filter(g => /^[a-z0-9\u0590-\u05ff]+$/.test(g.info.key));
+  for (const g of groups) {
+    const dir = path.join(BRANDS_OUT_DIR, g.info.key);
+    await mkdir(dir, { recursive: true });
+    await writeFile(path.join(dir, 'index.html'), hydrateBrandPage(hub, g), 'utf-8');
+  }
+  console.log(`🏷️  נכתבו ${groups.length} עמודי מותג תחת /cars/{brand}/.`);
+  return groups;
+}
+
+/* ═══════════════════ עמודי השוואה: /compare/{a}-vs-{b}/ ═══════════════════
+   להשוואה לא הייתה כתובת (חלון שנפתח מעל העמוד), ולכן אי אפשר היה לשתף או לאנדקס "X מול Y".
+   לכל דגם נבנים עמודי השוואה מול עד 3 המתחרים הקרובים אליו (אותו סוג מרכב, המחיר הקרוב ביותר).
+   כל שורה ומשפט בעמוד מחושבים מהנתונים שבמאגר בלבד; שדה שחסר בשני הרכבים לא מוצג. */
+const BODY_GROUPS = [['קרוסאובר', 'suv', 'פנאי', "ג'יפ"], ['סדאן', 'ליפטבק', 'סטיישן'], ["הטצ'בק", 'האצ', 'מיני', 'עירוני', 'סופרמיני'], ['מיניוואן', 'ואן'], ['טנדר']];
+function bodyGroup(c) { const t = String(c.category || '').toLowerCase(); return BODY_GROUPS.findIndex(g => g.some(k => t.includes(k))); }
+function comparePairs(cars) {
+  const seen = new Set(), pairs = [];
+  for (const a of cars) {
+    const pa = numOf(a.price), ga = bodyGroup(a); if (!pa || ga < 0) continue;
+    cars.filter(b => b !== a && numOf(b.price) && bodyGroup(b) === ga && Math.abs(numOf(b.price) - pa) / pa <= 0.3)
+      .sort((x, y) => Math.abs(numOf(x.price) - pa) - Math.abs(numOf(y.price) - pa)).slice(0, 3)
+      .forEach(b => { const [x, y] = [a, b].sort((m, n) => String(m.slug).localeCompare(String(n.slug))); const k = `${x.slug}-vs-${y.slug}`; if (!seen.has(k)) { seen.add(k); pairs.push({ key: k, a: x, b: y }); } });
+  }
+  return pairs;
+}
+const CMP_ROWS = [
+  ['מחיר התחלתי', c => numOf(c.price), v => formatPriceILS(v), 'low'],
+  ['הספק', c => numOf(c.horsepower), v => v + ' כ"ס', 'high'],
+  ['תאוצה 0-100 קמ"ש', c => numOf(c.acceleration_0_100), v => v + ' שניות', 'low'],
+  ['מהירות מרבית', c => numOf(c.top_speed), v => v + ' קמ"ש', 'high'],
+  ['טווח חשמלי', c => numOf(c.range_ev), v => v + ' ק"מ', 'high'],
+  ['קיבולת סוללה', c => numOf(c.battery_capacity_kwh), v => v + ' קוט"ש', 'high'],
+  ['צריכת דלק', c => numOf(c.fuel_consumption), v => v + ' ל\'/100 ק"מ', 'low'],
+  ['נפח תא מטען', c => numOf(c.trunk_volume), v => v + ' ליטר', 'high'],
+  ['אורך', c => numOf(c.length), v => v + ' מ"מ', null],
+  ['רוחב', c => numOf(c.width), v => v + ' מ"מ', null],
+  ['גובה', c => numOf(c.height), v => v + ' מ"מ', null],
+  ['בסיס גלגלים', c => numOf(c.wheelbase), v => v + ' מ"מ', 'high'],
+  ['משקל עצמי', c => numOf(c.weight), v => v + ' ק"ג', null],
+  ['מושבים', c => numOf(c.seats), v => String(v), null],
+  ['מנוע', c => hasText(c.engine) ? String(c.engine) : null, v => v, null],
+  ['תיבת הילוכים', c => hasText(c.transmission) ? String(c.transmission) : null, v => v, null],
+  ['הנעה', c => hasText(c.drive_type) ? String(c.drive_type) : null, v => v, null],
+  ['בטיחות', c => hasText(c.safety_rating) ? String(c.safety_rating) : null, v => v, null],
+  ['אחריות', c => hasText(c.warranty) ? String(c.warranty) : null, v => v, null],
+  ['יבואן', c => hasText(c.importer) ? String(c.importer) : null, v => v, null],
+];
+const CMP_CSS = '<style id="sp-cmp-css">.sp-cmp{max-width:980px;margin:0 auto;padding:22px 18px 10px;color:var(--ink,#10263D)}.sp-cmp .cx-crumbs{font-size:.85rem;opacity:.75;margin-bottom:10px}.sp-cmp .cx-crumbs a{color:inherit}.sp-cmp h1{font-size:clamp(1.5rem,4vw,2.3rem);font-weight:900;letter-spacing:-.02em;line-height:1.15;margin:0 0 10px}.sp-cmp-lead{line-height:1.75;margin:0 0 20px;max-width:70ch}.sp-cmp-heads{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:0 0 18px}.sp-cmp-head{border:1px solid rgba(16,38,61,.14);border-radius:18px;padding:14px;background:#fff;text-decoration:none;color:inherit;display:block}.sp-cmp-head img{width:100%;height:auto;aspect-ratio:16/10;object-fit:cover;border-radius:12px;display:block;margin-bottom:10px}.sp-cmp-head b{display:block;font-size:1.05rem;line-height:1.3}.sp-cmp-head span{display:block;opacity:.7;font-size:.88rem;margin-top:3px}.sp-cmp table{width:100%;border-collapse:collapse;background:#fff;border:1px solid rgba(16,38,61,.14);border-radius:18px;overflow:hidden;border-spacing:0}.sp-cmp th,.sp-cmp td{padding:11px 12px;border-bottom:1px solid rgba(16,38,61,.09);text-align:start;vertical-align:top;font-size:.94rem}.sp-cmp thead th{background:#10263D;color:#fff;font-weight:700}.sp-cmp tbody th{font-weight:500;opacity:.75;width:30%}.sp-cmp tr:last-child td,.sp-cmp tr:last-child th{border-bottom:0}.sp-cmp td.win{font-weight:800;color:#0a7d4d}.sp-cmp-cta{display:flex;flex-wrap:wrap;gap:10px;margin:20px 0 6px}.sp-cmp-cta a{display:inline-block;padding:12px 18px;border-radius:99px;font-weight:700;text-decoration:none;border:1px solid rgba(16,38,61,.25);color:inherit}.sp-cmp-cta a.pri{background:#e8001d;border-color:#e8001d;color:#fff}.sp-cmp h2{font-size:1.1rem;font-weight:800;margin:26px 0 10px}.sp-cmp-more{list-style:none;padding:0;margin:0;display:flex;flex-wrap:wrap;gap:8px}.sp-cmp-more a{display:inline-block;padding:8px 14px;border-radius:99px;border:1px solid rgba(16,38,61,.25);color:inherit;text-decoration:none;font-size:.9rem;font-weight:600}.sp-cmp small{display:block;opacity:.65;margin-top:14px;line-height:1.6}@media(max-width:560px){.sp-cmp{padding:16px 12px 6px}.sp-cmp th,.sp-cmp td{padding:9px 8px;font-size:.86rem}.sp-cmp tbody th{width:28%}.sp-cmp-head{padding:10px}}</style>';
+function cmpFacts(a, b) {
+  const A = carHeName(a), B = carHeName(b), out = [];
+  const diff = (get, unit, wordHigh, min) => { const x = get(a), y = get(b); if (!x || !y || x === y) return; const hi = x > y ? A : B, d = Math.round(Math.abs(x - y) * 10) / 10; if (d >= (min || 0)) out.push(`${wordHigh.replace('%s', hi).replace('%d', unit === '₪' ? formatPriceILS(d) : d + ' ' + unit)}`); };
+  const pa = numOf(a.price), pb = numOf(b.price);
+  if (pa && pb && pa !== pb) out.push(`${pa < pb ? A : B} זולה ב-${formatPriceILS(Math.abs(pa - pb))} במחיר ההתחלתי`);
+  diff(c => numOf(c.horsepower), 'כ"ס', 'ל-%s הספק גבוה ב-%d', 1);
+  diff(c => numOf(c.trunk_volume), 'ליטר', 'ל-%s תא מטען גדול ב-%d', 1);
+  diff(c => numOf(c.range_ev), 'ק"מ', 'ל-%s טווח חשמלי ארוך ב-%d', 1);
+  return out;
+}
+function buildComparePage(carTemplate, pair, pairsByCar) {
+  const { a, b, key } = pair, A = `${carHeName(a)} ${a.year}`, B = `${carHeName(b)} ${b.year}`;
+  const url = `${SITE}/compare/${key}/`, title = `${carHeName(a)} מול ${carHeName(b)} — השוואת מחיר ומפרט | ספידומטר`;
+  const facts = cmpFacts(a, b);
+  const desc = `השוואה בין ${A} ל-${B}: מחיר, הספק, מידות, תא מטען ואבזור, זה לצד זה.`.slice(0, 158);
+  const rows = CMP_ROWS.map(([label, get, fmt, better]) => {
+    const x = get(a), y = get(b); if (x == null && y == null) return '';
+    let wa = '', wb = '';
+    if (better && typeof x === 'number' && typeof y === 'number' && x !== y) { const aWins = better === 'high' ? x > y : x < y; wa = aWins ? ' class="win"' : ''; wb = aWins ? '' : ' class="win"'; }
+    return `<tr><th scope="row">${esc(label)}</th><td${wa}>${x == null ? '—' : esc(fmt(x))}</td><td${wb}>${y == null ? '—' : esc(fmt(y))}</td></tr>`;
+  }).join('');
+  const head = c => { const im = realImages(c)[0]; return `<a class="sp-cmp-head" href="/car/${esc(c.slug)}/">${im ? `<img src="${esc(wsrvW(im, 640))}" alt="${esc(carHeName(c))} ${esc(c.year)}" width="640" height="400" loading="lazy" decoding="async">` : ''}<b>${esc(carHeName(c))} ${esc(c.year)}</b><span>${numOf(c.price) ? 'החל מ-' + formatPriceILS(numOf(c.price)) : ''}</span></a>`; };
+  const more = c => (pairsByCar.get(c.slug) || []).filter(p => p.key !== key).slice(0, 4).map(p => { const o = p.a === c ? p.b : p.a; return `<li><a href="/compare/${esc(p.key)}/">${esc(carHeName(c))} מול ${esc(carHeName(o))}</a></li>`; }).join('');
+  const moreHTML = more(a) + more(b);
+  const body = `${CMP_CSS}<article class="sp-cmp"><nav class="cx-crumbs" aria-label="מיקום"><a href="/cars-list.html">מאגר הרכבים</a> › השוואות</nav>` +
+    `<h1>${esc(carHeName(a))} מול ${esc(carHeName(b))}</h1>` +
+    (facts.length ? `<p class="sp-cmp-lead">${esc(facts.join('. '))}.</p>` : '') +
+    `<div class="sp-cmp-heads">${head(a)}${head(b)}</div>` +
+    `<table><thead><tr><th scope="col">נתון</th><th scope="col">${esc(carHeName(a))}</th><th scope="col">${esc(carHeName(b))}</th></tr></thead><tbody>${rows}</tbody></table>` +
+    `<small>הנתונים לפי מפרטי היבואנים כפי שהוזנו במאגר ספידומטר. הערך המודגש בכל שורה הוא הגבוה או הנמוך יותר, לפי העניין; יש לאמת מול היבואן לפני רכישה.</small>` +
+    `<div class="sp-cmp-cta"><a class="pri" href="/cars-list.html?compare=${encodeURIComponent(a.slug)},${encodeURIComponent(b.slug)}">השוואה מלאה והוספת דגם שלישי</a><a href="/car/${esc(a.slug)}/">${esc(carHeName(a))}</a><a href="/car/${esc(b.slug)}/">${esc(carHeName(b))}</a></div>` +
+    (moreHTML ? `<h2>השוואות נוספות</h2><ul class="sp-cmp-more">${moreHTML}</ul>` : '') + `</article>`;
+  const img = realImages(a)[0] || realImages(b)[0] || `${SITE}/favicon-512.png`;
+  let html = carTemplate
+    .replace(/<meta name="robots" content="[^"]*">/, '<meta name="robots" content="index, follow, max-image-preview:large">')
+    .replace('<title>טוען...</title>', () => `<title>${esc(title)}</title>`)
+    .replace('<meta name="description" content="">', () => `<meta name="description" content="${esc(desc)}">`)
+    .replace('<link rel="canonical" href="">', () => `<link rel="canonical" href="${url}">`)
+    .replace('<meta property="og:title" content="">', () => `<meta property="og:title" content="${esc(title)}">`)
+    .replace('<meta property="og:description" content="">', () => `<meta property="og:description" content="${esc(desc)}">`)
+    .replace('<meta property="og:url" content="">', () => `<meta property="og:url" content="${url}">`)
+    .replace('<meta property="og:image" content="">', () => `<meta property="og:image" content="${esc(img)}">`)
+    .replace('<meta name="twitter:title" content="">', () => `<meta name="twitter:title" content="${esc(title)}">`)
+    .replace('<meta name="twitter:description" content="">', () => `<meta name="twitter:description" content="${esc(desc)}">`)
+    .replace('<meta name="twitter:image" content="">', () => `<meta name="twitter:image" content="${esc(img)}">`)
+    .replace('<span id="breadcrumb-name">טוען...</span>', () => `<span id="breadcrumb-name">${esc(carHeName(a))} מול ${esc(carHeName(b))}</span>`)
+    .replace(/<div id="car-page-root">[\s\S]*?<\/div>\s*<\/main>/, () => `<div id="car-page-root">${body}</div>\n</main>`);
+  /* עמוד ההשוואה סטטי: במקום קוד עמוד הרכב — רק התנהגות הכותרת (תפריט, שנה) וקישור לכלי ההשוואה המלא */
+  const tail = `<script>(function(){var y=document.getElementById('yr');if(y)y.textContent=new Date().getFullYear();var m=document.getElementById('hdr-menu');if(m)m.addEventListener('click',function(){var o=document.getElementById('cx-nav').classList.toggle('open');this.setAttribute('aria-expanded',o);});document.addEventListener('click',function(e){if(e.target.closest('[data-open-compare]')){e.preventDefault();location.href=${JSON.stringify(`/cars-list.html?compare=${a.slug},${b.slug}`)};}});window.addEventListener('scroll',function(){document.getElementById('hdr').classList.toggle('is-scrolled',scrollY>8);},{passive:true});})();</script>`;
+  const cut = html.indexOf('<script src="/cars-core.js');
+  if (cut === -1) throw new Error('car.html: לא נמצא בלוק הסקריפטים');
+  html = html.slice(0, cut) + tail + '\n</body>\n</html>\n';
+  const ld = [
+    { '@context': 'https://schema.org', '@type': 'WebPage', name: title, url, description: desc, inLanguage: 'he',
+      about: [a, b].map(c => ({ '@type': 'Car', name: `${c.brand} ${c.model} ${c.year}`, url: `${SITE}/car/${c.slug}/` })) },
+    { '@context': 'https://schema.org', '@type': 'BreadcrumbList', itemListElement: [
+      { '@type': 'ListItem', position: 1, name: 'ספידומטר', item: `${SITE}/` },
+      { '@type': 'ListItem', position: 2, name: 'מאגר רכבים', item: `${SITE}/cars-list.html` },
+      { '@type': 'ListItem', position: 3, name: `${carHeName(a)} מול ${carHeName(b)}` } ] },
+  ].map(o => `<script type="application/ld+json">${JSON.stringify(o).replace(/</g, '\\u003c')}</script>`).join('\n');
+  return html.replace('</head>', () => `${ld}\n</head>`);
+}
+let COMPARE_PAIRS = [], PAIRS_BY_CAR = new Map();
+function planComparePairs(cars) {
+  COMPARE_PAIRS = comparePairs(cars); PAIRS_BY_CAR = new Map();
+  for (const p of COMPARE_PAIRS) for (const c of [p.a, p.b]) { if (!PAIRS_BY_CAR.has(c.slug)) PAIRS_BY_CAR.set(c.slug, []); PAIRS_BY_CAR.get(c.slug).push(p); }
+}
+async function writeComparePages(carTemplate) {
+  await rm(COMPARE_OUT_DIR, { recursive: true, force: true });
+  for (const p of COMPARE_PAIRS) {
+    const dir = path.join(COMPARE_OUT_DIR, p.key);
+    await mkdir(dir, { recursive: true });
+    await writeFile(path.join(dir, 'index.html'), buildComparePage(carTemplate, p, PAIRS_BY_CAR), 'utf-8');
+  }
+  console.log(`⚖️  נכתבו ${COMPARE_PAIRS.length} עמודי השוואה תחת /compare/{a}-vs-{b}/.`);
+}
+
+/* ─── עמוד המאגר (cars-list.html) ───
+   רשימת הרכבים בעמוד נבנית כולה ב-JavaScript, ולכן ב-HTML שגוגל מקבל לא היה אף קישור לעמוד רכב.
+   כאן נכתב מדריך "כל הדגמים לפי מותג" כ-HTML רגיל, ונתוני ItemList מובנים. */
+const CARS_INDEX_CSS = '<style id="sp-cars-index-css">.sp-cidx{padding:8px 0 44px}.sp-cidx h2{font-size:clamp(1.35rem,2.4vw,1.65rem);font-weight:800;letter-spacing:-.01em;margin:0 0 4px}.sp-cidx>div>p{opacity:.7;margin:0 0 20px}.sp-cidx-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:12px}.sp-cidx-b{border:1px solid rgba(16,38,61,.14);border-radius:16px;padding:14px 16px;background:#fff}.sp-cidx-b h3{font-size:1rem;font-weight:800;margin:0 0 8px}.sp-cidx-b h3 a{color:inherit;text-decoration:none}.sp-cidx-b ul{list-style:none;margin:0;padding:0}.sp-cidx-b li{padding:5px 0;border-top:1px solid rgba(16,38,61,.08);display:flex;justify-content:space-between;gap:10px;align-items:baseline}.sp-cidx-b li a{color:#10263D;text-decoration:none;font-weight:600}.sp-cidx-b li a:hover{color:#e8001d}.sp-cidx-b li span{font-size:.82rem;opacity:.65;white-space:nowrap}.sp-cidx-cmp{list-style:none;margin:0;padding:0;display:flex;flex-wrap:wrap;gap:8px}.sp-cidx-cmp a{display:inline-block;padding:9px 15px;border-radius:99px;border:1px solid rgba(16,38,61,.2);background:#fff;color:#10263D;text-decoration:none;font-weight:600;font-size:.9rem}@media(max-width:520px){.sp-cidx-grid{grid-template-columns:1fr 1fr;gap:8px}.sp-cidx-b{padding:12px}.sp-cidx-b li{flex-direction:column;align-items:flex-start;gap:0}}</style>';
+function buildCarsIndexHTML(cars) {
+  const groups = new Map();
+  for (const c of cars) {
+    const info = brandInfo(c);
+    if (!groups.has(info.key)) groups.set(info.key, { info, cars: [] });
+    groups.get(info.key).cars.push(c);
+  }
+  const sorted = Array.from(groups.values()).sort((a, b) => b.cars.length - a.cars.length || a.info.he.localeCompare(b.info.he, 'he'));
+  const num = v => (v == null || v === '' || !isFinite(Number(v)) || Number(v) <= 0) ? null : Number(v);
+  const blocks = sorted.map(g => `<div class="sp-cidx-b"><h3><a href="/cars/${encodeURIComponent(g.info.key)}/">${esc(g.info.he)}</a></h3><ul>${g.cars.map(c => {
+    const he = carHeName(c), pre = [g.info.he, ...g.info.alt].sort((a, b) => b.length - a.length).find(x => he.startsWith(x + ' '));
+    const label = (pre ? he.slice(pre.length + 1) : he) + ' ' + c.year;
+    return `<li><a href="/car/${esc(c.slug)}/" title="${esc(he)} ${esc(c.year)}">${esc(label)}</a>${num(c.price) ? `<span>מ-${formatPriceILS(num(c.price))}</span>` : ''}</li>`;
+  }).join('')}</ul></div>`).join('');
+  return `${CARS_INDEX_CSS}<section class="sp-cidx" aria-labelledby="sp-cidx-t"><div class="cx-wrap"><h2 id="sp-cidx-t">כל הדגמים במאגר</h2><p>${cars.length} דגמים של ${sorted.length} מותגים, עם מחיר, מפרט טכני ואבזור.</p><div class="sp-cidx-grid">${blocks}</div>${COMPARE_PAIRS.length ? `<h2 style="margin-top:34px">השוואות</h2><p>מחיר ומפרט זה לצד זה, מול המתחרים הקרובים.</p><ul class="sp-cidx-cmp">${COMPARE_PAIRS.slice(0, 18).map(p => `<li><a href="/compare/${esc(p.key)}/">${esc(carHeName(p.a))} מול ${esc(carHeName(p.b))}</a></li>`).join('')}</ul>` : ''}</div></section>`;
+}
+function buildCarsItemList(cars) {
+  const ld = { '@context': 'https://schema.org', '@type': 'ItemList', name: 'מאגר הרכבים של ספידומטר', numberOfItems: cars.length,
+    itemListElement: cars.map((c, i) => ({ '@type': 'ListItem', position: i + 1, url: `${SITE}/car/${c.slug}/`, name: `${carHeName(c)} ${c.year}` })) };
+  return `<script type="application/ld+json">${JSON.stringify(ld).replace(/</g, '\\u003c')}</script>`;
+}
+/* ─── מחשבון שווי שימוש: רשימת הרכבים לבחירה + טבלת שווי לכל דגם ─── */
+async function hydrateUsageCalc(cars) {
+  const p = path.join(SITE_DIR, 'usage-value-calculator.html');
+  let html;
+  try { html = await readFile(p, 'utf-8'); } catch { return; }
+  if (!html.includes('<!-- BUILD:CALC_CARS_DATA:START -->')) { console.warn('⚠️ usage-value-calculator.html בלי סמני BUILD — מדלגים.'); return; }
+  const num = v => (v == null || v === '' || !isFinite(Number(v)) || Number(v) <= 0) ? null : Number(v);
+  const list = cars.filter(c => num(c.price)).map(c => ({
+    s: c.slug, n: carHeName(c), e: `${c.brand} ${c.model}`, y: c.year, p: num(c.price), pt: String(c.powertrain || '').toLowerCase(),
+    t: (Array.isArray(c.trims) ? c.trims : []).filter(t => t && t.name && num(t.price)).map(t => ({ n: String(t.name), p: num(t.price) })),
+    o: Array.isArray(c.old_slugs) ? c.old_slugs : [],
+  }));
+  html = injectBetween(html, 'CALC_CARS_DATA', `<script>window.SP_CALC_CARS=${JSON.stringify(list).replace(/</g, '\\u003c')};</script>`);
+  const rows = list.map(c => {
+    const pt = c.pt === 'diesel' ? 'diesel' : c.pt;
+    const u = usageValue(c.p, pt) || (pt === 'mhev' ? usageValue(c.p, 'petrol') : null);
+    if (!u) return '';
+    return `<tr><th scope="row"><a href="/car/${esc(c.s)}/">${esc(c.n)} ${esc(c.y)}</a></th><td><b>${formatPriceILS(u.value)}</b></td><td>${formatPriceILS(c.p)}</td><td style="font-family:inherit">${esc(PT_HE[pt] || '')}${pt === 'mhev' ? '*' : ''}</td><td class="calc"><a href="/usage-value-calculator.html?car=${encodeURIComponent(c.s)}">חשבו נטו</a></td></tr>`;
+  }).filter(Boolean);
+  const hasMh = list.some(c => c.pt === 'mhev');
+  const table = rows.length ? `<div class="tbl-wrap"><table><caption>לפי מחיר המחירון ההתחלתי במאגר.${hasMh ? ' * היברידי קל: מוצג ללא הפחתה; ההפחתה להיברידי תלויה בסוג הדלק הרשום ברישיון הרכב.' : ''}</caption><thead><tr><th scope="col">דגם</th><th scope="col">שווי לחודש</th><th scope="col">מחיר מחירון</th><th scope="col">הנעה</th><th scope="col"><span style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)">חישוב</span></th></tr></thead><tbody>${rows.join('')}</tbody></table></div>` : '';
+  html = injectBetween(html, 'CALC_CARS_TABLE', table);
+  await writeFile(p, html, 'utf-8');
+  console.log(`🧮 usage-value-calculator.html: ${list.length} רכבים לבחירה, ${rows.length} שורות בטבלה.`);
+}
+
+async function hydrateCarsList(cars) {
+  const p = path.join(SITE_DIR, 'cars-list.html');
+  let html = await readFile(p, 'utf-8');
+  if (!html.includes('<!-- BUILD:CARS_INDEX:START -->')) { console.warn('⚠️ cars-list.html בלי סמן CARS_INDEX — מדלגים.'); return; }
+  html = injectBetween(html, 'CARS_INDEX', buildCarsIndexHTML(cars));
+  html = injectBetween(html, 'CARS_ITEMLIST', buildCarsItemList(cars));
+  await writeFile(p, html, 'utf-8');
+  console.log(`🚗 cars-list.html: נכתבו ${cars.length} קישורים סטטיים לעמודי רכב.`);
 }
 
 /* מזריק תוכן בין סמני BUILD — אידמפוטנטי (מחליף את מה שהיה שם בריצה הקודמת) */
 function injectBetween(html, name, content) {
   const re = new RegExp(`<!-- BUILD:${name}:START -->[\\s\\S]*?<!-- BUILD:${name}:END -->`);
   if (!re.test(html)) return html; // תבנית ישנה בלי סמנים - לא נוגעים
-  return html.replace(re, `<!-- BUILD:${name}:START -->${content}<!-- BUILD:${name}:END -->`);
+  return html.replace(re, () => `<!-- BUILD:${name}:START -->${content}<!-- BUILD:${name}:END -->`); // פונקציה: $ בתוכן לא מתפרש
 }
 
 async function fetchArticles(supabase) {
@@ -1397,6 +1758,8 @@ function hydrateTemplateForCar(template, c, allCars) {
   /* נתונים מובנים: Car מלא + נתיב ניווט + שאלות נפוצות (ראו carSchemas). תמונות סטוק לא נכנסות. */
   html = html.replace('</head>', `${carSchemas(c, canonicalUrl)}\n</head>`);
 
+  /* התבנית car.html עצמה מסומנת noindex (עמוד ריק עם "טוען..."); עמוד רכב אמיתי מסומן לאינדוקס */
+  html = html.replace(/<meta name="robots" content="[^"]*">/, '<meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1">');
   html = html.replace(
     '<span id="breadcrumb-name">טוען...</span>',
     `<span id="breadcrumb-name">${esc(`${c.brand} ${c.model} ${c.year}`)}</span>`
@@ -1438,6 +1801,7 @@ async function main() {
   let liveCars = [];
   try {
     liveCars = await fetchCars(supabase);
+    planComparePairs(liveCars); // נדרש גם בריצה ממוקדת: מפת האתר ועמודי הרכב מקשרים להשוואות
   } catch (err) {
     console.error('⚠️ שליפת רכבים נכשלה - הפוטר ייבנה בלי קישורי רכבים:', err.message || err);
   }
@@ -1457,6 +1821,7 @@ async function main() {
   await writeFile(TEMPLATE_PATH, rootHtml, 'utf-8');
   await writeFile(path.join(SITE_DIR, '404.html'), with404CarRoute(rootHtml), 'utf-8');
   console.log(`✅ index.html + 404.html עודכנו (snapshot: ${Math.min(lightRows.length,16)} כתבות, preload: ${heroPreloadTag ? 'כן' : 'אין תמונת hero'})`);
+  await writeCategoryPages(rootHtml, lightRows);
   if (!template.includes('id="art-body"')) {
     throw new Error('התבנית לא מכילה את המבנה הצפוי (#art-body) - בדוק את index.html בשורש הריפו');
   }
@@ -1532,6 +1897,13 @@ async function main() {
         carsWritten++;
       }
       console.log(`🚗 נכתבו ${carsWritten} עמודי רכב תחת /car/{slug}/.`);
+      await writeCarRedirects(liveCars);
+      if (liveCars.length) {
+        await hydrateCarsList(liveCars);
+        await hydrateUsageCalc(liveCars);
+        await writeBrandPages(liveCars);
+        await writeComparePages(carTemplate);
+      }
     } catch (err) {
       console.error('⚠️ שגיאה בבניית עמודי רכב סטטיים - ממשיכים בלי לעצור את שאר הריצה:', err.message || err);
     }
