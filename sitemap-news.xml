@@ -22,15 +22,4 @@
       <news:title>BYD דולפין G בישראל: ההיברידית-נטענת הזולה בישראל</news:title>
     </news:news>
   </url>
-  <url>
-    <loc>https://speedometer10.co.il/article/724/</loc>
-    <news:news>
-      <news:publication>
-        <news:name>ספידומטר</news:name>
-        <news:language>he</news:language>
-      </news:publication>
-      <news:publication_date>2026-11-16T14:37:00.000Z</news:publication_date>
-      <news:title>באיק בישראל: רכב פנאי היברידי במראה קשוח ושני דגמי בנזין</news:title>
-    </news:news>
-  </url>
 </urlset>
