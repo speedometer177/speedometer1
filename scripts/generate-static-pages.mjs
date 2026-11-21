@@ -718,9 +718,11 @@ const BRAND_MAP = (() => {
   try {
     const src = readFileSync(new URL('../cars-core.js', import.meta.url), 'utf-8');
     const re = /^\s*['"]?([a-z0-9_-]+)['"]?\s*:\s*\{\s*name\s*:\s*'([^']+)'\s*,\s*he\s*:\s*'([^']+)'(?:\s*,\s*alt\s*:\s*\[([^\]]*)\])?/gm;
+    /* he:"ג'אקו" כתוב במירכאות כפולות — נתפס בביטוי שני (זהה לזיהוי בצד הלקוח, app.js) */
+    const re2 = /^\s*['"]?([a-z0-9_-]+)['"]?\s*:\s*\{\s*name\s*:\s*'([^']+)'\s*,\s*he\s*:\s*"([^"]+)"(?:\s*,\s*alt\s*:\s*\[([^\]]*)\])?/gm;
     let m;
-    while ((m = re.exec(src))) {
-      const alt = (m[4] || '').split(',').map(x => x.trim().replace(/^'|'$/g, '')).filter(Boolean);
+    for (const rx of [re, re2]) while ((m = rx.exec(src))) {
+      const alt = (m[4] || '').split(',').map(x => x.trim().replace(/^['"]|['"]$/g, '')).filter(Boolean);
       map.set(m[2].toLowerCase(), { key: m[1], name: m[2], he: m[3], alt });
     }
   } catch (e) { console.warn('⚠️ טבלת המותגים לא נקראה מ-cars-core.js:', e.message); }
@@ -739,19 +741,21 @@ function brandInfo(c) {
   if (b) return { key, name: b.name || String(c.brand || ''), he: b.he, alt: b.alt };
   return { key, name: String(c.brand || '').trim(), he: carHeName(c).split(' ')[0] || String(c.brand || ''), alt: [] };
 }
+/* גרש/מירכאות עבריים וטיפוגרפיים (׳ ״ ’ ”) נחשבים זהים ל-' ו-" — "ספורטאז׳" = "ספורטאז'" */
+const normQ = t => String(t || '').replace(/[\u05F3\u2018\u2019`\u00B4]/g, "'").replace(/[\u05F4\u201C\u201D]/g, '"');
 const MODEL_NOISE_RE = /\b(hybrid|phev|plug-?in|electric|ev)\b|היברידי(?:ת)?|חשמלי(?:ת)?|פלאג[- ]?אין|החדש(?:ה)?/gi;
 function carMatchKeys(c) {
   const info = brandInfo(c);
   const brandEn = String(c.brand || '').toLowerCase().trim();
-  const he = carHeName(c).toLowerCase();
+  const he = normQ(carHeName(c).toLowerCase());
   /* שם הדגם בעברית = השם המלא פחות המותג (גם כשהמותג הוא שתי מילים, "מרצדס בנץ") */
-  const prefixes = [info.he, ...info.alt, brandEn].map(x => String(x).toLowerCase()).sort((a, b) => b.length - a.length);
+  const prefixes = [info.he, ...info.alt, brandEn].map(x => normQ(String(x).toLowerCase())).sort((a, b) => b.length - a.length);
   const pre = prefixes.find(x => x && he.startsWith(x + ' '));
   const rest = pre ? he.slice(pre.length + 1) : he.split(' ').slice(1).join(' ');
   const brandHe = pre || he.split(' ')[0] || '';
-  const modelEn = String(c.model || '').toLowerCase().replace(MODEL_NOISE_RE, ' ').replace(/\s+/g, ' ').trim();
+  const modelEn = normQ(String(c.model || '').toLowerCase()).replace(MODEL_NOISE_RE, ' ').replace(/\s+/g, ' ').trim();
   const modelHe = rest.replace(MODEL_NOISE_RE, ' ').replace(/\s+/g, ' ').trim();
-  const brands = Array.from(new Set([brandHe, brandEn, String(info.he).toLowerCase(), ...info.alt.map(x => x.toLowerCase())].filter(b => b && b.length >= 2)));
+  const brands = Array.from(new Set([brandHe, brandEn, normQ(String(info.he).toLowerCase()), ...info.alt.map(x => normQ(x.toLowerCase()))].filter(b => b && b.length >= 2)));
   return { brandEn, brandHe, modelEn, modelHe, brands };
 }
 function escRe(x) { return x.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); }
@@ -791,7 +795,7 @@ function buildLinkGraph(articles, cars) {
     .sort((a, b) => Math.max(b.k.modelEn.length, b.k.modelHe.length) - Math.max(a.k.modelEn.length, a.k.modelHe.length));
   for (const a of articles) {
     if (a.cat === 'quick') continue;
-    const full = `${a.title || ''} \n ${a.sub || ''} \n ${a.body || ''}`.toLowerCase().replace(/<[^>]+>/g, ' ');
+    const full = normQ(`${a.title || ''} \n ${a.sub || ''} \n ${a.body || ''}`.toLowerCase().replace(/<[^>]+>/g, ' '));
     const box = { text: full, full };
     for (const { c, k } of keyed) {
       if (!matchCarInText(box, k)) continue;
@@ -806,26 +810,66 @@ function buildLinkGraph(articles, cars) {
 let LINK_GRAPH = { carsByArticle: new Map(), articlesByCar: new Map() };
 let ALL_LIVE_ARTICLES = [];
 
-const REL_CSS = '<style id="sp-rel-css">.sp-rel{margin:28px 0 8px;padding-top:20px;border-top:1px solid rgba(127,127,127,.25)}.sp-rel h2{font-size:1.05rem;font-weight:800;margin:0 0 10px}.sp-rel ul{list-style:none;margin:0 0 18px;padding:0;display:grid;gap:8px}.sp-rel a{display:block;padding:12px 14px;border-radius:10px;background:rgba(127,127,127,.1);color:inherit;text-decoration:none;font-weight:600;line-height:1.45}.sp-rel a:hover{background:rgba(232,0,29,.1)}.sp-rel small{display:block;font-weight:400;opacity:.7;font-size:.82em;margin-top:2px}</style>';
-/* בלוק קישורים פנימיים מתחת לכתבה: רכבים מהמאגר שמוזכרים בה + כתבות נוספות באותו מדור.
+/* בלוק "המשך קריאה" מתחת לכתבה — אותו עיצוב (sp-readon.css) ואותו מבנה כמו הבלוק החי שב-app.js.
+   כאן הוא אפוי ב-HTML כדי שגוגל יקרא את הקישורים מהבייט הראשון; כשהאפליקציה עולה, הבלוק החי מחליף אותו.
    יושב מחוץ ל-#art-body כדי שהאפליקציה לא תדרוס אותו; מוסר את עצמו כשעוברים לכתבה אחרת בלי טעינה מחדש. */
+const READON_CSS_HREF = '/sp-readon.css?v=20261122a';
+const RO_STOCK_RE = /unsplash\.com|pexels\.com|pixabay\.com/i;
+const RO_PT = { ev: 'חשמלי', phev: 'פלאג-אין', hev: 'היברידי', hybrid: 'היברידי', mhev: 'היברידי קל', ice: 'בנזין', petrol: 'בנזין', diesel: 'דיזל' };
+function roImg(u, w) {
+  if (!u || String(u).length < 6) return '';
+  if (/^https?:\/\//.test(u) && u.indexOf('wsrv.nl') === -1 && u.indexOf('images.unsplash.com') === -1)
+    return `https://wsrv.nl/?url=${encodeURIComponent(u)}&w=${w}&fit=cover&output=webp&q=72`;
+  return u;
+}
+function roHead(t, n) { return `<div class="sp-ro-head"><h2>${esc(t)}</h2>${n ? `<span class="sp-ro-count">${String(n).padStart(2, '0')}</span>` : ''}</div>`; }
+function roCarCard(c) {
+  const name = carHeName(c);
+  const cut = /^https?:/.test(c.image_cutout || '') ? c.image_cutout : '';
+  const photo = !cut && /^https?:/.test(c.image_main || '') && !RO_STOCK_RE.test(c.image_main) ? c.image_main : '';
+  const stage = cut ? `<img src="https://wsrv.nl/?url=${encodeURIComponent(cut)}&w=300&output=webp&q=80" alt="${esc(name)}" loading="lazy" decoding="async">`
+    : photo ? `<img class="sp-ro-photo" src="${esc(roImg(photo, 300))}" alt="${esc(name)}" loading="lazy" decoding="async">`
+    : `<span class="sp-ro-mono">${esc(String(c.model || c.brand || '').replace(MODEL_NOISE_RE, '').trim().slice(0, 8))}</span>`;
+  const pt = String(c.powertrain || '').toLowerCase(), chips = [];
+  if (RO_PT[pt]) chips.push(RO_PT[pt]);
+  if (Number(c.horsepower) > 0) chips.push(`${c.horsepower} כ"ס`);
+  if (Number(c.range_ev) > 0 && (pt === 'ev' || pt === 'phev')) chips.push(`טווח ${c.range_ev} ק"מ`);
+  const price = Number(c.price) > 0 ? `${Number(c.price).toLocaleString('he-IL')} ₪` : '';
+  return `<li><a class="sp-ro-car" href="/car/${esc(c.slug)}/"><div class="sp-ro-stage${photo ? ' has-photo' : ''}">${stage}</div><div class="sp-ro-info">`
+    + `<span class="sp-ro-brand">${esc(brandInfo(c).name)}</span><span class="sp-ro-name">${esc(name)}${c.year ? ' ' + esc(c.year) : ''}</span>`
+    + (price ? `<span class="sp-ro-price">החל מ-<b>${price}</b></span>` : '')
+    + (chips.length ? `<span class="sp-ro-chips">${chips.map(x => `<span>${esc(x)}</span>`).join('')}</span>` : '')
+    + `<span class="sp-ro-go">מחיר, מפרט ואבזור <i>←</i></span></div></a></li>`;
+}
+function roRow(x) {
+  const meta = [x.date, x.read_time].filter(Boolean).map(m => `<span>${esc(m)}</span>`).join('');
+  return `<li><a class="sp-ro-row" href="/article/${x.id}/" data-ro-id="${x.id}"><div><h3>${esc(x.title)}</h3><div class="sp-ro-meta">${meta}</div></div>`
+    + `<div class="sp-ro-thumb"><img src="${esc(roImg(x.img || CAT_IMAGES[x.cat], 260))}" alt="" loading="lazy" decoding="async"></div></a></li>`;
+}
 function buildRelatedHTML(a) {
   if (a.cat === 'quick') return '';
+  const now = new Date();
   const cars = LINK_GRAPH.carsByArticle.get(a.id) || [];
   /* שתי הכתבות שלפניה ושתיים שאחריה באותו מדור (ולא "4 הכי חדשות"): כך כל כתבה באתר,
      גם ישנה, מקבלת קישורים נכנסים קבועים. 36 כתבות ישנות סומנו ב-Search Console
      "נסרק אך לא נכלל באינדקס", ולאף אחת מהן לא היה קישור פנימי קבוע. */
-  const sameCat = ALL_LIVE_ARTICLES.filter(x => x.cat === a.cat);
+  const sameCat = ALL_LIVE_ARTICLES.filter(x => x.cat === a.cat && (x.id === a.id || !x.scheduled_at || new Date(x.scheduled_at) <= now));
   const at = sameCat.findIndex(x => x.id === a.id);
+  /* "הכתבה הבאה" = הבאה ברצף המדור (הישנה יותר), ואם אין — החדשה ביותר */
+  const next = (at >= 0 ? sameCat[at + 1] : null) || sameCat.find(x => x.id !== a.id) || null;
   let more = at < 0 ? sameCat.slice(0, 4) : [...sameCat.slice(Math.max(0, at - 2), at), ...sameCat.slice(at + 1, at + 3)];
-  if (more.length < 4) more = more.concat(sameCat.filter(x => x.id !== a.id && !more.includes(x)).slice(0, 4 - more.length));
-  if (!cars.length && !more.length) return '';
-  const carsHTML = cars.length ? `<h2>רכבים מהמאגר שמוזכרים בכתבה</h2><ul>${cars.map(c =>
-    `<li><a href="/car/${esc(c.slug)}/">${esc(carHeName(c))} ${esc(c.year)}<small>מחיר, מפרט טכני ואבזור</small></a></li>`).join('')}</ul>` : '';
-  const moreHTML = more.length ? `<h2>עוד ב${esc(CAT_LABELS[a.cat] || 'ספידומטר')}</h2><ul>${more.map(x =>
-    `<li><a href="/article/${x.id}/">${esc(x.title)}</a></li>`).join('')}</ul>` : '';
+  more = more.filter(x => x.id !== a.id && (!next || x.id !== next.id));
+  if (more.length < 4) more = more.concat(sameCat.filter(x => x.id !== a.id && (!next || x.id !== next.id) && !more.includes(x)).slice(0, 4 - more.length));
+  more = more.slice(0, 4);
+  if (!cars.length && !next && !more.length) return '';
+  const label = CAT_LABELS[a.cat] || 'ספידומטר';
+  const carsHTML = cars.length ? `<div class="sp-ro-sec sp-ro-cars">${roHead(cars.length > 1 ? 'רכבים מהמאגר בכתבה' : 'הרכב מהכתבה במאגר', cars.length > 1 ? cars.length : 0)}<ul>${cars.map(roCarCard).join('')}</ul></div>` : '';
+  const nextHTML = next ? `<div class="sp-ro-sec"><a class="sp-ro-next" href="/article/${next.id}/" data-ro-id="${next.id}"><img src="${esc(roImg(next.img || CAT_IMAGES[next.cat], 900))}" alt="" loading="lazy" decoding="async">`
+    + `<div class="sp-ro-next-in"><div class="sp-ro-kick"><b>הכתבה הבאה</b><span>${esc(CAT_LABELS[next.cat] || '')}</span></div><h3>${esc(next.title)}</h3>${next.sub ? `<p>${esc(next.sub)}</p>` : ''}`
+    + `<div class="sp-ro-next-foot"><span>${esc(next.read_time || '')}</span><em>להמשך קריאה <i>←</i></em></div></div></a></div>` : '';
+  const moreHTML = more.length ? `<div class="sp-ro-sec">${roHead('עוד ב' + label)}<ol class="sp-ro-list">${more.map(roRow).join('')}</ol><a class="sp-ro-all" href="/${esc(a.cat)}/">לכל הכתבות ב${esc(label)} ←</a></div>` : '';
   const guard = `<script>(function(){var b=document.getElementById('sp-related-static');if(!b)return;var id=b.getAttribute('data-for');function chk(){if(location.pathname.indexOf('/article/'+id+'/')!==0){b.remove();}}window.addEventListener('popstate',chk);var t=document.getElementById('art-title');if(t&&window.MutationObserver)new MutationObserver(chk).observe(t,{childList:true,characterData:true,subtree:true});})();</script>`;
-  return `${REL_CSS}<aside id="sp-related-static" class="sp-rel" data-for="${a.id}" aria-label="קישורים קשורים">${carsHTML}${moreHTML}${guard}</aside>`;
+  return `<link rel="stylesheet" id="sp-ro-css" href="${READON_CSS_HREF}"><section id="sp-related-static" class="sp-ro" data-for="${a.id}" aria-label="המשך קריאה">${carsHTML}${nextHTML}${moreHTML}${guard}</section>`;
 }
 
 /* ─── עמוד רכב: כל הנתונים ב-HTML הסטטי ───
@@ -1285,7 +1329,7 @@ function injectBetween(html, name, content) {
 async function fetchArticles(supabase) {
   const { data, error } = await supabase
     .from('articles')
-    .select('id,title,sub,cat,author,date,time,img,body,body_images,score,specs,deleted,live_updates,yt_urls,faq')
+    .select('id,title,sub,cat,author,date,time,read_time,scheduled_at,img,body,body_images,score,specs,deleted,live_updates,yt_urls,faq')
     .order('id', { ascending: false });
   if (error) throw new Error(`Supabase fetch failed: ${error.message}`);
   return (data || []).filter(a => !a.deleted); // כולל 'quick' - הם מקבלים עמוד סטטי עם noindex (במקום 404)
