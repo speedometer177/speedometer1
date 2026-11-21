@@ -267,7 +267,7 @@ if(a.specs&&a.specs.power){schema.about={"@type":"Car","name":a.title,"vehicleEn
 if(a.tags&&a.tags.length)schema.keywords=a.tags.join(', ');schema.articleSection=CAT_LABELS[a.cat]||a.cat;schema.inLanguage='he';schema.publisher={"@type":"Organization","name":"ספידומטר","url":"https://speedometer10.co.il/","logo":{"@type":"ImageObject","url":"https://speedometer10.co.il/logo.png"}};sc.textContent=JSON.stringify(schema,(k,v)=>v===undefined?undefined:v);const imgEl=document.getElementById('art-img');const oldSl=document.getElementById('art-slider');if(oldSl)oldSl.remove();if(a.gallery&&a.gallery.length>1){imgEl.style.display='none';const sl=document.createElement('div');sl.id='art-slider';imgEl.parentElement.insertBefore(sl,imgEl);sl.innerHTML=buildSliderHTML(a.gallery);sliderState['art-slider']={current:0};}else{imgEl.style.display='block';const rawSrc=a.img||CAT_IMAGES[a.cat];imgEl.classList.remove('loaded');imgEl.removeAttribute('src');if(rawSrc&&rawSrc.includes('unsplash.com')){const url=rawSrc.includes('fm=webp')?rawSrc:rawSrc.replace(/\?(.*)/,'?$1&fm=webp&q=75&w=900&auto=format').replace(/^([^?]+)$/,'$1?fm=webp&q=75&w=900&auto=format');imgEl.src=url;}else if(isProxyable(rawSrc)){imgEl.src=wsrvW(rawSrc,1000);}else{imgEl.src=rawSrc;}
 imgEl.alt=a.title;imgEl.setAttribute('data-lightbox',imgEl.src);if(imgEl.complete&&imgEl.naturalWidth)imgEl.classList.add('loaded');}
 document.getElementById('art-img-caption').textContent=a.imgCaption||'';try{renderVote(a.id);}catch(e){}const specWrap=document.getElementById('art-spec');if(a.cat==='review'&&a.specs){specWrap.innerHTML=quickCubesHTML(a.specs)+prosConsHTML(a.specs)+'<button class="spec-toggle" onclick="var b=this.closest(\'#art-spec\').querySelector(\'.spec-collapse\');var o=b.classList.toggle(\'open\');this.classList.toggle(\'open\',o);this.setAttribute(\'aria-expanded\',o)" aria-expanded="false"><span class="spec-toggle-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M14.7 6.3a5 5 0 0 0-7.07 7.07l-4.2 4.2a1.5 1.5 0 0 0 2.12 2.12l4.2-4.2a5 5 0 0 0 7.07-7.07l-2.83 2.83-2.12-2.12z"/></svg></span><span class="spec-toggle-label">מפרט טכני מלא</span><span class="spec-toggle-chev"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6"><polyline points="6 9 12 15 18 9"/></svg></span></button><div class="spec-collapse">'+buildSpecCard(a.specs,true)+'</div>';specWrap.style.display='block';setTimeout(()=>document.querySelectorAll('.score-bar-fill').forEach(b=>{b.style.width=b.dataset.pct+'%';}),150);}else{specWrap.innerHTML='';specWrap.style.display='none';}
-document.getElementById('art-body').innerHTML=(function(){var lu=a.liveUpdates||[];if(!lu.length)return'';return lu.slice().reverse().map(function(u){return'<div style="background:var(--red-light);border-right:3px solid var(--red);border-radius:0 6px 6px 0;padding:10px 16px;margin-bottom:16px;font-size:0.92rem;line-height:1.6;"><strong style="color:var(--red);">🔴 עדכון '+escapeHtml(u.time||'')+':</strong> '+escapeHtml(u.text||'')+'</div>';}).join('');})()+parseBody(a.body||'',a.bodyImages||[],a.title);const tagsWrap=document.getElementById('art-tags');var _dispTags=(a.tags||[]).filter(function(t){return !(typeof t==='string'&&(t.indexOf('uid:')===0||t.indexOf('src:')===0));});if(tagsWrap&&_dispTags.length){tagsWrap.innerHTML=_dispTags.map(t=>`<span onclick="doSearch('${t}')" style="display:inline-block;padding:4px 12px;background:var(--bg);border:1px solid var(--border);border-radius:20px;font-size:0.78rem;cursor:pointer;margin:4px 2px;transition:all 0.15s;" onmouseover="this.style.borderColor='var(--red)'" onmouseout="this.style.borderColor='var(--border)'">${t}</span>`).join('');tagsWrap.style.display='block';}else if(tagsWrap)tagsWrap.style.display='none';const _words=new Set((a.title||'').split(/[\s,]+/).filter(w=>w.length>2));const _tags=new Set(a.tags||[]);const related=articles.filter(x=>x.id!==id).map(x=>{let sc=0;if(x.cat===a.cat)sc+=3;(x.tags||[]).forEach(t=>{if(_tags.has(t))sc+=2;});(x.title||'').split(/[\s,]+/).forEach(w=>{if(w.length>2&&_words.has(w))sc+=1;});sc+=(x.views||0)/1000;return{x,sc};}).filter(({sc})=>sc>0).sort((a,b)=>b.sc-a.sc).slice(0,3).map(({x})=>x);const fallback=articles.filter(x=>x.id!==id).sort((x,y)=>(y.views||0)-(x.views||0)).slice(0,3);const galleryWrap=document.getElementById('art-gallery');if(galleryWrap){if(a.gallery&&a.gallery.length>1){const captions=a.galleryCaptions||[];galleryWrap.style.display='block';galleryWrap.innerHTML=`
+document.getElementById('art-body').innerHTML=(function(){var lu=a.liveUpdates||[];if(!lu.length)return'';return lu.slice().reverse().map(function(u){return'<div style="background:var(--red-light);border-right:3px solid var(--red);border-radius:0 6px 6px 0;padding:10px 16px;margin-bottom:16px;font-size:0.92rem;line-height:1.6;"><strong style="color:var(--red);">🔴 עדכון '+escapeHtml(u.time||'')+':</strong> '+escapeHtml(u.text||'')+'</div>';}).join('');})()+parseBody(a.body||'',a.bodyImages||[],a.title);const tagsWrap=document.getElementById('art-tags');var _dispTags=(a.tags||[]).filter(function(t){return !(typeof t==='string'&&(t.indexOf('uid:')===0||t.indexOf('src:')===0));});if(tagsWrap&&_dispTags.length){tagsWrap.innerHTML=_dispTags.map(t=>`<span onclick="doSearch('${t}')" style="display:inline-block;padding:4px 12px;background:var(--bg);border:1px solid var(--border);border-radius:20px;font-size:0.78rem;cursor:pointer;margin:4px 2px;transition:all 0.15s;" onmouseover="this.style.borderColor='var(--red)'" onmouseout="this.style.borderColor='var(--border)'">${t}</span>`).join('');tagsWrap.style.display='block';}else if(tagsWrap)tagsWrap.style.display='none';const _words=new Set((a.title||'').split(/[\s,]+/).filter(w=>w.length>2));const _tags=new Set(a.tags||[]);const related=articles.filter(x=>x.id!==id).map(x=>{let sc=0;if(x.cat===a.cat)sc+=3;(x.tags||[]).forEach(t=>{if(_tags.has(t))sc+=2;});(x.title||'').split(/[\s,]+/).forEach(w=>{if(w.length>2&&_words.has(w))sc+=1;});sc+=(x.views||0)/1000;return{x,sc};}).filter(({sc})=>sc>0).sort((a,b)=>b.sc-a.sc).slice(0,12).map(({x})=>x);const fallback=articles.filter(x=>x.id!==id).sort((x,y)=>(y.views||0)-(x.views||0)).slice(0,12);const galleryWrap=document.getElementById('art-gallery');if(galleryWrap){if(a.gallery&&a.gallery.length>1){const captions=a.galleryCaptions||[];galleryWrap.style.display='block';galleryWrap.innerHTML=`
         <div style="font-size:0.82rem;font-weight:700;color:var(--muted);letter-spacing:0.06em;text-transform:uppercase;margin-bottom:14px;display:flex;align-items:center;gap:8px;">
           <span style="display:block;width:3px;height:14px;background:var(--red);border-radius:2px;"></span>
           גלריית תמונות (${a.gallery.length})
@@ -275,7 +275,7 @@ document.getElementById('art-body').innerHTML=(function(){var lu=a.liveUpdates||
         <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:10px;">
           ${a.gallery.map((src,i)=>`<div style="cursor:zoom-in;"onclick="openLightbox('${src}')"><img src="${galThumb(src)}"alt="${captions[i]||'תמונה '+(i+1)}"loading="lazy"decoding="async"width="200"height="150"style="width:100%;aspect-ratio:4/3;object-fit:cover;border-radius:6px;border:1px solid var(--border);transition:transform 0.2s;"onmouseover="this.style.transform='scale(1.02)'"onmouseout="this.style.transform='scale(1)'">${captions[i]?`<p style="font-size:0.72rem;color:var(--muted);margin-top:4px;text-align:center;">${captions[i]}</p>`:''}</div>`).join('')}
         </div>`;}else{galleryWrap.style.display='none';}}
-document.getElementById('related-articles').innerHTML=(related.length?related:fallback).map(r=>cardHTML(r)).join('');document.getElementById('sidebar-related').innerHTML=articles.filter(x=>x.id!==id).sort((x,y)=>(y.views||0)-(x.views||0)).slice(0,5).map((r,i)=>latestItemHTML(r,i+1)).join('');if(window.history&&pushState){window.history.pushState({page:'article',id:id},'','/article/'+id+'/');}
+const _roShown=window.spReadOn?window.spReadOn.render(a):new Set();document.getElementById('related-articles').innerHTML=(related.length?related:fallback).filter(r=>!_roShown.has(r.id)).slice(0,3).map(r=>cardHTML(r)).join('');document.getElementById('sidebar-related').innerHTML=articles.filter(x=>x.id!==id).sort((x,y)=>(y.views||0)-(x.views||0)).slice(0,5).map((r,i)=>latestItemHTML(r,i+1)).join('');if(window.history&&pushState){window.history.pushState({page:'article',id:id},'','/article/'+id+'/');}
 window.scrollTo({top:0,behavior:'smooth'});}
 function buildSliderHTML(images){const dots=images.map((_,i)=>`<button class="slider-dot ${i===0?'active':''}" onclick="goSlide('art-slider',${i})" aria-label="תמונה ${i+1}"></button>`).join('');const imgs=images.map((src,i)=>`<img src="${isProxyable(src)?wsrvW(src,1000):src}" data-raw="${src}" onerror="if(this.dataset.raw&&this.src!==this.dataset.raw){this.src=this.dataset.raw;}" alt="תמונה ${i+1}" loading="lazy" decoding="async">`).join('');return`<div class="img-slider" id="art-slider"><div class="slider-track" id="ast">${imgs}</div><button class="slider-btn slider-prev" onclick="moveSlide('art-slider',-1)" aria-label="תמונה קודמת">&#8250;</button><button class="slider-btn slider-next" onclick="moveSlide('art-slider',1)" aria-label="תמונה הבאה">&#8249;</button><div class="slider-dots" role="tablist">${dots}</div><div class="slider-count" id="asc" aria-live="polite">1 / ${images.length}</div></div>`;}
 function moveSlide(id,dir){const wrap=document.getElementById(id);if(!wrap)return;const track=wrap.querySelector('.slider-track');const total=track.querySelectorAll('img').length;if(!sliderState[id])sliderState[id]={current:0};let cur=(sliderState[id].current+dir+total)%total;sliderState[id].current=cur;track.style.transform=`translateX(${cur*100}%)`;wrap.querySelectorAll('.slider-dot').forEach((d,i)=>d.classList.toggle('active',i===cur));const cnt=wrap.querySelector('.slider-count');if(cnt)cnt.textContent=`${cur+1} / ${total}`;}
@@ -985,4 +985,226 @@ if('serviceWorker'in navigator){window.addEventListener('load',()=>{navigator.se
   spSyncUI();
   setTimeout(spSyncUI,400);
   setTimeout(spSyncUI,1200);
+})();
+
+/* ═══════════════════════════════════════════════════════════════════════
+   sp-readon · "המשך קריאה" — בלוק קבוע בסוף כל כתבה + פס "הבא בתור"
+   ───────────────────────────────────────────────────────────────────────
+   1. רכבים מהמאגר שמוזכרים בכתבה — נשלפים חיים מטבלת cars (מטמון של שעתיים),
+      כך שכל רכב חדש שנוסף למאגר מתחבר מעצמו לכל הכתבות שמזכירות אותו.
+      כללי הזיהוי זהים ל-buildLinkGraph ב-scripts/generate-static-pages.mjs.
+   2. הכתבה הבאה — כרטיס גדול: הכתבה הבאה ברצף המדור שעוד לא נקראה.
+   3. עוד במדור — שתי הכתבות שלפניה ושתיים שאחריה (כמו בעמוד הסטטי, לטובת גוגל).
+   4. פס "הבא בתור" — צץ בתחתית המסך כשהקורא מגיע לסוף הכתבה.
+   הכתבות שנקראו נשמרות במכשיר (sp_read_ids), כדי לא להמליץ שוב על מה שכבר נקרא.
+   בעמוד סטטי הבלוק האפוי (#sp-related-static) מוחלף בבלוק החי.
+   ═══════════════════════════════════════════════════════════════════════ */
+(function(){
+  'use strict';
+  var CSS_HREF='/sp-readon.css?v=20261122a';
+  var CARS_KEY='sp_ro_cars_v1', CARS_TTL=2*60*60*1000, READ_KEY='sp_read_ids';
+  var PT_LABEL={ev:'חשמלי',phev:'פלאג-אין',hev:'היברידי',hybrid:'היברידי',mhev:'היברידי קל',ice:'בנזין',petrol:'בנזין',diesel:'דיזל'};
+  var STOCK_RE=/unsplash\.com|pexels\.com|pixabay\.com/i;
+  var state={id:null,a:null,next:null,io:null,mo:null,upOff:false,carsRun:0};
+
+  function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
+  function store(){try{return (typeof safeStorage!=='undefined')?safeStorage:window.localStorage;}catch(e){return{getItem:function(){return null;},setItem:function(){}};}}
+  function ensureCss(){if(document.getElementById('sp-ro-css'))return;var l=document.createElement('link');l.id='sp-ro-css';l.rel='stylesheet';l.href=CSS_HREF;document.head.appendChild(l);}
+  function img(u,w){if(!u||u.length<6)return'';if(/^https?:\/\//.test(u)&&u.indexOf('wsrv.nl')===-1&&u.indexOf('images.unsplash.com')===-1)return'https://wsrv.nl/?url='+encodeURIComponent(u)+'&w='+w+'&fit=cover&output=webp&q=72';return u;}
+
+  /* ── היסטוריית קריאה ── */
+  function readIds(){try{var v=JSON.parse(store().getItem(READ_KEY)||'[]');return Array.isArray(v)?v:[];}catch(e){return[];}}
+  function markRead(id){var l=readIds().filter(function(x){return x!==id;});l.unshift(id);try{store().setItem(READ_KEY,JSON.stringify(l.slice(0,300)));}catch(e){}}
+
+  /* ── בחירת כתבות ── */
+  function visible(x){if(!x||x.cat==='quick'||x.deleted)return false;if(x.scheduledAt&&new Date(x.scheduledAt)>new Date())return false;try{if(typeof deletedIds!=='undefined'&&deletedIds.has(x.id))return false;}catch(e){}return true;}
+  function pick(a){
+    var all=(typeof articles!=='undefined'&&articles)||[];
+    var pool=all.filter(function(x){return x.id===a.id||visible(x);});
+    var same=pool.filter(function(x){return x.cat===a.cat;});
+    var at=same.findIndex(function(x){return x.id===a.id;});
+    var read=new Set(readIds());
+    var older=at<0?same:same.slice(at+1), newer=at<0?[]:same.slice(0,at);
+    var isNew=function(x){return x.id!==a.id&&!read.has(x.id);};
+    var next=older.find(isNew)||newer.find(isNew)||pool.find(function(x){return x.cat!==a.cat&&isNew(x);})||older[0]||newer[newer.length-1]||null;
+    var more=at<0?same.slice(0,4):same.slice(Math.max(0,at-2),at).concat(same.slice(at+1,at+3));
+    more=more.filter(function(x){return x.id!==a.id&&(!next||x.id!==next.id);});
+    if(more.length<4)more=more.concat(same.filter(function(x){return x.id!==a.id&&(!next||x.id!==next.id)&&more.indexOf(x)<0;}).slice(0,4-more.length));
+    return {next:next,more:more.slice(0,4),read:read};
+  }
+
+  /* ── זיהוי רכבים (עותק נאמן של המחולל) ── */
+  var BRANDS=null;
+  function loadBrands(){
+    if(BRANDS)return Promise.resolve(BRANDS);
+    return fetch('/cars-core.js',{cache:'force-cache'}).then(function(r){return r.ok?r.text():'';}).catch(function(){return'';}).then(function(src){
+      var map=new Map(),re=/^\s*['"]?([a-z0-9_-]+)['"]?\s*:\s*\{\s*name\s*:\s*'([^']+)'\s*,\s*he\s*:\s*'([^']+)'(?:\s*,\s*alt\s*:\s*\[([^\]]*)\])?/gm,m;
+      /* he:"ג'אקו" (מירכאות כפולות) — נתפס בביטוי נפרד */
+      var re2=/^\s*['"]?([a-z0-9_-]+)['"]?\s*:\s*\{\s*name\s*:\s*'([^']+)'\s*,\s*he\s*:\s*"([^"]+)"(?:\s*,\s*alt\s*:\s*\[([^\]]*)\])?/gm;
+      [re,re2].forEach(function(rx){while((m=rx.exec(src))){var alt=(m[4]||'').split(',').map(function(x){return x.trim().replace(/^['"]|['"]$/g,'');}).filter(Boolean);map.set(m[1],{key:m[1],name:m[2],he:m[3],alt:alt});}});
+      BRANDS=map;return map;
+    });
+  }
+  /* גרש/מירכאות עבריים וטיפוגרפיים (׳ ״ ’ ”) נחשבים זהים ל-' ו-" — "ספורטאז׳" = "ספורטאז'" */
+  function normQ(t){return String(t||'').replace(/[\u05F3\u2018\u2019`\u00B4]/g,"'").replace(/[\u05F4\u201C\u201D]/g,'"');}
+  function carHeName(c){var f=String(c.meta_title||'').split('|')[0].replace(/\b20\d\d\b/g,'').replace(/\s+/g,' ').trim();return f||(c.brand+' '+c.model);}
+  function brandKeyOf(raw){var k=String(raw||'').trim().toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/&/g,'and').replace(/[^a-z0-9֐-׿]+/g,'');if(BRANDS&&BRANDS.has(k))return k;return k==='mercedesbenz'?'mercedes':k;}
+  function brandInfo(c){var key=brandKeyOf(c.brand),b=BRANDS&&BRANDS.get(key);if(b)return{key:key,name:b.name||String(c.brand||''),he:b.he,alt:b.alt};return{key:key,name:String(c.brand||'').trim(),he:carHeName(c).split(' ')[0]||String(c.brand||''),alt:[]};}
+  var NOISE=/\b(hybrid|phev|plug-?in|electric|ev)\b|היברידי(?:ת)?|חשמלי(?:ת)?|פלאג[- ]?אין|החדש(?:ה)?/gi;
+  function keysOf(c){
+    var info=brandInfo(c),brandEn=String(c.brand||'').toLowerCase().trim(),he=normQ(carHeName(c).toLowerCase());
+    var pres=[info.he].concat(info.alt,[brandEn]).map(function(x){return normQ(String(x).toLowerCase());}).sort(function(a,b){return b.length-a.length;});
+    var pre=pres.find(function(x){return x&&he.indexOf(x+' ')===0;});
+    var rest=pre?he.slice(pre.length+1):he.split(' ').slice(1).join(' ');
+    var brandHe=pre||he.split(' ')[0]||'';
+    var modelEn=normQ(String(c.model||'').toLowerCase()).replace(NOISE,' ').replace(/\s+/g,' ').trim();
+    var modelHe=rest.replace(NOISE,' ').replace(/\s+/g,' ').trim();
+    var brands=Array.from(new Set([brandHe,brandEn,normQ(String(info.he).toLowerCase())].concat(info.alt.map(function(x){return normQ(x.toLowerCase());})).filter(function(b){return b&&b.length>=2;})));
+    return{brandEn:brandEn,brandHe:brandHe,modelEn:modelEn,modelHe:modelHe,brands:brands};
+  }
+  function escRe(x){return x.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');}
+  function phraseRe(p){var body=escRe(p).replace(/\\?[\s-]+/g,'[\\s\\-]?').replace(/([a-z])(\d)/g,'$1[\\s\\-]?$2');return new RegExp('(^|[^a-z0-9א-ת])[והבלמשכ]{0,2}-?'+body+'(?![a-z0-9א-ת])','gi');}
+  var HE_SPELL={'rav4':['ראב 4','ראב4']};
+  function matchCar(box,k){
+    var brands=k.brands,models=Array.from(new Set([k.modelHe,k.modelEn].concat(HE_SPELL[k.modelEn]||[]).filter(function(m){return m&&m.length>=2;})));
+    if(!brands.length||!models.length)return false;var hit=false;
+    brands.forEach(function(b){models.forEach(function(m){if(phraseRe(b+' '+m).test(box.text)){hit=true;box.text=box.text.replace(phraseRe(b+' '+m),' · ');}});});
+    if(!hit){var any=brands.some(function(b){return phraseRe(b).test(box.full);});
+      models.forEach(function(m){if(!/^[a-z0-9][a-z0-9 \-]*$/.test(m)||!/[0-9\-]/.test(m)||m.length<3)return;if(any&&phraseRe(m).test(box.text)){hit=true;box.text=box.text.replace(phraseRe(m),' · ');}});}
+    return hit;
+  }
+  function carsInText(cars,text){
+    var full=normQ(String(text||'').toLowerCase()),box={text:full,full:full},out=[];
+    cars.map(function(c){return{c:c,k:keysOf(c)};})
+      .sort(function(a,b){return Math.max(b.k.modelEn.length,b.k.modelHe.length)-Math.max(a.k.modelEn.length,a.k.modelHe.length);})
+      .forEach(function(o){if(out.length<4&&matchCar(box,o.k))out.push(o.c);});
+    return out;
+  }
+
+  /* ── שליפת המאגר (חי, עם מטמון קצר) ── */
+  var carsP=null;
+  function loadCars(){
+    if(carsP)return carsP;
+    try{var c=JSON.parse(store().getItem(CARS_KEY)||'null');if(c&&c.t&&Date.now()-c.t<CARS_TTL&&Array.isArray(c.rows)){carsP=Promise.resolve(c.rows);return carsP;}}catch(e){}
+    var cols='slug,brand,model,year,meta_title,price,horsepower,range_ev,powertrain,image_main,image_cutout,deleted';
+    var url=(typeof SB_URL!=='undefined'?SB_URL:'https://kaykrrnmykqrfhawgtqt.supabase.co')+'/rest/v1/cars?select='+cols+'&order=sales_rank.asc.nullslast';
+    var key=(typeof SB_KEY!=='undefined')?SB_KEY:'';
+    carsP=fetch(url,{headers:{apikey:key,Authorization:'Bearer '+key}}).then(function(r){if(!r.ok)throw new Error(r.status);return r.json();})
+      .then(function(rows){rows=(rows||[]).filter(function(c){return c&&c.slug&&!c.deleted;});try{store().setItem(CARS_KEY,JSON.stringify({t:Date.now(),rows:rows}));}catch(e){}return rows;})
+      .catch(function(){carsP=null;return[];});
+    return carsP;
+  }
+
+  /* ── HTML ── */
+  function head(t,n){return'<div class="sp-ro-head"><h2>'+esc(t)+'</h2>'+(n?'<span class="sp-ro-count">'+String(n).padStart(2,'0')+'</span>':'')+'</div>';}
+  function fmtPrice(v){v=Number(v);return v>0?v.toLocaleString('he-IL')+' ₪':'';}
+  function carCard(c){
+    var name=carHeName(c),cut=c.image_cutout&&/^https?:/.test(c.image_cutout)?c.image_cutout:'';
+    var photo=!cut&&c.image_main&&/^https?:/.test(c.image_main)&&!STOCK_RE.test(c.image_main)?c.image_main:'';
+    var stage=cut?'<img src="https://wsrv.nl/?url='+encodeURIComponent(cut)+'&w=300&output=webp&q=80" alt="'+esc(name)+'" loading="lazy" decoding="async">'
+      :photo?'<img class="sp-ro-photo" src="'+esc(img(photo,300))+'" alt="'+esc(name)+'" loading="lazy" decoding="async">'
+      :'<span class="sp-ro-mono">'+esc(String(c.model||c.brand||'').replace(NOISE,'').trim().slice(0,8))+'</span>';
+    var chips=[],pt=String(c.powertrain||'').toLowerCase();
+    if(PT_LABEL[pt])chips.push(PT_LABEL[pt]);
+    if(Number(c.horsepower)>0)chips.push(c.horsepower+' כ"ס');
+    if(Number(c.range_ev)>0&&(pt==='ev'||pt==='phev'))chips.push('טווח '+c.range_ev+' ק"מ');
+    var price=fmtPrice(c.price);
+    return'<li><a class="sp-ro-car" href="/car/'+esc(c.slug)+'/"><div class="sp-ro-stage'+(photo?' has-photo':'')+'">'+stage+'</div><div class="sp-ro-info">'
+      +'<span class="sp-ro-brand">'+esc(brandInfo(c).name)+'</span><span class="sp-ro-name">'+esc(name)+(c.year?' '+esc(c.year):'')+'</span>'
+      +(price?'<span class="sp-ro-price">החל מ-<b>'+price+'</b></span>':'')
+      +(chips.length?'<span class="sp-ro-chips">'+chips.map(function(x){return'<span>'+esc(x)+'</span>';}).join('')+'</span>':'')
+      +'<span class="sp-ro-go">מחיר, מפרט ואבזור <i>←</i></span></div></a></li>';
+  }
+  function catLabel(c){return (typeof CAT_LABELS!=='undefined'&&CAT_LABELS[c])||'ספידומטר';}
+  function nextCard(x){
+    return'<a class="sp-ro-next" href="/article/'+x.id+'/" data-ro-id="'+x.id+'"><img src="'+esc(img(x.img,900))+'" alt="" loading="lazy" decoding="async">'
+      +'<div class="sp-ro-next-in"><div class="sp-ro-kick"><b>הכתבה הבאה</b><span>'+esc(catLabel(x.cat))+'</span></div>'
+      +'<h3>'+esc(x.title)+'</h3>'+(x.sub?'<p>'+esc(x.sub)+'</p>':'')
+      +'<div class="sp-ro-next-foot"><span>'+esc(x.readTime||'')+'</span><em>להמשך קריאה <i>←</i></em></div></div></a>';
+  }
+  function row(x,read){
+    var meta=[];if(x.date)meta.push(x.date);if(x.readTime)meta.push(x.readTime);
+    return'<li><a class="sp-ro-row" href="/article/'+x.id+'/" data-ro-id="'+x.id+'"><div><h3>'+esc(x.title)+'</h3><div class="sp-ro-meta">'
+      +meta.map(function(m){return'<span>'+esc(m)+'</span>';}).join('')+(read.has(x.id)?'<span class="sp-ro-seen">✓ קראת</span>':'')+'</div></div>'
+      +'<div class="sp-ro-thumb"><img src="'+esc(img(x.img,260))+'" alt="" loading="lazy" decoding="async"></div></a></li>';
+  }
+
+  /* ── פס "הבא בתור" ── */
+  function upBar(){
+    var u=document.getElementById('sp-ro-up');if(u)return u;
+    u=document.createElement('div');u.id='sp-ro-up';u.className='sp-ro-up';u.setAttribute('role','complementary');u.setAttribute('aria-label','הכתבה הבאה');
+    u.innerHTML='<div class="sp-ro-up-card"><a class="sp-ro-up-link" href="#"><img alt=""><span class="sp-ro-up-txt"><small>הבא בתור</small><strong></strong></span></a><button type="button" class="sp-ro-up-x" aria-label="סגירה">×</button></div>';
+    u.querySelector('.sp-ro-up-x').addEventListener('click',function(){state.upOff=true;u.classList.remove('on');});
+    document.body.appendChild(u);return u;
+  }
+  function setUp(x){var u=upBar();if(!x){u.classList.remove('on');return;}var l=u.querySelector('.sp-ro-up-link');l.href='/article/'+x.id+'/';l.setAttribute('data-ro-id',x.id);u.querySelector('img').src=img(x.img,140);u.querySelector('strong').textContent=x.title;}
+  var upRaf=0;
+  function onScroll(){
+    if(upRaf)return;upRaf=requestAnimationFrame(function(){upRaf=0;
+      var u=document.getElementById('sp-ro-up');if(!u)return;
+      var open=document.body.classList.contains('article-open');
+      var body=document.getElementById('art-body'),blk=document.getElementById('sp-readon');
+      if(!open||!state.next||state.upOff||!body||!blk||location.pathname.indexOf('/article/'+state.id+'/')!==0){u.classList.remove('on');return;}
+      var vh=window.innerHeight,b=body.getBoundingClientRect(),k=blk.getBoundingClientRect();
+      var p=b.height>0?Math.min(1,Math.max(0,(vh-b.top)/(b.height+vh*.2))):0;
+      u.firstChild.style.setProperty('--ro-p',Math.round(p*100)+'%');
+      /* מופיע מ-75% מהכתבה, ונעלם כשהבלוק עצמו על המסך (אין צורך בשניהם) */
+      u.classList.toggle('on',p>=.75&&k.top>vh*.85);
+    });
+  }
+
+  /* ── רכבים: מילוי (גם כשגוף הכתבה מגיע באיחור) ── */
+  function fillCars(a){
+    var run=++state.carsRun,sec=document.getElementById('sp-ro-cars');if(!sec)return;
+    var text=[a.title,a.sub,(document.getElementById('art-body')||{}).textContent||a.body||''].join(' \n ');
+    Promise.all([loadCars(),loadBrands()]).then(function(r){
+      if(run!==state.carsRun||state.id!==a.id)return;
+      var list=carsInText(r[0]||[],text);
+      if(!list.length){sec.hidden=true;sec.innerHTML='';return;}
+      sec.innerHTML=head(list.length>1?'רכבים מהמאגר בכתבה':'הרכב מהכתבה במאגר',list.length>1?list.length:0)+'<ul>'+list.map(carCard).join('')+'</ul>';
+      sec.hidden=false;
+    });
+  }
+
+  function render(a){
+    try{
+      ensureCss();
+      var old=document.getElementById('sp-readon');if(old)old.remove();
+      var st=document.getElementById('sp-related-static');if(st)st.remove();
+      state.id=a.id;state.a=a;state.upOff=false;
+      if(!a||a.cat==='quick'){state.next=null;setUp(null);return new Set();}
+      var p=pick(a);markRead(a.id);state.next=p.next;
+      var blk=document.createElement('section');blk.id='sp-readon';blk.className='sp-ro';blk.setAttribute('aria-label','המשך קריאה');blk.setAttribute('data-for',a.id);
+      var h='<div class="sp-ro-sec sp-ro-cars" id="sp-ro-cars" hidden></div>';
+      if(p.next)h+='<div class="sp-ro-sec">'+nextCard(p.next)+'</div>';
+      if(p.more.length)h+='<div class="sp-ro-sec">'+head('עוד ב'+catLabel(a.cat))+'<ol class="sp-ro-list">'+p.more.map(function(x){return row(x,p.read);}).join('')+'</ol>'
+        +'<a class="sp-ro-all" href="/'+esc(a.cat)+'/" data-ro-cat="'+esc(a.cat)+'">לכל הכתבות ב'+esc(catLabel(a.cat))+' ←</a></div>';
+      blk.innerHTML=h;
+      var anchor=document.getElementById('art-vote')||document.getElementById('art-body');
+      if(anchor&&anchor.parentNode)anchor.parentNode.insertBefore(blk,anchor.nextSibling);
+      fillCars(a);
+      /* גוף הכתבה נטען לפעמים אחרי הפתיחה — כשהוא מגיע, בודקים שוב רכבים */
+      if(state.mo)state.mo.disconnect();
+      var body=document.getElementById('art-body');
+      if(body&&window.MutationObserver){var t=0;state.mo=new MutationObserver(function(){clearTimeout(t);t=setTimeout(function(){if(state.id===a.id)fillCars(a);},400);});state.mo.observe(body,{childList:true,subtree:true});}
+      setUp(p.next);onScroll();
+      var shown=new Set(p.more.map(function(x){return x.id;}));if(p.next)shown.add(p.next.id);return shown;
+    }catch(e){try{console.warn('sp-readon',e);}catch(_){}return new Set();}
+  }
+
+  /* ניווט פנימי בלי טעינה מחדש; לחיצה עם Ctrl/Cmd או גלגלת נשארת קישור רגיל */
+  document.addEventListener('click',function(e){
+    var el=e.target&&e.target.closest&&e.target.closest('[data-ro-id],[data-ro-cat]');if(!el)return;
+    if(e.defaultPrevented||e.button!==0||e.metaKey||e.ctrlKey||e.shiftKey||e.altKey)return;
+    var id=Number(el.getAttribute('data-ro-id'));
+    if(id&&typeof openArticle==='function'&&typeof articles!=='undefined'&&articles.some(function(x){return x.id===id;})){
+      e.preventDefault();var u=document.getElementById('sp-ro-up');if(u)u.classList.remove('on');openArticle(id);return;}
+    var cat=el.getAttribute('data-ro-cat');
+    if(cat&&typeof filterCat==='function'){e.preventDefault();try{filterCat(cat);}catch(_){location.href='/'+cat+'/';}}
+  });
+  window.addEventListener('scroll',onScroll,{passive:true});
+  window.addEventListener('resize',onScroll,{passive:true});
+  window.addEventListener('popstate',function(){setTimeout(onScroll,50);});
+
+  window.spReadOn={render:render,_carsInText:carsInText,_loadBrands:loadBrands};
 })();

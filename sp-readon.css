@@ -1,0 +1,96 @@
+/* ═══ ספידומטר · "המשך קריאה" — בלוק קבוע בסוף כל כתבה + פס "הבא בתור" ═══
+   מקור יחיד לעיצוב: נטען גם מהאפליקציה (app.js) וגם מהעמודים הסטטיים (/article/{id}/). */
+.sp-ro{--ro-ink:var(--black,#0a0a0a);--ro-sub:var(--mid,#555);--ro-mute:var(--muted,#6f6f6f);--ro-line:var(--border,#e8e8e8);--ro-soft:#f3f2ef;--ro-card:#fff;--ro-red:var(--red,#e8001d);
+  margin:44px 0 12px;font-family:var(--font,'Rubik',sans-serif);color:var(--ro-ink);direction:rtl}
+body.dark-mode .sp-ro{--ro-ink:#ededed;--ro-sub:#b4b4b4;--ro-mute:#8a8a8a;--ro-line:#2b2b2b;--ro-soft:#1c1c1c;--ro-card:#161616}
+.sp-ro *{box-sizing:border-box}
+.sp-ro a{color:inherit;text-decoration:none}
+.sp-ro-sec{margin:0 0 38px}
+.sp-ro-sec[hidden]{display:none}
+
+/* כותרת מדור קלאסית: ריבוע אדום, טקסט במרווח, וקו כפול עד הקצה */
+.sp-ro-head{display:flex;align-items:center;gap:12px;margin:0 0 16px}
+.sp-ro-head h2{display:flex;align-items:center;gap:9px;margin:0;font-size:.8rem;font-weight:800;letter-spacing:.06em;white-space:nowrap;color:var(--ro-ink)}
+.sp-ro-head h2::before{content:'';width:8px;height:8px;background:var(--ro-red);flex-shrink:0}
+.sp-ro-head::after{content:'';flex:1;height:4px;border-top:1px solid var(--ro-ink);border-bottom:1px solid var(--ro-line);opacity:.9}
+.sp-ro-head .sp-ro-count{order:2;font-size:.72rem;font-weight:700;color:var(--ro-mute);font-variant-numeric:tabular-nums;letter-spacing:.08em}
+
+/* ── רכבים מהמאגר ── */
+.sp-ro-cars ul{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:1fr;gap:12px}
+@media (min-width:760px){.sp-ro-cars ul{grid-template-columns:1fr 1fr}}
+.sp-ro-car{display:grid;grid-template-columns:128px 1fr;align-items:stretch;min-height:118px;background:var(--ro-card);border:1px solid var(--ro-line);border-radius:12px;overflow:hidden;transition:border-color .2s ease,box-shadow .25s ease,transform .25s ease}
+.sp-ro-car:hover{border-color:var(--ro-ink);box-shadow:0 10px 28px rgba(0,0,0,.08);transform:translateY(-2px)}
+.sp-ro-stage{position:relative;background:radial-gradient(120% 90% at 50% 30%,#fff 0%,var(--ro-soft) 70%);display:flex;align-items:center;justify-content:center;overflow:hidden;border-left:1px solid var(--ro-line)}
+body.dark-mode .sp-ro-stage{background:radial-gradient(120% 90% at 50% 30%,#262626 0%,#141414 75%)}
+.sp-ro-stage::after{content:'';position:absolute;left:14%;right:14%;bottom:18%;height:10px;border-radius:50%;background:radial-gradient(closest-side,rgba(0,0,0,.22),transparent);pointer-events:none}
+.sp-ro-stage img{position:relative;z-index:1;width:92%;height:auto;max-height:84%;object-fit:contain;transition:transform .35s ease}
+.sp-ro-stage img.sp-ro-photo{width:100%;height:100%;max-height:none;object-fit:cover}
+.sp-ro-stage.has-photo::after{display:none}
+.sp-ro-car:hover .sp-ro-stage img{transform:scale(1.05)}
+.sp-ro-mono{font-size:1.9rem;font-weight:900;letter-spacing:-.04em;color:var(--ro-ink);opacity:.14;direction:ltr;text-transform:uppercase}
+.sp-ro-info{padding:13px 16px 12px;display:flex;flex-direction:column;gap:3px;min-width:0}
+.sp-ro-brand{font-size:.66rem;font-weight:700;letter-spacing:.14em;color:var(--ro-mute);direction:ltr;text-align:right;text-transform:uppercase}
+.sp-ro-name{font-size:1.04rem;font-weight:800;line-height:1.3;letter-spacing:-.01em}
+.sp-ro-price{font-size:.86rem;color:var(--ro-sub)}
+.sp-ro-price b{color:var(--ro-ink);font-weight:800;font-variant-numeric:tabular-nums}
+.sp-ro-chips{display:flex;flex-wrap:wrap;gap:0;margin-top:3px;font-size:.74rem;color:var(--ro-mute)}
+.sp-ro-chips span+span::before{content:'·';margin:0 7px;color:var(--ro-line);font-weight:900}
+body.dark-mode .sp-ro-chips span+span::before{color:#555}
+.sp-ro-go{margin-top:auto;padding-top:6px;font-size:.76rem;font-weight:700;color:var(--ro-red);display:inline-flex;align-items:center;gap:6px}
+.sp-ro-go i{display:inline-block;font-style:normal;transition:transform .25s ease}
+.sp-ro-car:hover .sp-ro-go i,.sp-ro-row:hover .sp-ro-go i{transform:translateX(-4px)}
+
+/* ── הכתבה הבאה ── */
+.sp-ro-next{position:relative;display:block;border-radius:14px;overflow:hidden;background:#111;color:#fff!important;aspect-ratio:16/9;isolation:isolate}
+@media (max-width:680px){.sp-ro-next{aspect-ratio:4/5;max-height:520px;width:100%}}
+.sp-ro-next img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:-2;transition:transform .8s cubic-bezier(.2,.7,.2,1)}
+.sp-ro-next:hover img{transform:scale(1.04)}
+.sp-ro-next::before{content:'';position:absolute;inset:0;z-index:-1;background:linear-gradient(to top,rgba(0,0,0,.92) 0%,rgba(0,0,0,.62) 38%,rgba(0,0,0,.08) 72%,rgba(0,0,0,.18) 100%)}
+.sp-ro-next-in{position:absolute;inset:auto 0 0 0;padding:22px 24px 22px}
+.sp-ro-kick{display:flex;align-items:center;gap:10px;margin-bottom:12px;font-size:.7rem;font-weight:800;letter-spacing:.1em}
+.sp-ro-kick b{background:var(--red,#e8001d);color:#fff;padding:5px 10px 4px;border-radius:3px}
+.sp-ro-kick span{color:rgba(255,255,255,.78);font-weight:600;letter-spacing:.06em}
+.sp-ro-next h3{margin:0 0 8px;font-size:1.55rem;font-weight:800;line-height:1.22;letter-spacing:-.02em;color:#fff;text-wrap:balance}
+@media (max-width:680px){.sp-ro-next h3{font-size:1.3rem}.sp-ro-next-in{padding:18px 18px 18px}}
+.sp-ro-next p{margin:0;font-size:.92rem;line-height:1.55;color:rgba(255,255,255,.82);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.sp-ro-next-foot{display:flex;align-items:center;justify-content:space-between;margin-top:16px;padding-top:14px;border-top:1px solid rgba(255,255,255,.18);font-size:.78rem;color:rgba(255,255,255,.7)}
+.sp-ro-next-foot em{font-style:normal;display:inline-flex;align-items:center;gap:8px;font-weight:700;color:#fff}
+.sp-ro-next-foot em i{display:inline-flex;width:30px;height:30px;border-radius:50%;background:#fff;color:#111;align-items:center;justify-content:center;font-style:normal;font-size:.95rem;transition:transform .25s ease}
+.sp-ro-next:hover .sp-ro-next-foot em i{transform:translateX(-4px)}
+
+/* ── עוד במדור ── */
+.sp-ro-list{list-style:none;margin:0;padding:0;counter-reset:ro}
+.sp-ro-list li{border-bottom:1px solid var(--ro-line)}
+.sp-ro-list li:first-child .sp-ro-row{padding-top:2px}
+.sp-ro-row{display:grid;grid-template-columns:auto 1fr 120px;gap:14px;align-items:center;padding:14px 0}
+@media (max-width:680px){.sp-ro-row{grid-template-columns:auto 1fr 96px;gap:12px}}
+.sp-ro-row::before{counter-increment:ro;content:counter(ro,decimal-leading-zero);align-self:start;margin-top:2px;font-size:.78rem;font-weight:800;color:var(--ro-red);font-variant-numeric:tabular-nums;letter-spacing:.04em}
+.sp-ro-row h3{margin:0 0 5px;font-size:1rem;font-weight:700;line-height:1.42;color:var(--ro-ink);display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;transition:color .18s ease}
+.sp-ro-row:hover h3{color:var(--ro-red)}
+.sp-ro-meta{font-size:.74rem;color:var(--ro-mute);display:flex;flex-wrap:wrap;gap:0}
+.sp-ro-meta span+span::before{content:'·';margin:0 6px}
+.sp-ro-meta .sp-ro-seen{color:var(--ro-sub);font-weight:600}
+.sp-ro-thumb{width:100%;aspect-ratio:4/3;border-radius:8px;overflow:hidden;background:var(--ro-soft)}
+.sp-ro-thumb img{width:100%;height:100%;object-fit:cover;display:block;transition:transform .4s ease}
+.sp-ro-row:hover .sp-ro-thumb img{transform:scale(1.06)}
+.sp-ro-all{display:inline-flex;align-items:center;gap:6px;margin-top:14px;font-size:.82rem;font-weight:700;color:var(--ro-ink);border-bottom:1.5px solid var(--ro-red);padding-bottom:2px}
+.sp-ro-all:hover{color:var(--ro-red)}
+
+/* ── פס "הבא בתור" ── */
+.sp-ro-up{position:fixed;z-index:390;left:12px;right:12px;bottom:calc(16px + env(safe-area-inset-bottom));margin:0 auto;max-width:540px;direction:rtl;font-family:var(--font,'Rubik',sans-serif);
+  transform:translateY(calc(100% + 40px));opacity:0;visibility:hidden;transition:transform .45s cubic-bezier(.2,.8,.2,1),opacity .3s ease,visibility 0s linear .45s}
+.sp-ro-up.on{transform:none;opacity:1;visibility:visible;transition:transform .45s cubic-bezier(.2,.8,.2,1),opacity .3s ease}
+/* במובייל: מעל סרגל הניווט התחתון ומעל כפתור הספידומטר שבולט ממנו */
+@media (max-width:680px){.sp-ro-up{bottom:calc(96px + env(safe-area-inset-bottom))}.sp-ro-car{grid-template-columns:112px 1fr}}
+.sp-ro-up-card{position:relative;display:grid;grid-template-columns:58px 1fr auto;gap:12px;align-items:center;padding:9px 10px 9px 8px;background:var(--white,#fff);color:var(--black,#0a0a0a);border:1px solid var(--border,#e8e8e8);border-radius:14px;box-shadow:0 14px 40px rgba(0,0,0,.18),0 2px 6px rgba(0,0,0,.06);overflow:hidden}
+body.dark-mode .sp-ro-up-card{background:#191919;color:#eee;border-color:#2c2c2c}
+.sp-ro-up-card::before{content:'';position:absolute;top:0;right:0;height:2px;width:var(--ro-p,0%);background:var(--red,#e8001d);transition:width .15s linear}
+.sp-ro-up-link{display:contents;color:inherit;text-decoration:none}
+.sp-ro-up img{width:58px;height:58px;border-radius:9px;object-fit:cover;display:block}
+.sp-ro-up-txt{min-width:0}
+.sp-ro-up-txt small{display:block;font-size:.64rem;font-weight:800;letter-spacing:.12em;color:var(--red,#e8001d);margin-bottom:3px}
+.sp-ro-up-txt strong{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;font-size:.88rem;font-weight:700;line-height:1.35}
+.sp-ro-up-x{width:32px;height:32px;border-radius:50%;border:none;background:transparent;color:inherit;opacity:.55;cursor:pointer;font-size:1.15rem;line-height:1;display:flex;align-items:center;justify-content:center}
+.sp-ro-up-x:hover{opacity:1;background:rgba(127,127,127,.12)}
+@media (prefers-reduced-motion:reduce){.sp-ro *,.sp-ro-up{transition:none!important}}
+body.no-animations .sp-ro-up{transition:none!important}
