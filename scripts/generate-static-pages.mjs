@@ -956,7 +956,7 @@ function buildCarSeoBlock(c, allCars) {
   const cmpHTML = cmps.length ? `<ul class="sp-cs-links">${cmps.map(p => { const o = p.a === c ? p.b : p.a; return `<li><a href="/compare/${esc(p.key)}/">${esc(carHeName(c))} מול ${esc(carHeName(o))}</a></li>`; }).join('')}</ul>` : '';
 
   const uv = usageValue(num(c.price), String(c.powertrain || '').toLowerCase());
-  const usageHTML = uv ? `<p>שווי שימוש חודשי לפי המחיר ההתחלתי: <b>${formatPriceILS(uv.value)}</b>${uv.ded ? ` (אחרי הפחתה של ${formatPriceILS(uv.ded)})` : ''}. <a href="/usage-value-calculator.html?car=${encodeURIComponent(c.slug)}">כמה זה עולה לכם נטו מהמשכורת ›</a></p>` : '';
+  const usageHTML = uv ? `<p>שווי שימוש חודשי לפי המחיר ההתחלתי: <b>${formatPriceILS(uv.value)}</b>${uv.ded ? ` (אחרי הפחתה של ${formatPriceILS(uv.ded)})` : ''}. <a href="/usage-value-calculator.html#car=${encodeURIComponent(c.slug)}">כמה זה עולה לכם נטו מהמשכורת ›</a></p>` : '';
   const inner = sec('מפרט טכני מלא', specs) + sec('גרסאות ומחירים', trimsHTML) + sec('אבזור ובטיחות', equipHTML) +
     sec('יתרונות וחסרונות', prosCons) + sec('צבעים', colors) + sec('שאלות נפוצות', faqHTML) + sec('תמונות', imgsHTML) + sec('השוואות מול מתחרים', cmpHTML) + sec('שווי שימוש (רכב צמוד)', usageHTML) + sec(`כתבות על ${carHeName(c)}`, artsHTML);
   if (!inner && !simHTML) return '';
@@ -967,8 +967,8 @@ function buildCarSeoBlock(c, allCars) {
    עד 16.11.2026 קישור למדור הוביל ל-/?cat=X: אותו HTML של דף הבית, אותה כותרת, canonical לדף הבית.
    גוגל לא יכול היה לאנדקס מדור, והגולש ראה "דף הבית". עכשיו לכל מדור עמוד סטטי משלו. */
 /* שמות המדורים כפי שהם מופיעים בתפריט האתר (זהה ל-SP_CATS ב-app.js) */
-const CAT_PAGE_LABELS = { local: 'חדשות מקומיות', world: 'חדשות עולמיות', review: 'מבחני רכב', electric: 'רכב חשמלי', tech: 'טכנולוגיה', buying: 'קניית רכב', sport: 'ספורט', luxury: 'רכב יוקרה' };
-const CAT_PAGES = ['local', 'world', 'review', 'electric', 'tech', 'buying', 'sport', 'luxury'];
+const CAT_PAGE_LABELS = { local: 'חדשות מקומיות', world: 'חדשות עולמיות', review: 'מבחני רכב', electric: 'רכב חשמלי', tech: 'טכנולוגיה', buying: 'קניית רכב', sport: 'ספורט', luxury: 'רכב יוקרה', quick: 'חדשות בקליק' };
+const CAT_PAGES = ['local', 'world', 'review', 'electric', 'tech', 'buying', 'sport', 'luxury', 'quick'];
 function hydrateTemplateForCategory(rootHtml, cat, catRows) {
   const label = CAT_PAGE_LABELS[cat] || CAT_LABELS[cat], url = `${SITE}/${cat}/`, title = `${label} | ספידומטר`;
   const desc = `${label} בספידומטר: ${catRows.length} כתבות, מהחדשה לישנה.`;
@@ -985,6 +985,8 @@ function hydrateTemplateForCategory(rootHtml, cat, catRows) {
   html = injectBetween(html, 'DATA_SNAPSHOT', buildSnapshotTag(catRows));
   html = injectBetween(html, 'HERO_PRELOAD', buildHeroPreloadTag(catRows) || '');
   html = injectBetween(html, 'HERO_SLIDE', buildStaticHeroSlide(catRows) || '');
+  /* חדשות בקליק: העמוד קיים לגולשים ולתפריט, אבל לא לאינדקס (תקצירים של כתבות שכבר קיימות) */
+  if (cat === 'quick') html = html.replace(/<meta name="robots" content="[^"]*">/, '<meta name="robots" content="noindex, follow">');
   /* רשימת כל כתבות המדור כקישורים רגילים. האפליקציה מסירה אותה כשהיא בונה את הרשת המעוצבת. */
   const list = catRows.map(r => `<li><a href="/article/${r.id}/">${esc(r.title)}<small>${esc(r.date || '')}</small></a></li>`).join('');
   html = injectBetween(html, 'HOME_H1', `<h1 id="sp-home-h1" class="sp-h1">${esc(label)}</h1><ul id="sp-cat-static" class="sp-catlist">${list}</ul>`);
@@ -1063,7 +1065,7 @@ function hydrateBrandPage(hubHtml, g) {
     .replace(/<meta property="og:url" content="[^"]*">/, () => `<meta property="og:url" content="${url}">`)
     .replace('<body class="cx">', '<body class="cx is-results">')
     .replace('<h1 id="r-title"></h1>', () => `<h1 id="r-title"><bdi>${esc(info.name)}</bdi>${heDiff ? ' · ' + esc(info.he) : ''}</h1>`)
-    .replace('<span id="r-crumb"></span>', () => `<span id="r-crumb"><a href="/cars-list.html?view=brands" data-route="view=brands">מותגים</a> › ${esc(info.name)}</span>`)
+    .replace('<span id="r-crumb"></span>', () => `<span id="r-crumb"><a href="/cars-list.html" data-route="view=brands">מותגים</a> › ${esc(info.name)}</span>`)
     .replace('<p id="r-sub"></p>', () => `<p id="r-sub">${cars.length === 1 ? 'דגם אחד' : cars.length + ' דגמים'} במאגר, עם מחיר, מפרט טכני ואבזור</p>`);
   const list = cars.map(c => `<li><a href="/car/${esc(c.slug)}/"><b>${esc(carHeName(c))} ${esc(c.year)}</b>` +
     `<span>${[hasText(c.category) ? esc(String(c.category)) : '', numOf(c.price) ? 'החל מ-' + formatPriceILS(numOf(c.price)) : ''].filter(Boolean).join(' · ')}</span></a></li>`).join('');
@@ -1079,6 +1081,9 @@ function hydrateBrandPage(hubHtml, g) {
   ].map(o => `<script type="application/ld+json">${JSON.stringify(o).replace(/</g, '\\u003c')}</script>`).join('\n');
   return injectBetween(html, 'CARS_ITEMLIST', ld);
 }
+function demoteHubHero(html) {
+  return html.replace(/<h1 id="hero-title">([\s\S]*?)<\/h1>/, '<p id="hero-title" class="cx-hero-h">$1</p>');
+}
 async function writeBrandPages(cars) {
   const hub = await readFile(path.join(SITE_DIR, 'cars-list.html'), 'utf-8');
   await rm(BRANDS_OUT_DIR, { recursive: true, force: true });
@@ -1087,7 +1092,7 @@ async function writeBrandPages(cars) {
   for (const g of groups) {
     const dir = path.join(BRANDS_OUT_DIR, g.info.key);
     await mkdir(dir, { recursive: true });
-    await writeFile(path.join(dir, 'index.html'), hydrateBrandPage(hub, g), 'utf-8');
+    await writeFile(path.join(dir, 'index.html'), demoteHubHero(hydrateBrandPage(hub, g)), 'utf-8');
   }
   console.log(`🏷️  נכתבו ${groups.length} עמודי מותג תחת /cars/{brand}/.`);
   return groups;
@@ -1162,7 +1167,7 @@ function buildComparePage(carTemplate, pair, pairsByCar) {
     `<div class="sp-cmp-heads">${head(a)}${head(b)}</div>` +
     `<table><thead><tr><th scope="col">נתון</th><th scope="col">${esc(carHeName(a))}</th><th scope="col">${esc(carHeName(b))}</th></tr></thead><tbody>${rows}</tbody></table>` +
     `<small>הנתונים לפי מפרטי היבואנים כפי שהוזנו במאגר ספידומטר. הערך המודגש בכל שורה הוא הגבוה או הנמוך יותר, לפי העניין; יש לאמת מול היבואן לפני רכישה.</small>` +
-    `<div class="sp-cmp-cta"><a class="pri" href="/cars-list.html?compare=${encodeURIComponent(a.slug)},${encodeURIComponent(b.slug)}">השוואה מלאה והוספת דגם שלישי</a><a href="/car/${esc(a.slug)}/">${esc(carHeName(a))}</a><a href="/car/${esc(b.slug)}/">${esc(carHeName(b))}</a></div>` +
+    `<div class="sp-cmp-cta"><a class="pri" href="/cars-list.html#compare=${encodeURIComponent(a.slug)},${encodeURIComponent(b.slug)}">השוואה מלאה והוספת דגם שלישי</a><a href="/car/${esc(a.slug)}/">${esc(carHeName(a))}</a><a href="/car/${esc(b.slug)}/">${esc(carHeName(b))}</a></div>` +
     (moreHTML ? `<h2>השוואות נוספות</h2><ul class="sp-cmp-more">${moreHTML}</ul>` : '') + `</article>`;
   const img = realImages(a)[0] || realImages(b)[0] || `${SITE}/favicon-512.png`;
   let html = carTemplate
@@ -1251,7 +1256,7 @@ async function hydrateUsageCalc(cars) {
     const pt = c.pt === 'diesel' ? 'diesel' : c.pt;
     const u = usageValue(c.p, pt) || (pt === 'mhev' ? usageValue(c.p, 'petrol') : null);
     if (!u) return '';
-    return `<tr><th scope="row"><a href="/car/${esc(c.s)}/">${esc(c.n)} ${esc(c.y)}</a></th><td><b>${formatPriceILS(u.value)}</b></td><td>${formatPriceILS(c.p)}</td><td style="font-family:inherit">${esc(PT_HE[pt] || '')}${pt === 'mhev' ? '*' : ''}</td><td class="calc"><a href="/usage-value-calculator.html?car=${encodeURIComponent(c.s)}">חשבו נטו</a></td></tr>`;
+    return `<tr><th scope="row"><a href="/car/${esc(c.s)}/">${esc(c.n)} ${esc(c.y)}</a></th><td><b>${formatPriceILS(u.value)}</b></td><td>${formatPriceILS(c.p)}</td><td style="font-family:inherit">${esc(PT_HE[pt] || '')}${pt === 'mhev' ? '*' : ''}</td><td class="calc"><a href="/usage-value-calculator.html#car=${encodeURIComponent(c.s)}">חשבו נטו</a></td></tr>`;
   }).filter(Boolean);
   const hasMh = list.some(c => c.pt === 'mhev');
   const table = rows.length ? `<div class="tbl-wrap"><table><caption>לפי מחיר המחירון ההתחלתי במאגר.${hasMh ? ' * היברידי קל: מוצג ללא הפחתה; ההפחתה להיברידי תלויה בסוג הדלק הרשום ברישיון הרכב.' : ''}</caption><thead><tr><th scope="col">דגם</th><th scope="col">שווי לחודש</th><th scope="col">מחיר מחירון</th><th scope="col">הנעה</th><th scope="col"><span style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)">חישוב</span></th></tr></thead><tbody>${rows.join('')}</tbody></table></div>` : '';
