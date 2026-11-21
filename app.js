@@ -215,13 +215,13 @@ function filterCat(cat,el){currentFilter=cat;_gridExpandState['latest-more-btn']
 buildHero();buildSections();showHome();_spCatUI();window.scrollTo(0,0);}
 /* עמודי מדור (16.11.2026): לכל מדור כתובת משלו (/review/, /local/ ...) שנבנית גם כעמוד סטטי במחולל.
    עד היום קישור למדור הוביל ל-/?cat=X, שנראה ונרשם בגוגל כדף הבית. */
-var SP_CATS={local:'חדשות מקומיות',world:'חדשות עולמיות',review:'מבחני רכב',electric:'רכב חשמלי',tech:'טכנולוגיה',buying:'קניית רכב',sport:'ספורט',luxury:'רכב יוקרה'};
+var SP_CATS={local:'חדשות מקומיות',world:'חדשות עולמיות',review:'מבחני רכב',electric:'רכב חשמלי',tech:'טכנולוגיה',buying:'קניית רכב',sport:'ספורט',luxury:'רכב יוקרה',quick:'חדשות בקליק'};
 var SP_HOME_H1='ספידומטר — חדשות רכב, מבחני דרכים ומאגר רכבים בישראל';
 function _spCatHref(c){return SP_CATS[c]?'/'+c+'/':'/?cat='+encodeURIComponent(c||'');}
 function _spCatPath(){return SP_CATS[currentFilter]?'/'+currentFilter+'/':'/';}
 function _spCatUI(){try{var l=SP_CATS[currentFilter];var st=document.getElementById('sp-cat-static');if(st&&st.parentNode)st.parentNode.removeChild(st);var h=document.getElementById('sp-home-h1');if(h){h.textContent=l||SP_HOME_H1;h.className=l?'sp-h1':'sp-h1 sp-h1--sr';}if(l){var u='https://speedometer10.co.il/'+currentFilter+'/';document.title=l+' | ספידומטר';setOG('og:title',l+' | ספידומטר');setOG('og:url',u);var c=document.querySelector('link[rel="canonical"]');if(c)c.href=u;}}catch(e){}}
 /* חזרה/קדימה בדפדפן: המדור המוצג תמיד תואם לכתובת (גם כשלרשומה בהיסטוריה אין state) */
-window.addEventListener('popstate',function(){setTimeout(function(){try{var m=location.pathname.match(/^\/(local|world|review|electric|tech|buying|sport|luxury)\/?$/);var want=m?m[1]:(location.pathname==='/'?'all':null);if(!want)return;if(want!==currentFilter&&(SP_CATS[currentFilter]||SP_CATS[want])){currentFilter=want;buildHero();buildSections();var map={all:'הכל',local:'חדשות מקומיות',world:'עולמי',review:'מבחני רכב',electric:'חשמלי',tech:'טכנולוגיה',buying:'קניית רכב',sport:'ספורט',luxury:'יוקרה'};document.querySelectorAll('.cat-tag').forEach(function(b){b.classList.toggle('active',b.textContent.trim()===map[want]);});}_spCatUI();}catch(e){}},0);});
+window.addEventListener('popstate',function(){setTimeout(function(){try{var m=location.pathname.match(/^\/(local|world|review|electric|tech|buying|sport|luxury|quick)\/?$/);var want=m?m[1]:(location.pathname==='/'?'all':null);if(!want)return;if(want!==currentFilter&&(SP_CATS[currentFilter]||SP_CATS[want])){currentFilter=want;buildHero();buildSections();var map={all:'הכל',local:'חדשות מקומיות',world:'עולמי',review:'מבחני רכב',electric:'חשמלי',tech:'טכנולוגיה',buying:'קניית רכב',sport:'ספורט',luxury:'יוקרה'};document.querySelectorAll('.cat-tag').forEach(function(b){b.classList.toggle('active',b.textContent.trim()===map[want]);});}_spCatUI();}catch(e){}},0);});
 function _clearPrerenderOverride(){try{var s=document.getElementById('prerender-override');if(s&&s.parentNode)s.parentNode.removeChild(s);}catch(e){}}
 function showHome(pushState=true){window.__homeShown=true;_clearPrerenderOverride();if(articles&&articles.length){const _lg=document.getElementById('latest-grid');if(_lg&&currentFilter!=='quick'&&_lg.children.length===0){try{buildHero();buildSections();buildTicker();buildBreakingTicker();}catch(e){}}}resetMeta();const artSubEl=document.getElementById('art-sub');if(artSubEl)artSubEl.style.display='';const hp=document.getElementById('home-page');const ap2=document.getElementById('article-page');const adp=document.getElementById('admin-page');document.body.classList.remove('article-open');if(hp){hp.style.display='block';}
 if(ap2)ap2.style.display='none';if(adp)adp.style.display='none';document.getElementById('main-footer').style.display='block';if(pushState&&window.history){try{(window._spNoPush?window.history.replaceState:window.history.pushState).call(window.history,{page:'home',filter:currentFilter},'',_spCatPath());}catch(e){}}
@@ -788,7 +788,7 @@ function initRouter(){
   const initParams=new URLSearchParams(window.location.search);
   const initQId=parseInt(initParams.get('article')||'');
   const initQCat=initParams.get('cat');
-  const initPathCat=(initPath.match(/^\/(local|world|review|electric|tech|buying|sport|luxury)\/?$/)||[])[1];
+  const initPathCat=(initPath.match(/^\/(local|world|review|electric|tech|buying|sport|luxury|quick)\/?$/)||[])[1];
 
   if(isStaticPrerender&&directArticleId){
     // כתובת נקייה - זו הצורה הסופית, איננו נוגעים בה כלל.

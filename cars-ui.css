@@ -111,7 +111,7 @@ body.cx{font-family:var(--f);background:var(--paper);color:var(--ink);font-size:
   linear-gradient(270deg,rgba(8,20,34,.82) 0%,rgba(8,20,34,.55) 38%,rgba(8,20,34,.18) 72%,rgba(8,20,34,.3) 100%),
   linear-gradient(180deg,rgba(8,20,34,.35) 0%,rgba(8,20,34,0) 30%,rgba(8,20,34,0) 60%,rgba(8,20,34,.55) 100%)}
 .cx-hero-in{padding-top:52px;padding-bottom:44px}
-.cx-hero h1{font-size:clamp(2rem,4.4vw,3.15rem);font-weight:800;line-height:1.1;letter-spacing:-.02em;text-shadow:0 2px 24px rgba(0,0,0,.35)}
+.cx-hero h1,.cx-hero .cx-hero-h{font-size:clamp(2rem,4.4vw,3.15rem);font-weight:800;line-height:1.1;letter-spacing:-.02em;text-shadow:0 2px 24px rgba(0,0,0,.35)}
 .cx-hero-sub{display:flex;flex-wrap:wrap;margin-top:12px;font-size:clamp(1rem,1.7vw,1.3rem);font-weight:400;color:rgba(255,255,255,.92);text-shadow:0 2px 16px rgba(0,0,0,.35)}
 .cx-hero-sub span+span::before{content:'|';margin:0 12px;color:rgba(255,255,255,.7)}
 .cx-hero-copy>*{opacity:0;transform:translateY(16px);animation:cxUp .9s var(--e-out) forwards}
@@ -333,7 +333,11 @@ body.is-results .cx-results{display:block}
 .cx-btile .cx-mq-logo{height:48px}
 .cx-btile b{font-size:.92rem;font-weight:600;color:var(--ink)}
 .cx-btile small{font-size:.76rem;color:var(--mute)}
-.cx-btile.is-soon{opacity:.6}
+.cx-btile.is-soon{opacity:.6;cursor:default}
+.cx-btile.is-soon:hover{transform:none;box-shadow:none}
+.cx-mq-item.is-soon{cursor:default}
+.cx-mq-item.is-soon:hover{background:none}
+.cx-mq-item.is-soon:hover .cx-mq-logo{transform:none}
 
 /* ═══ סרגל השוואה ═══ */
 .cx-tray{position:fixed;bottom:18px;left:50%;transform:translate(-50%,160%);visibility:hidden;z-index:70;background:var(--navy);color:#fff;border-radius:12px;box-shadow:var(--sh-3);padding:10px 10px 10px 14px;display:flex;align-items:center;gap:12px;transition:transform .5s var(--e-out),visibility .5s;width:max-content;max-width:calc(100vw - 24px)}

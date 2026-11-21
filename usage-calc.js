@@ -100,18 +100,19 @@
     clearTimeout(urlTimer);
     urlTimer = setTimeout(function () {
       try {
-        var u = new URL(location.href), sp = u.searchParams;
-        ['car', 'trim', 'price', 'pt', 'salary', 'pts'].forEach(function (k) { sp.delete(k); });
+        var u = new URL(location.href), sp = new URLSearchParams();
+        ['car', 'trim', 'price', 'pt', 'salary', 'pts'].forEach(function (k) { u.searchParams.delete(k); });
         if (chosen) { sp.set('car', chosen.s); if (chosenTrim) sp.set('trim', String(chosenTrim)); }
         else { var p = digits(priceText.value); if (p) sp.set('price', String(p)); }
         if (!chosen || (chosen.pt !== curPt())) sp.set('pt', curPt());
         var s = digits(salaryEl.value); if (s) sp.set('salary', String(s));
         if (curPoints() !== 2.25) sp.set('pts', String(curPoints()));
-        history.replaceState(null, '', u.pathname + (sp.toString() ? '?' + sp.toString() : '') + u.hash);
+        /* 19.11.2026: מצב החישוב נשמר אחרי # — קישור משותף פותח את אותה תוצאה, וגוגל לא רואה בו כתובת נוספת */
+        history.replaceState(null, '', u.pathname + u.search + (sp.toString() ? '#' + sp.toString() : ''));
       } catch (e) {}
     }, 250);
   }
-  function shareUrl() { return 'https://speedometer10.co.il/usage-value-calculator.html' + location.search; }
+  function shareUrl() { return 'https://speedometer10.co.il/usage-value-calculator.html' + location.hash; }
 
   /* ── עדכון התצוגה ── */
   function update() {
@@ -232,6 +233,7 @@
 
   /* ── מצב התחלתי מהכתובת (?car= / ?price= / ?pt= / ?salary= / ?pts=) ── */
   var q = new URLSearchParams(location.search);
+  new URLSearchParams(location.hash.replace(/^#/, '')).forEach(function (v, k) { if (!q.has(k)) q.set(k, v); });
   if (q.get('salary')) salaryEl.value = fmt(digits(q.get('salary')));
   if (q.get('pts')) { var pv = parseFloat(q.get('pts')); if (pv === 2.75) pointsEl.value = '2.75'; else if (isFinite(pv) && pv !== 2.25) { pointsEl.value = 'custom'; pointsCustom.value = String(pv); $('pointsCustomWrap').style.display = ''; } }
   if (q.get('price')) setPrice(digits(q.get('price')));

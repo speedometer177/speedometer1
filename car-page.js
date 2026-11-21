@@ -240,7 +240,7 @@
   function scoreBadge(c, url) {
     const sc = num(c.score); if (sc == null) return '';
     const v = Math.max(0, Math.min(10, sc)), t = Number.isInteger(v) ? v : v.toFixed(1), C = 2 * Math.PI * 47;
-    return '<a class="cp-score" href="' + url + '?view=review" data-view="review" aria-label="ציון ספידומטר ' + t + ' מתוך 10 — לחוות הדעת" style="--len:' + C.toFixed(1) + ';--off:' + (C * (1 - v / 10)).toFixed(1) + '">' +
+    return '<a class="cp-score" href="' + url + '#review" data-view="review" aria-label="ציון ספידומטר ' + t + ' מתוך 10 — לחוות הדעת" style="--len:' + C.toFixed(1) + ';--off:' + (C * (1 - v / 10)).toFixed(1) + '">' +
       '<svg viewBox="0 0 100 100" aria-hidden="true"><circle cx="50" cy="50" r="47" class="cp-score-bg"/><circle cx="50" cy="50" r="47" class="cp-score-arc"/></svg>' +
       '<small>ציון<br>ספידומטר</small><b class="cx-num" dir="ltr">' + t + '<i>/10</i></b></a>';
   }
@@ -262,7 +262,7 @@
   const NV_SHORT = { '': 'דגם', specs: 'מפרט', gallery: 'גלריה', equipment: 'אבזור', review: 'חוות דעת' };
   const nvIco = id => '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + NVI[id] + '</svg>';
   function navHTML(url, short) {
-    return [{ id: '', label: 'דגם' }].concat(VIEWS).map(v => '<a href="' + url + (v.id ? '?view=' + v.id : '') + '" data-view="' + v.id + '"' + (v.id ? '' : ' aria-current="page"') + '>' + nvIco(v.id) + '<span>' + esc(short ? NV_SHORT[v.id] : v.label) + '</span></a>').join('');
+    return [{ id: '', label: 'דגם' }].concat(VIEWS).map(v => '<a href="' + url + (v.id ? '#' + v.id : '') + '" data-view="' + v.id + '"' + (v.id ? '' : ' aria-current="page"') + '>' + nvIco(v.id) + '<span>' + esc(short ? NV_SHORT[v.id] : v.label) + '</span></a>').join('');
   }
   /* מה מבדיל בין הגרסאות: הנתון הראשון שבאמת שונה ביניהן (טווח, הנעה, הספק, תאוצה, סוללה). אם הכול זהה — הנתון הראשון שקיים. */
   function trimNotes(c, trims) {
@@ -1195,7 +1195,7 @@
       '</div>' +
       '<span class="rv-road-tag"><i></i>בדרך</span>' +
       '<h2>יצאנו לנסיעת מבחן</h2><p class="rv-road-sub">חוות הדעת של ספידומטר על ה-' + mix(c.model) + ' בדרך</p><p>בינתיים אפשר לעבור על המפרט המלא, על האבזור ועל התמונות.</p>' +
-      '<div class="rv-empty-links"><a href="' + url + '?view=specs" data-view="specs">למפרט הטכני המלא</a><a href="' + url + '?view=equipment" data-view="equipment">לאבזור</a><a href="' + url + '?view=gallery" data-view="gallery">לגלריה</a></div></div></div>';
+      '<div class="rv-empty-links"><a href="' + url + '#specs" data-view="specs">למפרט הטכני המלא</a><a href="' + url + '#equipment" data-view="equipment">לאבזור</a><a href="' + url + '#gallery" data-view="gallery">לגלריה</a></div></div></div>';
     const li = (arr, k) => arr.map(x => '<li>' + rvIco(k === 'ok' ? RVI.ok : RVI.no, 'rv-li-' + k) + '<span>' + mix(x) + '</span></li>').join('');
     return '<div class="rv" id="rv">' +
       /* 1. השאלה · מה אהבנו · מה פחות */
@@ -1216,7 +1216,7 @@
       /* 3. פסק הדין · למי מתאים */
       (verdict || fitY.length || fitN.length ? '<section class="rv-mid' + (verdict && (fitY.length || fitN.length) ? '' : ' is-one') + '">' +
         (verdict ? '<article class="rv-verdict rv-in"><h3>' + rvIco(RVI.flag, 'rv-h-ico') + 'השורה התחתונה של ספידומטר</h3><p>' + esc(verdict) + '</p>' +
-          '<a class="rv-btn rv-btn-red" href="' + url + '?view=specs" data-view="specs">' + rvIco(RVI.car) + '<span>לקריאת המפרט המלא</span>' + rvIco(RVI.arrow, 'rv-arr') + '</a></article>' : '') +
+          '<a class="rv-btn rv-btn-red" href="' + url + '#specs" data-view="specs">' + rvIco(RVI.car) + '<span>לקריאת המפרט המלא</span>' + rvIco(RVI.arrow, 'rv-arr') + '</a></article>' : '') +
         (fitY.length || fitN.length ? '<article class="rv-card rv-fit rv-in"><div class="rv-fit-txt"><h3>' + rvIco(RVI.users, 'rv-h-ico') + '<span>למי ה-' + mix(c.model) + ' מתאים?</span></h3><ul>' + li(fitY, 'ok') + li(fitN, 'no') + '</ul></div>' +
           (imgFit ? '<figure class="rv-fit-img"><img src="' + esc(thumb(imgFit, 800)) + '" alt="' + esc(full) + '" loading="lazy"></figure>' : '') + '</article>' : '') +
       '</section>' : '') +
@@ -1225,7 +1225,7 @@
         '<button type="button" class="rv-btn rv-btn-red" data-cmp="' + esc(c.slug || c.id) + '" aria-pressed="false">' + rvIco(RVI.car) + '<span>להשוואה בין רכבים</span>' + rvIco(RVI.arrow, 'rv-arr') + '</button>' +
         '<button type="button" class="rv-link" data-rv-rivals>' + rvIco(RVI.scale) + '<span>השווה את ה-' + mix(c.model) + ' למתחרים</span></button>' +
         (vid ? '<a class="rv-link" href="https://www.youtube.com/watch?v=' + vid + '" target="_blank" rel="noopener">' + rvIco(RVI.play, 'rv-yt') + '<span>צפו במבחן הווידאו של ' + mix(full) + '</span></a>' : '') +
-        '<a class="rv-link" href="' + url + '?view=specs" data-view="specs">' + rvIco(RVI.bars) + '<span>מפרט טכני מלא</span></a>' +
+        '<a class="rv-link" href="' + url + '#specs" data-view="specs">' + rvIco(RVI.bars) + '<span>מפרט טכני מלא</span></a>' +
       '</nav>' +
     '</div>';
   }
@@ -1493,7 +1493,9 @@
     });
     let lbSkip = 0; // הלייטבוקס מוסיף שלב בהיסטוריה; החזרה ממנו לא אמורה לבנות מחדש את העמוד
     win.addEventListener('popstate', () => { if (lbSkip) { lbSkip = 0; return; } showView(new URLSearchParams(location.search).get('view') || '', false); });
-    const initial = new URLSearchParams(location.search).get('view'); if (initial) showView(initial, false);
+    /* 19.11.2026: הקישורים בלשוניות הם #specs (כתובת אחת לגוגל). ?view= ממשיך לעבוד לקישורים ישנים ומשותפים. */
+    const initial = new URLSearchParams(location.search).get('view') || (/^#[a-z]+$/.test(location.hash) ? location.hash.slice(1) : '');
+    if (initial) showView(initial, false);
 
     /* לייטבוקס לגלריה */
     rootEl.addEventListener('click', e => {
