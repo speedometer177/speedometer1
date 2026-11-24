@@ -346,11 +346,12 @@ function buildSpecCard(specs,skipPC){const cats=specs.cats||[];const row=(icon,l
     </div>
     ${scoresHTML}
   </div>`;}
+function linkifyEscaped(h){const L=[];const tag=(href,label)=>{L.push('<a href="'+href+'" target="_blank" rel="noopener noreferrer" style="overflow-wrap:anywhere;word-break:break-word">'+label+'</a>');return '\u0000'+(L.length-1)+'\u0000';};h=h.replace(/\[([^\]\n]+)\]\((https?:\/\/[^\s)<]+)\)/g,(m,t,u)=>tag(u,t));h=h.replace(/https?:\/\/[^\s<\u0000]+/g,m=>{let u=m,tail='';while(/[.,;:!?)\]]$/.test(u)&&!(u.endsWith(')')&&u.includes('('))){tail=u.slice(-1)+tail;u=u.slice(0,-1);}return tag(u,u)+tail;});return h.replace(/\u0000(\d+)\u0000/g,(m,i)=>L[+i]);}
 function parseBody(text,bodyImages,articleTitle){const lines=String(text||'').split('\n');const rawParts=[];const imgs=(bodyImages||[]).filter(x=>x&&safeUrl(x.src));let firstHeadingSkipped=false;for(const line of lines){if(line.startsWith('## ')){const ht=line.slice(3).trim();if(!firstHeadingSkipped&&articleTitle&&ht===articleTitle.trim()){firstHeadingSkipped=true;continue;}
 rawParts.push({type:'h2',html:`<h2>${escapeHtml(ht)}</h2>`});}
 else if(line.startsWith('### ')){rawParts.push({type:'h3',html:`<h3>${escapeHtml(line.slice(4))}</h3>`});}
 else if(line.startsWith('> ')){rawParts.push({type:'quote',html:`<blockquote>${escapeHtml(line.slice(2))}</blockquote>`});}
-else if(line.trim()){rawParts.push({type:'p',html:`<p>${escapeHtml(line).replace(/\*\*(.*?)\*\*/g,'<strong>$1</strong>')}</p>`});}}
+else if(line.trim()){rawParts.push({type:'p',html:`<p>${linkifyEscaped(escapeHtml(line)).replace(/\*\*(.*?)\*\*/g,'<strong>$1</strong>')}</p>`});}}
 const figHTML=img=>{const s=safeUrl(img.src);if(!s)return '';const esc=escapeHtml(s);const cap=escapeHtml(img.cap||'');const disp=escapeHtml(isProxyable(s)?wsrvW(s,1000):s);return `<figure class="body-img-wrap"><img src="${disp}" alt="${cap}" loading="lazy" decoding="async" width="800" height="450" data-lightbox="${esc}" onerror="if(this.dataset.lightbox&&this.src!==this.dataset.lightbox){this.src=this.dataset.lightbox;}" style="cursor:zoom-in">${img.cap?`<figcaption>${cap}</figcaption>`:''}</figure>`;};
 let html;if(imgs.length===0){html=rawParts.map(x=>x.html).join('');}
 else{const paraCount=rawParts.filter(x=>x.type==='p').length;const interval=Math.max(2,Math.floor(paraCount/(imgs.length+1)));let imgQueue=[...imgs],pIdx=0,result=[];for(const part of rawParts){result.push(part.html);if(part.type==='p'){pIdx++;if(imgQueue.length>0&&pIdx%interval===0)result.push(figHTML(imgQueue.shift()));}}
