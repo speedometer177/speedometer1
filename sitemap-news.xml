@@ -1,6 +1,17 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:news="http://www.google.com/schemas/sitemap-news/0.9">
   <url>
+    <loc>https://speedometer10.co.il/article/759/</loc>
+    <news:news>
+      <news:publication>
+        <news:name>ספידומטר</news:name>
+        <news:language>he</news:language>
+      </news:publication>
+      <news:publication_date>2026-11-24T12:39:00.000Z</news:publication_date>
+      <news:title>מרצדס AMG GT חשמלית נחתה בישראל: עד 1,169 כ״ס</news:title>
+    </news:news>
+  </url>
+  <url>
     <loc>https://speedometer10.co.il/article/758/</loc>
     <news:news>
       <news:publication>
@@ -53,17 +64,6 @@
       </news:publication>
       <news:publication_date>2026-11-22T15:46:00.000Z</news:publication_date>
       <news:title>טויוטה קורולה קרוס: עכשיו גם בגרסת טנדר</news:title>
-    </news:news>
-  </url>
-  <url>
-    <loc>https://speedometer10.co.il/article/748/</loc>
-    <news:news>
-      <news:publication>
-        <news:name>ספידומטר</news:name>
-        <news:language>he</news:language>
-      </news:publication>
-      <news:publication_date>2026-11-22T13:21:00.000Z</news:publication_date>
-      <news:title>האם הגעה לקו האדום במד הסל&quot;ד מזיקה לרכב?</news:title>
     </news:news>
   </url>
 </urlset>
