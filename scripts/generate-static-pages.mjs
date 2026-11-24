@@ -185,6 +185,9 @@ function schemaImages(url) {
   return [url, v(1200, 675), v(1200, 900), v(1200, 1200)];
 }
 
+/** הופך כתובות https:// וקישורי [טקסט](כתובת) לקישורים לחיצים - זהה ל-linkifyEscaped ב-app.js */
+function linkifyEscaped(h){const L=[];const tag=(href,label)=>{L.push('<a href="'+href+'" target="_blank" rel="noopener noreferrer" style="overflow-wrap:anywhere;word-break:break-word">'+label+'</a>');return '\u0000'+(L.length-1)+'\u0000';};h=h.replace(/\[([^\]\n]+)\]\((https?:\/\/[^\s)<]+)\)/g,(m,t,u)=>tag(u,t));h=h.replace(/https?:\/\/[^\s<\u0000]+/g,m=>{let u=m,tail='';while(/[.,;:!?)\]]$/.test(u)&&!(u.endsWith(')')&&u.includes('('))){tail=u.slice(-1)+tail;u=u.slice(0,-1);}return tag(u,u)+tail;});return h.replace(/\u0000(\d+)\u0000/g,(m,i)=>L[+i]);}
+
 /** מקביל ל-parseBody בקליינט (index.html) - שומר על אותה לוגיקה בדיוק כדי שהתוכן הראשוני יתאים למה שה-JS ירנדר מחדש */
 function parseBodyToHTML(text, bodyImages, articleTitle) {
   const lines = (text || '').split('\n');
@@ -205,7 +208,7 @@ function parseBodyToHTML(text, bodyImages, articleTitle) {
     } else if (line.startsWith('> ')) {
       parts.push({ type: 'quote', html: `<blockquote>${esc(line.slice(2))}</blockquote>` });
     } else if (line.trim()) {
-      const withBold = esc(line).replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+      const withBold = linkifyEscaped(esc(line)).replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
       parts.push({ type: 'p', html: `<p>${withBold}</p>` });
     }
   }
@@ -236,6 +239,7 @@ function plainTextExcerpt(text, maxLen = 160) {
     .replace(/^##?#?\s+/gm, '')
     .replace(/^>\s+/gm, '')
     .replace(/\*\*(.*?)\*\*/g, '$1')
+    .replace(/\[([^\]\n]+)\]\((https?:\/\/[^\s)]+)\)/g, '$1')
     .replace(/\s+/g, ' ')
     .trim();
   return clean.length > maxLen ? clean.slice(0, maxLen - 1).trim() + '…' : clean;
