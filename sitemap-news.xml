@@ -44,26 +44,4 @@
       <news:title>עתידני אך סדרתי: BYD מציגה הגה מתקפל לתוך הדשבורד</news:title>
     </news:news>
   </url>
-  <url>
-    <loc>https://speedometer10.co.il/article/754/</loc>
-    <news:news>
-      <news:publication>
-        <news:name>ספידומטר</news:name>
-        <news:language>he</news:language>
-      </news:publication>
-      <news:publication_date>2026-11-23T10:53:00.000Z</news:publication_date>
-      <news:title>לנד קרוזר בלחץ? סמלת מתחילה לשווק את iCaur V27</news:title>
-    </news:news>
-  </url>
-  <url>
-    <loc>https://speedometer10.co.il/article/752/</loc>
-    <news:news>
-      <news:publication>
-        <news:name>ספידומטר</news:name>
-        <news:language>he</news:language>
-      </news:publication>
-      <news:publication_date>2026-11-23T10:41:00.000Z</news:publication_date>
-      <news:title>חשמל קיצוני: פולקסווגן ID פולו GTI קלאב ספורט נחשפת</news:title>
-    </news:news>
-  </url>
 </urlset>
