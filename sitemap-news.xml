@@ -1,6 +1,17 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:news="http://www.google.com/schemas/sitemap-news/0.9">
   <url>
+    <loc>https://speedometer10.co.il/article/765/</loc>
+    <news:news>
+      <news:publication>
+        <news:name>ספידומטר</news:name>
+        <news:language>he</news:language>
+      </news:publication>
+      <news:publication_date>2026-11-26T12:35:00.000Z</news:publication_date>
+      <news:title>צניחה מצוק 100 מטר: לינק אנד קו 07GT בניסוי ריסוק מפתיע</news:title>
+    </news:news>
+  </url>
+  <url>
     <loc>https://speedometer10.co.il/article/763/</loc>
     <news:news>
       <news:publication>
@@ -20,17 +31,6 @@
       </news:publication>
       <news:publication_date>2026-11-25T07:21:00.000Z</news:publication_date>
       <news:title>הכי נמכר באירופה: סקודה אלרוק עקף את טסלה מודל Y</news:title>
-    </news:news>
-  </url>
-  <url>
-    <loc>https://speedometer10.co.il/article/759/</loc>
-    <news:news>
-      <news:publication>
-        <news:name>ספידומטר</news:name>
-        <news:language>he</news:language>
-      </news:publication>
-      <news:publication_date>2026-11-24T12:39:00.000Z</news:publication_date>
-      <news:title>מרצדס AMG GT חשמלית נחתה בישראל: עד 1,169 כ״ס</news:title>
     </news:news>
   </url>
 </urlset>
